@@ -1,25 +1,27 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@200;300;400;500&display=swap");
 @import "tailwindcss";
 
 :root {
-  /* Branding Colors */
-  --brand-selva: #1a472a;
-  --brand-bosque: #2d5a3d;
-  --brand-musgo: #5a7d6e;
-  --brand-arena: #d4c5b5;
-  --brand-pergamino: #ede0c4;
-  --brand-jade: #4a9b7f;
-  --brand-brote: #7cb342;
-  --brand-ambar: #ffc107;
-  --brand-corteza: #8b6f47;
-  --brand-gold: #d4af37;
+  /* Branding Colors — aligned with tailwind.config.js */
+  --brand-selva:     #1a2e1a;
+  --brand-bosque:    #243524;
+  --brand-musgo:     #2d3d2d;
+  --brand-arena:     #c8b68e;
+  --brand-pergamino: #f5f0e8;
+  --brand-jade:      #2d5a3d;
+  --brand-brote:     #4a7c5c;
+  --brand-ambar:     #d4a857;
+  --brand-corteza:   #5c4a3a;
+  --brand-gold:      #b8a472;
 
-  /* Neutral Colors */
-  --background: #ffffff;
-  --foreground: #171717;
-  --cream: #f7f2e8;
-  --parchment: #ede0c4;
-  --ink: #3d2b14;
+  /* Neutral / Text Colors */
+  --brand-cream:          #f7f2e8;
+  --brand-parchment:      #ede0c4;
+  --brand-parchment-soft: #f3ead8;
+  --brand-ink:            #3d2b14;
+  --brand-ink-soft:       #6b4c28;
+  --brand-accent:         #8a6428;
+  --brand-accent-hero:    #f6dfb2;
 }
 
 /* Typography */
@@ -28,7 +30,9 @@ html {
 }
 
 body {
-  font-family: "Jost", sans-serif;
+  font-family: "Jost", system-ui, sans-serif;
+  background: #f7f2e8;
+  color: #3d2b14;
   line-height: 1.6;
 }
 

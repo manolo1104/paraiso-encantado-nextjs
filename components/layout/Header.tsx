@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import Navigation from "./Navigation";
 
@@ -8,22 +9,19 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+    <header className="bg-cream border-b border-parchment sticky top-0 z-50">
+      <div className="container mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="w-12 h-12 flex items-center justify-center">
-            <svg
-              viewBox="0 0 100 100"
-              className="w-full h-full text-selva"
-              fill="currentColor"
-            >
-              {/* Simple leaf/plant icon */}
-              <path d="M50 10C50 10 30 30 30 50C30 70 40 85 50 85C60 85 70 70 70 50C70 30 50 10 50 10Z" />
-              <circle cx="45" cy="45" r="4" fill="white" />
-            </svg>
-          </div>
-          <span className="font-display text-xl font-bold text-selva">Paraiso</span>
+        <Link href="/" className="flex items-center space-x-3">
+          <Image
+            src="https://booking-paraisoencantado.up.railway.app/images/logo.png"
+            alt="Paraiso Encantado"
+            width={48}
+            height={48}
+            className="object-contain"
+            unoptimized
+          />
+          <span className="font-display text-xl font-bold text-selva tracking-wide">Paraiso Encantado</span>
         </Link>
 
         {/* Desktop Navigation */}

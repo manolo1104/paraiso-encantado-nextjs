@@ -1,24 +1,51 @@
 import Link from "next/link";
-import { rooms, amenities, hotelInfo } from "@/lib/data";
+import Image from "next/image";
+import { rooms, amenities } from "@/lib/data";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
+
+// Real room images available in /public (folder → first image)
+const roomImages: Record<string, string> = {
+  jungla:  "/images/rooms/JUNGLA/IMG_5775.jpeg",
+  bosque:  "/images/rooms/LAJAS/DSC09589-HDR.jpg",
+  musgo:   "/images/rooms/LINDA-VISTA/DSC09538-HDR-2.jpg",
+  jade:    "/images/rooms/BRO_1/DSC09385-HDR.jpg",
+  brote:   "/images/rooms/BROMELIAS_2/IMG_8597.png",
+  arena:   "/images/rooms/FDL1/DSC09449.jpg",
+};
 
 export default function Home() {
   return (
     <main className="w-full">
       <WhatsAppFloat />
       {/* Hero Section */}
-      <section className="relative w-full h-96 md:h-[500px] bg-gradient-to-r from-selva to-jade flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-black/30"></div>
+      <section className="relative w-full h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
+        {/* Background photo */}
+        <Image
+          src="/images/rooms/JUNGLA/IMG_5775.jpeg"
+          alt="Paraiso Encantado — Xilitla, Huasteca Potosina"
+          fill
+          className="object-cover object-center"
+          priority
+        />
+        {/* Gradient overlay — matches landing page */}
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, rgba(20,34,20,0.38) 0%, rgba(20,34,20,0.52) 55%, rgba(20,34,20,0.72) 100%)" }}
+        />
         <div className="relative z-10 text-center text-white max-w-3xl mx-auto px-4">
-          <h1 className="font-display text-5xl md:text-7xl font-bold mb-4">
+          <p className="font-body text-xs tracking-[0.2em] uppercase text-ambar mb-4">
+            Xilitla · Huasteca Potosina
+          </p>
+          <h1 className="font-display text-5xl md:text-7xl font-bold mb-4" style={{ color: "#f5f0e8" }}>
             Paraiso Encantado
           </h1>
-          <p className="font-body text-xl md:text-2xl mb-8 text-pergamino">
-            Tu Casa en la Huasteca Potosina
+          <p className="font-body text-lg md:text-xl mb-8" style={{ color: "rgba(245,240,232,0.85)" }}>
+            Tu refugio de lujo en la selva potosina. 15 suites únicas, a 7 minutos del Jardín de Edward James.
           </p>
           <Link
             href="/booking"
-            className="inline-block bg-brote hover:bg-ambar text-white font-body font-semibold px-8 py-3 rounded-lg transition-colors duration-200"
+            className="inline-block bg-brote hover:bg-ambar font-body font-semibold px-8 py-3 rounded transition-colors duration-200"
+            style={{ color: "#f5f0e8" }}
           >
             Reservar Ahora
           </Link>
@@ -26,7 +53,7 @@ export default function Home() {
       </section>
 
       {/* Info Rápida */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-parchment-soft">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
@@ -60,18 +87,29 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {rooms.slice(0, 6).map((room) => (
-              <div key={room.id} className="card bg-white hover:shadow-xl transition-shadow">
-                <div className="h-40 bg-gradient-to-br from-jade to-brote"></div>
+              <div key={room.id} className="bg-white rounded-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <div className="relative h-52 overflow-hidden">
+                  {roomImages[room.id] ? (
+                    <Image
+                      src={roomImages[room.id]}
+                      alt={room.name}
+                      fill
+                      className="object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="h-full bg-gradient-to-br from-jade to-brote" />
+                  )}
+                </div>
                 <div className="p-6">
-                  <h3 className="font-display text-2xl text-selva mb-2">{room.name}</h3>
-                  <p className="font-body text-sm text-gray-500 mb-3">{room.type}</p>
-                  <p className="font-body text-gray-700 text-sm mb-4 line-clamp-2">
+                  <h3 className="font-display text-2xl text-selva mb-1">{room.name}</h3>
+                  <p className="font-body text-xs tracking-widest uppercase text-ink-soft mb-3">{room.type}</p>
+                  <p className="font-body text-ink-soft text-sm mb-4 line-clamp-2">
                     {room.description}
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="font-display text-2xl text-jade">
-                      ${room.price}
-                      <span className="text-sm text-gray-600">/noche</span>
+                      ${room.price.toLocaleString("es-MX")}
+                      <span className="font-body text-sm text-ink-soft">/noche</span>
                     </span>
                     <Link
                       href={`/habitaciones#${room.id}`}
@@ -97,7 +135,7 @@ export default function Home() {
       </section>
 
       {/* Amenidades */}
-      <section className="py-16 md:py-24 bg-white">
+      <section className="py-16 md:py-24 bg-cream">
         <div className="container mx-auto px-4 md:px-6">
           <h2 className="font-display text-4xl md:text-5xl text-selva mb-4 text-center">
             Amenidades

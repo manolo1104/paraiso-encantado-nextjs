@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Remote image domains
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "booking-paraisoencantado.up.railway.app",
+      },
+    ],
+  },
+
   // Compresión gzip
   compress: true,
 
