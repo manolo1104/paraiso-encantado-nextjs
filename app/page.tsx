@@ -1,17 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { rooms, amenities } from "@/lib/data";
+import { rooms, amenities, hotelInfo } from "@/lib/data";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-
-// Imágenes reales disponibles en /public
-const roomImages: Record<string, string> = {
-  jungla:  "/images/rooms/JUNGLA/IMG_5775.jpeg",
-  bosque:  "/images/rooms/LAJAS/DSC09589-HDR.jpg",
-  musgo:   "/images/rooms/LINDA-VISTA/DSC09538-HDR-2.jpg",
-  jade:    "/images/rooms/BRO_1/DSC09385-HDR.jpg",
-  brote:   "/images/rooms/BROMELIAS_2/IMG_8597.png",
-  arena:   "/images/rooms/FDL1/DSC09449.jpg",
-};
 
 export default function Home() {
   return (
@@ -25,11 +15,12 @@ export default function Home() {
       >
         {/* Foto de fondo */}
         <Image
-          src="/images/rooms/JUNGLA/IMG_5775.jpeg"
+          src={hotelInfo.heroImage}
           alt="Paraíso Encantado — Xilitla, Huasteca Potosina"
           fill
           className="object-cover object-center"
           priority
+          unoptimized
         />
         {/* Overlay oscuro — branding */}
         <div
@@ -181,16 +172,13 @@ export default function Home() {
               >
                 {/* Imagen */}
                 <div className="relative overflow-hidden" style={{ height: "240px" }}>
-                  {roomImages[room.id] ? (
-                    <Image
-                      src={roomImages[room.id]}
-                      alt={room.name}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div style={{ background: "#1e3012", height: "100%" }} />
-                  )}
+                  <Image
+                    src={room.cover}
+                    alt={room.name}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    unoptimized
+                  />
                   {/* Overlay sutil */}
                   <div className="absolute inset-0" style={{ background: "rgba(15,13,10,0.25)" }} />
                 </div>
