@@ -9,19 +9,40 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-cream border-b border-parchment sticky top-0 z-50">
-      <div className="container mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+    <header
+      className="sticky top-0 z-50"
+      style={{
+        background: "rgba(21, 32, 9, 0.94)",
+        borderBottom: "1px solid rgba(200, 169, 110, 0.18)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+      }}
+    >
+      <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="https://booking-paraisoencantado.up.railway.app/images/logo.png"
             alt="Paraiso Encantado"
-            width={48}
-            height={48}
+            width={40}
+            height={40}
             className="object-contain"
             unoptimized
           />
-          <span className="font-display text-xl font-bold text-selva tracking-wide">Paraiso Encantado</span>
+          <div>
+            <span
+              className="font-display block leading-none"
+              style={{ fontSize: "17px", letterSpacing: "3px", textTransform: "uppercase", color: "#f7f2e8", fontWeight: 300 }}
+            >
+              Paraíso Encantado
+            </span>
+            <span
+              className="font-body block"
+              style={{ fontSize: "9px", letterSpacing: "3px", textTransform: "uppercase", color: "#c8a96e", marginTop: "2px" }}
+            >
+              Xilitla · Huasteca Potosina
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
@@ -31,7 +52,18 @@ export default function Header() {
         <div className="hidden md:block">
           <Link
             href="/booking"
-            className="bg-brote hover:bg-ambar text-white font-body font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200"
+            className="font-body transition-colors duration-200"
+            style={{
+              background: "#c8a96e",
+              color: "#152009",
+              fontSize: "10px",
+              fontWeight: 600,
+              letterSpacing: "3px",
+              textTransform: "uppercase",
+              padding: "10px 22px",
+              borderRadius: "2px",
+              display: "inline-block",
+            }}
           >
             Reservar
           </Link>
@@ -43,49 +75,53 @@ export default function Header() {
           className="md:hidden flex flex-col space-y-1.5 w-8 h-8 items-center justify-center"
           aria-label="Menu"
         >
-          <span
-            className={`block w-6 h-0.5 bg-selva transition-transform duration-300 ${
-              mobileMenuOpen ? "rotate-45 translate-y-2" : ""
-            }`}
-          />
-          <span
-            className={`block w-6 h-0.5 bg-selva transition-opacity duration-300 ${
-              mobileMenuOpen ? "opacity-0" : ""
-            }`}
-          />
-          <span
-            className={`block w-6 h-0.5 bg-selva transition-transform duration-300 ${
-              mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""
-            }`}
-          />
+          <span className={`block w-5 h-px transition-transform duration-300 ${mobileMenuOpen ? "rotate-45 translate-y-[5px]" : ""}`}
+            style={{ background: "#c8a96e" }} />
+          <span className={`block w-5 h-px transition-opacity duration-300 ${mobileMenuOpen ? "opacity-0" : ""}`}
+            style={{ background: "#c8a96e" }} />
+          <span className={`block w-5 h-px transition-transform duration-300 ${mobileMenuOpen ? "-rotate-45 -translate-y-[5px]" : ""}`}
+            style={{ background: "#c8a96e" }} />
         </button>
       </div>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-pergamino border-t border-jade">
-          <div className="container mx-auto px-4 py-4 space-y-4">
-            <Link href="/" className="block font-body text-sm font-medium text-selva hover:text-jade">
-              Inicio
-            </Link>
-            <Link href="/habitaciones" className="block font-body text-sm font-medium text-selva hover:text-jade">
-              Habitaciones
-            </Link>
-            <Link href="/amenidades" className="block font-body text-sm font-medium text-selva hover:text-jade">
-              Amenidades
-            </Link>
-            <Link href="/restaurante" className="block font-body text-sm font-medium text-selva hover:text-jade">
-              Restaurante
-            </Link>
-            <Link href="/guia-huasteca" className="block font-body text-sm font-medium text-selva hover:text-jade">
-              Guía Huasteca
-            </Link>
-            <Link href="/contacto" className="block font-body text-sm font-medium text-selva hover:text-jade">
-              Contacto
-            </Link>
+        <div
+          className="md:hidden"
+          style={{ background: "#1e3012", borderTop: "1px solid rgba(200,169,110,0.15)" }}
+        >
+          <div className="container mx-auto px-4 py-5 flex flex-col gap-4">
+            {[
+              { href: "/", label: "Inicio" },
+              { href: "/habitaciones", label: "Habitaciones" },
+              { href: "/amenidades", label: "Amenidades" },
+              { href: "/restaurante", label: "Restaurante" },
+              { href: "/guia-huasteca", label: "Guía Huasteca" },
+              { href: "/contacto", label: "Contacto" },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="font-body"
+                style={{ fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase", color: "rgba(240,235,224,0.7)" }}
+              >
+                {label}
+              </Link>
+            ))}
             <Link
               href="/booking"
-              className="block bg-brote hover:bg-ambar text-white font-body font-semibold px-6 py-2.5 rounded-lg transition-colors duration-200 text-center"
+              className="font-body text-center mt-2"
+              style={{
+                background: "#c8a96e",
+                color: "#152009",
+                fontSize: "10px",
+                fontWeight: 600,
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                padding: "12px 22px",
+                borderRadius: "2px",
+                display: "block",
+              }}
             >
               Reservar
             </Link>

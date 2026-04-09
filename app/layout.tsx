@@ -69,7 +69,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
       </head>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col" style={{ background: "#0f0d0a", color: "#f7f2e8" }}>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

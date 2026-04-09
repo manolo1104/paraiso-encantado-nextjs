@@ -1,215 +1,149 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@200;300;400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@200;300;400;500;600&display=swap");
 @import "tailwindcss";
 
-/* ─── Tailwind v4: theme tokens via @theme ─── */
+/* ─── Tailwind v4: tokens vía @theme ─── */
 @theme {
-  /* Brand greens */
-  --color-selva:  #1a2e1a;
-  --color-bosque: #243524;
-  --color-musgo:  #2d3d2d;
-  --color-jade:   #2d5a3d;
-  --color-brote:  #4a7c5c;
+  /* Paleta primaria (branding guide) */
+  --color-selva:    #152009;   /* Base / fondos oscuros */
+  --color-bosque:   #1e3012;   /* Principal / headers */
+  --color-musgo:    #2d4a1a;   /* Secundario / CTAs */
+  --color-arena:    #c8a96e;   /* Acento de lujo (Arena Dorada) */
+  --color-pergamino:#ede0c4;   /* Fondos claros / tarjetas */
 
-  /* Brand warms */
-  --color-arena:   #c8b68e;
-  --color-ambar:   #d4a857;
-  --color-corteza: #5c4a3a;
-  --color-gold:    #b8a472;
+  /* Paleta de apoyo */
+  --color-jade:     #4a6e2e;
+  --color-brote:    #7aaa52;
+  --color-ambar:    #a8842a;
+  --color-corteza:  #6b4c28;
 
-  /* Backgrounds / text */
-  --color-cream:           #f7f2e8;
-  --color-pergamino:       #f5f0e8;
-  --color-parchment:       #ede0c4;
-  --color-parchment-soft:  #f3ead8;
-  --color-ink:             #3d2b14;
-  --color-ink-soft:        #6b4c28;
-  --color-accent:          #8a6428;
-  --color-accent-hero:     #f6dfb2;
+  /* Neutros / texto */
+  --color-ink:      #0f0d0a;   /* Negro cálido base */
+  --color-bark:     #3d2b14;   /* Texto principal sobre claro */
+  --color-clay:     #6b4c28;   /* Texto secundario */
+  --color-cream:    #f7f2e8;   /* Crema / texto sobre oscuro */
 
-  /* Font families */
+  /* Tipografías */
   --font-display: "Cormorant Garamond", Georgia, serif;
   --font-body:    "Jost", system-ui, sans-serif;
 }
 
-/* Typography */
-html {
-  scroll-behavior: smooth;
-}
+/* ─── Base ─── */
+html { scroll-behavior: smooth; }
 
 body {
   font-family: "Jost", system-ui, sans-serif;
-  background: #f7f2e8;
-  color: #3d2b14;
+  font-weight: 300;
+  background: #0f0d0a;
+  color: #f7f2e8;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
+/* Títulos: Cormorant Garamond light */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Cormorant Garamond", serif;
-  font-weight: 700;
-  line-height: 1.2;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 300;
+  line-height: 1.08;
 }
 
-h1 {
-  font-size: 3rem;
-  line-height: 1;
-}
-
-@media (min-width: 768px) {
-  h1 {
-    font-size: 3.75rem;
-  }
-}
-
-h2 {
-  font-size: 2.25rem;
-}
-
-@media (min-width: 768px) {
-  h2 {
-    font-size: 3rem;
-  }
-}
-
-h3 {
-  font-size: 1.875rem;
-}
-
-@media (min-width: 768px) {
-  h3 {
-    font-size: 2.25rem;
-  }
-}
-
-h4 {
-  font-size: 1.5rem;
-}
-
-@media (min-width: 768px) {
-  h4 {
-    font-size: 1.875rem;
-  }
-}
+h1 { font-size: clamp(2.8rem, 8vw, 5.5rem); font-style: italic; }
+h2 { font-size: clamp(2rem, 5vw, 3.5rem); }
+h3 { font-size: clamp(1.5rem, 3vw, 2.25rem); }
+h4 { font-size: clamp(1.25rem, 2.5vw, 1.875rem); }
 
 p {
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.85;
+  font-weight: 300;
 }
 
 @media (min-width: 768px) {
-  p {
-    font-size: 1.125rem;
-  }
+  p { font-size: 1.0625rem; }
 }
 
-/* Link Styles */
+/* Labels estilo branding (uppercase + tracking) */
+.label {
+  font-family: "Jost", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+/* Links */
 a {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
+  transition: all 200ms ease;
 }
 
 /* Container */
-.container {
-  max-width: 80rem;
-}
+.container { max-width: 80rem; }
 
-/* Section Spacing */
+/* Secciones */
 section {
-  padding-top: 4rem;
-  padding-bottom: 4rem;
+  padding-top: 5rem;
+  padding-bottom: 5rem;
 }
 
 @media (min-width: 768px) {
   section {
-    padding-top: 6rem;
-    padding-bottom: 6rem;
+    padding-top: 7rem;
+    padding-bottom: 7rem;
   }
 }
 
-/* Responsive Images */
-img {
-  max-width: 100%;
-  height: auto;
-}
+/* Imágenes */
+img { max-width: 100%; height: auto; }
 
-/* Form Styles */
-input,
-textarea,
-select {
-  border-radius: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-family: inherit;
-  border: 1px solid #d1d5db;
+/* Inputs */
+input, textarea, select {
+  border-radius: 2px;
+  padding: 0.625rem 1rem;
+  font-family: "Jost", system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  border: 1px solid rgba(200, 169, 110, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f7f2e8;
   outline: none;
   transition: all 200ms;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: #2d5a3d;
-  box-shadow: 0 0 0 2px rgba(45, 90, 61, 0.1);
+input:focus, textarea:focus, select:focus {
+  border-color: #c8a96e;
+  box-shadow: 0 0 0 2px rgba(200, 169, 110, 0.12);
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: #9ca3af;
+input::placeholder, textarea::placeholder {
+  color: rgba(240, 235, 224, 0.35);
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f3f4f6;
-}
-
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0f0d0a; }
 ::-webkit-scrollbar-thumb {
-  background: #2d5a3d;
-  border-radius: 9999px;
+  background: #2d4a1a;
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover { background: #c8a96e; }
+
+/* Animaciones */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #1a2e1a;
-}
-
-/* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-in-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.6s ease-out;
-}
+.animate-fade-up  { animation: fadeUp  0.75s ease both; }
+.animate-fade-in  { animation: fadeIn  0.6s  ease both; }
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

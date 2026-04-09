@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+// NOTE: Tailwind v4 lee tokens desde @theme en globals.css, no desde aquí.
+// Este archivo sirve como documentación de la paleta oficial.
 export default {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -7,23 +9,24 @@ export default {
   theme: {
     extend: {
       colors: {
-        selva:     '#1a2e1a',
-        bosque:    '#243524',
-        musgo:     '#2d3d2d',
-        arena:     '#c8b68e',
-        pergamino: '#f5f0e8',
-        jade:      '#2d5a3d',
-        brote:     '#4a7c5c',
-        ambar:     '#d4a857',
-        corteza:   '#5c4a3a',
-        gold:      '#b8a472',
-        'cream':   '#f7f2e8',
-        'parchment': '#ede0c4',
-        'parchment-soft': '#f3ead8',
-        'ink':     '#3d2b14',
-        'ink-soft': '#6b4c28',
-        'accent':  '#8a6428',
-        'accent-hero': '#f6dfb2',
+        // Paleta primaria — Branding Guide 2026
+        selva:     '#152009',   // Base / fondos oscuros
+        bosque:    '#1e3012',   // Principal / headers
+        musgo:     '#2d4a1a',   // Secundario / CTAs
+        arena:     '#c8a96e',   // Acento de lujo (Arena Dorada)
+        pergamino: '#ede0c4',   // Fondos claros / tarjetas
+
+        // Paleta de apoyo
+        jade:    '#4a6e2e',
+        brote:   '#7aaa52',
+        ambar:   '#a8842a',
+        corteza: '#6b4c28',
+
+        // Neutros
+        ink:     '#0f0d0a',
+        bark:    '#3d2b14',
+        clay:    '#6b4c28',
+        cream:   '#f7f2e8',
       },
       fontFamily: {
         display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
