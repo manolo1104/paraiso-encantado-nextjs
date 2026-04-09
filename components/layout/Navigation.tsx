@@ -18,7 +18,16 @@ export default function Navigation() {
         <Link
           key={item.href}
           href={item.href}
-          className="font-body text-sm font-medium text-selva hover:text-jade transition-colors duration-200"
+          className="font-body transition-colors duration-200"
+          style={{
+            fontSize: "10px",
+            fontWeight: 400,
+            letterSpacing: "2.5px",
+            textTransform: "uppercase",
+            color: "rgba(240,235,224,0.6)",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#c8a96e")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(240,235,224,0.6)")}
         >
           {item.label}
         </Link>

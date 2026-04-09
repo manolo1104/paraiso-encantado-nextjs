@@ -1,174 +1,216 @@
-
-
+import Image from 'next/image';
 import Link from 'next/link';
-import { rooms } from '@/lib/data';
+
+const CDN = 'https://booking-paraisoencantado.up.railway.app/images';
+
+export const metadata = {
+  title: 'Suite Jungla | Paraíso Encantado – Xilitla',
+  description: 'Descubre la Suite Jungla, nuestra habitación premium con jacuzzi privado, vista panorámica a la selva y terraza amplia.',
+};
+
+const features = [
+  'Cama King-Size',
+  'Jacuzzi Privado',
+  'Terraza Panorámica',
+  'Vista a la Selva',
+  'Baño de Lujo',
+  'Aire Acondicionado',
+  'WiFi de Alta Velocidad',
+  'Amenidades Premium',
+];
+
+const gallery = [
+  { src: `${CDN}/JUNGLA/jungla-1.jpg`, alt: 'Suite Jungla — Vista principal' },
+  { src: `${CDN}/JUNGLA/jungla-2.jpg`, alt: 'Suite Jungla — Jacuzzi privado' },
+  { src: `${CDN}/JUNGLA/jungla-3.jpg`, alt: 'Suite Jungla — Terraza con vista' },
+  { src: `${CDN}/JUNGLA/jungla-4.jpg`, alt: 'Suite Jungla — Baño de lujo' },
+];
 
 export default function SuiteJunglaPage() {
-  const room = rooms.find((r) => r.id === 'jungla');
-
-  if (!room) {
-    return <div>Suite no encontrada</div>;
-  }
-
   return (
-    <>
-      {/* Hero Gallery Section */}
-      <section className="relative h-96 md:h-[500px] w-full overflow-hidden bg-gradient-to-br from-green-800 to-teal-700">
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="relative h-full w-full flex items-center justify-center">
-          <div className="text-center text-white z-10">
-            <h1 className="text-5xl md:text-6xl font-bold mb-2">{room.name}</h1>
-            <p className="text-xl text-gray-100">{room.type}</p>
-          </div>
+    <main className="w-full" style={{ background: "#0f0d0a", color: "#f7f2e8" }}>
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden" style={{ minHeight: "65vh" }}>
+        <Image
+          src={`${CDN}/JUNGLA/jungla-1.jpg`}
+          alt="Suite Jungla — Paraíso Encantado"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(15,13,10,0.3) 0%, rgba(15,13,10,0.85) 100%)" }} />
+        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-10">
+          <p className="font-body mb-4" style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "5px", textTransform: "uppercase", color: "#c8a96e" }}>
+            Suite Premium
+          </p>
+          <h1 className="font-display mb-3" style={{ fontSize: "clamp(36px, 5vw, 56px)", color: "#f7f2e8", fontStyle: "italic", fontWeight: 300 }}>
+            Suite Jungla
+          </h1>
+          <p className="font-body" style={{ fontSize: "15px", color: "rgba(240,235,224,0.6)", fontWeight: 300, maxWidth: "520px" }}>
+            Nuestra suite insignia con jacuzzi privado y vistas panorámicas a la selva huasteca.
+          </p>
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Description */}
-          <div className="lg:col-span-2">
-            {/* Description */}
-            <div className="mb-10">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Descripción</h2>
-              <p className="text-lg text-gray-700 leading-relaxed">{room.description}</p>
-            </div>
-
-            {/* Gallery Placeholder */}
-            <div className="mb-10">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Galería</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {room.images.map((image, idx) => (
-                  <div
-                    key={idx}
-                    className="aspect-video rounded-lg bg-gradient-to-br from-green-600 to-teal-500 overflow-hidden group cursor-pointer"
-                  >
-                    <div className="w-full h-full flex items-center justify-center text-white/50 group-hover:text-white/70 transition-colors">
-                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
-                      </svg>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Amenities */}
+      {/* ── DETAILS ── */}
+      <section style={{ background: "#0f0d0a", padding: "96px 0" }}>
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+            {/* Info */}
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Amenidades</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {room.amenities.map((amenity, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-jade-50 rounded-lg">
-                    <span className="text-jade-600 text-xl">✓</span>
-                    <span className="text-gray-700">{amenity}</span>
+              <p className="font-body mb-4" style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "4px", textTransform: "uppercase", color: "#c8a96e" }}>
+                Descripción
+              </p>
+              <h2 className="font-display mb-8" style={{ color: "#f7f2e8", fontWeight: 300 }}>
+                Tu <em style={{ color: "#c8a96e" }}>refugio</em> en la selva
+              </h2>
+              <p className="font-body mb-6" style={{ fontSize: "15px", color: "rgba(240,235,224,0.55)", fontWeight: 300, lineHeight: "1.8" }}>
+                La Suite Jungla es nuestra habitación más exclusiva, diseñada para quienes buscan una experiencia de lujo
+                inmersa en la naturaleza. Con vistas panorámicas a la selva huasteca, un jacuzzi privado en la terraza
+                y acabados de primera calidad, esta suite redefine el concepto de hospedaje boutique.
+              </p>
+              <p className="font-body mb-8" style={{ fontSize: "15px", color: "rgba(240,235,224,0.45)", fontWeight: 300, lineHeight: "1.8" }}>
+                Cada detalle ha sido pensado para crear un ambiente de tranquilidad y sofisticación,
+                desde la iluminación tenue hasta los materiales naturales que conectan el interior con el exterior.
+              </p>
+
+              {/* Price Card */}
+              <div style={{ background: "rgba(30,48,18,0.4)", border: "1px solid rgba(200,169,110,0.15)", borderRadius: "2px", padding: "28px 24px" }}>
+                <p className="font-body mb-2" style={{ fontSize: "9px", fontWeight: 500, letterSpacing: "3px", textTransform: "uppercase", color: "#c8a96e" }}>
+                  Desde
+                </p>
+                <p className="font-display mb-3" style={{ fontSize: "36px", color: "#c8a96e", fontWeight: 300 }}>
+                  $3,200 <span className="font-body" style={{ fontSize: "13px", color: "rgba(240,235,224,0.4)" }}>MXN / noche</span>
+                </p>
+                <Link
+                  href="/booking"
+                  className="font-body block text-center"
+                  style={{
+                    background: "#c8a96e",
+                    color: "#152009",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    letterSpacing: "3px",
+                    textTransform: "uppercase",
+                    padding: "14px 24px",
+                    borderRadius: "2px",
+                    display: "block",
+                  }}
+                >
+                  Reservar Suite Jungla
+                </Link>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div>
+              <p className="font-body mb-4" style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "4px", textTransform: "uppercase", color: "#c8a96e" }}>
+                Amenidades
+              </p>
+              <h2 className="font-display mb-8" style={{ color: "#f7f2e8", fontWeight: 300 }}>
+                Incluye
+              </h2>
+              <div className="grid grid-cols-2 gap-px" style={{ background: "rgba(200,169,110,0.08)" }}>
+                {features.map((feature) => (
+                  <div key={feature} style={{ background: "#0f0d0a", padding: "20px 16px" }}>
+                    <p className="font-body" style={{ fontSize: "13px", color: "rgba(240,235,224,0.6)", fontWeight: 300 }}>
+                      <span style={{ color: "#c8a96e", marginRight: "8px" }}>✓</span>
+                      {feature}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-20 bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-              {/* Price */}
-              <div className="mb-6 pb-6 border-b border-gray-200">
-                <p className="text-gray-600 text-sm mb-1">Tarifa por noche</p>
-                <p className="text-4xl font-bold text-amber-700">${room.price}</p>
+      {/* ── GALLERY ── */}
+      <section style={{ background: "#152009", borderTop: "1px solid rgba(200,169,110,0.12)", padding: "96px 0" }}>
+        <div className="container mx-auto px-4 md:px-6">
+          <p className="font-body mb-4" style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "4px", textTransform: "uppercase", color: "#c8a96e" }}>
+            Galería
+          </p>
+          <h2 className="font-display mb-14" style={{ color: "#f7f2e8", fontWeight: 300 }}>
+            Explora la <em style={{ color: "#c8a96e" }}>suite</em>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ background: "rgba(200,169,110,0.08)" }}>
+            {gallery.map((img) => (
+              <div key={img.src} className="relative overflow-hidden" style={{ height: "360px" }}>
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(15,13,10,0.5) 0%, transparent 50%)" }} />
               </div>
-
-              {/* Room Details */}
-              <div className="space-y-3 mb-6">
-                <div>
-                  <p className="text-gray-600 text-sm">Tipo de cama</p>
-                  <p className="font-semibold text-gray-900">{room.bedType}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 text-sm">Huéspedes máximo</p>
-                  <p className="font-semibold text-gray-900">{room.maxGuests} personas</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 text-sm">Categoría</p>
-                  <p className="font-semibold text-gray-900">{room.type}</p>
-                </div>
-              </div>
-
-              {/* Availability Info */}
-              <div className="mb-6 p-3 bg-green-50 rounded-lg border border-green-200">
-                <p className="text-green-800 text-sm font-semibold">✓ Disponible</p>
-              </div>
-
-              {/* CTAs */}
-              <div className="space-y-3">
-                <button className="w-full bg-jade-600 hover:bg-jade-700 text-white font-bold py-3 rounded-lg transition-colors duration-200">
-                  Reservar Ahora
-                </button>
-                <Link
-                  href="/contacto"
-                  className="block text-center px-4 py-3 border-2 border-jade-600 text-jade-600 font-bold rounded-lg hover:bg-jade-50 transition-colors duration-200"
-                >
-                  Consultar Disponibilidad
-                </Link>
-              </div>
-
-              {/* Additional Info */}
-              <div className="mt-6 pt-6 border-t border-gray-200 space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <span>🚫</span>
-                  <span>Política flexible de cancelación</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>✓</span>
-                  <span>Check-in 15:00 | Check-out 12:00</span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Related Rooms Section */}
-      <section className="bg-gray-50 py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">Otras Suites Disponibles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rooms
-              .filter((r) => r.id !== 'jungla')
-              .slice(0, 3)
-              .map((relatedRoom) => (
-                <Link key={relatedRoom.id} href={`/suite-${relatedRoom.id}`}>
-                  <div className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden cursor-pointer h-full flex flex-col">
-                    <div className="h-48 bg-gradient-to-br from-gray-700 to-gray-600 group-hover:opacity-90 transition-opacity" />
-                    <div className="p-4 flex-grow flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-900">{relatedRoom.name}</h3>
-                        <p className="text-sm text-gray-600 mb-2">{relatedRoom.type}</p>
-                        <p className="text-sm text-gray-600 line-clamp-2">{relatedRoom.description}</p>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <p className="text-2xl font-bold text-amber-700">${relatedRoom.price}</p>
-                        <p className="text-xs text-gray-500">por noche</p>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+      {/* ── CTA ── */}
+      <section
+        style={{
+          background: "radial-gradient(ellipse 100% 80% at 50% 100%, #1e3012 0%, #0f0d0a 65%)",
+          borderTop: "1px solid rgba(200,169,110,0.12)",
+          padding: "96px 0",
+          textAlign: "center",
+        }}
+      >
+        <div className="container mx-auto px-6">
+          <p className="font-body mb-5" style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "5px", textTransform: "uppercase", color: "#c8a96e" }}>
+            Reserva Directa
+          </p>
+          <h2 className="font-display mb-6" style={{ color: "#f7f2e8", fontWeight: 300 }}>
+            Vive la experiencia <em style={{ color: "#c8a96e" }}>Jungla</em>
+          </h2>
+          <p className="font-body mx-auto mb-10" style={{ color: "rgba(240,235,224,0.5)", fontWeight: 300, maxWidth: "480px", fontSize: "15px" }}>
+            Reserva directamente con nosotros para obtener el mejor precio garantizado.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/booking"
+              className="font-body"
+              style={{
+                background: "#c8a96e",
+                color: "#152009",
+                fontSize: "10px",
+                fontWeight: 600,
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                padding: "16px 40px",
+                borderRadius: "2px",
+                display: "inline-block",
+              }}
+            >
+              Reservar Ahora
+            </Link>
+            <a
+              href="https://wa.me/5248910007679"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-body"
+              style={{
+                background: "transparent",
+                color: "#c8a96e",
+                fontSize: "10px",
+                fontWeight: 500,
+                letterSpacing: "3px",
+                textTransform: "uppercase",
+                padding: "16px 40px",
+                borderRadius: "2px",
+                border: "1px solid rgba(200,169,110,0.35)",
+                display: "inline-block",
+              }}
+            >
+              WhatsApp
+            </a>
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-jade-600 to-selva-600 text-white py-12">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">¿Te gustó esta suite?</h2>
-          <p className="text-white/90 mb-6">Reserva ahora y disfruta de una experiencia única</p>
-          <Link
-            href="/contacto"
-            className="inline-block px-8 py-3 bg-white text-jade-600 font-bold rounded-lg hover:bg-gray-100 transition-colors duration-200"
-          >
-            Reservar
-          </Link>
-        </div>
-      </section>
-    </>
+    </main>
   );
 }

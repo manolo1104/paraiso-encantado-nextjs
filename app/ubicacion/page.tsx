@@ -1,131 +1,163 @@
-
-
 import { hotelInfo } from '@/lib/data';
 
 export const metadata = {
-  title: 'Ubicación | Paraiso Encantado',
-  description: 'Encuentra Paraiso Encantado en Xilitla, Huasteca Potosina. A 7 minutos del centro y cerca del Jardín Surrealista Edward James.',
+  title: 'Ubicación | Paraíso Encantado',
+  description: 'Encuentra Paraíso Encantado en Xilitla, Huasteca Potosina. A 7 minutos del centro y cerca del Jardín Surrealista Edward James.',
 };
 
 export default function UbicacionPage() {
   return (
-    <main className="w-full">
-      {/* Hero */}
-      <section className="relative w-full h-80 md:h-96 bg-gradient-to-r from-jade to-bosque flex items-center justify-center">
-        <div className="absolute inset-0 bg-black/25"></div>
-        <div className="relative z-10 text-center text-white">
-          <h1 className="font-display text-5xl md:text-6xl font-bold mb-4">
+    <main className="w-full" style={{ background: "#0f0d0a", color: "#f7f2e8" }}>
+      {/* ── HERO ── */}
+      <section
+        className="relative flex items-center justify-center overflow-hidden"
+        style={{ minHeight: "50vh", padding: 0 }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{ background: "radial-gradient(ellipse 120% 100% at 50% 120%, #1e3012 0%, #0f0d0a 60%)" }}
+        />
+        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
+          <p className="font-body mb-5" style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "5px", textTransform: "uppercase", color: "#c8a96e" }}>
+            Encuéntranos
+          </p>
+          <h1 className="font-display mb-5" style={{ color: "#f7f2e8", fontStyle: "italic", fontWeight: 300 }}>
             Ubicación
           </h1>
         </div>
       </section>
 
-      {/* Content */}
-      <section className="py-16 md:py-24 bg-white">
+      {/* ── CONTENT ── */}
+      <section style={{ background: "#0f0d0a", padding: "96px 0" }}>
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             {/* Info */}
             <div>
-              <h2 className="font-display text-3xl text-selva mb-8">
+              <p className="font-body mb-4" style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "4px", textTransform: "uppercase", color: "#c8a96e" }}>
+                Cómo llegar
+              </p>
+              <h2 className="font-display mb-10" style={{ color: "#f7f2e8", fontWeight: 300 }}>
                 Encuéntranos
               </h2>
 
               <div className="space-y-8">
-                <div>
-                  <h3 className="font-display text-xl text-jade mb-2">
-                    📍 Dirección
-                  </h3>
-                  <p className="font-body text-gray-700">
-                    {hotelInfo.location.address}
-                  </p>
-                </div>
+                {[
+                  { icon: "📍", title: "Dirección", value: hotelInfo.location.address },
+                  { icon: "📞", title: "Teléfono", value: hotelInfo.contact.phone, href: `tel:${hotelInfo.contact.phone}` },
+                  { icon: "✉️", title: "Email", value: hotelInfo.contact.email, href: `mailto:${hotelInfo.contact.email}` },
+                  { icon: "🗺️", title: "Coordenadas", value: `${hotelInfo.location.coordinates.lat}, ${hotelInfo.location.coordinates.lng}` },
+                ].map((item) => (
+                  <div key={item.title}>
+                    <h3 className="font-display mb-2" style={{ fontSize: "18px", color: "#c8a96e", fontWeight: 300 }}>
+                      {item.icon} {item.title}
+                    </h3>
+                    {item.href ? (
+                      <a href={item.href} className="font-body" style={{ fontSize: "14px", color: "rgba(240,235,224,0.7)", fontWeight: 300 }}>
+                        {item.value}
+                      </a>
+                    ) : (
+                      <p className="font-body" style={{ fontSize: "14px", color: "rgba(240,235,224,0.55)", fontWeight: 300 }}>
+                        {item.value}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-                <div>
-                  <h3 className="font-display text-xl text-jade mb-2">
-                    📞 Teléfono
-                  </h3>
-                  <a
-                    href={`tel:${hotelInfo.contact.phone}`}
-                    className="font-body text-brote hover:text-ambar font-semibold"
-                  >
-                    {hotelInfo.contact.phone}
-                  </a>
-                </div>
-
-                <div>
-                  <h3 className="font-display text-xl text-jade mb-2">
-                    ✉️ Email
-                  </h3>
-                  <a
-                    href={`mailto:${hotelInfo.contact.email}`}
-                    className="font-body text-brote hover:text-ambar font-semibold"
-                  >
-                    {hotelInfo.contact.email}
-                  </a>
-                </div>
-
-                <div>
-                  <h3 className="font-display text-xl text-jade mb-2">
-                    🗺️ Coordenadas
-                  </h3>
-                  <p className="font-body text-gray-700">
-                    {hotelInfo.location.coordinates.lat + ", " + hotelInfo.location.coordinates.lng}
-                  </p>
-                </div>
-
-                <div className="bg-pergamino p-6 rounded-lg">
-                  <h3 className="font-display text-lg text-selva mb-3">
-                    ¿Cómo llegar?
-                  </h3>
-                  <ul className="font-body text-gray-700 space-y-2">
-                    <li>• <strong>Desde Xilitla centro:</strong> 7 minutos en coche</li>
-                    <li>• <strong>Desde Aeropuerto San Luis Potosí:</strong> 2 horas</li>
-                    <li>• <strong>Desde Ciudad de México:</strong> 3.5 horas</li>
-                    <li>• <strong>Desde Tampico:</strong> 2 horas</li>
-                  </ul>
+              <div style={{ marginTop: "40px", background: "rgba(30,48,18,0.4)", border: "1px solid rgba(200,169,110,0.12)", borderRadius: "2px", padding: "24px 20px" }}>
+                <h3 className="font-display mb-4" style={{ fontSize: "18px", color: "#f7f2e8", fontWeight: 300 }}>
+                  ¿Cómo llegar?
+                </h3>
+                <div className="space-y-2">
+                  {[
+                    { from: "Desde Xilitla centro", time: "7 minutos en coche" },
+                    { from: "Desde Aeropuerto San Luis Potosí", time: "2 horas" },
+                    { from: "Desde Ciudad de México", time: "3.5 horas" },
+                    { from: "Desde Tampico", time: "2 horas" },
+                  ].map((route) => (
+                    <p key={route.from} className="font-body" style={{ fontSize: "13px", color: "rgba(240,235,224,0.45)", fontWeight: 300 }}>
+                      • <span style={{ color: "rgba(240,235,224,0.65)" }}>{route.from}:</span> {route.time}
+                    </p>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Map */}
+            {/* Map + Landmarks */}
             <div>
-              <div className="w-full h-96 bg-gradient-to-br from-jade to-brote rounded-lg flex items-center justify-center">
-                <div className="text-center text-white">
-                  <p className="font-display text-2xl mb-2">🗺️</p>
-                  <p className="font-body">
+              <div
+                style={{
+                  width: "100%",
+                  height: "380px",
+                  background: "linear-gradient(135deg, rgba(30,48,18,0.6) 0%, rgba(45,74,26,0.3) 100%)",
+                  border: "1px solid rgba(200,169,110,0.12)",
+                  borderRadius: "2px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "32px",
+                }}
+              >
+                <div className="text-center" style={{ color: "rgba(240,235,224,0.4)" }}>
+                  <p className="font-display mb-2" style={{ fontSize: "28px" }}>🗺️</p>
+                  <p className="font-body" style={{ fontSize: "13px" }}>
                     Mapa interactivo<br />
-                    <span className="text-sm">Próximamente</span>
+                    <span style={{ fontSize: "11px" }}>Próximamente</span>
                   </p>
                 </div>
               </div>
 
-              <div className="mt-8 bg-pergamino p-6 rounded-lg">
-                <h3 className="font-display text-lg text-selva mb-4">
+              <div style={{ background: "rgba(30,48,18,0.4)", border: "1px solid rgba(200,169,110,0.12)", borderRadius: "2px", padding: "24px 20px" }}>
+                <h3 className="font-display mb-4" style={{ fontSize: "18px", color: "#f7f2e8", fontWeight: 300 }}>
                   Puntos de Referencia
                 </h3>
-                <ul className="font-body text-gray-700 space-y-2">
-                  <li>✓ A pasos del Jardín Surrialista Edward James</li>
-                  <li>✓ Cerca de las Pozas de Agua Fría</li>
-                  <li>✓ Próximo a Cascada del Salto</li>
-                  <li>✓ Centro de Xilitla a 5 km</li>
-                </ul>
+                <div className="space-y-2">
+                  {[
+                    "A pasos del Jardín Surrealista Edward James",
+                    "Cerca de las Pozas de Agua Fría",
+                    "Próximo a Cascada del Salto",
+                    "Centro de Xilitla a 5 km",
+                  ].map((landmark) => (
+                    <p key={landmark} className="font-body" style={{ fontSize: "13px", color: "rgba(240,235,224,0.5)", fontWeight: 300 }}>
+                      ✓ {landmark}
+                    </p>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 bg-gradient-to-r from-selva to-jade text-white">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="font-display text-3xl mb-4">
-            ¿Listo para visitarnos?
+      {/* ── CTA ── */}
+      <section
+        style={{
+          background: "radial-gradient(ellipse 100% 80% at 50% 100%, #1e3012 0%, #0f0d0a 65%)",
+          borderTop: "1px solid rgba(200,169,110,0.12)",
+          padding: "96px 0",
+          textAlign: "center",
+        }}
+      >
+        <div className="container mx-auto px-6">
+          <h2 className="font-display mb-8" style={{ color: "#f7f2e8", fontWeight: 300 }}>
+            ¿Listo para <em style={{ color: "#c8a96e" }}>visitarnos?</em>
           </h2>
           <a
             href="/booking"
-            className="inline-block bg-brote hover:bg-ambar text-white font-body font-semibold px-8 py-3 rounded-lg transition-colors"
+            className="font-body"
+            style={{
+              background: "#c8a96e",
+              color: "#152009",
+              fontSize: "10px",
+              fontWeight: 600,
+              letterSpacing: "3px",
+              textTransform: "uppercase",
+              padding: "16px 40px",
+              borderRadius: "2px",
+              display: "inline-block",
+            }}
           >
-            Reservar ahora
+            Reservar Ahora
           </a>
         </div>
       </section>

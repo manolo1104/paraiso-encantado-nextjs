@@ -72,7 +72,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
       </head>
-      <body className="min-h-screen flex flex-col bg-white text-gray-900">
+      <body className="min-h-screen flex flex-col" style={{ background: "#0f0d0a", color: "#f7f2e8" }}>
         <Providers>
           <Header />
           <main className="flex-grow">{children}</main>
