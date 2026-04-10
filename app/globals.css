@@ -23,10 +23,6 @@
   --bark: #3d2b14;
   --clay: #624820;
 
-  /* Tipografías */
-  --font-cormorant: var(--font-cormorant-var, 'Cormorant Garamond', Georgia, serif);
-  --font-jost: var(--font-jost-var, 'Jost', -apple-system, BlinkMacSystemFont, sans-serif);
-
   /* Espaciados */
   --spacing-xs: 8px;
   --spacing-sm: 16px;
@@ -59,7 +55,8 @@ html {
 }
 
 body {
-  font-family: var(--font-jost);
+  /* --font-jost es la variable inyectada por next/font/google en <html> */
+  font-family: var(--font-jost), 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 300;
   color: var(--ink);
   background-color: var(--cream);
@@ -75,7 +72,8 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-cormorant);
+  /* --font-cormorant es la variable inyectada por next/font/google en <html> */
+  font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   line-height: 1.1;
   color: var(--forest);
@@ -108,7 +106,7 @@ img {
 }
 
 button {
-  font-family: var(--font-jost);
+  font-family: var(--font-jost), 'Jost', sans-serif;
   cursor: pointer;
   border: none;
   outline: none;
@@ -150,7 +148,7 @@ ol {
   display: inline-block;
   background: linear-gradient(135deg, var(--moss), var(--jade));
   color: var(--cream);
-  font-family: var(--font-jost);
+  font-family: var(--font-jost), sans-serif;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -173,7 +171,7 @@ ol {
   display: inline-block;
   background: transparent;
   color: var(--forest);
-  font-family: var(--font-jost);
+  font-family: var(--font-jost), sans-serif;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -207,12 +205,8 @@ ol {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ============================================
@@ -220,18 +214,11 @@ ol {
    ============================================ */
 
 @media (max-width: 768px) {
-  h1 {
-    font-size: 36px;
-  }
-  h2 {
-    font-size: 28px;
-  }
-  h3 {
-    font-size: 22px;
-  }
-  p {
-    font-size: 15px;
-  }
+  h1 { font-size: 36px; }
+  h2 { font-size: 28px; }
+  h3 { font-size: 22px; }
+  p  { font-size: 15px; }
+
   .section-header {
     margin-bottom: 40px;
   }

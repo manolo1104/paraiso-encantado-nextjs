@@ -28,13 +28,8 @@ export default function SuitesGrid() {
       </div>
 
       <div className={styles.cta}>
-        <a
-          href={BOOKING_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.ctaBtn}
-        >
-          Ver Disponibilidad de las 13 Suites →
+        <a href="/habitaciones" className={styles.ctaBtn}>
+          Ver las 13 Suites →
         </a>
         <p className={styles.ctaNote}>
           Confirmación instantánea · Mejor precio garantizado

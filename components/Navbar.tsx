@@ -38,10 +38,10 @@ export default function Navbar() {
         {/* Links desktop */}
         <ul className={styles.navLinks} role="list">
           <li><a href="/">Inicio</a></li>
-          <li><a href="#habitaciones">Habitaciones</a></li>
-          <li><a href="#restaurante">Restaurante</a></li>
-          <li><a href="#experiencias">Experiencias</a></li>
-          <li><a href="#contacto">Contacto</a></li>
+          <li><a href="/habitaciones">Habitaciones</a></li>
+          <li><a href="/#restaurante">Restaurante</a></li>
+          <li><a href="/#experiencias">Experiencias</a></li>
+          <li><a href="/#contacto">Contacto</a></li>
         </ul>
 
         {/* CTA Reservar */}
@@ -75,10 +75,10 @@ export default function Navbar() {
       >
         <ul role="list">
           <li><a href="/" onClick={() => setMenuOpen(false)}>Inicio</a></li>
-          <li><a href="#habitaciones" onClick={() => setMenuOpen(false)}>Habitaciones</a></li>
-          <li><a href="#restaurante" onClick={() => setMenuOpen(false)}>Restaurante</a></li>
-          <li><a href="#experiencias" onClick={() => setMenuOpen(false)}>Experiencias</a></li>
-          <li><a href="#contacto" onClick={() => setMenuOpen(false)}>Contacto</a></li>
+          <li><a href="/habitaciones" onClick={() => setMenuOpen(false)}>Habitaciones</a></li>
+          <li><a href="/#restaurante" onClick={() => setMenuOpen(false)}>Restaurante</a></li>
+          <li><a href="/#experiencias" onClick={() => setMenuOpen(false)}>Experiencias</a></li>
+          <li><a href="/#contacto" onClick={() => setMenuOpen(false)}>Contacto</a></li>
           <li>
             <a
               href={BOOKING_URL}

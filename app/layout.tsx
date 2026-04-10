@@ -4,18 +4,19 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
+// Usando variable names exactos que se referencian en globals.css y CSS Modules
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['300', '400', '500'],
   style: ['normal', 'italic'],
-  variable: '--font-cormorant-var',
+  variable: '--font-cormorant',
   display: 'swap',
 });
 
 const jost = Jost({
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '600'],
-  variable: '--font-jost-var',
+  variable: '--font-jost',
   display: 'swap',
 });
 
