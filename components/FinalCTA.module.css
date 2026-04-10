@@ -1,0 +1,132 @@
+.section {
+  background: var(--forest);
+  padding: var(--spacing-2xl) 24px;
+}
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.content h2 {
+  font-family: var(--font-cormorant);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 300;
+  color: var(--cream);
+  line-height: 1.1;
+  margin: 0;
+}
+
+.content h2 em {
+  font-style: italic;
+  color: var(--sand);
+}
+
+.subtitle {
+  font-family: var(--font-jost);
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(250, 248, 245, 0.8);
+  max-width: 600px;
+  margin: -8px 0 0;
+}
+
+/* CTA principal */
+.ctaBtn {
+  display: inline-block;
+  background: var(--sand);
+  color: var(--forest);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 22px 56px;
+  border-radius: 2px;
+  transition: all var(--transition-normal);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+}
+
+.ctaBtn:hover {
+  background: var(--gold);
+  color: var(--cream);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.4);
+}
+
+/* Guarantees */
+.guarantees {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+  list-style: none;
+  margin: -8px 0 0;
+}
+
+.guarantees li {
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(250, 248, 245, 0.7);
+  letter-spacing: 0.5px;
+}
+
+/* Alternativas de contacto */
+.alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 32px;
+  margin-top: -8px;
+}
+
+.altLink {
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(201, 169, 122, 0.85);
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.altLink:hover {
+  color: var(--sand);
+  border-bottom-color: var(--sand);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .section {
+    padding: var(--spacing-xl) 20px;
+  }
+
+  .ctaBtn {
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+    padding: 20px 24px;
+    font-size: 12px;
+  }
+
+  .guarantees {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .alternatives {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+}

@@ -1,87 +1,52 @@
-import type { Metadata } from "next";
-import Script from "next/script";
-import "./globals.css";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import type { Metadata } from 'next';
+import { Cormorant_Garamond, Jost } from 'next/font/google';
+import './globals.css';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  style: ['normal', 'italic'],
+  variable: '--font-cormorant-var',
+  display: 'swap',
+});
+
+const jost = Jost({
+  subsets: ['latin'],
+  weight: ['200', '300', '400', '500', '600'],
+  variable: '--font-jost-var',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: "Paraiso Encantado | Tu Casa en la Huasteca",
-  description: "Retiro de lujo en la selva potosina. 15 suites con piscina privada, restaurante gourmet y vistas panorámicas. A 7 minutos del Centro de Xilitla.",
-  keywords: "hotel, lujo, Xilitla, San Luis Potosí, huasteca, suite, reservas, naturaleza",
+  title: 'Hotel Paraíso Encantado | A 5 Min del Jardín Edward James · Xilitla',
+  description:
+    '13 suites boutique con spa privado en Xilitla. El hotel más cercano al Jardín Surrealista de Edward James (Las Pozas). Desde $1,500/noche con mejor precio garantizado.',
+  keywords: [
+    'hotel xilitla',
+    'jardín edward james',
+    'las pozas xilitla',
+    'huasteca potosina',
+    'hotel boutique',
+    'hotel paraíso encantado',
+    'san luis potosí',
+  ],
   openGraph: {
-    title: "Paraiso Encantado | Tu Casa en la Huasteca",
-    description: "Retiro de lujo en la selva potosina",
-    type: "website",
-    url: "https://paraisoencantado.com",
-    locale: "es_MX",
-    siteName: "Paraiso Encantado",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Paraiso Encantado",
-    description: "Tu refugio surrealista en la Huasteca Potosina",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-    },
-  },
-  alternates: {
-    canonical: "https://paraisoencantado.com",
+    title: 'Hotel Paraíso Encantado | Xilitla, Huasteca Potosina',
+    description:
+      '13 suites con spa privado a 5 minutos caminando del Jardín de Edward James. Mejor precio garantizado.',
+    locale: 'es_MX',
+    type: 'website',
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="es"
-      className="h-full antialiased scroll-smooth"
-    >
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/favicon.svg" />
-        
-        {/* Google Tag Manager */}
-        <Script
-          id="gtm-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','GTM-N98DFD9V');
-            `,
-          }}
-        />
-
-        {/* Preconnect para performance */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-      </head>
-      <body className="min-h-screen flex flex-col" style={{ background: "#0f0d0a", color: "#f7f2e8" }}>
-        {/* Google Tag Manager (noscript) */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-N98DFD9V"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-          ></iframe>
-        </noscript>
-
-        <Header />
-        <main className="flex-grow">{children}</main>
+    <html lang="es" className={`${cormorant.variable} ${jost.variable}`}>
+      <body>
+        <Navbar />
+        {children}
         <Footer />
       </body>
     </html>

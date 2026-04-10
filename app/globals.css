@@ -1,149 +1,238 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@200;300;400;500;600&display=swap");
-@import "tailwindcss";
+/* ============================================
+   SISTEMA DE DISEÑO: QUIET LUXURY
+   Paraíso Encantado — Xilitla, S.L.P.
+   ============================================ */
 
-/* ─── Tailwind v4: tokens vía @theme ─── */
-@theme {
-  /* Paleta primaria (branding guide) */
-  --color-selva:    #152009;   /* Base / fondos oscuros */
-  --color-bosque:   #1e3012;   /* Principal / headers */
-  --color-musgo:    #2d4a1a;   /* Secundario / CTAs */
-  --color-arena:    #c8a96e;   /* Acento de lujo (Arena Dorada) */
-  --color-pergamino:#ede0c4;   /* Fondos claros / tarjetas */
+:root {
+  /* Primarios - Verdes naturales */
+  --forest: #1e3012;
+  --moss: #2d4a1a;
+  --jade: #4a6e2e;
+  --sage: #6b8e4e;
 
-  /* Paleta de apoyo */
-  --color-jade:     #4a6e2e;
-  --color-brote:    #7aaa52;
-  --color-ambar:    #a8842a;
-  --color-corteza:  #6b4c28;
+  /* Secundarios - Dorados premium */
+  --sand: #c9a97a;
+  --gold: #a8842a;
 
-  /* Neutros / texto */
-  --color-ink:      #0f0d0a;   /* Negro cálido base */
-  --color-bark:     #3d2b14;   /* Texto principal sobre claro */
-  --color-clay:     #6b4c28;   /* Texto secundario */
-  --color-cream:    #f7f2e8;   /* Crema / texto sobre oscuro */
+  /* Neutrales - Fondos */
+  --parch: #f0ebe3;
+  --cream: #faf8f5;
+
+  /* Texto */
+  --ink: #2a2218;
+  --bark: #3d2b14;
+  --clay: #624820;
 
   /* Tipografías */
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-body:    "Jost", system-ui, sans-serif;
+  --font-cormorant: var(--font-cormorant-var, 'Cormorant Garamond', Georgia, serif);
+  --font-jost: var(--font-jost-var, 'Jost', -apple-system, BlinkMacSystemFont, sans-serif);
+
+  /* Espaciados */
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 40px;
+  --spacing-xl: 64px;
+  --spacing-2xl: 96px;
+
+  /* Transiciones */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── Base ─── */
-html { scroll-behavior: smooth; }
+/* ============================================
+   RESET & BASE
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
 
 body {
-  font-family: "Jost", system-ui, sans-serif;
+  font-family: var(--font-jost);
   font-weight: 300;
-  background: #0f0d0a;
-  color: #f7f2e8;
+  color: var(--ink);
+  background-color: var(--cream);
   line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Títulos: Cormorant Garamond light */
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Cormorant Garamond", Georgia, serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-cormorant);
   font-weight: 300;
-  line-height: 1.08;
+  line-height: 1.1;
+  color: var(--forest);
 }
 
-h1 { font-size: clamp(2.8rem, 8vw, 5.5rem); font-style: italic; }
-h2 { font-size: clamp(2rem, 5vw, 3.5rem); }
-h3 { font-size: clamp(1.5rem, 3vw, 2.25rem); }
-h4 { font-size: clamp(1.25rem, 2.5vw, 1.875rem); }
+h1 {
+  font-size: clamp(42px, 7vw, 72px);
+  line-height: 1.05;
+}
+
+h2 {
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.1;
+}
+
+h3 {
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.2;
+}
 
 p {
-  font-size: 1rem;
-  line-height: 1.85;
-  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.8;
 }
 
-@media (min-width: 768px) {
-  p { font-size: 1.0625rem; }
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
-/* Labels estilo branding (uppercase + tracking) */
-.label {
-  font-family: "Jost", system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
+button {
+  font-family: var(--font-jost);
+  cursor: pointer;
+  border: none;
+  outline: none;
 }
 
-/* Links */
 a {
-  transition: all 200ms ease;
+  text-decoration: none;
+  color: inherit;
 }
 
-/* Container */
-.container { max-width: 80rem; }
-
-/* Secciones */
-section {
-  padding-top: 5rem;
-  padding-bottom: 5rem;
+ul,
+ol {
+  list-style: none;
 }
 
-@media (min-width: 768px) {
-  section {
-    padding-top: 7rem;
-    padding-bottom: 7rem;
+/* ============================================
+   CLASES UTILITARIAS GLOBALES
+   ============================================ */
+
+.section-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 64px;
+}
+
+.section-header h2 em {
+  font-style: italic;
+  color: var(--clay);
+}
+
+.section-subtitle {
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(61, 43, 20, 0.8);
+  margin-top: 16px;
+}
+
+.btn-primary {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--moss), var(--jade));
+  color: var(--cream);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 18px 48px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 8px 32px rgba(30, 48, 18, 0.3);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--jade), var(--sage));
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(30, 48, 18, 0.4);
+}
+
+.btn-secondary {
+  display: inline-block;
+  background: transparent;
+  color: var(--forest);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 16px 40px;
+  border-radius: 2px;
+  border: 1px solid var(--forest);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.btn-secondary:hover {
+  background: var(--forest);
+  color: var(--cream);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Imágenes */
-img { max-width: 100%; height: auto; }
-
-/* Inputs */
-input, textarea, select {
-  border-radius: 2px;
-  padding: 0.625rem 1rem;
-  font-family: "Jost", system-ui, sans-serif;
-  font-weight: 300;
-  font-size: 14px;
-  border: 1px solid rgba(200, 169, 110, 0.3);
-  background: rgba(255, 255, 255, 0.04);
-  color: #f7f2e8;
-  outline: none;
-  transition: all 200ms;
-}
-
-input:focus, textarea:focus, select:focus {
-  border-color: #c8a96e;
-  box-shadow: 0 0 0 2px rgba(200, 169, 110, 0.12);
-}
-
-input::placeholder, textarea::placeholder {
-  color: rgba(240, 235, 224, 0.35);
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #0f0d0a; }
-::-webkit-scrollbar-thumb {
-  background: #2d4a1a;
-  border-radius: 0;
-}
-::-webkit-scrollbar-thumb:hover { background: #c8a96e; }
-
-/* Animaciones */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: none; }
-}
-
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.animate-fade-up  { animation: fadeUp  0.75s ease both; }
-.animate-fade-in  { animation: fadeIn  0.6s  ease both; }
+/* ============================================
+   RESPONSIVE BASE
+   ============================================ */
 
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+@media (max-width: 768px) {
+  h1 {
+    font-size: 36px;
+  }
+  h2 {
+    font-size: 28px;
+  }
+  h3 {
+    font-size: 22px;
+  }
+  p {
+    font-size: 15px;
+  }
+  .section-header {
+    margin-bottom: 40px;
   }
 }
