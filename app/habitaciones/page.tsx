@@ -65,7 +65,7 @@ export default function HabitacionesPage() {
             <h2 className={styles.groupTitle}>{groupName}</h2>
             <div className={styles.grid}>
               {groupSuites.map((suite) => (
-                <article key={suite.id} className={styles.card}>
+                <Link key={suite.id} href={`/habitaciones/${suite.id}`} className={styles.card}>
                   {/* Imagen */}
                   <div className={styles.imageWrapper}>
                     <Image
@@ -113,17 +113,12 @@ export default function HabitacionesPage() {
                         </span>
                         <span className={styles.priceUnit}> MXN/noche</span>
                       </div>
-                      <a
-                        href={BOOKING_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.reserveBtn}
-                      >
-                        Reservar →
-                      </a>
+                      <span className={styles.reserveBtn}>
+                        Ver Suite →
+                      </span>
                     </div>
                   </div>
-                </article>
+                </Link>
               ))}
             </div>
           </div>
