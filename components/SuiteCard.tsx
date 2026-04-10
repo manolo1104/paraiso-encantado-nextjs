@@ -1,8 +1,7 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { Suite } from '@/data/suites';
 import styles from './SuiteCard.module.css';
-
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
 
 interface SuiteCardProps {
   suite: Suite;
@@ -11,7 +10,7 @@ interface SuiteCardProps {
 
 export default function SuiteCard({ suite, showBadge = false }: SuiteCardProps) {
   return (
-    <article className={styles.card}>
+    <Link href={`/habitaciones/${suite.id}`} className={styles.card} aria-label={`Ver ${suite.name}`}>
       {showBadge && (
         <div className={styles.badge} aria-label="Suite más popular">
           Más Popular
@@ -53,17 +52,11 @@ export default function SuiteCard({ suite, showBadge = false }: SuiteCardProps) 
             <span className={styles.priceUnit}>/noche</span>
           </div>
 
-          <a
-            href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.viewBtn}
-            aria-label={`Reservar ${suite.name}`}
-          >
-            Reservar →
-          </a>
+          <span className={styles.viewBtn}>
+            Ver Suite →
+          </span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

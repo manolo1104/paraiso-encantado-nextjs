@@ -1,0 +1,464 @@
+.main {
+  min-height: 100vh;
+  background: var(--cream);
+  padding-top: 80px;
+}
+
+/* ---- BREADCRUMB ---- */
+.breadcrumb {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 24px 0;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--clay);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.breadcrumb a {
+  color: var(--clay);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.breadcrumb a:hover {
+  color: var(--forest);
+}
+
+.breadcrumb span:last-child {
+  color: var(--forest);
+  font-weight: 500;
+}
+
+/* ---- EYEBROW ---- */
+.eyebrow {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--clay);
+  margin: 0;
+}
+
+/* ---- HERO ---- */
+.hero {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 56px;
+  align-items: start;
+}
+
+.heroImageGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 240px 240px;
+  gap: 8px;
+}
+
+.heroImageGrid .heroImage:first-child {
+  grid-column: 1 / -1;
+}
+
+.heroImage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--parch);
+}
+
+.heroImg {
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.heroImage:hover .heroImg {
+  transform: scale(1.04);
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 96px;
+}
+
+.heroTitle {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 300;
+  color: var(--forest);
+  line-height: 1.0;
+  margin: -8px 0 0;
+}
+
+.heroTitle em {
+  font-style: italic;
+  color: var(--clay);
+}
+
+.heroDesc {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: rgba(42, 34, 24, 0.8);
+  margin: 0;
+}
+
+.hoursCard {
+  background: var(--parch);
+  border: 1px solid rgba(201, 169, 122, 0.25);
+  border-radius: 2px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hoursItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hoursLabel {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--clay);
+}
+
+.hoursValue {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--forest);
+}
+
+.hoursDivider {
+  height: 1px;
+  background: rgba(201, 169, 122, 0.2);
+}
+
+/* ---- GALERÍA EXTRA ---- */
+.gallerySection {
+  background: var(--parch);
+  padding: 48px 24px;
+}
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.galleryItem {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--parch);
+}
+
+.galleryImg {
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.galleryItem:hover .galleryImg {
+  transform: scale(1.04);
+}
+
+/* ---- MENÚ ---- */
+.menuSection {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.menuHeader {
+  text-align: center;
+  margin-bottom: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.menuTitle {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 300;
+  color: var(--forest);
+  margin: 0;
+}
+
+.menuTitle em {
+  font-style: italic;
+  color: var(--clay);
+}
+
+.menuSubtitle {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(42, 34, 24, 0.7);
+  max-width: 500px;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.menuCategory {
+  margin-bottom: 48px;
+}
+
+.categoryTitle {
+  font-family: var(--font-cormorant), serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--forest);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(201, 169, 122, 0.3);
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.menuItem {
+  background: var(--parch);
+  border: 1px solid rgba(201, 169, 122, 0.2);
+  border-radius: 2px;
+  padding: 20px 24px;
+}
+
+.menuItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.menuItemName {
+  font-family: var(--font-cormorant), serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--forest);
+  margin: 0;
+}
+
+.menuItemPrice {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--clay);
+  white-space: nowrap;
+}
+
+.menuItemDesc {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(42, 34, 24, 0.7);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---- INFO ---- */
+.infoSection {
+  background: var(--parch);
+  padding: 64px 24px;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.infoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoIcon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.infoCard h3 {
+  font-family: var(--font-cormorant), serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--forest);
+  margin: 0;
+}
+
+.infoCard p {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(42, 34, 24, 0.75);
+  margin: 0;
+}
+
+/* ---- CTA ---- */
+.ctaSection {
+  text-align: center;
+  padding: 80px 24px;
+  background: var(--forest);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.ctaSection .eyebrow {
+  color: var(--sand);
+}
+
+.ctaTitle {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 300;
+  color: var(--cream);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.ctaTitle em {
+  font-style: italic;
+  color: var(--sand);
+}
+
+.ctaDesc {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(250, 248, 245, 0.7);
+  max-width: 460px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.ctaButtons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.ctaBtn {
+  background: var(--sand);
+  color: var(--forest);
+  font-family: var(--font-jost), sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 18px 40px;
+  border-radius: 2px;
+  text-decoration: none;
+  transition: all var(--transition-normal);
+}
+
+.ctaBtn:hover {
+  background: var(--cream);
+  transform: translateY(-2px);
+}
+
+.ctaBtnOutline {
+  background: transparent;
+  color: var(--cream);
+  font-family: var(--font-jost), sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 18px 32px;
+  border: 1px solid rgba(250, 248, 245, 0.3);
+  border-radius: 2px;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.ctaBtnOutline:hover {
+  background: #25d366;
+  border-color: #25d366;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .heroContent {
+    position: static;
+  }
+
+  .heroImageGrid {
+    grid-template-rows: 200px 200px;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .galleryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .menuGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 20px 16px 48px;
+  }
+
+  .heroImageGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 220px 180px 180px;
+  }
+
+  .heroImageGrid .heroImage:first-child {
+    grid-column: auto;
+  }
+
+  .galleryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ctaButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+}
