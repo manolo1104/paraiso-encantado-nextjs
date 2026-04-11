@@ -2,8 +2,6 @@ import { featuredSuites } from '@/data/suites';
 import SuiteCard from './SuiteCard';
 import styles from './SuitesGrid.module.css';
 
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
-
 export default function SuitesGrid() {
   return (
     <section className={styles.section} id="habitaciones" aria-label="Nuestras suites">
@@ -29,7 +27,7 @@ export default function SuitesGrid() {
 
       <div className={styles.cta}>
         <a href="/habitaciones" className={styles.ctaBtn}>
-          Ver las 13 Suites →
+          Explorar Todas las Suites
         </a>
         <p className={styles.ctaNote}>
           Confirmación instantánea · Mejor precio garantizado

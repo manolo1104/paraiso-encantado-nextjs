@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import styles from './restaurante.module.css';
 
 export const metadata: Metadata = {
-  title: 'El Papán Huasteco — Restaurante | Hotel Paraíso Encantado, Xilitla',
+  title: 'El Papán Huasteco · Restaurante | Hotel Paraíso Encantado',
   description:
     'Gastronomía auténtica de la Huasteca Potosina. Tortillas de comal, zacahuil, pozole y sabores que no encontrarás en ningún otro lado. Abierto de 8am a 8pm.',
 };

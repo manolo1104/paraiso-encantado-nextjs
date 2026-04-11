@@ -1,15 +1,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { suites } from '@/data/suites';
+import { mxnToUsd, BOOKING_URL } from '@/lib/config';
 import styles from './habitaciones.module.css';
 
 export const metadata = {
-  title: 'Habitaciones y Suites | Hotel Paraíso Encantado · Xilitla',
+  title: 'Suites Boutique | Hotel Paraíso Encantado · Xilitla',
   description:
     '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla. Desde $1,500/noche con mejor precio garantizado.',
 };
-
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
 
 export default function HabitacionesPage() {
   // Suites con piscina/spa primero, luego por precio desc
@@ -53,7 +52,7 @@ export default function HabitacionesPage() {
             <span>✓ Cancelación gratuita 48hrs</span>
           </div>
           <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className={styles.headerCta}>
-            Ver Disponibilidad y Precios
+            Encuentra tu Suite Perfecta
           </a>
         </div>
       </section>
@@ -111,7 +110,8 @@ export default function HabitacionesPage() {
                         <span className={styles.priceAmount}>
                           ${suite.price.toLocaleString('es-MX')}
                         </span>
-                        <span className={styles.priceUnit}> MXN/noche</span>
+                        <span className={styles.priceUnit}> MXN</span>
+                        <span className={styles.priceUsd}>~${mxnToUsd(suite.price)} USD</span>
                       </div>
                       <span className={styles.reserveBtn}>
                         Ver Suite →

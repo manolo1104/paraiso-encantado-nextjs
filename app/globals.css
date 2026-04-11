@@ -66,6 +66,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Espacio para la barra sticky en mobile */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 60px;
+  }
+}
+
 h1,
 h2,
 h3,

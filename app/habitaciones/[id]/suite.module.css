@@ -202,6 +202,20 @@
   color: var(--clay);
 }
 
+.priceUsd {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: rgba(168, 132, 42, 0.75);
+  margin: -4px 0 4px;
+}
+
+.priceTiers em {
+  font-style: normal;
+  font-size: 11px;
+  color: rgba(168, 132, 42, 0.65);
+}
+
 .priceTiers {
   display: flex;
   flex-direction: column;
@@ -425,6 +439,12 @@
   font-weight: 300;
   color: var(--clay);
   margin: 0;
+}
+
+.otherUsd {
+  font-size: 11px;
+  color: rgba(168, 132, 42, 0.65);
+  font-weight: 300;
 }
 
 .allSuitesLink {

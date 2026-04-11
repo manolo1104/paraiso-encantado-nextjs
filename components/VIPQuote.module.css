@@ -1,0 +1,158 @@
+.section {
+  background: var(--forest);
+  padding: 0;
+  overflow: hidden;
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 45fr 55fr;
+  min-height: 480px;
+}
+
+/* Imagen */
+.imageWrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.image {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(30, 48, 18, 0.2), rgba(30, 48, 18, 0.5));
+  z-index: 1;
+}
+
+.badge {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(201, 169, 122, 0.15);
+  border: 1px solid rgba(201, 169, 122, 0.4);
+  padding: 8px 16px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--sand);
+}
+
+.badgeStar {
+  font-size: 12px;
+  color: var(--sand);
+}
+
+/* Quote */
+.quoteWrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px 72px 64px 56px;
+  position: relative;
+}
+
+.openQuote {
+  font-family: var(--font-cormorant), serif;
+  font-size: 160px;
+  font-weight: 300;
+  color: rgba(201, 169, 122, 0.15);
+  line-height: 0.8;
+  position: absolute;
+  top: 32px;
+  left: 40px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.quote {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 24px;
+}
+
+.quoteText {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 5vw, 60px);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--cream);
+  line-height: 1.1;
+  margin: 0 0 20px;
+}
+
+.cite {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--sand);
+  font-style: normal;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.citeContext {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: rgba(250, 248, 245, 0.55);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.context {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(250, 248, 245, 0.6);
+  line-height: 1.7;
+  margin: 0;
+  max-width: 420px;
+  border-top: 1px solid rgba(201, 169, 122, 0.2);
+  padding-top: 20px;
+}
+
+@media (max-width: 1024px) {
+  .inner {
+    grid-template-columns: 1fr;
+  }
+
+  .imageWrap {
+    min-height: 320px;
+  }
+
+  .quoteWrap {
+    padding: 48px 32px;
+  }
+
+  .openQuote {
+    font-size: 120px;
+  }
+}
+
+@media (max-width: 640px) {
+  .imageWrap {
+    min-height: 250px;
+  }
+
+  .quoteWrap {
+    padding: 48px 24px 48px;
+  }
+
+  .openQuote {
+    top: 8px;
+    left: 16px;
+    font-size: 96px;
+  }
+}

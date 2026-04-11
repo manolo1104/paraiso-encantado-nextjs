@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
-  title: 'Experiencias y Tours — Hotel Paraíso Encantado | Huasteca Potosina',
+  title: 'Tours y Experiencias | Hotel Paraíso Encantado · Huasteca Potosina',
   description:
     'Tours por la Huasteca Potosina desde Xilitla. Cascada Tamul, Jardín de Edward James, Cascadas de Micos, Puente de Dios y más. Guía certificado, transporte y desayuno incluidos.',
 };

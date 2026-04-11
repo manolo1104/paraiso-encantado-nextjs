@@ -156,6 +156,14 @@
   color: var(--clay);
 }
 
+.priceUsd {
+  font-family: var(--font-jost);
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(168, 132, 42, 0.7);
+  margin-left: 2px;
+}
+
 .viewBtn {
   display: inline-block;
   background: transparent;

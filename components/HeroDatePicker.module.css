@@ -1,0 +1,126 @@
+.picker {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: rgba(250, 248, 245, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 169, 122, 0.35);
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 760px;
+  animation: fadeUp 1s 0.4s ease-out both;
+}
+
+.fields {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.field:hover {
+  background: rgba(250, 248, 245, 0.08);
+}
+
+.label {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(201, 169, 122, 0.9);
+  white-space: nowrap;
+}
+
+.input,
+.select {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--cream);
+  cursor: pointer;
+  width: 100%;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+  cursor: pointer;
+}
+
+.select option {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+.divider {
+  width: 1px;
+  background: rgba(201, 169, 122, 0.2);
+  margin: 10px 0;
+  flex-shrink: 0;
+}
+
+.btn {
+  background: linear-gradient(135deg, var(--moss), var(--jade));
+  color: var(--cream);
+  font-family: var(--font-jost), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border: none;
+  padding: 0 28px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn:hover {
+  background: linear-gradient(135deg, var(--jade), var(--sage));
+}
+
+/* Mobile — vertical */
+@media (max-width: 768px) {
+  .picker {
+    flex-direction: column;
+    max-width: 360px;
+    width: calc(100% - 0px);
+  }
+
+  .fields {
+    flex-direction: column;
+  }
+
+  .divider {
+    width: auto;
+    height: 1px;
+    margin: 0 16px;
+  }
+
+  .field {
+    padding: 10px 16px;
+  }
+
+  .btn {
+    padding: 16px;
+    text-align: center;
+  }
+}

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Suite } from '@/data/suites';
+import { mxnToUsd } from '@/lib/config';
 import styles from './SuiteCard.module.css';
 
 interface SuiteCardProps {
@@ -9,6 +10,8 @@ interface SuiteCardProps {
 }
 
 export default function SuiteCard({ suite, showBadge = false }: SuiteCardProps) {
+  const usd = mxnToUsd(suite.price);
+
   return (
     <Link href={`/habitaciones/${suite.id}`} className={styles.card} aria-label={`Ver ${suite.name}`}>
       {showBadge && (
@@ -50,6 +53,7 @@ export default function SuiteCard({ suite, showBadge = false }: SuiteCardProps) 
               ${suite.price.toLocaleString('es-MX')}
             </span>
             <span className={styles.priceUnit}>/noche</span>
+            <span className={styles.priceUsd}>~${usd} USD</span>
           </div>
 
           <span className={styles.viewBtn}>

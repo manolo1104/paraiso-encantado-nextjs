@@ -315,6 +315,14 @@
   color: var(--clay);
 }
 
+.priceUsd {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(168, 132, 42, 0.7);
+  margin-left: 4px;
+}
+
 .reserveBtn {
   display: inline-block;
   background: var(--forest);
