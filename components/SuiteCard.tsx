@@ -4,16 +4,26 @@ import type { Suite } from '@/data/suites';
 import { mxnToUsd } from '@/lib/config';
 import styles from './SuiteCard.module.css';
 
+export type SuiteCardVariant = 'default' | 'elegant' | 'minimal';
+
 interface SuiteCardProps {
   suite: Suite;
   showBadge?: boolean;
+  variant?: SuiteCardVariant;
 }
 
-export default function SuiteCard({ suite, showBadge = false }: SuiteCardProps) {
+const variantStyles: Record<SuiteCardVariant, string> = {
+  default: styles.card,
+  elegant: styles.cardElegant,
+  minimal: styles.cardMinimal,
+};
+
+export default function SuiteCard({ suite, showBadge = false, variant = 'default' }: SuiteCardProps) {
   const usd = mxnToUsd(suite.price);
+  const cardClass = variantStyles[variant];
 
   return (
-    <Link href={`/habitaciones/${suite.id}`} className={styles.card} aria-label={`Ver ${suite.name}`}>
+    <Link href={`/habitaciones/${suite.id}`} className={cardClass} aria-label={`Ver ${suite.name}`}>
       {showBadge && (
         <div className={styles.badge} aria-label="Suite más popular">
           Más Popular
