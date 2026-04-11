@@ -1,3 +1,4 @@
+import { MessageCircle } from 'lucide-react';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -35,8 +36,8 @@ export default function Footer() {
             <li><a href="/">Inicio</a></li>
             <li><a href="/habitaciones">Habitaciones</a></li>
             <li><a href="/restaurante">Restaurante</a></li>
-            <li><a href="/experiencias">Experiencias</a></li>
             <li><a href="/galeria">Galería</a></li>
+            <li><a href="/experiencias">Experiencias</a></li>
             <li><a href="/#contacto">Contacto</a></li>
           </ul>
         </div>
@@ -83,7 +84,8 @@ export default function Footer() {
             rel="noopener noreferrer"
             className={styles.whatsappLink}
           >
-            💬 WhatsApp directo
+            <MessageCircle size={14} strokeWidth={1.5} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+            WhatsApp directo
           </a>
         </div>
 

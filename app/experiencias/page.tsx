@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import { Bus, Coffee, GraduationCap, ShieldCheck, Leaf, Camera, MessageCircle, CheckCircle, Clock } from 'lucide-react';
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
@@ -184,7 +186,7 @@ export default function ExperienciasPage() {
               <ul className={styles.packageList}>
                 {packageHighlight.includes.map((item) => (
                   <li key={item} className={styles.packageItem}>
-                    <span>✓</span>
+                    <CheckCircle size={14} strokeWidth={2} />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -260,7 +262,7 @@ export default function ExperienciasPage() {
                       <span className={styles.tourPriceAmount}>{tour.price}</span>
                       <span className={styles.tourPriceUnit}>{tour.priceUnit}</span>
                     </div>
-                    <span className={styles.tourDuration}>⏱ {tour.duration}</span>
+                    <span className={styles.tourDuration}><Clock size={13} strokeWidth={1.5} /> {tour.duration}</span>
                   </div>
                   <a
                     href={whatsappTour(tour.name)}
@@ -284,14 +286,16 @@ export default function ExperienciasPage() {
           <h2 className={styles.includesTitle}>Lo que viene <em>con cada tour</em></h2>
         </div>
         <div className={styles.includesGrid}>
-          {[
-            { icon: '🚐', title: 'Transporte', desc: 'Vehículo privado desde y hacia el hotel.' },
-            { icon: '🥐', title: 'Desayuno', desc: 'Desayuno huasteco antes de la salida.' },
-            { icon: '🎓', title: 'Guía Certificado', desc: 'Guía local con certificación y seguro.' },
-            { icon: '🏥', title: 'Seguro de viaje', desc: 'Cobertura durante toda la excursión.' },
-            { icon: '🌿', title: 'Entradas', desc: 'Entradas a reservas y sitios naturales.' },
-            { icon: '📸', title: 'Fotografía', desc: 'Paradas en los mejores puntos de foto.' },
-          ].map((item) => (
+          {(
+            [
+              { icon: <Bus size={22} strokeWidth={1.5} />, title: 'Transporte', desc: 'Vehículo privado desde y hacia el hotel.' },
+              { icon: <Coffee size={22} strokeWidth={1.5} />, title: 'Desayuno', desc: 'Desayuno huasteco antes de la salida.' },
+              { icon: <GraduationCap size={22} strokeWidth={1.5} />, title: 'Guía Certificado', desc: 'Guía local con certificación y seguro.' },
+              { icon: <ShieldCheck size={22} strokeWidth={1.5} />, title: 'Seguro de viaje', desc: 'Cobertura durante toda la excursión.' },
+              { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Entradas', desc: 'Entradas a reservas y sitios naturales.' },
+              { icon: <Camera size={22} strokeWidth={1.5} />, title: 'Fotografía', desc: 'Paradas en los mejores puntos de foto.' },
+            ] as { icon: ReactNode; title: string; desc: string }[]
+          ).map((item) => (
             <div key={item.title} className={styles.includeItem}>
               <span className={styles.includeIcon}>{item.icon}</span>
               <div>
@@ -349,7 +353,7 @@ export default function ExperienciasPage() {
             rel="noopener noreferrer"
             className={styles.ctaBtn}
           >
-            💬 Consultar por WhatsApp
+            <MessageCircle size={16} strokeWidth={1.5} /> Consultar por WhatsApp
           </a>
           <a
             href={BOOKING_URL}

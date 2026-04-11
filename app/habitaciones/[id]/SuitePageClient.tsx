@@ -3,34 +3,38 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+  Bed, Sofa, ShowerHead, Bath, Droplets, Mountain, Wifi,
+  Wind, Trees, Waves, CheckCircle, MessageCircle
+} from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import { mxnToUsd, BOOKING_URL } from '@/lib/config';
 import { suites } from '@/data/suites';
 import styles from './suite.module.css';
 
-const featureIcons: Record<string, string> = {
-  'Cama kingsize': '🛏️',
-  'Cama matrimonial': '🛏️',
-  'Camas matrimoniales': '🛏️',
-  'Sala de estar': '🛋️',
-  'Baño completo': '🚿',
-  'Piscina spa': '🛁',
-  'Hidromasaje': '💧',
-  'Tina de hidromasaje': '💧',
-  'Terraza privada': '🌿',
-  'Balcón privado': '🌿',
-  'Vista': '🏔️',
-  'WiFi': '📶',
-  'Aire acondicionado': '❄️',
-  'Planta baja': '🌳',
-  'Acceso directo piscina': '🏊',
-};
-
-function getIcon(feature: string): string {
-  for (const [key, icon] of Object.entries(featureIcons)) {
-    if (feature.toLowerCase().includes(key.toLowerCase())) return icon;
-  }
-  return '✓';
+function getFeatureIcon(feature: string) {
+  const f = feature.toLowerCase();
+  if (f.includes('cama') || f.includes('king') || f.includes('matrimon'))
+    return <Bed size={16} strokeWidth={1.5} />;
+  if (f.includes('sala') || f.includes('sofa') || f.includes('sofá'))
+    return <Sofa size={16} strokeWidth={1.5} />;
+  if (f.includes('regadera') || f.includes('ducha'))
+    return <ShowerHead size={16} strokeWidth={1.5} />;
+  if (f.includes('tina') || f.includes('hidromasaje') || f.includes('baño'))
+    return <Bath size={16} strokeWidth={1.5} />;
+  if (f.includes('piscina') || f.includes('spa'))
+    return <Droplets size={16} strokeWidth={1.5} />;
+  if (f.includes('vista') || f.includes('montaña') || f.includes('panorámic'))
+    return <Mountain size={16} strokeWidth={1.5} />;
+  if (f.includes('wifi') || f.includes('internet'))
+    return <Wifi size={16} strokeWidth={1.5} />;
+  if (f.includes('aire') || f.includes('a/c') || f.includes('clima'))
+    return <Wind size={16} strokeWidth={1.5} />;
+  if (f.includes('jardín') || f.includes('terraza') || f.includes('balcón') || f.includes('planta'))
+    return <Trees size={16} strokeWidth={1.5} />;
+  if (f.includes('piscina') || f.includes('alberca') || f.includes('acceso directo'))
+    return <Waves size={16} strokeWidth={1.5} />;
+  return <CheckCircle size={16} strokeWidth={1.5} />;
 }
 
 interface Props {
@@ -158,7 +162,7 @@ export default function SuitePageClient({ suite }: Props) {
               {suite.features.map((f) => (
                 <li key={f} className={styles.featureItem}>
                   <span className={styles.featureIcon} aria-hidden="true">
-                    {getIcon(f)}
+                    {getFeatureIcon(f)}
                   </span>
                   <span>{f}</span>
                 </li>
@@ -167,9 +171,9 @@ export default function SuitePageClient({ suite }: Props) {
           </section>
 
           <div className={styles.guarantees}>
-            <span>✓ Mejor precio garantizado</span>
-            <span>✓ Pago 100% seguro (Stripe)</span>
-            <span>✓ Cancelación gratis 48hrs</span>
+            <span><CheckCircle size={13} strokeWidth={2} /> Mejor precio garantizado</span>
+            <span><CheckCircle size={13} strokeWidth={2} /> Pago 100% seguro (Stripe)</span>
+            <span><CheckCircle size={13} strokeWidth={2} /> Cancelación gratis 48hrs</span>
           </div>
 
           <a
@@ -178,7 +182,8 @@ export default function SuitePageClient({ suite }: Props) {
             rel="noopener noreferrer"
             className={styles.whatsappBtn}
           >
-            💬 Preguntar por WhatsApp
+            <MessageCircle size={16} strokeWidth={1.5} />
+            Preguntar por WhatsApp
           </a>
         </aside>
       </div>

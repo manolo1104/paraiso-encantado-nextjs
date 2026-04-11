@@ -11,7 +11,7 @@
 .videoBackground {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;  /* encima del fallback de imagen */
   overflow: hidden;
   pointer-events: none;
 }
@@ -37,14 +37,12 @@
   pointer-events: none;
 }
 
-/* ---- IMAGEN FALLBACK ---- */
+/* ---- IMAGEN FALLBACK (siempre debajo del video) ---- */
 .heroBackground {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 0;  /* debajo del video */
 }
-
-/* En desktop la imagen queda tapada por el video (cuando carga) */
 
 .heroOverlay {
   position: absolute;
@@ -55,13 +53,13 @@
     rgba(30, 48, 18, 0.55) 60%,
     rgba(30, 48, 18, 0.70) 100%
   );
-  z-index: 1;
+  z-index: 2;
 }
 
 /* ---- CONTENIDO ---- */
 .heroContent {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   text-align: center;
   max-width: 960px;
   padding: 100px 24px 80px;
@@ -179,7 +177,7 @@
   bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;

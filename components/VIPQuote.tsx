@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { Star } from 'lucide-react';
 import styles from './VIPQuote.module.css';
 
 export default function VIPQuote() {
@@ -16,7 +17,7 @@ export default function VIPQuote() {
           />
           <div className={styles.imageOverlay} aria-hidden="true" />
           <div className={styles.badge} aria-label="Validación VIP">
-            <span className={styles.badgeStar}>★</span>
+            <Star size={12} strokeWidth={0} fill="currentColor" className={styles.badgeStar} />
             <span>Validación VIP</span>
           </div>
         </div>

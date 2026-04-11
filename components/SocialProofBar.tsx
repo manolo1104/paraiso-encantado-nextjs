@@ -1,3 +1,4 @@
+import { Star, MapPin, Award, ShieldCheck } from 'lucide-react';
 import styles from './SocialProofBar.module.css';
 
 export default function SocialProofBar() {
@@ -6,7 +7,9 @@ export default function SocialProofBar() {
       <div className={styles.container}>
 
         <div className={styles.item}>
-          <div className={styles.icon} aria-hidden="true">⭐</div>
+          <div className={styles.icon} aria-hidden="true">
+            <Star size={24} strokeWidth={0} fill="currentColor" />
+          </div>
           <div className={styles.content}>
             <strong>4.8 / 5</strong>
             <p>514 reseñas verificadas en Google</p>
@@ -16,7 +19,9 @@ export default function SocialProofBar() {
         <div className={styles.divider} aria-hidden="true" />
 
         <div className={styles.item}>
-          <div className={styles.icon} aria-hidden="true">📍</div>
+          <div className={styles.icon} aria-hidden="true">
+            <MapPin size={24} strokeWidth={1.5} />
+          </div>
           <div className={styles.content}>
             <strong>#1 en Ubicación</strong>
             <p>El más cercano al Jardín de Edward James</p>
@@ -26,7 +31,9 @@ export default function SocialProofBar() {
         <div className={styles.divider} aria-hidden="true" />
 
         <div className={styles.item}>
-          <div className={styles.icon} aria-hidden="true">🏆</div>
+          <div className={styles.icon} aria-hidden="true">
+            <Award size={24} strokeWidth={1.5} />
+          </div>
           <div className={styles.content}>
             <strong>Validación VIP</strong>
             <p>Visita oficial del Presidente de México 2023</p>
@@ -36,7 +43,9 @@ export default function SocialProofBar() {
         <div className={styles.divider} aria-hidden="true" />
 
         <div className={styles.item}>
-          <div className={styles.icon} aria-hidden="true">🔒</div>
+          <div className={styles.icon} aria-hidden="true">
+            <ShieldCheck size={24} strokeWidth={1.5} />
+          </div>
           <div className={styles.content}>
             <strong>Pago Seguro</strong>
             <p>Plataforma Stripe — encriptación total</p>

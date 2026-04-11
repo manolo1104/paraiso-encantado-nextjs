@@ -1,6 +1,6 @@
+import { Star, CheckCircle } from 'lucide-react';
 import styles from './Testimonials.module.css';
 
-// Testimoniales reales del motor de reservas
 const testimonials = [
   {
     id: 1,
@@ -73,7 +73,9 @@ const testimonials = [
 function StarRating({ count }: { count: number }) {
   return (
     <div className={styles.stars} aria-label={`${count} estrellas de 5`}>
-      {'★'.repeat(count)}
+      {Array.from({ length: count }).map((_, i) => (
+        <Star key={i} size={13} strokeWidth={0} fill="currentColor" />
+      ))}
     </div>
   );
 }
@@ -89,7 +91,11 @@ export default function Testimonials() {
           <div className={styles.ratingNumber} aria-label="Calificación 4.8 de 5">
             4.8
           </div>
-          <div className={styles.ratingStars} aria-hidden="true">★★★★★</div>
+          <div className={styles.ratingStars} aria-hidden="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star key={i} size={18} strokeWidth={0} fill="currentColor" />
+            ))}
+          </div>
           <p>Basado en 514 reseñas verificadas en Google</p>
         </div>
       </div>
@@ -107,8 +113,9 @@ export default function Testimonials() {
                 <StarRating count={t.rating} />
                 <span className={styles.date}>{t.date}</span>
                 {t.verified && (
-                  <span className={styles.verified} role="img" aria-label="Estancia verificada">
-                    ✓ Estancia Verificada
+                  <span className={styles.verified} aria-label="Estancia verificada">
+                    <CheckCircle size={12} strokeWidth={2} />
+                    Estancia Verificada
                   </span>
                 )}
               </div>

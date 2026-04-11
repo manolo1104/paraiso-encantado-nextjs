@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MessageCircle, Plus, Minus } from 'lucide-react';
 import styles from './FAQ.module.css';
 
 const faqs = [
@@ -79,7 +80,7 @@ export default function FAQ() {
               >
                 <span>{faq.question}</span>
                 <span className={styles.icon} aria-hidden="true">
-                  {isOpen ? '−' : '+'}
+                  {isOpen ? <Minus size={16} strokeWidth={2} /> : <Plus size={16} strokeWidth={2} />}
                 </span>
               </button>
 
@@ -105,7 +106,8 @@ export default function FAQ() {
           className={styles.whatsappBtn}
           aria-label="Contactar por WhatsApp"
         >
-          💬 Pregúntanos por WhatsApp
+          <MessageCircle size={16} strokeWidth={1.5} />
+          Pregúntanos por WhatsApp
         </a>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { Leaf, BookOpen, Sun, MessageCircle } from 'lucide-react';
 import styles from './restaurante.module.css';
 
 export const metadata: Metadata = {
@@ -157,7 +158,7 @@ export default function RestaurantePage() {
       <section className={styles.infoSection}>
         <div className={styles.infoGrid}>
           <div className={styles.infoCard}>
-            <div className={styles.infoIcon}>🌿</div>
+            <div className={styles.infoIcon}><Leaf size={28} strokeWidth={1.5} /></div>
             <h3>Ingredientes Locales</h3>
             <p>
               Trabajamos con productores de Xilitla y la sierra potosina.
@@ -165,7 +166,7 @@ export default function RestaurantePage() {
             </p>
           </div>
           <div className={styles.infoCard}>
-            <div className={styles.infoIcon}>🫘</div>
+            <div className={styles.infoIcon}><BookOpen size={28} strokeWidth={1.5} /></div>
             <h3>Recetas Tradicionales</h3>
             <p>
               El zacahuil y el pozole siguen recetas familiares de varias generaciones.
@@ -173,7 +174,7 @@ export default function RestaurantePage() {
             </p>
           </div>
           <div className={styles.infoCard}>
-            <div className={styles.infoIcon}>🌄</div>
+            <div className={styles.infoIcon}><Sun size={28} strokeWidth={1.5} /></div>
             <h3>Vista a la Selva</h3>
             <p>
               Las mesas del restaurante tienen vistas directas al jardín y la selva tropical.
@@ -208,7 +209,7 @@ export default function RestaurantePage() {
             rel="noopener noreferrer"
             className={styles.ctaBtnOutline}
           >
-            💬 Preguntar por WhatsApp
+            <MessageCircle size={16} strokeWidth={1.5} /> Preguntar por WhatsApp
           </a>
         </div>
       </section>

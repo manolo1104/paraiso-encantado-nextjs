@@ -1,3 +1,4 @@
+import { CheckCircle, Phone, MessageCircle, Mail } from 'lucide-react';
 import styles from './FinalCTA.module.css';
 
 const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
@@ -20,20 +21,21 @@ export default function FinalCTA() {
           target="_blank"
           rel="noopener noreferrer"
           className={styles.ctaBtn}
-          aria-label="Reservar ahora — confirmación instantánea"
+          aria-label="Asegura tu escapada — confirmación instantánea"
         >
-          Reservar Ahora — Confirmación Instantánea
+          Asegura Tu Escapada
         </a>
 
         <ul className={styles.guarantees} role="list" aria-label="Garantías">
-          <li>✓ Pago 100% seguro</li>
-          <li>✓ Cancela hasta 48hrs antes</li>
-          <li>✓ Mejor precio garantizado</li>
+          <li><CheckCircle size={14} strokeWidth={2} /> Pago 100% seguro</li>
+          <li><CheckCircle size={14} strokeWidth={2} /> Cancela hasta 48hrs antes</li>
+          <li><CheckCircle size={14} strokeWidth={2} /> Mejor precio garantizado</li>
         </ul>
 
         <div className={styles.alternatives} aria-label="Otras formas de contacto">
           <a href="tel:+524891007679" className={styles.altLink}>
-            📞 489-100-7679
+            <Phone size={15} strokeWidth={1.5} />
+            489-100-7679
           </a>
           <a
             href="https://wa.me/524891007679"
@@ -41,10 +43,12 @@ export default function FinalCTA() {
             rel="noopener noreferrer"
             className={styles.altLink}
           >
-            💬 WhatsApp
+            <MessageCircle size={15} strokeWidth={1.5} />
+            WhatsApp
           </a>
           <a href="mailto:reservas@paraisoencantado.com" className={styles.altLink}>
-            📧 reservas@paraisoencantado.com
+            <Mail size={15} strokeWidth={1.5} />
+            reservas@paraisoencantado.com
           </a>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { CheckCircle, MessageCircle, Phone } from 'lucide-react';
 import { suites } from '@/data/suites';
 import { mxnToUsd, BOOKING_URL } from '@/lib/config';
 import styles from './habitaciones.module.css';
@@ -49,7 +50,7 @@ export default function HabitacionesPage() {
             <span className={styles.dot}>·</span>
             <span>Persona adicional <strong>+$300 MXN</strong></span>
             <span className={styles.dot}>·</span>
-            <span>✓ Cancelación gratuita 48hrs</span>
+            <span><CheckCircle size={13} strokeWidth={2} /> Cancelación gratuita 48hrs</span>
           </div>
           <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className={styles.headerCta}>
             Encuentra tu Suite Perfecta
@@ -134,9 +135,9 @@ export default function HabitacionesPage() {
         </a>
         <div className={styles.contactRow}>
           <a href="https://wa.me/524891007679" target="_blank" rel="noopener noreferrer">
-            💬 WhatsApp
+            <MessageCircle size={14} strokeWidth={1.5} /> WhatsApp
           </a>
-          <a href="tel:+524891007679">📞 489-100-7679</a>
+          <a href="tel:+524891007679"><Phone size={14} strokeWidth={1.5} /> 489-100-7679</a>
         </div>
       </section>
     </main>
