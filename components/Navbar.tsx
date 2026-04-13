@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import styles from './Navbar.module.css';
 
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
+const BOOKING_URL = '/reservar';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -49,8 +49,6 @@ export default function Navbar() {
         {/* CTA Reservar */}
         <a
           href={BOOKING_URL}
-          target="_blank"
-          rel="noopener noreferrer"
           className={styles.navCta}
           aria-label="Reservar habitación"
         >
@@ -86,8 +84,6 @@ export default function Navbar() {
           <li>
             <a
               href={BOOKING_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className={styles.mobileCta}
               onClick={() => setMenuOpen(false)}
             >

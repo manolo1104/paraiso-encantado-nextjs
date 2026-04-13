@@ -1,0 +1,277 @@
+.main {
+  min-height: 100vh;
+  background: #f8f6f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 48px 40px;
+  max-width: 560px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.iconWrap {
+  width: 80px;
+  height: 80px;
+  background: #f0faf0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.checkIcon {
+  color: #3d7a34;
+}
+
+.eyebrow {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3d7a34;
+  margin: 0;
+}
+
+.title {
+  font-family: var(--font-cormorant), serif;
+  font-size: 2rem;
+  font-weight: 400;
+  color: #1a2e1a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.title em {
+  font-style: italic;
+  color: #3d7a34;
+}
+
+.subtitle {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.88rem;
+  color: #6a7a6a;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 420px;
+}
+
+.confirmationBadge {
+  background: #f0faf0;
+  border: 1px solid #c0dfc0;
+  border-radius: 10px;
+  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+}
+
+.confirmationBadge span {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5a8a5a;
+}
+
+.confirmationBadge strong {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #1a2e1a;
+}
+
+/* Booking details */
+.details {
+  width: 100%;
+  background: #faf9f6;
+  border: 1px solid #e8e2d6;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.detailRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #6a7a6a;
+}
+
+.detailRow svg {
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: #3d7a34;
+}
+
+.detailRow > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.detailLabel {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a9a8a;
+}
+
+.detailValue {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.88rem;
+  color: #1a2e1a;
+  font-weight: 500;
+}
+
+/* Room list */
+.rooms {
+  width: 100%;
+  border-top: 1px solid #e8e2d6;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.roomRow {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  color: #4a5a4a;
+}
+
+.discountRow {
+  color: #2d5a27;
+}
+
+.totalRow {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1a2e1a;
+  border-top: 1px solid #e8e2d6;
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+/* Info grid */
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.infoBox {
+  background: #faf9f6;
+  border: 1px solid #e8e2d6;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.infoBox strong {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a7a6a;
+}
+
+.infoBox span {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  color: #1a2e1a;
+  font-weight: 500;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.btnWhatsApp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #25d366;
+  color: #fff;
+  border-radius: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 14px 24px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btnWhatsApp:hover { background: #1da855; }
+
+.btnPhone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: #1a2e1a;
+  border: 1.5px solid #d8d0c4;
+  border-radius: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 12px 24px;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.btnPhone:hover {
+  border-color: #1a2e1a;
+  background: #f8f6f1;
+}
+
+.homeLink {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  color: #8a9a8a;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.homeLink:hover { color: #1a2e1a; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .card { padding: 32px 20px; }
+  .title { font-size: 1.6rem; }
+  .infoGrid { grid-template-columns: 1fr; }
+}
