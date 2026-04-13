@@ -5,13 +5,13 @@
   right: 0;
   z-index: 1000;
   height: 80px;
-  transition: background var(--transition-normal), box-shadow var(--transition-normal);
-  background: transparent;
+  background: var(--forest);
+  box-shadow: 0 2px 24px rgba(30, 48, 18, 0.35);
+  transition: box-shadow var(--transition-normal);
 }
 
 .navbarScrolled {
-  background: var(--forest);
-  box-shadow: 0 2px 24px rgba(30, 48, 18, 0.4);
+  box-shadow: 0 4px 32px rgba(30, 48, 18, 0.5);
 }
 
 .navContainer {

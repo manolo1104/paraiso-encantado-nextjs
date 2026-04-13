@@ -23,10 +23,12 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 function CheckoutForm({
   booking,
   paymentIntentId,
+  sessionId,
   onSuccess,
 }: {
   booking: BookingState;
   paymentIntentId: string;
+  sessionId: string;
   onSuccess: (cn: string) => void;
 }) {
   const stripe = useStripe();
@@ -90,6 +92,7 @@ function CheckoutForm({
             howDidYouHear,
             total,
             paymentIntentId,
+            sessionId,
             bookingDetails: {
               checkin: booking.checkin,
               checkout: booking.checkout,
@@ -98,7 +101,7 @@ function CheckoutForm({
               nights: booking.nights,
               adults: booking.adults,
               minors: booking.children,
-              guests: booking.adults,
+              guests: booking.adults + booking.children,
               notes,
             },
             rooms,
@@ -345,6 +348,7 @@ export default function CheckoutPage() {
               <CheckoutForm
                 booking={booking}
                 paymentIntentId={paymentIntentId}
+                sessionId={sessionId}
                 onSuccess={handleSuccess}
               />
             </Elements>
