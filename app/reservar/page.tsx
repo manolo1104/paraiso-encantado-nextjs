@@ -22,7 +22,7 @@ import {
 } from '@/lib/booking';
 import styles from './reservar.module.css';
 
-const API = process.env.NEXT_PUBLIC_BOOKING_API_URL!;
+const API = process.env.NEXT_PUBLIC_BOOKING_API_URL || 'https://booking-paraisoencantado.up.railway.app';
 
 // ── Room Detail Drawer ────────────────────────────────────
 function RoomDrawer({

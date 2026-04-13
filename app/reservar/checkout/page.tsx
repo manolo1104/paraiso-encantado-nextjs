@@ -16,8 +16,11 @@ import {
 } from '@/lib/booking';
 import styles from './checkout.module.css';
 
-const API = process.env.NEXT_PUBLIC_BOOKING_API_URL!;
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const API = process.env.NEXT_PUBLIC_BOOKING_API_URL || 'https://booking-paraisoencantado.up.railway.app';
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+  'pk_live_51TBljS2NTr97DEMsM069f4O7Zp5uHM2L4HkJZrButJxsHmcluZNR0OQ2qfpX9EFhoXBRW2AY2ADs2bbLin4kszJ900HuSVXYz0'
+);
 
 // ── Inner form (needs Stripe context) ────────────────────
 function CheckoutForm({
