@@ -2,7 +2,8 @@ import Image from 'next/image';
 import { MapPin, Clock, ArrowRight } from 'lucide-react';
 import styles from './ToursSection.module.css';
 
-const TOURS_URL = 'https://huasteca-potosina.com';
+const TOURS_URL = 'https://www.huasteca-potosina.com/';
+const TOURS_BOOK_URL = 'https://www.huasteca-potosina.com/tours';
 
 const tours = [
   {
@@ -14,7 +15,7 @@ const tours = [
     duration: '10–12 hrs',
     from: 'Desde $1,450 MXN/persona',
     image: '/images/atracciones/cascada_de_tamul.jpg',
-    href: TOURS_URL,
+    href: TOURS_BOOK_URL,
   },
   {
     id: 'xilitla',
@@ -25,7 +26,7 @@ const tours = [
     duration: '8–10 hrs',
     from: 'Desde $1,300 MXN/persona',
     image: '/images/atracciones/jardin_de_edward_james.jpg',
-    href: TOURS_URL,
+    href: TOURS_BOOK_URL,
   },
   {
     id: 'puente-de-dios',
@@ -36,7 +37,7 @@ const tours = [
     duration: '10–12 hrs',
     from: 'Desde $1,500 MXN/persona',
     image: '/images/atracciones/puente_de_dios.jpg',
-    href: TOURS_URL,
+    href: TOURS_BOOK_URL,
   },
 ];
 

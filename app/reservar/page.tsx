@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Wifi, Bath, BedDouble, Sparkles, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle } from 'lucide-react';
+import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle } from 'lucide-react';
 import {
   BOOKING_ROOMS,
   BookingRoom,
@@ -115,7 +115,8 @@ function RoomDrawer({
           <p className={styles.drawerDesc}>{room.description}</p>
           <div className={styles.drawerAttrs}>
             {room.attributes.wifi && <span><Wifi size={14} strokeWidth={1.5} /> WiFi incluido</span>}
-            {room.attributes.jacuzzi && <span><Sparkles size={14} strokeWidth={1.5} /> Piscina spa / Jacuzzi</span>}
+            {room.attributes.spaPrivado && <span><Sparkles size={14} strokeWidth={1.5} /> Spa privado</span>}
+            {room.attributes.jacuzzi && <span><Droplets size={14} strokeWidth={1.5} /> Tina de hidromasaje</span>}
             {room.attributes.kingBed && <span><BedDouble size={14} strokeWidth={1.5} /> Cama King Size</span>}
             {room.attributes.balcony && <span><Bath size={14} strokeWidth={1.5} /> Terraza / Balcón</span>}
           </div>
@@ -173,7 +174,6 @@ function ReservarPageInner() {
 
   // ── Cart ──────────────────────────────────────────────
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [roomGuestOverrides, setRoomGuestOverrides] = useState<Record<number, number>>({});
 
   // ── Promo ─────────────────────────────────────────────
   const [promoInput, setPromoInput] = useState('');
@@ -294,9 +294,7 @@ function ReservarPageInner() {
   // ── Cart helpers ──────────────────────────────────────
   function getRoomGuests(roomId: number): number {
     const room = BOOKING_ROOMS.find(r => r.id === roomId)!;
-    const override = roomGuestOverrides[roomId];
-    const selected = override != null ? override : adults;
-    return Math.max(1, Math.min(selected, room.maxGuests));
+    return Math.max(1, Math.min(adults, room.maxGuests));
   }
 
   function addToCart(room: BookingRoom) {
@@ -311,17 +309,6 @@ function ReservarPageInner() {
       const disc = calcPromoDiscount(promoCode, next, checkin, checkout, nights);
       setPromoDiscount(disc);
     }
-  }
-
-  function updateCartGuests(roomId: number, delta: number) {
-    const room = BOOKING_ROOMS.find(r => r.id === roomId)!;
-    setRoomGuestOverrides(prev => {
-      const current = prev[roomId] ?? adults;
-      const next = Math.max(1, Math.min(current + delta, room.maxGuests));
-      const updated = { ...prev, [roomId]: next };
-      setCart(c => c.map(item => item.roomId === roomId ? { ...item, guestCount: next } : item));
-      return updated;
-    });
   }
 
   // ── Promo ─────────────────────────────────────────────
@@ -522,7 +509,8 @@ function ReservarPageInner() {
                     </div>
                     <div className={styles.roomAttrs}>
                       {room.attributes.wifi && <span title="WiFi"><Wifi size={14} strokeWidth={1.5} /> WiFi</span>}
-                      {room.attributes.jacuzzi && <span title="Spa/Jacuzzi"><Sparkles size={14} strokeWidth={1.5} /> Spa</span>}
+                      {room.attributes.spaPrivado && <span title="Spa privado"><Sparkles size={14} strokeWidth={1.5} /> Spa privado</span>}
+                      {room.attributes.jacuzzi && <span title="Tina de hidromasaje"><Droplets size={14} strokeWidth={1.5} /> Hidromasaje</span>}
                       {room.attributes.kingBed && <span title="Cama King"><BedDouble size={14} strokeWidth={1.5} /> King</span>}
                       {room.attributes.balcony && <span title="Terraza"><Bath size={14} strokeWidth={1.5} /> Terraza</span>}
                       <span title={`Hasta ${room.maxGuests} personas`}><Users size={14} strokeWidth={1.5} /> Hasta {room.maxGuests}</span>
@@ -594,10 +582,7 @@ function ReservarPageInner() {
                         </button>
                       </div>
                       <div className={styles.cartItemGuests}>
-                        <span>Adultos:</span>
-                        <button onClick={() => updateCartGuests(item.roomId, -1)}><Minus size={11} /></button>
-                        <span>{item.guestCount}</span>
-                        <button onClick={() => updateCartGuests(item.roomId, 1)}><Plus size={11} /></button>
+                        <span>{item.guestCount} adulto{item.guestCount !== 1 ? 's' : ''}</span>
                         {children > 0 && <span className={styles.cartMinors}>· {children} menor{children > 1 ? 'es' : ''}</span>}
                       </div>
                       <div className={styles.cartItemPrice}>{formatMXN(roomTotal)}</div>
