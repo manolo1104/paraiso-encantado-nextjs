@@ -42,7 +42,8 @@ export default function Navbar() {
           <li><a href="/restaurante">Restaurante</a></li>
           <li><a href="/galeria">Galería</a></li>
           <li><a href="/experiencias">Experiencias</a></li>
-          <li><a href="/#contacto">Contacto</a></li>
+          <li><a href="/sobre-nosotros">Nosotros</a></li>
+          <li><a href="/contacto">Contacto</a></li>
         </ul>
 
         {/* CTA Reservar */}
@@ -80,7 +81,8 @@ export default function Navbar() {
           <li><a href="/restaurante" onClick={() => setMenuOpen(false)}>Restaurante</a></li>
           <li><a href="/galeria" onClick={() => setMenuOpen(false)}>Galería</a></li>
           <li><a href="/experiencias" onClick={() => setMenuOpen(false)}>Experiencias</a></li>
-          <li><a href="/#contacto" onClick={() => setMenuOpen(false)}>Contacto</a></li>
+          <li><a href="/sobre-nosotros" onClick={() => setMenuOpen(false)}>Nosotros</a></li>
+          <li><a href="/contacto" onClick={() => setMenuOpen(false)}>Contacto</a></li>
           <li>
             <a
               href={BOOKING_URL}

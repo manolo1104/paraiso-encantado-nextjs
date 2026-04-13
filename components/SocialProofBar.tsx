@@ -11,8 +11,8 @@ export default function SocialProofBar() {
             <Star size={24} strokeWidth={0} fill="currentColor" />
           </div>
           <div className={styles.content}>
-            <strong>4.8 / 5</strong>
-            <p>514 reseñas verificadas en Google</p>
+            <strong>4.6 / 5</strong>
+            <p>519 reseñas verificadas en Google</p>
           </div>
         </div>
 
@@ -35,8 +35,8 @@ export default function SocialProofBar() {
             <Award size={24} strokeWidth={1.5} />
           </div>
           <div className={styles.content}>
-            <strong>Validación VIP</strong>
-            <p>Visita oficial del Presidente de México 2023</p>
+            <strong>Mejor Precio Garantizado</strong>
+            <p>Reserve directo y ahorre vs. Booking o Airbnb</p>
           </div>
         </div>
 

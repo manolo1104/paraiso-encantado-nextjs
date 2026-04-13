@@ -1,9 +1,11 @@
 import Hero from '@/components/Hero';
+import PromoStrip from '@/components/PromoStrip';
 import SocialProofBar from '@/components/SocialProofBar';
 import DestinoSection from '@/components/DestinoSection';
 import WhyUs from '@/components/WhyUs';
 import SuitesGrid from '@/components/SuitesGrid';
 import AmenitiesGrid from '@/components/AmenitiesGrid';
+import ToursSection from '@/components/ToursSection';
 import VIPQuote from '@/components/VIPQuote';
 import Testimonials from '@/components/Testimonials';
 import LocationSection from '@/components/LocationSection';
@@ -15,11 +17,13 @@ export default function HomePage() {
   return (
     <main>
       <Hero />
+      <PromoStrip />
       <SocialProofBar />
       <DestinoSection />
       <WhyUs />
       <SuitesGrid />
       <AmenitiesGrid />
+      <ToursSection />
       <VIPQuote />
       <Testimonials />
       <LocationSection />

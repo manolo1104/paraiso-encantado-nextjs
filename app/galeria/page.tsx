@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import styles from './galeria.module.css';
 
-type Category = 'Todo' | 'Suites' | 'Restaurante' | 'Naturaleza' | 'Experiencias';
+type Category = 'Todo' | 'Suites' | 'Áreas Comunes' | 'Restaurante' | 'Naturaleza' | 'Experiencias';
 
 interface GalleryImage {
   src: string;
@@ -38,6 +38,19 @@ const images: GalleryImage[] = [
   { src: '/images/ORQUIDEAS DOBLE/PORTADA.jpg', alt: 'Suite Orquídeas Doble', category: 'Suites' },
   { src: '/images/ORQUIDEAS DOBLE/Copia de DSC09602-HDR.jpg', alt: 'Suite Orquídeas Doble interior', category: 'Suites' },
   { src: '/images/BROMELIAS 1/PORTADA.jpg', alt: 'Suite Bromelias 1', category: 'Suites' },
+  // Áreas Comunes
+  { src: '/images/Areas comunes/DSC09442-HDR.jpg', alt: 'Áreas comunes — Paraíso Encantado', category: 'Áreas Comunes', aspect: 'wide' },
+  { src: '/images/Areas comunes/DSC09447-HDR.jpg', alt: 'Jardín y piscina — Paraíso Encantado', category: 'Áreas Comunes', aspect: 'tall' },
+  { src: '/images/Areas comunes/DSC09452.jpg', alt: 'Terraza exterior — Paraíso Encantado', category: 'Áreas Comunes' },
+  { src: '/images/Areas comunes/DSC09453.jpg', alt: 'Vista panorámica del hotel', category: 'Áreas Comunes' },
+  { src: '/images/Areas comunes/DSC09456-HDR.jpg', alt: 'Piscina y jardín — Paraíso Encantado', category: 'Áreas Comunes', aspect: 'wide' },
+  { src: '/images/Areas comunes/DSC09461-HDR.jpg', alt: 'Acceso al hotel — selva de Xilitla', category: 'Áreas Comunes' },
+  { src: '/images/Areas comunes/DSC09462-HDR.jpg', alt: 'Jardines del hotel', category: 'Áreas Comunes', aspect: 'tall' },
+  { src: '/images/Areas comunes/DSC09471-HDR.jpg', alt: 'Atardecer en Paraíso Encantado', category: 'Áreas Comunes' },
+  { src: '/images/Areas comunes/DSC09692-2.jpg', alt: 'Área de descanso — Paraíso Encantado', category: 'Áreas Comunes' },
+  { src: '/images/Areas comunes/DSC09693.jpg', alt: 'Vista desde el hotel a Xilitla', category: 'Áreas Comunes', aspect: 'wide' },
+  { src: '/images/Areas comunes/DSC09694.jpg', alt: 'Pasillo exterior del hotel', category: 'Áreas Comunes' },
+  { src: '/images/Areas comunes/DSC09695.jpg', alt: 'Entorno natural — Paraíso Encantado', category: 'Áreas Comunes' },
   // Restaurante
   { src: '/images/RESTAURANTE/DSC09679.jpg', alt: 'El Papán Huasteco — restaurante', category: 'Restaurante', aspect: 'wide' },
   { src: '/images/RESTAURANTE/DSC09682.jpg', alt: 'El Papán Huasteco — ambiente', category: 'Restaurante' },
@@ -58,7 +71,7 @@ const images: GalleryImage[] = [
   { src: '/images/atracciones/cascada_el_salto.jpg', alt: 'Cascada El Salto', category: 'Experiencias' },
 ];
 
-const categories: Category[] = ['Todo', 'Suites', 'Restaurante', 'Naturaleza', 'Experiencias'];
+const categories: Category[] = ['Todo', 'Suites', 'Áreas Comunes', 'Restaurante', 'Naturaleza', 'Experiencias'];
 
 export default function GaleriaPage() {
   const [active, setActive] = useState<Category>('Todo');
@@ -102,7 +115,7 @@ export default function GaleriaPage() {
           Galería de <em>Fotos</em>
         </h1>
         <p className={styles.subtitle}>
-          Explora las suites, el restaurante, la naturaleza y las experiencias de la Huasteca Potosina.
+          Explora las suites, áreas comunes, restaurante, naturaleza y las experiencias de la Huasteca Potosina.
         </p>
       </div>
 

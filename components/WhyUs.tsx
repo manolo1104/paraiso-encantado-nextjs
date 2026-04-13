@@ -12,11 +12,11 @@ const benefits = [
   },
   {
     Icon: AwardIcon,
-    title: 'Validación VIP',
-    highlight: '"Despertamos en el cielo"',
+    title: 'Mejor Precio Garantizado',
+    highlight: 'Reserve directo y ahorre',
     description:
-      'Palabras del Presidente de México durante su visita oficial a Xilitla en 2023. El único hotel boutique de la región que recibió a un mandatario en funciones.',
-    proof: 'No es marketing — es historia.',
+      'Al reservar directamente en nuestra página o motor de reservas obtienes el precio más bajo disponible. Si encuentras más barato, lo igualamos. Sin comisiones de intermediarios.',
+    proof: 'Garantía 100% — o te regresamos la diferencia.',
   },
   {
     Icon: LeafIcon,
@@ -37,7 +37,7 @@ export default function WhyUs() {
         </h2>
         <p className={styles.subtitle}>
           No somos un hotel más en Xilitla. Somos la única experiencia que combina
-          ubicación privilegiada, validación VIP y autenticidad huasteca.
+          ubicación privilegiada, mejor precio garantizado y autenticidad huasteca.
         </p>
       </div>
 

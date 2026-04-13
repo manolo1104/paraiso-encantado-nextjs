@@ -27,7 +27,7 @@ export default function VIPQuote() {
           <div className={styles.openQuote} aria-hidden="true">"</div>
           <blockquote className={styles.quote}>
             <p id="vip-quote-heading" className={styles.quoteText}>
-              Despertamos en el cielo
+              Amanecimos en el Cielo
             </p>
             <footer>
               <cite className={styles.cite}>
