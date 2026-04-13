@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Wifi, Bath, BedDouble, Sparkles, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info } from 'lucide-react';
+import { Wifi, Bath, BedDouble, Sparkles, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle } from 'lucide-react';
 import {
   BOOKING_ROOMS,
   BookingRoom,
@@ -53,13 +53,11 @@ function RoomDrawer({
   const normal = searched ? calcRoomStayNormal(room, guestCount, checkin, checkout) : null;
   const hasDiscount = normal != null && total != null && normal > total;
 
-  // Trap scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
@@ -69,7 +67,6 @@ function RoomDrawer({
   return (
     <div className={styles.drawerOverlay} onClick={onClose}>
       <div className={styles.drawer} onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div className={styles.drawerHeader}>
           <h2 className={styles.drawerTitle}>{room.name}</h2>
           <button className={styles.drawerClose} onClick={onClose} aria-label="Cerrar">
@@ -77,7 +74,6 @@ function RoomDrawer({
           </button>
         </div>
 
-        {/* Gallery */}
         <div className={styles.drawerGallery}>
           <div className={styles.drawerMainImg}>
             <Image
@@ -103,12 +99,7 @@ function RoomDrawer({
           {room.images.length > 1 && (
             <div className={styles.drawerThumbs}>
               {room.images.map((src, i) => (
-                <button
-                  key={i}
-                  className={`${styles.drawerThumb} ${i === imgIdx ? styles.drawerThumbActive : ''}`}
-                  onClick={() => setImgIdx(i)}
-                  aria-label={`Foto ${i + 1}`}
-                >
+                <button key={i} className={`${styles.drawerThumb} ${i === imgIdx ? styles.drawerThumbActive : ''}`} onClick={() => setImgIdx(i)} aria-label={`Foto ${i + 1}`}>
                   <Image src={src} alt="" fill sizes="80px" className={styles.drawerThumbImg} />
                 </button>
               ))}
@@ -116,47 +107,31 @@ function RoomDrawer({
           )}
         </div>
 
-        {/* Content */}
         <div className={styles.drawerBody}>
           <div className={styles.drawerMeta}>
             <span className={styles.drawerCategory}>{room.category}</span>
             <span className={styles.drawerMaxGuests}><Users size={13} strokeWidth={1.5} /> Hasta {room.maxGuests} personas</span>
           </div>
-
           <p className={styles.drawerDesc}>{room.description}</p>
-
-          {/* Attributes */}
           <div className={styles.drawerAttrs}>
             {room.attributes.wifi && <span><Wifi size={14} strokeWidth={1.5} /> WiFi incluido</span>}
             {room.attributes.jacuzzi && <span><Sparkles size={14} strokeWidth={1.5} /> Piscina spa / Jacuzzi</span>}
             {room.attributes.kingBed && <span><BedDouble size={14} strokeWidth={1.5} /> Cama King Size</span>}
             {room.attributes.balcony && <span><Bath size={14} strokeWidth={1.5} /> Terraza / Balcón</span>}
           </div>
-
-          {/* Features */}
           <div className={styles.drawerSection}>
             <h3 className={styles.drawerSectionTitle}>Lo que incluye</h3>
             <ul className={styles.drawerFeatures}>
-              {room.features.map(f => (
-                <li key={f}>{f}</li>
-              ))}
+              {room.features.map(f => <li key={f}>{f}</li>)}
             </ul>
           </div>
-
-          {/* Pricing */}
           <div className={styles.drawerPricing}>
             {searched && total !== null ? (
               <>
-                {hasDiscount && (
-                  <span className={styles.drawerPriceNormal}>{formatMXN(normal!)}</span>
-                )}
+                {hasDiscount && <span className={styles.drawerPriceNormal}>{formatMXN(normal!)}</span>}
                 <span className={styles.drawerPriceMain}>{formatMXN(total)}</span>
                 <span className={styles.drawerPriceSub}>{nights} noche{nights !== 1 ? 's' : ''} · {guestCount} adulto{guestCount !== 1 ? 's' : ''}</span>
-                {hasDiscount && (
-                  <span className={styles.drawerPriceSavings}>
-                    Ahorro: {formatMXN(normal! - total)} con tarifa entre semana
-                  </span>
-                )}
+                {hasDiscount && <span className={styles.drawerPriceSavings}>Ahorro: {formatMXN(normal! - total)} con tarifa entre semana</span>}
               </>
             ) : (
               <>
@@ -165,22 +140,14 @@ function RoomDrawer({
               </>
             )}
           </div>
-
-          {/* CTA */}
           <button
             className={`${styles.drawerCta} ${inCart ? styles.drawerCtaAdded : ''}`}
             onClick={() => inCart ? onRemove(room.id) : onAdd(room)}
             disabled={!searched}
           >
-            {!searched
-              ? 'Selecciona fechas para reservar'
-              : inCart
-                ? '✓ Quitar del carrito'
-                : `Agregar al carrito — ${formatMXN(total ?? room.price)}`}
+            {!searched ? 'Selecciona fechas para reservar' : inCart ? '✓ Quitar del carrito' : `Agregar al carrito — ${formatMXN(total ?? room.price)}`}
           </button>
-          {!searched && (
-            <p className={styles.drawerCtaNote}>Elige tus fechas arriba y busca disponibilidad</p>
-          )}
+          {!searched && <p className={styles.drawerCtaNote}>Elige tus fechas arriba y busca disponibilidad</p>}
         </div>
       </div>
     </div>
@@ -191,6 +158,7 @@ function RoomDrawer({
 function ReservarPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // ── Search state ──────────────────────────────────────
   const [checkin, setCheckin] = useState('');
@@ -201,6 +169,7 @@ function ReservarPageInner() {
   const [searching, setSearching] = useState(false);
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [datesOverlapBlocked, setDatesOverlapBlocked] = useState(false);
 
   // ── Cart ──────────────────────────────────────────────
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -218,18 +187,12 @@ function ReservarPageInner() {
   const [detailRoom, setDetailRoom] = useState<BookingRoom | null>(null);
 
   const nights = calcNights(checkin, checkout);
+  const today = new Date().toISOString().split('T')[0];
+  const minCheckout = checkin
+    ? new Date(new Date(checkin).getTime() + 86400000).toISOString().split('T')[0]
+    : today;
 
-  // Pre-fill from URL params (from HeroDatePicker)
-  useEffect(() => {
-    const ci = searchParams.get('checkin');
-    const co = searchParams.get('checkout');
-    const a = searchParams.get('adults');
-    if (ci) setCheckin(ci);
-    if (co) setCheckout(co);
-    if (a) setAdults(Math.max(1, Math.min(12, parseInt(a, 10) || 2)));
-  }, []);
-
-  // Fetch blocked dates on mount
+  // ── Fetch blocked dates from Sheets on mount ──────────
   useEffect(() => {
     fetch(`${API}/api/fully-booked-dates`)
       .then(r => r.json())
@@ -237,33 +200,55 @@ function ReservarPageInner() {
       .catch(() => {});
   }, []);
 
-  // Today as min date
-  const today = new Date().toISOString().split('T')[0];
-  const minCheckout = checkin
-    ? new Date(new Date(checkin).getTime() + 86400000).toISOString().split('T')[0]
-    : today;
-
-  function handleCheckinChange(v: string) {
-    setCheckin(v);
-    if (checkout && v >= checkout) {
-      const next = new Date(new Date(v).getTime() + 86400000).toISOString().split('T')[0];
-      setCheckout(next);
+  // ── Pre-fill + auto-search from URL params ────────────
+  useEffect(() => {
+    const ci = searchParams.get('checkin');
+    const co = searchParams.get('checkout');
+    const a = searchParams.get('adults');
+    if (ci) setCheckin(ci);
+    if (co) setCheckout(co);
+    if (a) setAdults(Math.max(1, Math.min(12, parseInt(a, 10) || 2)));
+    // If both dates provided via URL, auto-trigger search
+    if (ci && co && calcNights(ci, co) > 0) {
+      triggerSearch(ci, co);
     }
-    setSearched(false);
+  }, []);
+
+  // ── Warn when selected dates overlap fully-booked ────
+  useEffect(() => {
+    if (!checkin || !checkout || blockedDates.length === 0) {
+      setDatesOverlapBlocked(false);
+      return;
+    }
+    // Build list of nights in the selected range
+    const start = new Date(`${checkin}T12:00:00`);
+    const end = new Date(`${checkout}T12:00:00`);
+    const cursor = new Date(start);
+    while (cursor < end) {
+      const ds = cursor.toISOString().split('T')[0];
+      if (blockedDates.includes(ds)) {
+        setDatesOverlapBlocked(true);
+        return;
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    setDatesOverlapBlocked(false);
+  }, [checkin, checkout, blockedDates]);
+
+  // ── Core search function ──────────────────────────────
+  async function triggerSearch(ci: string, co: string) {
+    const n = calcNights(ci, co);
+    if (!ci || !co || n <= 0) return;
+    setSearching(true);
     setCart([]);
     setPromoCode(null);
     setPromoDiscount(0);
-  }
-
-  async function handleSearch() {
-    if (!checkin || !checkout || nights <= 0) return;
-    setSearching(true);
     try {
       const roomNames = BOOKING_ROOMS.map(r => r.name);
       const res = await fetch(`${API}/api/check-availability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checkin, checkout, rooms: roomNames }),
+        body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames }),
       });
       const data = await res.json();
       setUnavailable(data.unavailableRooms || []);
@@ -272,7 +257,38 @@ function ReservarPageInner() {
     } finally {
       setSearching(false);
       setSearched(true);
+      // Scroll to results after short delay
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
     }
+  }
+
+  async function handleSearch() {
+    await triggerSearch(checkin, checkout);
+  }
+
+  function handleCheckinChange(v: string) {
+    setCheckin(v);
+    if (checkout && v >= checkout) {
+      const next = new Date(new Date(v).getTime() + 86400000).toISOString().split('T')[0];
+      setCheckout(next);
+    }
+    // Clear stale results when dates change
+    setSearched(false);
+    setUnavailable([]);
+    setCart([]);
+    setPromoCode(null);
+    setPromoDiscount(0);
+  }
+
+  function handleCheckoutChange(v: string) {
+    setCheckout(v);
+    setSearched(false);
+    setUnavailable([]);
+    setCart([]);
+    setPromoCode(null);
+    setPromoDiscount(0);
   }
 
   // ── Cart helpers ──────────────────────────────────────
@@ -289,8 +305,12 @@ function ReservarPageInner() {
   }
 
   function removeFromCart(roomId: number) {
-    setCart(prev => prev.filter(c => c.roomId !== roomId));
-    recalcPromo(cart.filter(c => c.roomId !== roomId));
+    const next = cart.filter(c => c.roomId !== roomId);
+    setCart(next);
+    if (promoCode) {
+      const disc = calcPromoDiscount(promoCode, next, checkin, checkout, nights);
+      setPromoDiscount(disc);
+    }
   }
 
   function updateCartGuests(roomId: number, delta: number) {
@@ -305,12 +325,6 @@ function ReservarPageInner() {
   }
 
   // ── Promo ─────────────────────────────────────────────
-  function recalcPromo(newCart: CartItem[]) {
-    if (!promoCode) return;
-    const disc = calcPromoDiscount(promoCode, newCart, checkin, checkout, nights);
-    setPromoDiscount(disc);
-  }
-
   function applyPromo() {
     const code = promoInput.trim().toUpperCase();
     const { valid, error } = validatePromo(code, nights, cart.length);
@@ -321,7 +335,7 @@ function ReservarPageInner() {
     setPromoDiscount(disc);
   }
 
-  // ── Subtotals ─────────────────────────────────────────
+  // ── Totals ────────────────────────────────────────────
   const subtotal = calcCartSubtotal(cart, checkin, checkout);
   const total = Math.max(0, subtotal - promoDiscount);
 
@@ -336,9 +350,8 @@ function ReservarPageInner() {
     router.push('/reservar/checkout');
   }
 
-  // ── Room grid ─────────────────────────────────────────
+  // ── Room grid helpers ─────────────────────────────────
   const visibleRooms = BOOKING_ROOMS.filter(r => !r.disabled);
-
   const isUnavailable = (r: BookingRoom) => unavailable.includes(r.name);
   const inCart = (id: number) => cart.some(c => c.roomId === id);
 
@@ -373,7 +386,7 @@ function ReservarPageInner() {
               className={styles.dateInput}
               value={checkout}
               min={minCheckout}
-              onChange={e => { setCheckout(e.target.value); setSearched(false); setCart([]); }}
+              onChange={e => handleCheckoutChange(e.target.value)}
             />
           </label>
           <div className={styles.fieldDivider} />
@@ -400,24 +413,39 @@ function ReservarPageInner() {
           onClick={handleSearch}
           disabled={!checkin || !checkout || nights <= 0 || searching}
         >
-          {searching ? 'Buscando…' : searched ? 'Actualizar' : 'Ver disponibilidad'}
+          {searching ? 'Verificando…' : searched ? 'Actualizar' : 'Ver disponibilidad'}
         </button>
       </div>
 
+      {/* ── Date summary + blocked warning ── */}
       {nights > 0 && checkin && checkout && (
-        <p className={styles.nightsSummary}>
-          <CalendarDays size={14} strokeWidth={1.5} />
-          {' '}{nights} noche{nights !== 1 ? 's' : ''} · {new Date(`${checkin}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} → {new Date(`${checkout}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
-        </p>
+        <div className={styles.dateSummaryRow}>
+          <p className={styles.nightsSummary}>
+            <CalendarDays size={14} strokeWidth={1.5} />
+            {' '}{nights} noche{nights !== 1 ? 's' : ''} · {new Date(`${checkin}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} → {new Date(`${checkout}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+          </p>
+          {datesOverlapBlocked && (
+            <p className={styles.blockedWarning}>
+              <AlertTriangle size={13} strokeWidth={2} />
+              {' '}Algunas noches en este rango están completamente reservadas. Podría haber disponibilidad limitada.
+            </p>
+          )}
+        </div>
       )}
 
-      <div className={styles.layout}>
+      <div className={styles.layout} ref={resultsRef}>
         {/* ── Room grid ── */}
         <div className={styles.roomGrid}>
-          {!searched && (
+          {!searched && !searching && (
             <div className={styles.promptBanner}>
               <CalendarDays size={20} strokeWidth={1.5} />
-              <span>Selecciona tus fechas y haz clic en <strong>Ver disponibilidad</strong> para ver precios exactos.</span>
+              <span>Selecciona tus fechas y haz clic en <strong>Ver disponibilidad</strong> para ver precios exactos y disponibilidad en tiempo real.</span>
+            </div>
+          )}
+          {searching && (
+            <div className={styles.searchingBanner}>
+              <div className={styles.searchSpinner} />
+              <span>Consultando disponibilidad en tiempo real…</span>
             </div>
           )}
 
@@ -463,22 +491,21 @@ function ReservarPageInner() {
                   >
                     Ver fotos ({room.images.length})
                   </button>
-                  {unavail && <div className={styles.unavailOverlay}>No disponible en estas fechas</div>}
+                  {unavail && (
+                    <div className={styles.unavailOverlay}>
+                      <span>🚫 No disponible</span>
+                      <span className={styles.unavailSub}>Agotada en estas fechas</span>
+                    </div>
+                  )}
                   {added && <div className={styles.addedOverlay}><span>✓ Agregada al carrito</span></div>}
                 </div>
 
                 {/* Content */}
                 <div className={styles.roomContent}>
                   <div className={styles.roomTop}>
-                    {/* Title row — click opens detail */}
                     <div className={styles.roomNameRow}>
                       <h3 className={styles.roomName}>{room.name}</h3>
-                      <button
-                        className={styles.detailBtn}
-                        onClick={() => setDetailRoom(room)}
-                        aria-label={`Ver detalles de ${room.name}`}
-                        title="Ver detalles"
-                      >
+                      <button className={styles.detailBtn} onClick={() => setDetailRoom(room)} aria-label={`Ver detalles de ${room.name}`} title="Ver detalles">
                         <Info size={15} strokeWidth={1.5} />
                       </button>
                     </div>
@@ -515,15 +542,16 @@ function ReservarPageInner() {
                       </span>
                     </div>
 
-                    {!unavail && searched && (
+                    {unavail ? (
+                      <span className={styles.unavailTag}>Agotada</span>
+                    ) : searched ? (
                       <button
                         className={`${styles.addBtn} ${added ? styles.addBtnAdded : ''}`}
                         onClick={() => added ? removeFromCart(room.id) : addToCart(room)}
                       >
                         {added ? '✓ Quitar' : 'Seleccionar'}
                       </button>
-                    )}
-                    {!searched && (
+                    ) : (
                       <button className={styles.detailCta} onClick={() => setDetailRoom(room)}>
                         Ver detalles
                       </button>
@@ -580,7 +608,7 @@ function ReservarPageInner() {
             )}
 
             {cart.length === 0 && searched && (
-              <p className={styles.sidebarEmpty}>Selecciona una habitación del listado</p>
+              <p className={styles.sidebarEmpty}>Selecciona una habitación disponible</p>
             )}
 
             {cart.length > 0 && (
@@ -676,7 +704,6 @@ function ReservarPageInner() {
   );
 }
 
-// ── Page export with Suspense (required for useSearchParams) ──
 export default function ReservarPage() {
   return (
     <Suspense fallback={null}>

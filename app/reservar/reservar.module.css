@@ -167,16 +167,73 @@
 .searchBtn:hover:not(:disabled) { background: #2d5a27; }
 .searchBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.nightsSummary {
+.dateSummaryRow {
   max-width: 1100px;
   margin: 0 auto 24px;
   padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nightsSummary {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.82rem;
   color: #5a6b5a;
   display: flex;
   align-items: center;
   gap: 6px;
+  margin: 0;
+}
+
+.blockedWarning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  color: #8a4a1a;
+  background: #fff8f0;
+  border: 1px solid #f0d0a0;
+  border-radius: 6px;
+  padding: 7px 12px;
+  margin: 0;
+}
+
+.searchingBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f0faf0;
+  border: 1px solid #c0dfc0;
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.88rem;
+  color: #2d5a27;
+  grid-column: 1 / -1;
+}
+
+.searchSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #c0dfc0;
+  border-top-color: #3d7a34;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.unavailTag {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8a1a1a;
+  background: #fff0f0;
+  border: 1px solid #f0c0c0;
+  border-radius: 4px;
+  padding: 5px 10px;
+  white-space: nowrap;
 }
 
 /* ── Layout ── */
@@ -307,8 +364,16 @@
 }
 
 .unavailOverlay {
-  background: rgba(30,10,10,0.65);
+  background: rgba(30,10,10,0.72);
   color: #ffdddd;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.unavailSub {
+  font-size: 0.72rem;
+  opacity: 0.8;
+  font-weight: 400;
 }
 
 .addedOverlay {
