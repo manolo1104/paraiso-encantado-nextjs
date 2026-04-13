@@ -48,11 +48,7 @@ export default function Footer() {
           <h4>Reservas</h4>
           <ul role="list">
             <li>
-              <a
-                href="https://booking-paraisoencantado.up.railway.app"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href="/reservar">
                 Reservar Ahora
               </a>
             </li>

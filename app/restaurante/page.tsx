@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     'Gastronomía auténtica de la Huasteca Potosina. Tortillas de comal, zacahuil, pozole y sabores que no encontrarás en ningún otro lado. Abierto de 8am a 8pm.',
 };
 
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
+const BOOKING_URL = '/reservar';
 
 const menuHighlights = [
   {
@@ -197,8 +197,6 @@ export default function RestaurantePage() {
         <div className={styles.ctaButtons}>
           <a
             href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             className={styles.ctaBtn}
           >
             Reservar Suite

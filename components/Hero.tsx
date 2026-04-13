@@ -3,8 +3,6 @@ import styles from './Hero.module.css';
 import HeroDatePicker from './HeroDatePicker';
 import { StarIcon, ShieldCheckIcon, CheckCircleIcon } from './icons';
 
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
-
 export default function Hero() {
   return (
     <section className={styles.hero} aria-label="Sección principal">
@@ -72,9 +70,7 @@ export default function Hero() {
         </div>
 
         <a
-          href={BOOKING_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/reservar"
           className={styles.heroCta}
           aria-label="Encontrar suite perfecta en el motor de reservas"
         >

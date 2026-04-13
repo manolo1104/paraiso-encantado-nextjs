@@ -52,7 +52,7 @@ export default function HabitacionesPage() {
             <span className={styles.dot}>·</span>
             <span><CheckCircle size={13} strokeWidth={2} /> Cancelación gratuita 48hrs</span>
           </div>
-          <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className={styles.headerCta}>
+          <a href={BOOKING_URL} className={styles.headerCta}>
             Encuentra tu Suite Perfecta
           </a>
         </div>
@@ -130,7 +130,7 @@ export default function HabitacionesPage() {
       <section className={styles.finalCta}>
         <h2>¿Lista tu <em>Escapada</em>?</h2>
         <p>Confirmación instantánea · Mejor precio garantizado · Cancela hasta 48hrs antes</p>
-        <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className={styles.finalCtaBtn}>
+        <a href={BOOKING_URL} className={styles.finalCtaBtn}>
           Reservar Ahora
         </a>
         <div className={styles.contactRow}>

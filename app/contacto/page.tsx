@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     'Contáctanos por WhatsApp, teléfono o correo. Reserva directamente y obtén el mejor precio. Hotel Paraíso Encantado en Xilitla, Huasteca Potosina.',
 };
 
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
+const BOOKING_URL = '/reservar';
 const WHATSAPP_URL = 'https://wa.me/524891007679';
 const MAPS_URL = 'https://www.google.com/maps/place/Hotel+Paraiso+Encantado/@21.3842,-99.0033,17z';
 
@@ -57,8 +57,6 @@ export default function ContactoPage() {
 
           <a
             href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             className={`${styles.actionCard} ${styles.actionReserva}`}
           >
             <div className={styles.actionIcon}>

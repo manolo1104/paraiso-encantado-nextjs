@@ -1,8 +1,6 @@
 import { CheckCircle, Phone, MessageCircle, Mail } from 'lucide-react';
 import styles from './FinalCTA.module.css';
 
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
-
 export default function FinalCTA() {
   return (
     <section className={styles.section} aria-label="Reserva ahora">
@@ -17,9 +15,7 @@ export default function FinalCTA() {
         </p>
 
         <a
-          href={BOOKING_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/reservar"
           className={styles.ctaBtn}
           aria-label="Asegura tu escapada — confirmación instantánea"
         >

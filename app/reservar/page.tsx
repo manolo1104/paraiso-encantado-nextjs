@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Wifi, Bath, BedDouble, Sparkles, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Wifi, Bath, BedDouble, Sparkles, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info } from 'lucide-react';
 import {
   BOOKING_ROOMS,
   BookingRoom,
@@ -24,8 +24,173 @@ import styles from './reservar.module.css';
 
 const API = process.env.NEXT_PUBLIC_BOOKING_API_URL!;
 
-export default function ReservarPage() {
+// ── Room Detail Drawer ────────────────────────────────────
+function RoomDrawer({
+  room,
+  onClose,
+  onAdd,
+  onRemove,
+  inCart,
+  searched,
+  guestCount,
+  checkin,
+  checkout,
+  nights,
+}: {
+  room: BookingRoom;
+  onClose: () => void;
+  onAdd: (room: BookingRoom) => void;
+  onRemove: (id: number) => void;
+  inCart: boolean;
+  searched: boolean;
+  guestCount: number;
+  checkin: string;
+  checkout: string;
+  nights: number;
+}) {
+  const [imgIdx, setImgIdx] = useState(0);
+  const total = searched ? calcRoomStayTotal(room, guestCount, checkin, checkout) : null;
+  const normal = searched ? calcRoomStayNormal(room, guestCount, checkin, checkout) : null;
+  const hasDiscount = normal != null && total != null && normal > total;
+
+  // Trap scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div className={styles.drawerOverlay} onClick={onClose}>
+      <div className={styles.drawer} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className={styles.drawerHeader}>
+          <h2 className={styles.drawerTitle}>{room.name}</h2>
+          <button className={styles.drawerClose} onClick={onClose} aria-label="Cerrar">
+            <X size={20} strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Gallery */}
+        <div className={styles.drawerGallery}>
+          <div className={styles.drawerMainImg}>
+            <Image
+              src={room.images[imgIdx]}
+              alt={`${room.name} — foto ${imgIdx + 1}`}
+              fill
+              sizes="(max-width: 768px) 100vw, 600px"
+              className={styles.drawerMainImgEl}
+              priority
+            />
+            {room.images.length > 1 && (
+              <>
+                <button className={styles.drawerPrev} onClick={() => setImgIdx(i => (i - 1 + room.images.length) % room.images.length)}>
+                  <ChevronLeft size={20} strokeWidth={2} />
+                </button>
+                <button className={styles.drawerNext} onClick={() => setImgIdx(i => (i + 1) % room.images.length)}>
+                  <ChevronRight size={20} strokeWidth={2} />
+                </button>
+                <span className={styles.drawerImgCount}>{imgIdx + 1} / {room.images.length}</span>
+              </>
+            )}
+          </div>
+          {room.images.length > 1 && (
+            <div className={styles.drawerThumbs}>
+              {room.images.map((src, i) => (
+                <button
+                  key={i}
+                  className={`${styles.drawerThumb} ${i === imgIdx ? styles.drawerThumbActive : ''}`}
+                  onClick={() => setImgIdx(i)}
+                  aria-label={`Foto ${i + 1}`}
+                >
+                  <Image src={src} alt="" fill sizes="80px" className={styles.drawerThumbImg} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className={styles.drawerBody}>
+          <div className={styles.drawerMeta}>
+            <span className={styles.drawerCategory}>{room.category}</span>
+            <span className={styles.drawerMaxGuests}><Users size={13} strokeWidth={1.5} /> Hasta {room.maxGuests} personas</span>
+          </div>
+
+          <p className={styles.drawerDesc}>{room.description}</p>
+
+          {/* Attributes */}
+          <div className={styles.drawerAttrs}>
+            {room.attributes.wifi && <span><Wifi size={14} strokeWidth={1.5} /> WiFi incluido</span>}
+            {room.attributes.jacuzzi && <span><Sparkles size={14} strokeWidth={1.5} /> Piscina spa / Jacuzzi</span>}
+            {room.attributes.kingBed && <span><BedDouble size={14} strokeWidth={1.5} /> Cama King Size</span>}
+            {room.attributes.balcony && <span><Bath size={14} strokeWidth={1.5} /> Terraza / Balcón</span>}
+          </div>
+
+          {/* Features */}
+          <div className={styles.drawerSection}>
+            <h3 className={styles.drawerSectionTitle}>Lo que incluye</h3>
+            <ul className={styles.drawerFeatures}>
+              {room.features.map(f => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Pricing */}
+          <div className={styles.drawerPricing}>
+            {searched && total !== null ? (
+              <>
+                {hasDiscount && (
+                  <span className={styles.drawerPriceNormal}>{formatMXN(normal!)}</span>
+                )}
+                <span className={styles.drawerPriceMain}>{formatMXN(total)}</span>
+                <span className={styles.drawerPriceSub}>{nights} noche{nights !== 1 ? 's' : ''} · {guestCount} adulto{guestCount !== 1 ? 's' : ''}</span>
+                {hasDiscount && (
+                  <span className={styles.drawerPriceSavings}>
+                    Ahorro: {formatMXN(normal! - total)} con tarifa entre semana
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <span className={styles.drawerPriceMain}>desde {formatMXN(room.price)}</span>
+                <span className={styles.drawerPriceSub}>por noche · 2 personas</span>
+              </>
+            )}
+          </div>
+
+          {/* CTA */}
+          <button
+            className={`${styles.drawerCta} ${inCart ? styles.drawerCtaAdded : ''}`}
+            onClick={() => inCart ? onRemove(room.id) : onAdd(room)}
+            disabled={!searched}
+          >
+            {!searched
+              ? 'Selecciona fechas para reservar'
+              : inCart
+                ? '✓ Quitar del carrito'
+                : `Agregar al carrito — ${formatMXN(total ?? room.price)}`}
+          </button>
+          {!searched && (
+            <p className={styles.drawerCtaNote}>Elige tus fechas arriba y busca disponibilidad</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Inner page (needs useSearchParams) ───────────────────
+function ReservarPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // ── Search state ──────────────────────────────────────
   const [checkin, setCheckin] = useState('');
@@ -50,8 +215,19 @@ export default function ReservarPage() {
   // ── UI ────────────────────────────────────────────────
   const [lightboxRoom, setLightboxRoom] = useState<BookingRoom | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [detailRoom, setDetailRoom] = useState<BookingRoom | null>(null);
 
   const nights = calcNights(checkin, checkout);
+
+  // Pre-fill from URL params (from HeroDatePicker)
+  useEffect(() => {
+    const ci = searchParams.get('checkin');
+    const co = searchParams.get('checkout');
+    const a = searchParams.get('adults');
+    if (ci) setCheckin(ci);
+    if (co) setCheckout(co);
+    if (a) setAdults(Math.max(1, Math.min(12, parseInt(a, 10) || 2)));
+  }, []);
 
   // Fetch blocked dates on mount
   useEffect(() => {
@@ -253,12 +429,22 @@ export default function ReservarPage() {
             const normal_room = searched ? calcRoomStayNormal(room, guestCount, checkin, checkout) : null;
             const hasDiscount = normal_room != null && total_room != null && normal_room > total_room;
             const discPct = hasDiscount ? Math.round(((normal_room! - total_room!) / normal_room!) * 100) : 0;
-            const nightly = searched ? calcRoomStayTotal(room, guestCount, checkin, checkout) / Math.max(nights, 1) : room.price;
 
             return (
-              <article key={room.id} className={`${styles.roomCard} ${unavail ? styles.unavailable : ''} ${added ? styles.inCart : ''}`}>
-                {/* Image */}
-                <div className={styles.roomImageWrap}>
+              <article
+                key={room.id}
+                className={`${styles.roomCard} ${unavail ? styles.unavailable : ''} ${added ? styles.inCart : ''}`}
+              >
+                {/* Image — click opens detail drawer */}
+                <div
+                  className={styles.roomImageWrap}
+                  onClick={() => setDetailRoom(room)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Ver detalles de ${room.name}`}
+                  onKeyDown={e => e.key === 'Enter' && setDetailRoom(room)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <Image
                     src={room.image}
                     alt={room.name}
@@ -271,11 +457,12 @@ export default function ReservarPage() {
                     {room.occupancy === 'HIGH' && <span className={styles.hotBadge}>Alta demanda</span>}
                     {hasDiscount && <span className={styles.discountBadge}>−{discPct}%</span>}
                   </div>
-                  {room.images.length > 1 && (
-                    <button className={styles.photoBtn} onClick={() => { setLightboxRoom(room); setLightboxIdx(0); }}>
-                      Ver fotos ({room.images.length})
-                    </button>
-                  )}
+                  <button
+                    className={styles.photoBtn}
+                    onClick={e => { e.stopPropagation(); setLightboxRoom(room); setLightboxIdx(0); }}
+                  >
+                    Ver fotos ({room.images.length})
+                  </button>
                   {unavail && <div className={styles.unavailOverlay}>No disponible en estas fechas</div>}
                   {added && <div className={styles.addedOverlay}><span>✓ Agregada al carrito</span></div>}
                 </div>
@@ -283,12 +470,28 @@ export default function ReservarPage() {
                 {/* Content */}
                 <div className={styles.roomContent}>
                   <div className={styles.roomTop}>
-                    <h3 className={styles.roomName}>{room.name}</h3>
+                    {/* Title row — click opens detail */}
+                    <div className={styles.roomNameRow}>
+                      <h3 className={styles.roomName}>{room.name}</h3>
+                      <button
+                        className={styles.detailBtn}
+                        onClick={() => setDetailRoom(room)}
+                        aria-label={`Ver detalles de ${room.name}`}
+                        title="Ver detalles"
+                      >
+                        <Info size={15} strokeWidth={1.5} />
+                      </button>
+                    </div>
                     <p className={styles.roomDesc}>{room.description}</p>
                     <div className={styles.roomFeatures}>
                       {room.features.slice(0, 4).map(f => (
                         <span key={f} className={styles.featureTag}>{f}</span>
                       ))}
+                      {room.features.length > 4 && (
+                        <button className={styles.moreFeatures} onClick={() => setDetailRoom(room)}>
+                          +{room.features.length - 4} más
+                        </button>
+                      )}
                     </div>
                     <div className={styles.roomAttrs}>
                       {room.attributes.wifi && <span title="WiFi"><Wifi size={14} strokeWidth={1.5} /> WiFi</span>}
@@ -321,7 +524,9 @@ export default function ReservarPage() {
                       </button>
                     )}
                     {!searched && (
-                      <span className={styles.selectDateHint}>Elige fechas para reservar</span>
+                      <button className={styles.detailCta} onClick={() => setDetailRoom(room)}>
+                        Ver detalles
+                      </button>
                     )}
                   </div>
                 </div>
@@ -335,7 +540,6 @@ export default function ReservarPage() {
           <div className={styles.sidebarInner}>
             <h2 className={styles.sidebarTitle}>Tu Reserva</h2>
 
-            {/* Dates summary */}
             {checkin && checkout ? (
               <div className={styles.sidebarDates}>
                 <div><span>Llegada</span><strong>{new Date(`${checkin}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></div>
@@ -348,7 +552,6 @@ export default function ReservarPage() {
               <p className={styles.sidebarEmpty}>Selecciona fechas para comenzar</p>
             )}
 
-            {/* Cart items */}
             {cart.length > 0 && (
               <div className={styles.cartItems}>
                 {cart.map(item => {
@@ -380,7 +583,6 @@ export default function ReservarPage() {
               <p className={styles.sidebarEmpty}>Selecciona una habitación del listado</p>
             )}
 
-            {/* Promo code */}
             {cart.length > 0 && (
               <div className={styles.promoBlock}>
                 {promoCode ? (
@@ -407,7 +609,6 @@ export default function ReservarPage() {
               </div>
             )}
 
-            {/* Totals */}
             {cart.length > 0 && (
               <div className={styles.totals}>
                 <div className={styles.totalRow}>
@@ -427,7 +628,6 @@ export default function ReservarPage() {
               </div>
             )}
 
-            {/* CTA */}
             <button
               className={styles.checkoutBtn}
               disabled={cart.length === 0 || !checkin || !checkout}
@@ -444,7 +644,23 @@ export default function ReservarPage() {
         </aside>
       </div>
 
-      {/* Lightbox */}
+      {/* ── Room Detail Drawer ── */}
+      {detailRoom && (
+        <RoomDrawer
+          room={detailRoom}
+          onClose={() => setDetailRoom(null)}
+          onAdd={(r) => { addToCart(r); setDetailRoom(null); }}
+          onRemove={(id) => { removeFromCart(id); setDetailRoom(null); }}
+          inCart={inCart(detailRoom.id)}
+          searched={searched}
+          guestCount={getRoomGuests(detailRoom.id)}
+          checkin={checkin}
+          checkout={checkout}
+          nights={nights}
+        />
+      )}
+
+      {/* ── Lightbox ── */}
       {lightboxRoom && (
         <div className={styles.lightbox} onClick={() => setLightboxRoom(null)}>
           <button className={styles.lbClose} onClick={() => setLightboxRoom(null)}>✕</button>
@@ -457,5 +673,14 @@ export default function ReservarPage() {
         </div>
       )}
     </main>
+  );
+}
+
+// ── Page export with Suspense (required for useSearchParams) ──
+export default function ReservarPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReservarPageInner />
+    </Suspense>
   );
 }

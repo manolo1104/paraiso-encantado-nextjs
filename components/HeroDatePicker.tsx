@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './HeroDatePicker.module.css';
-import { BOOKING_URL } from '@/lib/config';
 
 export default function HeroDatePicker() {
+  const router = useRouter();
   const today = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
@@ -14,7 +15,6 @@ export default function HeroDatePicker() {
 
   function handleCheckinChange(value: string) {
     setCheckin(value);
-    // Asegurar que checkout sea posterior a checkin
     if (value >= checkout) {
       const next = new Date(value);
       next.setDate(next.getDate() + 1);
@@ -23,8 +23,7 @@ export default function HeroDatePicker() {
   }
 
   function handleSubmit() {
-    const url = `${BOOKING_URL}?checkin=${checkin}&checkout=${checkout}&guests=${guests}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    router.push(`/reservar?checkin=${checkin}&checkout=${checkout}&adults=${guests}`);
   }
 
   return (

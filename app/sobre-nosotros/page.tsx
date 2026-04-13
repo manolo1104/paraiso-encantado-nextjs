@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     'Conoce la historia, misión y valores del Hotel Paraíso Encantado en Xilitla. Hotel boutique comprometido con la naturaleza y la comunidad de la Huasteca Potosina.',
 };
 
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
+const BOOKING_URL = '/reservar';
 
 export default function SobreNosotrosPage() {
   return (
@@ -188,8 +188,6 @@ export default function SobreNosotrosPage() {
         <div className={styles.ctaButtons}>
           <a
             href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             className={styles.ctaBtn}
           >
             Reservar Suite

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 const WHATSAPP_URL = 'https://wa.me/524891007679';
-const BOOKING_URL = 'https://booking-paraisoencantado.up.railway.app';
+const BOOKING_URL = '/reservar';
 
 const tours = [
   {
@@ -206,8 +206,6 @@ export default function ExperienciasPage() {
               </a>
               <a
                 href={BOOKING_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className={styles.packageBtnOutline}
               >
                 Reservar Suite
@@ -357,8 +355,6 @@ export default function ExperienciasPage() {
           </a>
           <a
             href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             className={styles.ctaBtnOutline}
           >
             Reservar Suite

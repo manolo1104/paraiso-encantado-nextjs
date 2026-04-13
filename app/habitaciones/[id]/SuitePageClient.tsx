@@ -144,8 +144,6 @@ export default function SuitePageClient({ suite }: Props) {
           {/* CTA */}
           <a
             href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             className={styles.reserveBtn}
             aria-label={`Reservar ${suite.name}`}
           >
