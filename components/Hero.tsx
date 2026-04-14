@@ -45,7 +45,7 @@ export default function Hero() {
 
         <p className={styles.heroSubtitle}>
           13 suites boutique con spa privado a 5 minutos caminando de Las Pozas.<br />
-          Desde $1,500/noche con el mejor precio garantizado.
+          Disfruta de esta experiencia desde $1,200 MXN/noche.
         </p>
 
         {/* Date picker */}

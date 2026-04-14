@@ -21,6 +21,7 @@ export interface Suite {
   features: string[];   // detalle: camas, baños, etc.
   amenities: string[];  // tags visuales rápidos
   images: string[];
+  badge?: string;       // badge destacado en el grid
   featured?: boolean;
 }
 
@@ -47,13 +48,14 @@ export const suites: Suite[] = [
     ],
     amenities: ['Piscina spa privada', 'Cama kingsize', 'Terraza privada', 'Vista montaña'],
     images: [
-      '/images/JUNGLA/PORTADA.JPG',
+      '/images/JUNGLA/PORTADA.jpg',
       '/images/JUNGLA/DSCF1065.jpg',
       '/images/JUNGLA/DSCF1078.jpg',
       '/images/JUNGLA/DSCF1094.jpg',
       '/images/JUNGLA/Copia de DSCF1085.jpg',
       '/images/JUNGLA/Copia de DSCF1088.jpg',
     ],
+    badge: 'SPA PRIVADO',
     featured: true,
   },
   {
@@ -83,6 +85,7 @@ export const suites: Suite[] = [
       '/images/LINDAVISTA/Copia de DSC09576.jpg',
       '/images/LINDAVISTA/Copia de IMG_0531.jpg',
     ],
+    badge: 'HIDROMASAJE',
     featured: true,
   },
   {
@@ -111,6 +114,7 @@ export const suites: Suite[] = [
       '/images/FLOR DE LIS 1/Copia de DSC09450-2.jpg',
       '/images/FLOR DE LIS 1/Copia de DSC09677-HDR.jpg',
     ],
+    badge: 'SPA PRIVADO',
     featured: false,
   },
   {
@@ -139,6 +143,7 @@ export const suites: Suite[] = [
       '/images/FLOR DE LIS 2/Copia de DSC09450-2.jpg',
       '/images/FLOR DE LIS 2/Copia de DSC09677-HDR.jpg',
     ],
+    badge: 'SPA PRIVADO',
     featured: true,
   },
   {
@@ -166,6 +171,7 @@ export const suites: Suite[] = [
       '/images/LAJAS/Copia de DSC09615.jpg',
       '/images/LAJAS/Copia de DSC09622-2.jpg',
     ],
+    badge: 'VISTAS PANORÁMICAS',
     featured: false,
   },
   {
@@ -193,6 +199,7 @@ export const suites: Suite[] = [
       '/images/HELECHOS 1/Copia de DSC09517-HDR.jpg',
       '/images/HELECHOS 1/Copia de DSC09526-HDR.jpg',
     ],
+    badge: 'VISTA A LA PISCINA',
     featured: false,
   },
   {
@@ -218,6 +225,7 @@ export const suites: Suite[] = [
       '/images/HELECHOS 2/Copia de DSC09461-HDR.jpg',
       '/images/HELECHOS 2/Copia de DSC09556-HDR.jpg',
     ],
+    badge: 'VISTA A LA PISCINA',
     featured: false,
   },
   {
@@ -225,7 +233,7 @@ export const suites: Suite[] = [
     name: 'Lirios 1',
     category: 'Standard',
     categoryGroup: 'Habitaciones Estándar',
-    description: 'Desconexión total y descanso reparador rodeado de vegetación. Ideal para parejas o amigos que buscan naturaleza y tranquilidad al mejor precio.',
+    description: 'Desconexión total y descanso reparador rodeado de vegetación. Ideal para parejas o amigos que buscan naturaleza y tranquilidad.',
     price: 1500,
     priceTiers: { 2: 1500, 3: 1900, 4: 1900 },
     maxOccupancy: 4,
@@ -243,6 +251,7 @@ export const suites: Suite[] = [
       '/images/LIRIOS 1/Copia de DSCF1620.jpg',
       '/images/LIRIOS 1/Copia de DSCF1622.jpg',
     ],
+    badge: 'VISTA A JARDÍN Y SELVA',
     featured: false,
   },
   {
@@ -267,6 +276,7 @@ export const suites: Suite[] = [
       '/images/LIRIOS 2/Copia de DSC09483-HDR.jpg',
       '/images/LIRIOS 2/Copia de DSC09489-2.jpg',
     ],
+    badge: 'BALCÓN PRIVADO',
     featured: true,
   },
   {
@@ -291,6 +301,7 @@ export const suites: Suite[] = [
       '/images/ORQUIDEAS 2/Copia de DSC09568-HDR.jpg',
       '/images/ORQUIDEAS 2/DSCF1607.jpg',
     ],
+    badge: 'KING BED',
     featured: false,
   },
   {
@@ -298,7 +309,7 @@ export const suites: Suite[] = [
     name: 'Orquídeas Doble',
     category: 'Superior',
     categoryGroup: 'Habitaciones Estándar',
-    description: 'Amplitud para cuatro personas con terraza compartida y vistas a la piscina. Ideal para dos parejas o familia pequeña.',
+    description: 'Amplitud para cuatro personas con terraza y vistas a la piscina. Ideal para dos parejas o familia pequeña.',
     price: 1500,
     priceTiers: { 2: 1500, 3: 1900, 4: 1900 },
     maxOccupancy: 4,
@@ -313,10 +324,12 @@ export const suites: Suite[] = [
     images: [
       '/images/ORQUIDEAS DOBLE/PORTADA.jpg',
       '/images/ORQUIDEAS DOBLE/Copia de DSC09602-HDR.jpg',
+      '/images/ORQUIDEAS DOBLE/Copia de DSCF1607.jpg',
       '/images/ORQUIDEAS DOBLE/Copia de DSCF1616.jpg',
       '/images/ORQUIDEAS DOBLE/Copia de DSCF1617.jpg',
       '/images/ORQUIDEAS DOBLE/DSCF1607.jpg',
     ],
+    badge: 'VISTA A LA SELVA',
     featured: false,
   },
   {
@@ -337,12 +350,14 @@ export const suites: Suite[] = [
     ],
     amenities: ['Cama kingsize', 'Solo 2 personas', 'Vista a piscina', 'WiFi'],
     images: [
+      '/images/ORQUIDEAS 3/ORQUIDEAS_3_HERO.jpg',
       '/images/ORQUIDEAS 3/PORTADA.jpg',
       '/images/ORQUIDEAS 3/Copia de DSC09567-HDR.jpg',
       '/images/ORQUIDEAS 3/Copia de DSC09568-HDR.jpg',
       '/images/ORQUIDEAS 3/DSCF1607.jpg',
       '/images/ORQUIDEAS 3/DSCF1612.jpg',
     ],
+    badge: 'KING BED',
     featured: true,
   },
   {
@@ -369,6 +384,7 @@ export const suites: Suite[] = [
       '/images/BROMELIAS 1/Copia de DSC09419-HDR.jpg',
       '/images/BROMELIAS 1/Copia de DSC09431.jpg',
     ],
+    badge: 'PLANTA BAJA',
     featured: false,
   },
 ];

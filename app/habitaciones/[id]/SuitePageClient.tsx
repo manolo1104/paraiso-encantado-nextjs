@@ -169,7 +169,7 @@ export default function SuitePageClient({ suite }: Props) {
           </section>
 
           <div className={styles.guarantees}>
-            <span><CheckCircle size={13} strokeWidth={2} /> Mejor precio garantizado</span>
+            <span><CheckCircle size={13} strokeWidth={2} /> Reserva directa sin comisiones</span>
             <span><CheckCircle size={13} strokeWidth={2} /> Pago 100% seguro (Stripe)</span>
             <span><CheckCircle size={13} strokeWidth={2} /> Cancelación gratis 48hrs</span>
           </div>

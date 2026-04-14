@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!suite) return {};
   return {
     title: `${suite.name} | Hotel Paraíso Encantado · Xilitla`,
-    description: `${suite.description} Desde $${suite.price.toLocaleString('es-MX')} MXN/noche. Reserva directa con mejor precio garantizado.`,
+    description: `${suite.description} Disfruta de esta experiencia desde $1,200 MXN/noche. Reserva directa sin comisiones.`,
   };
 }
 

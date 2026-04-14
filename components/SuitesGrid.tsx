@@ -11,7 +11,7 @@ export default function SuitesGrid() {
         </h2>
         <p className={styles.subtitle}>
           13 espacios únicos. Cada uno con carácter propio, diseñado para
-          privacidad absoluta y lujo en la naturaleza de la Huasteca Potosina.
+          privacidad absoluta y confort en la naturaleza de la Huasteca Potosina.
         </p>
       </div>
 
@@ -30,7 +30,7 @@ export default function SuitesGrid() {
           Explorar Todas las Suites
         </a>
         <p className={styles.ctaNote}>
-          Confirmación instantánea · Mejor precio garantizado
+          Confirmación instantánea · Cancelación gratuita 48hrs
         </p>
       </div>
     </section>

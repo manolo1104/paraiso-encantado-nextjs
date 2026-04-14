@@ -160,6 +160,7 @@ function ReservarPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const resultsRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // ── Search state ──────────────────────────────────────
   const [checkin, setCheckin] = useState('');
@@ -345,7 +346,7 @@ function ReservarPageInner() {
   return (
     <main className={styles.main}>
       <div className={styles.pageHeader}>
-        <p className={styles.eyebrow}>Reserva Directa · Mejor Precio Garantizado</p>
+        <p className={styles.eyebrow}>Reserva Directa · Sin Comisiones</p>
         <h1>Reserva tu <em>Suite</em></h1>
         <p className={styles.headerSub}>
           Sin intermediarios · Confirmación instantánea · Cancela hasta 48 hrs antes
@@ -449,16 +450,17 @@ function ReservarPageInner() {
               <article
                 key={room.id}
                 className={`${styles.roomCard} ${unavail ? styles.unavailable : ''} ${added ? styles.inCart : ''}`}
+                onClick={() => setDetailRoom(room)}
+                style={{ cursor: 'pointer' }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver detalles de ${room.name}`}
+                onKeyDown={e => e.key === 'Enter' && setDetailRoom(room)}
               >
-                {/* Image — click opens detail drawer */}
+                {/* Image */}
                 <div
                   className={styles.roomImageWrap}
-                  onClick={() => setDetailRoom(room)}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Ver detalles de ${room.name}`}
-                  onKeyDown={e => e.key === 'Enter' && setDetailRoom(room)}
-                  style={{ cursor: 'pointer' }}
+                  onClick={e => e.stopPropagation()}
                 >
                   <Image
                     src={room.image}
@@ -475,6 +477,7 @@ function ReservarPageInner() {
                   <button
                     className={styles.photoBtn}
                     onClick={e => { e.stopPropagation(); setLightboxRoom(room); setLightboxIdx(0); }}
+                    aria-label={`Ver galería de ${room.name}`}
                   >
                     Ver fotos ({room.images.length})
                   </button>
@@ -492,7 +495,7 @@ function ReservarPageInner() {
                   <div className={styles.roomTop}>
                     <div className={styles.roomNameRow}>
                       <h3 className={styles.roomName}>{room.name}</h3>
-                      <button className={styles.detailBtn} onClick={() => setDetailRoom(room)} aria-label={`Ver detalles de ${room.name}`} title="Ver detalles">
+                      <button className={styles.detailBtn} onClick={e => { e.stopPropagation(); setDetailRoom(room); }} aria-label={`Ver detalles de ${room.name}`} title="Ver detalles">
                         <Info size={15} strokeWidth={1.5} />
                       </button>
                     </div>
@@ -535,12 +538,12 @@ function ReservarPageInner() {
                     ) : searched ? (
                       <button
                         className={`${styles.addBtn} ${added ? styles.addBtnAdded : ''}`}
-                        onClick={() => added ? removeFromCart(room.id) : addToCart(room)}
+                        onClick={e => { e.stopPropagation(); added ? removeFromCart(room.id) : addToCart(room); }}
                       >
                         {added ? '✓ Quitar' : 'Seleccionar'}
                       </button>
                     ) : (
-                      <button className={styles.detailCta} onClick={() => setDetailRoom(room)}>
+                      <button className={styles.detailCta} onClick={e => { e.stopPropagation(); setDetailRoom(room); }}>
                         Ver detalles
                       </button>
                     )}
@@ -552,7 +555,7 @@ function ReservarPageInner() {
         </div>
 
         {/* ── Cart sidebar ── */}
-        <aside className={styles.sidebar}>
+        <aside className={styles.sidebar} ref={sidebarRef}>
           <div className={styles.sidebarInner}>
             <h2 className={styles.sidebarTitle}>Tu Reserva</h2>
 
@@ -656,6 +659,18 @@ function ReservarPageInner() {
           </div>
         </aside>
       </div>
+
+      {/* ── Sticky cart jump button ── */}
+      {cart.length > 0 && (
+        <button
+          className={styles.stickyCartBtn}
+          onClick={() => sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          aria-label="Ver carrito de reserva"
+        >
+          <ShieldCheck size={15} strokeWidth={2} />
+          Ver carrito ({cart.length})
+        </button>
+      )}
 
       {/* ── Room Detail Drawer ── */}
       {detailRoom && (

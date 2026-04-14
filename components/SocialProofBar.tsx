@@ -35,8 +35,8 @@ export default function SocialProofBar() {
             <Award size={24} strokeWidth={1.5} />
           </div>
           <div className={styles.content}>
-            <strong>Mejor Precio Garantizado</strong>
-            <p>Reserve directo y ahorre vs. Booking o Airbnb</p>
+            <strong>Reserva Directa</strong>
+            <p>Sin comisiones · Confirmación instantánea</p>
           </div>
         </div>
 

@@ -409,7 +409,7 @@ export default function CheckoutPage() {
           <div className={styles.summaryGuarantees}>
             <p><ShieldCheck size={13} strokeWidth={1.5} /> Confirmación instantánea por email</p>
             <p><ShieldCheck size={13} strokeWidth={1.5} /> Cancelación gratuita hasta 48 hrs antes</p>
-            <p><ShieldCheck size={13} strokeWidth={1.5} /> Mejor precio garantizado</p>
+            <p><ShieldCheck size={13} strokeWidth={1.5} /> Reserva directa sin comisiones</p>
           </div>
         </aside>
       </div>

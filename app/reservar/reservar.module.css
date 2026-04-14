@@ -1170,3 +1170,40 @@
   .drawer { max-width: 100%; }
   .drawerFeatures { grid-template-columns: 1fr; }
 }
+
+/* ── Sticky cart jump button ── */
+.stickyCartBtn {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #1a2e1a;
+  color: #e8dcc8;
+  border: none;
+  border-radius: 50px;
+  padding: 11px 18px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(26, 46, 26, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+.stickyCartBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(26, 46, 26, 0.55);
+}
+
+@media (max-width: 768px) {
+  .stickyCartBtn {
+    bottom: 80px;
+    right: 16px;
+    font-size: 0.78rem;
+    padding: 10px 14px;
+  }
+}

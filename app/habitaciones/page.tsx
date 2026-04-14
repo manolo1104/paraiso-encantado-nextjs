@@ -8,7 +8,7 @@ import styles from './habitaciones.module.css';
 export const metadata = {
   title: 'Suites Boutique | Hotel Paraíso Encantado · Xilitla',
   description:
-    '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla. Desde $1,500/noche con mejor precio garantizado.',
+    '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla. Disfruta de esta experiencia desde $1,200/noche.',
 };
 
 export default function HabitacionesPage() {
@@ -42,11 +42,11 @@ export default function HabitacionesPage() {
             Nuestras <em>Suites</em>
           </h1>
           <p className={styles.headerSubtitle}>
-            13 espacios únicos. Cada uno diseñado para privacidad absoluta y lujo en la naturaleza.
+            13 espacios únicos. Cada uno diseñado para privacidad absoluta y confort en la naturaleza.
             Todas a 5 minutos caminando del Jardín de Edward James.
           </p>
           <div className={styles.headerMeta}>
-            <span>Desde <strong>$1,500 MXN</strong>/noche · 2 personas</span>
+            <span>Disfruta de esta experiencia desde <strong>$1,200 MXN</strong>/noche</span>
             <span className={styles.dot}>·</span>
             <span>Persona adicional <strong>+$300 MXN</strong></span>
             <span className={styles.dot}>·</span>
@@ -77,12 +77,8 @@ export default function HabitacionesPage() {
                       loading="lazy"
                     />
                     <div className={styles.categoryBadge}>{suite.category}</div>
-                    {suite.amenities.some((a) =>
-                      a.toLowerCase().includes('spa') ||
-                      a.toLowerCase().includes('piscina') ||
-                      a.toLowerCase().includes('hidro')
-                    ) && (
-                      <div className={styles.spaBadge}>Spa Privado</div>
+                    {suite.badge && (
+                      <div className={styles.spaBadge}>{suite.badge}</div>
                     )}
                   </div>
 
@@ -129,7 +125,7 @@ export default function HabitacionesPage() {
       {/* CTA final */}
       <section className={styles.finalCta}>
         <h2>¿Lista tu <em>Escapada</em>?</h2>
-        <p>Confirmación instantánea · Mejor precio garantizado · Cancela hasta 48hrs antes</p>
+        <p>Confirmación instantánea · Cancelación gratuita hasta 48hrs antes</p>
         <a href={BOOKING_URL} className={styles.finalCtaBtn}>
           Reservar Ahora
         </a>

@@ -12,11 +12,11 @@ const benefits = [
   },
   {
     Icon: AwardIcon,
-    title: 'Mejor Precio Garantizado',
-    highlight: 'Reserve directo y ahorre',
+    title: 'Reserva Directa',
+    highlight: 'Sin intermediarios, sin comisiones',
     description:
-      'Al reservar directamente en nuestra página o motor de reservas obtienes el precio más bajo disponible. Si encuentras más barato, lo igualamos. Sin comisiones de intermediarios.',
-    proof: 'Garantía 100% — o te regresamos la diferencia.',
+      'Al reservar directamente con nosotros obtienes el mejor precio disponible y trato personalizado. Sin comisiones de OTAs como Booking o Airbnb.',
+    proof: 'Confirmación instantánea · Cancela hasta 48hrs antes.',
   },
   {
     Icon: LeafIcon,
@@ -37,7 +37,7 @@ export default function WhyUs() {
         </h2>
         <p className={styles.subtitle}>
           No somos un hotel más en Xilitla. Somos la única experiencia que combina
-          ubicación privilegiada, mejor precio garantizado y autenticidad huasteca.
+          ubicación privilegiada, reserva directa sin comisiones y autenticidad huasteca.
         </p>
       </div>
 

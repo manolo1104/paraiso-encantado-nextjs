@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Jost } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -22,7 +23,7 @@ const jost = Jost({
 export const metadata: Metadata = {
   title: 'Hotel Paraíso Encantado | A 5 min del Jardín de Edward James · Xilitla, SLP',
   description:
-    '13 suites boutique con spa privado en Xilitla. El hotel más cercano al Jardín Surrealista de Edward James (Las Pozas). Desde $1,500/noche con mejor precio garantizado.',
+    '13 suites boutique con spa privado en Xilitla. El hotel más cercano al Jardín Surrealista de Edward James (Las Pozas). Disfruta de esta experiencia desde $1,200/noche.',
   keywords: [
     'hotel xilitla',
     'jardín edward james',
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Hotel Paraíso Encantado | Xilitla, Huasteca Potosina',
     description:
-      '13 suites con spa privado a 5 minutos caminando del Jardín de Edward James. Mejor precio garantizado.',
+      '13 suites con spa privado a 5 minutos caminando del Jardín de Edward James. Reserva directa sin comisiones.',
     locale: 'es_MX',
     type: 'website',
   },
@@ -105,6 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         {children}
         <Footer />
+        <WhatsAppButton />
       </body>
     </html>
   );

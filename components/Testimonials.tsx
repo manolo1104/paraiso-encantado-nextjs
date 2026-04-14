@@ -52,7 +52,7 @@ const testimonials = [
     location: 'Guadalajara, Jal.',
     date: 'Marzo 2026',
     rating: 5,
-    text: 'Buscábamos desconectarnos sin sacrificar comodidad. Paraíso Encantado es exactamente eso: lujo auténtico en la Huasteca. Los niños disfrutaron la piscina y nosotros la calma total.',
+    text: 'Buscábamos desconectarnos sin sacrificar comodidad. Paraíso Encantado es exactamente eso: confort auténtico en la Huasteca. Los niños disfrutaron la piscina y nosotros la calma total.',
     suite: 'Helechos 1',
     nights: 3,
     verified: true,

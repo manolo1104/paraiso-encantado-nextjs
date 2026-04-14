@@ -25,7 +25,7 @@ export default function FinalCTA() {
         <ul className={styles.guarantees} role="list" aria-label="Garantías">
           <li><CheckCircle size={14} strokeWidth={2} /> Pago 100% seguro</li>
           <li><CheckCircle size={14} strokeWidth={2} /> Cancela hasta 48hrs antes</li>
-          <li><CheckCircle size={14} strokeWidth={2} /> Mejor precio garantizado</li>
+          <li><CheckCircle size={14} strokeWidth={2} /> Confirmación instantánea</li>
         </ul>
 
         <div className={styles.alternatives} aria-label="Otras formas de contacto">
