@@ -48,7 +48,7 @@ const jsonLd = {
   name: 'Hotel Paraíso Encantado',
   description:
     '13 suites boutique con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina.',
-  url: 'https://paraisoencantado-nextjs.up.railway.app',
+  url: 'https://www.paraisoencantado.com',
   telephone: '+524891007679',
   email: 'reservas@paraisoencantado.com',
   address: {
