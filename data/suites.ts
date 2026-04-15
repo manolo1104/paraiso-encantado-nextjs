@@ -48,7 +48,7 @@ export const suites: Suite[] = [
     ],
     amenities: ['Piscina spa privada', 'Cama kingsize', 'Terraza privada', 'Vista montaña'],
     images: [
-      '/images/JUNGLA/PORTADA.jpg',
+      '/images/JUNGLA/PORTADA.JPG',
       '/images/JUNGLA/DSCF1065.jpg',
       '/images/JUNGLA/DSCF1078.jpg',
       '/images/JUNGLA/DSCF1094.jpg',
