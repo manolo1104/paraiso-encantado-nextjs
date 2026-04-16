@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@/lib/track';
 import styles from './HeroDatePicker.module.css';
 
 export default function HeroDatePicker() {
@@ -15,14 +16,23 @@ export default function HeroDatePicker() {
 
   function handleCheckinChange(value: string) {
     setCheckin(value);
+    let newCheckout = checkout;
     if (value >= checkout) {
       const next = new Date(value);
       next.setDate(next.getDate() + 1);
-      setCheckout(next.toISOString().split('T')[0]);
+      newCheckout = next.toISOString().split('T')[0];
+      setCheckout(newCheckout);
     }
+    track('seleccionar_fecha', { field: 'checkin', checkin: value, checkout: newCheckout });
+  }
+
+  function handleCheckoutChange(value: string) {
+    setCheckout(value);
+    track('seleccionar_fecha', { field: 'checkout', checkin, checkout: value });
   }
 
   function handleSubmit() {
+    track('ir_reservar', { checkin, checkout, guests });
     router.push(`/reservar?checkin=${checkin}&checkout=${checkout}&adults=${guests}`);
   }
 
@@ -50,7 +60,7 @@ export default function HeroDatePicker() {
             className={styles.input}
             value={checkout}
             min={checkin ? (() => { const d = new Date(checkin); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })() : tomorrow}
-            onChange={(e) => setCheckout(e.target.value)}
+            onChange={(e) => handleCheckoutChange(e.target.value)}
             aria-label="Fecha de salida"
           />
         </label>

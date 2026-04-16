@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import TrackingSetup from '@/components/TrackingSetup';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -103,6 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <TrackingSetup />
         <Navbar />
         {children}
         <Footer />

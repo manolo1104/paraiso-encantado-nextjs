@@ -1,5 +1,6 @@
 'use client';
 
+import { track } from '@/lib/track';
 import styles from './WhatsAppButton.module.css';
 
 export default function WhatsAppButton() {
@@ -10,6 +11,7 @@ export default function WhatsAppButton() {
       rel="noopener noreferrer"
       className={styles.btn}
       aria-label="Chatear por WhatsApp"
+      onClick={() => track('clic_whatsapp', { source: 'floating_button' }, true)}
     >
       <svg
         viewBox="0 0 24 24"

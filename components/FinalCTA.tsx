@@ -1,4 +1,7 @@
+'use client';
+
 import { CheckCircle, Phone, MessageCircle, Mail } from 'lucide-react';
+import { track } from '@/lib/track';
 import styles from './FinalCTA.module.css';
 
 export default function FinalCTA() {
@@ -29,7 +32,8 @@ export default function FinalCTA() {
         </ul>
 
         <div className={styles.alternatives} aria-label="Otras formas de contacto">
-          <a href="tel:+524891007679" className={styles.altLink}>
+          <a href="tel:+524891007679" className={styles.altLink}
+            onClick={() => track('clic_telefono', { number: '+524891007679', source: 'final_cta' }, true)}>
             <Phone size={15} strokeWidth={1.5} />
             489-100-7679
           </a>
@@ -38,6 +42,7 @@ export default function FinalCTA() {
             target="_blank"
             rel="noopener noreferrer"
             className={styles.altLink}
+            onClick={() => track('clic_whatsapp', { source: 'final_cta' }, true)}
           >
             <MessageCircle size={15} strokeWidth={1.5} />
             WhatsApp
