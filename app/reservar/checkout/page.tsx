@@ -84,7 +84,7 @@ function CheckoutForm({
       });
 
       try {
-        const res = await fetch(`${API}/send-confirmation`, {
+        const res = await fetch(`${API}/api/send-confirmation`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -261,7 +261,7 @@ export default function CheckoutPage() {
     }).catch(() => {});
 
     // Create payment intent
-    fetch(`${API}/create-payment-intent`, {
+    fetch(`${API}/api/create-payment-intent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
