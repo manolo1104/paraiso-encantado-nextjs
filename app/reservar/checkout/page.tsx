@@ -16,7 +16,7 @@ import {
 } from '@/lib/booking';
 import styles from './checkout.module.css';
 
-const API = process.env.NEXT_PUBLIC_BOOKING_API_URL || 'https://hotel-reservas-backend-production.up.railway.app';
+const API = '';
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
   'pk_live_51SuFNKPRwYk9rOzoUc56CjtGJ2VdnUkHvRNlP6N6EXX2PHdemLg0oHcOhXTUyv1jl1XHKvxcMfoIJErQSBBp4ojT00UPdWzcaR'

@@ -22,7 +22,7 @@ import {
 } from '@/lib/booking';
 import styles from './reservar.module.css';
 
-const API = process.env.NEXT_PUBLIC_BOOKING_API_URL || 'https://hotel-reservas-backend-production.up.railway.app';
+const API = '';
 
 // ── Room Detail Drawer ────────────────────────────────────
 function RoomDrawer({
