@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createTemporaryBlock } from '@/lib/sheets';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { checkin, checkout, rooms, sessionId } = await req.json();

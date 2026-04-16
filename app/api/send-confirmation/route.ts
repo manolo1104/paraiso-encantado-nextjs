@@ -3,9 +3,10 @@ import { Resend } from 'resend';
 import { addBookingToSheet, blockDates, removeTemporaryBlock } from '@/lib/sheets';
 import { buildEmailHtml } from '@/lib/email';
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
   try {
     const body = await req.json();
     const { email, customerName, customerPhone, notes, total, paymentIntentId,
