@@ -34,19 +34,37 @@ function ExitIntentPopup({ sessionId }: { sessionId: string }) {
   const fired = useRef(false);
 
   useEffect(() => {
-    function handleMouseLeave(e: MouseEvent) {
-      if (e.clientY <= 0 && !fired.current) {
-        fired.current = true;
-        setVisible(true);
-        fetch('/api/track-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event: 'EXIT_INTENT_TRIGGER', sessionId, payload: { page: 'checkout' } }),
-        }).catch(() => {});
-      }
+    function trigger() {
+      if (fired.current) return;
+      fired.current = true;
+      setVisible(true);
+      fetch('/api/track-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'EXIT_INTENT_TRIGGER', sessionId, payload: { page: 'checkout' } }),
+      }).catch(() => {});
     }
+
+    // Cursor sale por arriba del viewport
+    function handleMouseLeave(e: MouseEvent) {
+      if (e.clientY <= 0) trigger();
+    }
+
+    // Botón atrás del browser — empujamos un estado extra al cargar
+    // para interceptar el popstate
+    window.history.pushState(null, '', window.location.href);
+    function handlePopState() {
+      trigger();
+      // Volvemos a poner el estado para que si cierra el popup pueda seguir
+      window.history.pushState(null, '', window.location.href);
+    }
+
     document.addEventListener('mouseleave', handleMouseLeave);
-    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [sessionId]);
 
   async function handleSubmit(e: React.FormEvent) {
