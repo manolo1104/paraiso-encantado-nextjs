@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
@@ -21,6 +21,105 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
   'pk_live_51SuFNKPRwYk9rOzoUc56CjtGJ2VdnUkHvRNlP6N6EXX2PHdemLg0oHcOhXTUyv1jl1XHKvxcMfoIJErQSBBp4ojT00UPdWzcaR'
 );
+
+const PROMO_CODE = 'PARAISO10';
+
+// ── Exit-intent popup ─────────────────────────────────────
+function ExitIntentPopup({ sessionId }: { sessionId: string }) {
+  const [visible, setVisible] = useState(false);
+  const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const fired = useRef(false);
+
+  useEffect(() => {
+    function handleMouseLeave(e: MouseEvent) {
+      if (e.clientY <= 0 && !fired.current) {
+        fired.current = true;
+        setVisible(true);
+        fetch('/api/track-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'EXIT_INTENT_TRIGGER', sessionId, payload: { page: 'checkout' } }),
+        }).catch(() => {});
+      }
+    }
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+  }, [sessionId]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim() || !email.includes('@')) {
+      setError('Ingresa un correo válido.');
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await fetch('/api/capture-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (res.ok) {
+        setSuccess(true);
+        fetch('/api/track-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'EXIT_POPUP_CONVERT', sessionId, payload: { email: email.trim() } }),
+        }).catch(() => {});
+      } else {
+        setError('No se pudo guardar. Intenta de nuevo.');
+        setSubmitting(false);
+      }
+    } catch {
+      setError('Error de conexión.');
+      setSubmitting(false);
+    }
+  }
+
+  if (!visible) return null;
+
+  return (
+    <div className={styles.exitOverlay} onClick={e => { if (e.target === e.currentTarget) setVisible(false); }}>
+      <div className={styles.exitPopup}>
+        <button className={styles.exitClose} onClick={() => setVisible(false)} aria-label="Cerrar">×</button>
+        <span className={styles.exitTag}>Oferta exclusiva</span>
+        <h2 className={styles.exitTitle}>¡Espera! 10% de descuento</h2>
+        <p className={styles.exitDesc}>
+          Déjanos tu correo y recibe un cupón de 10% de descuento para aplicar en tu reserva directa.
+        </p>
+        {!success ? (
+          <form onSubmit={handleSubmit} className={styles.exitForm}>
+            <input
+              type="email"
+              className={styles.exitInput}
+              placeholder="tu@correo.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+            <button type="submit" className={styles.exitBtn} disabled={submitting}>
+              {submitting ? 'Enviando…' : 'Obtener cupón'}
+            </button>
+            {error && <p className={styles.exitError}>{error}</p>}
+          </form>
+        ) : (
+          <div className={styles.exitSuccess}>
+            <p style={{ margin: '0 0 8px', fontFamily: 'var(--font-jost), sans-serif', fontSize: '0.85rem', color: '#2d5a27' }}>
+              ¡Listo! Tu cupón:
+            </p>
+            <div className={styles.exitCode}>{PROMO_CODE}</div>
+            <p className={styles.exitSuccessNote}>Aplícalo en el campo de código promocional al pagar.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ── Inner form (needs Stripe context) ────────────────────
 function CheckoutForm({
@@ -174,7 +273,8 @@ function CheckoutForm({
             onChange={e => setHowDidYouHear(e.target.value)}
           >
             <option value="">Selecciona una opción</option>
-            <option value="google">Google</option>
+            <option value="google_busqueda">Google Búsqueda</option>
+            <option value="google_maps">Google Maps</option>
             <option value="instagram">Instagram</option>
             <option value="facebook">Facebook</option>
             <option value="recomendacion">Recomendación</option>
@@ -323,6 +423,7 @@ export default function CheckoutPage() {
 
   return (
     <main className={styles.main}>
+      <ExitIntentPopup sessionId={sessionId} />
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => router.back()}>
           <ChevronLeft size={15} strokeWidth={2} /> Volver

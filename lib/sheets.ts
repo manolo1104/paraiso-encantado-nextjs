@@ -300,6 +300,23 @@ export async function removeTemporaryBlock(sessionId: string) {
   }
 }
 
+export async function addLead(email: string) {
+  const client = await getSheetsClient();
+  if (!client || !process.env.GOOGLE_SHEET_ID) return;
+  try {
+    const ts = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+    await client.spreadsheets.values.append({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: 'Leads!A:B',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[ts, email]] },
+    });
+    console.log(`✅ Lead guardado: ${email.slice(0, 4)}***`);
+  } catch (e: any) {
+    console.error('❌ addLead error:', e.message);
+  }
+}
+
 export async function blockDates(
   checkin: string, checkout: string,
   rooms: (string | { name: string })[],

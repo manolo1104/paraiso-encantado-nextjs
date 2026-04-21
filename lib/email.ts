@@ -77,8 +77,7 @@ export function buildEmailHtml(data: {
       <table class="container full-width" role="presentation" width="620" cellspacing="0" cellpadding="0" border="0">
 
         <!-- HERO -->
-        <tr><td style="padding:0;background-color:#2f281f;">
-          <td class="mobile-padding-lg" style="padding:34px 40px 38px 40px;background-color:#2f281f;">
+        <tr><td class="mobile-padding-lg" style="padding:34px 40px 38px 40px;background-color:#2f281f;">
             <p style="margin:0 0 8px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,0.72);">Confirmación de Reserva</p>
             <h1 class="hero-title" style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:46px;font-style:italic;font-weight:300;color:#ffffff;line-height:1.1;">Tu paraíso te espera.</h1>
             <p style="margin:14px 0 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;font-weight:300;color:rgba(255,255,255,0.8);line-height:1.7;">Tu estancia en Hotel Paraíso Encantado ya está lista. Aquí tienes todos los detalles de tu llegada.</p>
