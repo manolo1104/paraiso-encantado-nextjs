@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import styles from './Hero.module.css';
 import HeroDatePicker from './HeroDatePicker';
+import HeroLiveSignals from './HeroLiveSignals';
 import { StarIcon, ShieldCheckIcon, CheckCircleIcon } from './icons';
 
 export default function Hero() {
@@ -47,6 +48,9 @@ export default function Hero() {
           13 suites boutique con spa privado a 5 minutos caminando de Las Pozas.<br />
           Disfruta de esta experiencia desde $1,200 MXN/noche.
         </p>
+
+        {/* Live signals — viewers, escasez, última reserva */}
+        <HeroLiveSignals />
 
         {/* Date picker */}
         <HeroDatePicker />
