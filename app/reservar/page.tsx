@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle } from 'lucide-react';
+import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle, Check, Ban } from 'lucide-react';
 import {
   BOOKING_ROOMS,
   BookingRoom,
@@ -152,7 +152,7 @@ function RoomDrawer({
             onClick={() => inCart ? onRemove(room.id) : onAdd(room)}
             disabled={!searched}
           >
-            {!searched ? 'Selecciona fechas para reservar' : inCart ? '✓ Quitar del carrito' : `Agregar al carrito — ${formatMXN(total ?? room.price)}`}
+            {!searched ? 'Selecciona fechas para reservar' : inCart ? <><Check size={14} strokeWidth={2} /> Quitar del carrito</> : `Agregar al carrito — ${formatMXN(total ?? room.price)}`}
           </button>
           {!searched && <p className={styles.drawerCtaNote}>Elige tus fechas arriba y busca disponibilidad</p>}
         </div>
@@ -372,6 +372,13 @@ function ReservarPageInner() {
     router.push('/reservar/checkout');
   }
 
+  // ── Capacity validation ───────────────────────────────
+  const cartCapacity = cart.reduce((sum, item) => {
+    const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
+    return sum + (room?.maxGuests ?? 0);
+  }, 0);
+  const capacityOk = cart.length === 0 || cartCapacity >= adults;
+
   // ── Room grid helpers ─────────────────────────────────
   const visibleRooms = BOOKING_ROOMS.filter(r => !r.disabled);
   const isUnavailable = (r: BookingRoom) => unavailable.includes(r.name);
@@ -522,11 +529,16 @@ function ReservarPageInner() {
                   </button>
                   {unavail && (
                     <div className={styles.unavailOverlay}>
-                      <span>🚫 No disponible</span>
+                      <span><Ban size={14} strokeWidth={2} /> No disponible</span>
                       <span className={styles.unavailSub}>Agotada en estas fechas</span>
                     </div>
                   )}
-                  {added && <div className={styles.addedOverlay}><span>✓ Agregada al carrito</span></div>}
+                  {added && <div className={styles.addedOverlay}><span><Check size={14} strokeWidth={2} /> Agregada al carrito</span></div>}
+                  {!unavail && !added && adults > room.maxGuests && (
+                    <div className={styles.overCapacityBadge}>
+                      <Users size={12} strokeWidth={2} /> Máx. {room.maxGuests} personas
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -579,7 +591,7 @@ function ReservarPageInner() {
                         className={`${styles.addBtn} ${added ? styles.addBtnAdded : ''}`}
                         onClick={e => { e.stopPropagation(); added ? removeFromCart(room.id) : addToCart(room); }}
                       >
-                        {added ? '✓ Quitar' : 'Seleccionar'}
+                        {added ? <><Check size={13} strokeWidth={2} /> Quitar</> : 'Seleccionar'}
                       </button>
                     ) : (
                       <button className={styles.detailCta} onClick={e => { e.stopPropagation(); setDetailRoom(room); }}>
@@ -683,9 +695,19 @@ function ReservarPageInner() {
               </div>
             )}
 
+            {!capacityOk && cart.length > 0 && (
+              <div className={styles.capacityWarning}>
+                <AlertTriangle size={14} strokeWidth={2} />
+                <span>
+                  {adults} adultos pero capacidad del carrito es {cartCapacity}.
+                  Agrega otra habitación o elige Helechos 1 ó 2 (hasta 6 personas).
+                </span>
+              </div>
+            )}
+
             <button
               className={styles.checkoutBtn}
-              disabled={cart.length === 0 || !checkin || !checkout}
+              disabled={cart.length === 0 || !checkin || !checkout || !capacityOk}
               onClick={goToCheckout}
             >
               Continuar <ChevronRight size={16} strokeWidth={2} />

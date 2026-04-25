@@ -802,6 +802,39 @@
   white-space: nowrap;
 }
 
+/* ── Capacity warning ── */
+.capacityWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff8e6;
+  border: 1px solid #e8b84b;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  color: #7a5a00;
+  margin-bottom: 10px;
+}
+.capacityWarning svg { flex-shrink: 0; margin-top: 1px; color: #c9860a; }
+
+/* ── Over-capacity badge on room card ── */
+.overCapacityBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(201,169,122,0.92);
+  color: #1e3012;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .layout { grid-template-columns: 1fr 280px; }
@@ -811,13 +844,18 @@
   .layout { grid-template-columns: 1fr; }
   .sidebar { position: static; }
   .roomGrid { grid-template-columns: 1fr; }
-  .searchBar { flex-wrap: wrap; }
-  .searchFields { flex-wrap: wrap; }
+  .searchBar { flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
+  .searchFields { flex-direction: column; gap: 0; }
+  .fieldLabel { padding: 12px 16px; border-bottom: 1px solid #f0ece4; }
+  .fieldDivider { display: none; }
+  .guestField { padding: 12px 16px; border-bottom: 1px solid #f0ece4; flex-direction: row; justify-content: space-between; align-items: center; }
+  .searchBtn { margin: 12px 16px 16px; border-radius: 8px; }
+  .pageHeader { padding: 32px 16px 20px; }
 }
 
 @media (max-width: 500px) {
-  .searchBar { flex-direction: column; align-items: stretch; }
-  .fieldDivider { display: none; }
+  .roomGrid { gap: 12px; }
+  .pageHeader { padding: 24px 16px 16px; }
 }
 
 /* ── Room name row & detail button ── */
