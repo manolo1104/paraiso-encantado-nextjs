@@ -106,9 +106,21 @@ export default function ConfirmacionPage() {
                 </div>
               )}
               <div className={`${styles.roomRow} ${styles.totalRow}`}>
-                <span>Total pagado</span>
+                <span>Total estadía</span>
                 <span>{formatMXN(total)}</span>
               </div>
+              {booking.isDeposit && booking.amountPaid != null && (
+                <>
+                  <div className={`${styles.roomRow} ${styles.paidRow}`}>
+                    <span>✓ Pagado ahora (50%)</span>
+                    <span>{formatMXN(booking.amountPaid)}</span>
+                  </div>
+                  <div className={`${styles.roomRow} ${styles.pendingRow}`}>
+                    <span>Pendiente al check-in</span>
+                    <span>{formatMXN(booking.amountPending ?? 0)}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

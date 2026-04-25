@@ -31,6 +31,11 @@ const faqs = [
       'Incluye: suite con todas las amenidades, WiFi de alta velocidad, estacionamiento privado gratuito, acceso a piscina spa, toallas y amenidades de baño, spa privado (en suites que lo incluyen). No incluye: desayunos ($100–200 MXN), tours a Las Pozas y masajes terapéuticos.',
   },
   {
+    question: '¿Con cuánto se confirma la reserva?',
+    answer:
+      '1 noche: se cobra el 100% al confirmar en línea. 2 noches o más: solo pagas el 50% ahora con tarjeta y el 50% restante lo liquidas directamente en el hotel al momento del check-in (efectivo, tarjeta o transferencia). Cancelaciones gratuitas hasta 48 hrs antes con reembolso total.',
+  },
+  {
     question: '¿Cuántas personas caben por habitación?',
     answer:
       'Varía según la suite: Habitaciones Standard: 2–4 personas. Suites Plus/Master: 4 personas. Suites Familiares (Helechos): hasta 6–8 personas. El precio base es para 2 personas. Persona adicional: +$300 MXN por noche.',

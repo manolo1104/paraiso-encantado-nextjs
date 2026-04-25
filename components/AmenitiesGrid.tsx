@@ -6,31 +6,37 @@ const amenities = [
   {
     Icon: DropletsIcon,
     title: 'Piscina Spa Privada',
+    desc: 'Tu propio spa al aire libre, exclusivo para tu suite. Nadie más — solo tú y el paisaje de Xilitla.',
     image: '/images/JUNGLA/PORTADA.JPG',
   },
   {
     Icon: SunriseIcon,
     title: 'Terraza Panorámica',
+    desc: 'Desayuna frente a las montañas de la Huasteca. La vista más impresionante de toda la región.',
     image: '/images/LINDAVISTA/Copia de DSC09539-HDR.jpg',
   },
   {
     Icon: UtensilsIcon,
     title: 'Restaurante El Papán',
+    desc: 'Cocina huasteca auténtica a pasos de tu habitación. Tortillas hechas a mano y zacahuil de temporada.',
     image: '/images/RESTAURANTE/DSC09679.jpg',
   },
   {
     Icon: CompassIcon,
     title: 'Tours a Las Pozas',
+    desc: 'A 5 minutos caminando del Jardín Surrealista de Edward James. Te organizamos la visita desde el hotel.',
     image: '/images/atracciones/jardin_de_edward_james.jpg',
   },
   {
     Icon: WifiIcon,
     title: 'WiFi de Alta Velocidad',
+    desc: 'Conexión estable en toda la propiedad. Trabaja o desconéctate — tú eliges desde tu suite.',
     image: '/images/ORQUIDEAS DOBLE/PORTADA.jpg',
   },
   {
     Icon: CarIcon,
     title: 'Estacionamiento Gratuito',
+    desc: 'Llegada sin estrés: estacionamiento privado y seguro incluido sin costo adicional.',
     image: '/images/LAJAS/PORTADA.jpg',
   },
 ];
@@ -48,7 +54,7 @@ export default function AmenitiesGrid() {
         </p>
       </div>
       <div className={styles.grid}>
-        {amenities.map(({ Icon, title, image }) => (
+        {amenities.map(({ Icon, title, desc, image }) => (
           <div key={title} className={styles.cell}>
             <Image
               src={image}
@@ -59,8 +65,11 @@ export default function AmenitiesGrid() {
             />
             <div className={styles.cellOverlay} aria-hidden="true" />
             <div className={styles.cellContent}>
-              <Icon size={28} className={styles.cellIcon} />
-              <p className={styles.cellTitle}>{title}</p>
+              <Icon size={26} className={styles.cellIcon} />
+              <div>
+                <p className={styles.cellTitle}>{title}</p>
+                <p className={styles.cellDesc}>{desc}</p>
+              </div>
             </div>
           </div>
         ))}

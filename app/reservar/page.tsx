@@ -580,8 +580,15 @@ function ReservarPageInner() {
                         {searched ? formatMXN(total_room!) : formatMXN(room.price)}
                       </span>
                       <span className={styles.priceSub}>
-                        {searched ? `${nights} noche${nights !== 1 ? 's' : ''}` : 'por noche · 2 personas'}
+                        {searched
+                          ? `total · ${nights} noche${nights !== 1 ? 's' : ''} · ${guestCount} pax`
+                          : 'por noche · 2 personas'}
                       </span>
+                      {searched && (
+                        <span className={styles.pricePerNight}>
+                          {formatMXN(Math.round(total_room! / nights))}/noche
+                        </span>
+                      )}
                     </div>
 
                     {unavail ? (
@@ -619,7 +626,20 @@ function ReservarPageInner() {
                 {children > 0 && <div><span>Menores</span><strong>{children}</strong></div>}
               </div>
             ) : (
-              <p className={styles.sidebarEmpty}>Selecciona fechas para comenzar</p>
+              <>
+                <p className={styles.sidebarEmpty}>Selecciona fechas para comenzar</p>
+                <div className={styles.promoReminder}>
+                  <Tag size={14} strokeWidth={1.5} />
+                  <div>
+                    <strong>3ª Noche Gratis</strong>
+                    <p>Reserva 3 noches con código <strong>XILITLA3MX</strong> y ahorra hasta {formatMXN(2400)} MXN</p>
+                  </div>
+                </div>
+                <div className={styles.depositNote}>
+                  <ShieldCheck size={13} strokeWidth={1.5} />
+                  <span>2 noches o más: solo pagas el 50% ahora. El resto al llegar.</span>
+                </div>
+              </>
             )}
 
             {cart.length > 0 && (

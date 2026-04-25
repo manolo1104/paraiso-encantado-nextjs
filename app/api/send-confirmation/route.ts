@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { email, customerName, customerPhone, notes, total, paymentIntentId,
-            bookingDetails, rooms, howDidYouHear, sessionId } = body;
+            bookingDetails, rooms, howDidYouHear, sessionId,
+            amountPaid, amountPending, isDeposit } = body;
 
     const checkin  = bookingDetails?.checkin  || bookingDetails?.checkin_date  || null;
     const checkout = bookingDetails?.checkout || bookingDetails?.checkout_date || null;
@@ -73,6 +74,9 @@ export async function POST(req: NextRequest) {
           checkin: checkin ?? undefined, checkout: checkout ?? undefined,
           nights, guests, adults, minors,
           rooms: normalizedRooms, total: total || 0,
+          amountPaid: amountPaid ?? undefined,
+          amountPending: amountPending ?? undefined,
+          isDeposit: isDeposit ?? false,
         });
         const from    = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
         const adminTo = process.env.ADMIN_EMAIL || 'reservas@paraisoencantado.com';

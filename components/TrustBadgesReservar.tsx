@@ -1,7 +1,7 @@
 'use client';
 
 import { ShieldCheckIcon, CheckCircleIcon } from '@/components/icons';
-import { Lock, RotateCcw, Tag } from 'lucide-react';
+import { Lock, RotateCcw, CreditCard } from 'lucide-react';
 
 const BADGES = [
   {
@@ -20,9 +20,9 @@ const BADGES = [
     sub: 'Hasta 48hrs antes',
   },
   {
-    icon: <Tag size={18} strokeWidth={1.5} />,
-    title: 'Mejor Precio',
-    sub: 'Reserva directa',
+    icon: <CreditCard size={18} strokeWidth={1.5} />,
+    title: 'Reserva con el 50%',
+    sub: '2 noches o más · Resto al llegar',
   },
 ];
 
@@ -33,11 +33,14 @@ export default function TrustBadgesReservar() {
         .trust-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 10px;
-          margin-bottom: 20px;
+          gap: 8px;
+          margin: 0 16px 20px;
         }
         @media (min-width: 640px) {
-          .trust-grid { grid-template-columns: repeat(4, 1fr); }
+          .trust-grid {
+            grid-template-columns: repeat(4, 1fr);
+            margin: 0 0 20px;
+          }
         }
         .trust-badge {
           display: flex;
@@ -46,8 +49,9 @@ export default function TrustBadgesReservar() {
           background: rgba(30,48,18,0.03);
           border: 1px solid rgba(30,48,18,0.08);
           border-radius: 6px;
-          padding: 12px 14px;
+          padding: 10px 12px;
           min-height: 56px;
+          box-sizing: border-box;
         }
         .trust-icon-wrap {
           color: #c9a97a;
@@ -55,8 +59,8 @@ export default function TrustBadgesReservar() {
           display: flex;
           align-items: center;
         }
-        .trust-title { font-size: 0.75rem; font-weight: 600; color: #1e3012; line-height: 1.3; }
-        .trust-sub   { font-size: 0.68rem; color: #888; margin-top: 1px; }
+        .trust-title { font-size: 0.72rem; font-weight: 600; color: #1e3012; line-height: 1.3; }
+        .trust-sub   { font-size: 0.65rem; color: #888; margin-top: 1px; line-height: 1.3; }
       `}</style>
       <div className="trust-grid" role="list" aria-label="Garantías de reserva">
         {BADGES.map((b) => (

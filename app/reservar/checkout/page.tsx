@@ -12,6 +12,7 @@ import {
   BOOKING_ROOMS,
   calcRoomStayTotal,
   calcCartSubtotal,
+  calcDepositAmount,
   formatMXN,
 } from '@/lib/booking';
 import styles from './checkout.module.css';
@@ -214,6 +215,9 @@ function CheckoutForm({
             notes,
             howDidYouHear,
             total,
+            amountPaid: booking.amountPaid,
+            amountPending: booking.amountPending,
+            isDeposit: booking.isDeposit,
             paymentIntentId,
             sessionId,
             bookingDetails: {
@@ -367,11 +371,22 @@ export default function CheckoutPage() {
       router.replace('/reservar');
       return;
     }
-    setBooking(state);
-
     const subtotal = calcCartSubtotal(state.cart, state.checkin, state.checkout);
     const total = Math.max(0, subtotal - state.promoDiscount);
-    const amountCents = Math.round(total * 100);
+    const deposit = calcDepositAmount(total, state.nights);
+    const pending = total - deposit;
+    const isDeposit = state.nights >= 2;
+
+    // Persist deposit info into booking state
+    const stateWithDeposit: BookingState = {
+      ...state,
+      amountTotal: total,
+      amountPaid: deposit,
+      amountPending: pending,
+      isDeposit,
+    };
+    setBooking(stateWithDeposit);
+    const amountCents = Math.round(deposit * 100);
 
     // Create temporary block
     const roomNames = state.cart.map(item => BOOKING_ROOMS.find(r => r.id === item.roomId)!.name);
@@ -427,6 +442,14 @@ export default function CheckoutPage() {
     }
     router.push('/reservar/confirmacion');
   }
+
+  // Expose deposit info to CheckoutForm via context alternative
+  const depositInfo = booking ? {
+    isDeposit: booking.isDeposit ?? false,
+    amountPaid: booking.amountPaid ?? 0,
+    amountPending: booking.amountPending ?? 0,
+    amountTotal: booking.amountTotal ?? 0,
+  } : null;
 
   if (!booking) return null;
 
@@ -527,15 +550,30 @@ export default function CheckoutPage() {
               </div>
             )}
             <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
-              <span>Total a pagar</span>
+              <span>Total estadía</span>
               <span>{formatMXN(total)}</span>
             </div>
+            {depositInfo?.isDeposit && (
+              <>
+                <div className={`${styles.summaryRow} ${styles.summaryDeposit}`}>
+                  <span>Pagas ahora (50%)</span>
+                  <span>{formatMXN(depositInfo.amountPaid)}</span>
+                </div>
+                <div className={`${styles.summaryRow} ${styles.summaryPending}`}>
+                  <span>Resto al check-in</span>
+                  <span>{formatMXN(depositInfo.amountPending)}</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className={styles.summaryGuarantees}>
             <p><ShieldCheck size={13} strokeWidth={1.5} /> Confirmación instantánea por email</p>
             <p><ShieldCheck size={13} strokeWidth={1.5} /> Cancelación gratuita hasta 48 hrs antes</p>
-            <p><ShieldCheck size={13} strokeWidth={1.5} /> Reserva directa sin comisiones</p>
+            {depositInfo?.isDeposit
+              ? <p><ShieldCheck size={13} strokeWidth={1.5} /> Resto ({formatMXN(depositInfo.amountPending)}) se paga al llegar</p>
+              : <p><ShieldCheck size={13} strokeWidth={1.5} /> Reserva directa sin comisiones</p>
+            }
           </div>
         </aside>
       </div>

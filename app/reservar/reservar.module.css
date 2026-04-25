@@ -473,6 +473,13 @@
   color: #8a9a8a;
 }
 
+.pricePerNight {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.68rem;
+  color: #c9a97a;
+  margin-top: 1px;
+}
+
 .addBtn {
   background: #1a2e1a;
   color: #e8dcc8;
@@ -801,6 +808,39 @@
   font-size: 0.78rem;
   white-space: nowrap;
 }
+
+/* ── Sidebar promo reminder ── */
+.promoReminder {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: rgba(201,169,122,0.10);
+  border: 1px solid rgba(201,169,122,0.35);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  color: #1e3012;
+}
+.promoReminder svg { flex-shrink: 0; margin-top: 1px; color: #c9a97a; }
+.promoReminder strong { display: block; font-size: 0.82rem; margin-bottom: 3px; }
+.promoReminder p { margin: 0; color: #4a5e4a; line-height: 1.4; }
+
+.depositNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  background: rgba(30,48,18,0.03);
+  border: 1px solid rgba(30,48,18,0.08);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  color: #5a6b5a;
+}
+.depositNote svg { flex-shrink: 0; margin-top: 1px; color: #3d7a34; }
 
 /* ── Capacity warning ── */
 .capacityWarning {

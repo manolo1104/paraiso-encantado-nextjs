@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Zap, Check } from 'lucide-react';
 
 const NAMES  = ['Ana', 'Carlos', 'María', 'Luis', 'Sofía', 'Diego', 'Valentina', 'Andrés', 'Camila', 'Roberto'];
 const CITIES = ['CDMX', 'Monterrey', 'Guadalajara', 'Querétaro', 'Puebla', 'Tampico', 'León', 'Mérida'];
@@ -69,6 +70,7 @@ export default function HeroLiveSignals() {
           padding: 5px 12px;
           white-space: nowrap;
         }
+        .hs-item svg { flex-shrink: 0; }
         .hs-dot {
           width: 7px;
           height: 7px;
@@ -89,11 +91,11 @@ export default function HeroLiveSignals() {
           <span><strong>{viewers}</strong> personas viendo ahora</span>
         </div>
         <div className="hs-item">
-          <span aria-hidden="true">⚡</span>
+          <Zap size={12} strokeWidth={2} color="#c9a97a" aria-hidden="true" />
           <span>Solo <strong>{scarcity} suites</strong> para {currentMonth}</span>
         </div>
         <div className="hs-item hs-booking" style={{ opacity: bookFade ? 1 : 0 }}>
-          <span aria-hidden="true">✓</span>
+          <Check size={12} strokeWidth={2.5} color="#22c55e" aria-hidden="true" />
           <span><strong>{booking.name}</strong> de {booking.city} reservó {booking.suite} hace {booking.hours}h</span>
         </div>
       </div>

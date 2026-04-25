@@ -10,6 +10,9 @@ export function buildEmailHtml(data: {
   guests?: number;
   rooms?: { name: string; guestCount?: number; totalPrice?: number }[];
   total?: number;
+  amountPaid?: number;
+  amountPending?: number;
+  isDeposit?: boolean;
 }): string {
   const base = 'https://www.paraisoencantado.com';
 
@@ -153,13 +156,26 @@ export function buildEmailHtml(data: {
             <tr><td class="mobile-padding" style="padding:24px 48px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#c9b99a;">Total Pagado</p></td>
+                  <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#c9b99a;">Total Estadía</p></td>
                   <td style="text-align:right;">
                     <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#faf8f5;">
                       $${Number(data.total || 0).toLocaleString('es-MX')}<span style="font-size:14px;color:#c9b99a;"> MXN</span>
                     </p>
                   </td>
                 </tr>
+                ${data.isDeposit && data.amountPaid != null ? `
+                <tr><td colspan="2" style="padding-top:16px;border-top:1px solid rgba(201,185,154,0.3);">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#c9b99a;">✓ Cobrado ahora (50%)</p></td>
+                      <td style="text-align:right;"><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;font-weight:500;color:#e8dcc8;">$${Number(data.amountPaid).toLocaleString('es-MX')} MXN</p></td>
+                    </tr>
+                    <tr>
+                      <td><p style="margin:4px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#a09080;">Pendiente al check-in (50%)</p></td>
+                      <td style="text-align:right;"><p style="margin:4px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;color:#a09080;">$${Number(data.amountPending ?? 0).toLocaleString('es-MX')} MXN</p></td>
+                    </tr>
+                  </table>
+                </td></tr>` : ''}
               </table>
             </td></tr>
           </table>
@@ -177,7 +193,7 @@ export function buildEmailHtml(data: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f0e8;margin:32px 0 0 0;">
             <tr>
               <td style="width:50%;padding:20px;vertical-align:top;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">🚗 Cómo Llegar</p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Cómo Llegar</p>
                 <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A 7 min del centro. Paraíso Encantado, Xilitla, SLP 79910.</p>
               </td>
               <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-left:1px solid #e4ddd3;">

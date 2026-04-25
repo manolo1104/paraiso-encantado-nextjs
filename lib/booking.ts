@@ -183,6 +183,16 @@ export interface BookingState {
   cart: CartItem[];
   promoCode: PromoCode | null;
   promoDiscount: number;
+  // Deposit info (50% for 2+ nights)
+  amountTotal?: number;
+  amountPaid?: number;
+  amountPending?: number;
+  isDeposit?: boolean;
+}
+
+/** Returns how much to charge now: 50% for 2+ nights, 100% for 1 night */
+export function calcDepositAmount(total: number, nights: number): number {
+  return nights >= 2 ? Math.round(total * 0.5) : Math.round(total);
 }
 
 export const BOOKING_STATE_KEY = 'pe_booking_state';
