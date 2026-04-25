@@ -8,6 +8,7 @@ import {
   Wind, Trees, Waves, CheckCircle, MessageCircle
 } from 'lucide-react';
 import type { Suite } from '@/data/suites';
+import StickySuiteCTA from '@/components/StickySuiteCTA';
 import { mxnToUsd, BOOKING_URL } from '@/lib/config';
 import { suites } from '@/data/suites';
 import styles from './suite.module.css';
@@ -215,6 +216,7 @@ export default function SuitePageClient({ suite }: Props) {
           <Link href="/habitaciones">← Ver todas las suites</Link>
         </div>
       </section>
+      <StickySuiteCTA suiteName={suite.name} suiteId={suite.id} price={suite.price} />
     </main>
   );
 }

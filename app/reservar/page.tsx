@@ -21,6 +21,12 @@ import {
   formatMXN,
 } from '@/lib/booking';
 import styles from './reservar.module.css';
+import ReservationUrgencyBar from '@/components/ReservationUrgencyBar';
+import RecentBookingsTicker from '@/components/RecentBookingsTicker';
+import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+import TrustBadgesReservar from '@/components/TrustBadgesReservar';
+import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
+import { trackEvent } from '@/lib/analytics';
 
 const API = '';
 
@@ -236,6 +242,32 @@ function ReservarPageInner() {
     setDatesOverlapBlocked(false);
   }, [checkin, checkout, blockedDates]);
 
+  // ── Analytics tracking ────────────────────────────────
+  const startTime = useRef(Date.now());
+  const cartAbandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    trackEvent('PAGE_VIEW', { path: '/reservar' });
+    trackEvent('BOOKING_START');
+    cartAbandonTimer.current = setTimeout(() => {
+      trackEvent('CART_ABANDON', {
+        timeOnPage: Math.round((Date.now() - startTime.current) / 1000),
+        checkin, checkout, guests: adults,
+      });
+    }, 60_000);
+    return () => { if (cartAbandonTimer.current) clearTimeout(cartAbandonTimer.current); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (checkin && checkout && nights > 0) {
+      trackEvent('DATES_SELECTED', { checkin, checkout, nights });
+    }
+  }, [checkin, checkout, nights]);
+
+  useEffect(() => {
+    trackEvent('GUEST_COUNT_CHANGED', { guests: adults });
+  }, [adults]);
+
   // ── Core search function ──────────────────────────────
   async function triggerSearch(ci: string, co: string) {
     const n = calcNights(ci, co);
@@ -335,6 +367,8 @@ function ReservarPageInner() {
       cart, promoCode, promoDiscount,
     };
     saveBookingState(state);
+    trackEvent('CHECKOUT_STEP_1', { rooms: cart.length, checkin, checkout, guests: adults });
+    if (cartAbandonTimer.current) clearTimeout(cartAbandonTimer.current);
     router.push('/reservar/checkout');
   }
 
@@ -352,6 +386,11 @@ function ReservarPageInner() {
           Sin intermediarios · Confirmación instantánea · Cancela hasta 48 hrs antes
         </p>
       </div>
+
+      <CheckoutProgressBar currentStep={1} />
+      <TrustBadgesReservar />
+      <RecentBookingsTicker />
+      <ReservationUrgencyBar />
 
       {/* ── Search bar ── */}
       <div className={styles.searchBar}>
@@ -700,6 +739,7 @@ function ReservarPageInner() {
           <p className={styles.lbCaption}>{lightboxRoom.name} · {lightboxIdx + 1}/{lightboxRoom.images.length}</p>
         </div>
       )}
+      <WhatsAppRecoveryWidget />
     </main>
   );
 }

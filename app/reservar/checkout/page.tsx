@@ -15,6 +15,9 @@ import {
   formatMXN,
 } from '@/lib/booking';
 import styles from './checkout.module.css';
+import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
+import { trackEvent } from '@/lib/analytics';
 
 const API = '';
 const stripePromise = loadStripe(
@@ -404,6 +407,8 @@ export default function CheckoutPage() {
       })
       .catch(() => setLoadError('Error de conexión. Verifica tu internet e intenta de nuevo.'));
 
+    trackEvent('CHECKOUT_STEP_2', { rooms: state.cart.length, checkin: state.checkin, checkout: state.checkout });
+
     // Cleanup: remove block if user leaves
     return () => {
       fetch(`${API}/api/remove-temporary-block`, {
@@ -415,6 +420,7 @@ export default function CheckoutPage() {
   }, []);
 
   function handleSuccess(confirmationNumber: string) {
+    trackEvent('BOOKING_SUCCESS', { confirmationNumber });
     sessionStorage.setItem('pe_confirmation_number', confirmationNumber);
     if (booking) {
       sessionStorage.setItem('pe_booking_for_confirm', JSON.stringify(booking));
@@ -442,6 +448,7 @@ export default function CheckoutPage() {
   return (
     <main className={styles.main}>
       <ExitIntentPopup sessionId={sessionId} />
+      <CheckoutProgressBar currentStep={2} />
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => router.back()}>
           <ChevronLeft size={15} strokeWidth={2} /> Volver
@@ -532,6 +539,7 @@ export default function CheckoutPage() {
           </div>
         </aside>
       </div>
+      <WhatsAppRecoveryWidget />
     </main>
   );
 }
