@@ -67,8 +67,12 @@ export async function POST(req: NextRequest) {
     } catch (e: any) { console.error('❌ removeTemporaryBlock:', e.message); }
 
     // 6. Email (opcional)
-    if (resend) {
+    if (!resend) {
+      console.warn('⚠️ RESEND_API_KEY no configurada — email omitido');
+    } else {
       try {
+        if (!email || !email.includes('@')) throw new Error('Email del cliente inválido');
+
         const html = buildEmailHtml({
           customerName, confirmationNumber, paymentIntentId,
           checkin: checkin ?? undefined, checkout: checkout ?? undefined,
@@ -78,19 +82,28 @@ export async function POST(req: NextRequest) {
           amountPending: amountPending ?? undefined,
           isDeposit: isDeposit ?? false,
         });
+
         const from    = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
         const adminTo = process.env.ADMIN_EMAIL || 'reservas@paraisoencantado.com';
         const bcc     = Array.from(new Set([adminTo, 'marioarturocovarrubias@hotmail.com']));
 
-        await resend.emails.send({
+        // Resend v4: errors are returned in the response object, NOT thrown
+        const { data, error: resendError } = await resend.emails.send({
           from,
           to: [email],
           bcc,
           subject: `Tu estadía está confirmada — ${confirmationNumber}`,
           html,
         });
-        console.log('✅ Email enviado');
-      } catch (e: any) { console.error('⚠️ Email error:', e.message); }
+
+        if (resendError) {
+          console.error(`❌ Resend error: ${resendError.message} | from=${from} | to=${email}`);
+        } else {
+          console.log(`✅ Email enviado | id=${data?.id} | to=${email} | cn=${confirmationNumber}`);
+        }
+      } catch (e: any) {
+        console.error('❌ Email exception:', e.message);
+      }
     }
 
     return NextResponse.json({ status: 'ok', confirmationNumber });
