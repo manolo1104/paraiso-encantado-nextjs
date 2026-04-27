@@ -809,6 +809,55 @@
   white-space: nowrap;
 }
 
+/* ── Sidebar includes block ── */
+.includesBlock {
+  border-top: 1px solid #e8e2d6;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.includesTitle {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #1a2e1a;
+  margin: 0 0 10px;
+}
+
+.includesList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.includesItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.76rem;
+  color: #4a5e4a;
+}
+
+.includesItem svg {
+  flex-shrink: 0;
+  color: #3d7a34;
+}
+
+.includesHighlight {
+  color: #1a2e1a;
+  font-weight: 500;
+}
+
+.includesHighlight svg {
+  color: #c9a97a;
+}
+
 /* ── Sidebar promo reminder ── */
 .promoReminder {
   display: flex;

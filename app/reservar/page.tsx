@@ -737,6 +737,72 @@ function ReservarPageInner() {
               <span><ShieldCheck size={12} strokeWidth={1.5} /> Pago seguro con Stripe</span>
               <span><ShieldCheck size={12} strokeWidth={1.5} /> Cancelación gratuita 48 hrs</span>
             </div>
+
+            {/* ── Incluido en tu reserva ── */}
+            <div className={styles.includesBlock}>
+              <h3 className={styles.includesTitle}>Incluido en tu reserva</h3>
+              <ul className={styles.includesList}>
+                {/* Room-specific amenities */}
+                {cart.map(item => {
+                  const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
+                  return (
+                    <li key={`suite-${item.roomId}`} className={styles.includesItem}>
+                      <BedDouble size={13} strokeWidth={1.5} />
+                      <span>{room.name} — suite completa</span>
+                    </li>
+                  );
+                })}
+                {cart.some(item => BOOKING_ROOMS.find(r => r.id === item.roomId)?.attributes.spaPrivado) && (
+                  <li className={`${styles.includesItem} ${styles.includesHighlight}`}>
+                    <Sparkles size={13} strokeWidth={1.5} />
+                    <span>Piscina spa privada en tu suite</span>
+                  </li>
+                )}
+                {cart.some(item => BOOKING_ROOMS.find(r => r.id === item.roomId)?.attributes.jacuzzi) && (
+                  <li className={`${styles.includesItem} ${styles.includesHighlight}`}>
+                    <Droplets size={13} strokeWidth={1.5} />
+                    <span>Tina de hidromasaje privada</span>
+                  </li>
+                )}
+                {cart.some(item => BOOKING_ROOMS.find(r => r.id === item.roomId)?.attributes.kingBed) && (
+                  <li className={styles.includesItem}>
+                    <BedDouble size={13} strokeWidth={1.5} />
+                    <span>Cama King Size</span>
+                  </li>
+                )}
+                {cart.some(item => BOOKING_ROOMS.find(r => r.id === item.roomId)?.attributes.balcony) && (
+                  <li className={styles.includesItem}>
+                    <Users size={13} strokeWidth={1.5} />
+                    <span>Terraza o balcón privado</span>
+                  </li>
+                )}
+                {/* Always included */}
+                <li className={styles.includesItem}>
+                  <Wifi size={13} strokeWidth={1.5} />
+                  <span>WiFi de alta velocidad gratuito</span>
+                </li>
+                <li className={styles.includesItem}>
+                  <ShieldCheck size={13} strokeWidth={1.5} />
+                  <span>Estacionamiento privado gratuito</span>
+                </li>
+                <li className={styles.includesItem}>
+                  <Check size={13} strokeWidth={2} />
+                  <span>Toallas y amenidades de baño premium</span>
+                </li>
+                <li className={styles.includesItem}>
+                  <Droplets size={13} strokeWidth={1.5} />
+                  <span>Acceso a piscinas y áreas comunes</span>
+                </li>
+                <li className={styles.includesItem}>
+                  <Check size={13} strokeWidth={2} />
+                  <span>Servicio de limpieza diario</span>
+                </li>
+                <li className={styles.includesItem}>
+                  <Check size={13} strokeWidth={2} />
+                  <span>A 5 min del Jardín de Edward James</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </aside>
       </div>
