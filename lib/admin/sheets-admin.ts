@@ -278,9 +278,34 @@ export async function getAllQuotes(): Promise<AdminQuote[]> {
   }
 }
 
+async function ensureSheet(sheetName: string, headers: string[]) {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    const meta = await client.spreadsheets.get({ spreadsheetId: SHEET_ID });
+    const exists = meta.data.sheets?.some(s => s.properties?.title === sheetName);
+    if (!exists) {
+      await client.spreadsheets.batchUpdate({
+        spreadsheetId: SHEET_ID,
+        requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] },
+      });
+      await client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${sheetName}!A1`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [headers] },
+      });
+    }
+  } catch (e: any) {
+    console.error(`ensureSheet(${sheetName}) error:`, e.message);
+  }
+}
+
 export async function createQuote(data: Omit<AdminQuote, 'rowIndex' | 'id' | 'fecha' | 'estado'>): Promise<string> {
   const client = await getSheetsClient();
-  if (!client) throw new Error('No sheets client');
+  if (!client) throw new Error('Sin conexión a Google Sheets');
+
+  await ensureSheet(COTIZACIONES_SHEET, ['ID','Fecha','Cliente','Teléfono','Email','Suite','CheckIn','CheckOut','Noches','PrecioTotal','Estado','Notas']);
 
   const id = 'COT-' + Date.now().toString(36).toUpperCase();
   const fecha = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
@@ -373,6 +398,7 @@ async function getGuestNotes(): Promise<Record<string, string>> {
 export async function saveGuestNote(email: string, notas: string): Promise<void> {
   const client = await getSheetsClient();
   if (!client) return;
+  await ensureSheet(NOTAS_CRM_SHEET, ['Email','Notas','UltimaActualizacion']);
   try {
     const res = await client.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
@@ -440,6 +466,7 @@ export async function getRedMetricas(): Promise<RedMetrica[]> {
 export async function saveRedMetrica(data: Omit<RedMetrica, 'fecha'>): Promise<void> {
   const client = await getSheetsClient();
   if (!client) return;
+  await ensureSheet(METRICAS_REDES_SHEET, ['Fecha','IG_Seguidores','IG_Alcance','IG_Interacciones','FB_Seguidores','FB_Alcance','Notas']);
   const fecha = new Date().toLocaleDateString('es-MX');
   await client.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,

@@ -154,3 +154,10 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.7s linear infinite; }
+
+.rowActions { display: flex; gap: 5px; }
+.actionBtn { background: var(--forest); color: #fff; border: none; border-radius: 4px; padding: 5px 7px; cursor: pointer; display: flex; align-items: center; }
+.actionBtn:hover { opacity: 0.85; }
+.actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.actionBtnPdf { background: #624820; color: #fff; border: none; border-radius: 4px; padding: 5px 7px; cursor: pointer; display: flex; align-items: center; }
+.actionBtnPdf:hover { opacity: 0.85; }

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Search, RefreshCw } from 'lucide-react';
+import { Plus, Search, RefreshCw, Send, Download, Loader2 } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
+import { printBookingPDF } from '../cotizaciones/CotizacionesClient';
 import styles from './reservas.module.css';
 
 const ESTADO_COLOR: Record<string, string> = {
@@ -20,6 +21,7 @@ export default function ReservasClient({ initialBookings }: Props) {
   const [suiteFilter, setSuiteFilter] = useState('');
   const [modal, setModal] = useState<{ mode: 'new' | 'edit'; booking?: AdminBooking } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -37,6 +39,25 @@ export default function ReservasClient({ initialBookings }: Props) {
     const res = await fetch('/api/admin/reservas');
     if (res.ok) setBookings(await res.json());
     setLoading(false);
+  }
+
+  async function sendEmail(e: React.MouseEvent, b: AdminBooking) {
+    e.stopPropagation();
+    if (!b.email || b.email === 'N/A') return alert('Esta reserva no tiene email registrado');
+    setSendingId(b.confirmacion);
+    try {
+      const res = await fetch(`/api/admin/reservas/${b.confirmacion}/send-email`, { method: 'POST' });
+      if (res.ok) alert(`✅ Confirmación enviada a ${b.email}`);
+      else {
+        const d = await res.json();
+        alert('Error: ' + (d.error || 'No se pudo enviar'));
+      }
+    } finally { setSendingId(null); }
+  }
+
+  function downloadPDF(e: React.MouseEvent, b: AdminBooking) {
+    e.stopPropagation();
+    printBookingPDF(b);
   }
 
   const totalIngresos = filtered.reduce((s, b) => s + (b.estado !== 'CANCELADA' ? b.total : 0), 0);
@@ -58,7 +79,6 @@ export default function ReservasClient({ initialBookings }: Props) {
         </div>
       </div>
 
-      {/* Filtros */}
       <div className={styles.filters}>
         <div className={styles.searchWrap}>
           <Search size={15} className={styles.searchIcon} />
@@ -77,7 +97,6 @@ export default function ReservasClient({ initialBookings }: Props) {
         </select>
       </div>
 
-      {/* Tabla */}
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -90,11 +109,12 @@ export default function ReservasClient({ initialBookings }: Props) {
               <th>Noches</th>
               <th>Total</th>
               <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} className={styles.empty}>Sin reservas que mostrar</td></tr>
+              <tr><td colSpan={9} className={styles.empty}>Sin reservas que mostrar</td></tr>
             ) : filtered.map(b => (
               <tr
                 key={b.confirmacion + b.rowIndex}
@@ -115,6 +135,27 @@ export default function ReservasClient({ initialBookings }: Props) {
                   <span className={styles.badge} style={{ color: ESTADO_COLOR[b.estado] || '#888' }}>
                     {b.estado}
                   </span>
+                </td>
+                <td onClick={e => e.stopPropagation()}>
+                  <div className={styles.rowActions}>
+                    <button
+                      className={styles.actionBtn}
+                      onClick={e => sendEmail(e, b)}
+                      disabled={sendingId === b.confirmacion}
+                      title="Enviar confirmación por email"
+                    >
+                      {sendingId === b.confirmacion
+                        ? <Loader2 size={13} className={styles.spin} />
+                        : <Send size={13} />}
+                    </button>
+                    <button
+                      className={styles.actionBtnPdf}
+                      onClick={e => downloadPDF(e, b)}
+                      title="Descargar PDF"
+                    >
+                      <Download size={13} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

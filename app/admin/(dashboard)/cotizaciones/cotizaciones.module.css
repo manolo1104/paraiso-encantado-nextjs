@@ -20,6 +20,8 @@
 .sendBtn { background: var(--forest); color: #fff; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; display: flex; align-items: center; }
 .sendBtn:disabled { opacity: 0.5; }
 .waBtn { background: #25D366; color: #fff; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; display: flex; align-items: center; }
+.pdfBtn { background: #624820; color: #fff; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; display: flex; align-items: center; }
+.pdfBtn:hover { opacity: 0.85; }
 /* Modal */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
 .modal { background: var(--cream); border-radius: 8px; width: 100%; max-width: 640px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
