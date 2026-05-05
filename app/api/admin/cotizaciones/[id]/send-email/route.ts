@@ -4,10 +4,9 @@ import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
-
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const FROM = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
   const { id } = await params;
 
   const quotes = await getAllQuotes();
