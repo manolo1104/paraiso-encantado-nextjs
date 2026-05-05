@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllQuotes, updateQuoteStatus } from '@/lib/admin/sheets-admin';
 import { Resend } from 'resend';
 
+export const dynamic = 'force-dynamic';
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
 

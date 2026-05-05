@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { jwtVerify } from 'jose/jwt/verify';
 
 const ADMIN_SECRET = new TextEncoder().encode(
   process.env.ADMIN_JWT_SECRET || 'paraiso-encantado-admin-secret-change-in-prod'
