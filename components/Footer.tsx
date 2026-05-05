@@ -92,6 +92,7 @@ export default function Footer() {
       <div className={styles.bottom}>
         <p>© {currentYear} Paraíso Encantado. Todos los derechos reservados.</p>
         <div className={styles.social}>
+          <a href="/admin/login" style={{ opacity: 0.35, fontSize: '0.7rem' }}>Admin</a>
           <a
             href="https://www.instagram.com/paraisoencantadoxilitla"
             target="_blank"
