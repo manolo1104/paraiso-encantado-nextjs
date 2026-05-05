@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Bed, Sofa, ShowerHead, Bath, Droplets, Mountain, Wifi,
   Wind, Trees, Waves, CheckCircle, MessageCircle
 } from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import StickySuiteCTA from '@/components/StickySuiteCTA';
-import { mxnToUsd, BOOKING_URL } from '@/lib/config';
+import { mxnToUsd } from '@/lib/config';
 import { suites } from '@/data/suites';
 import styles from './suite.module.css';
 
@@ -43,11 +44,23 @@ interface Props {
 }
 
 export default function SuitePageClient({ suite }: Props) {
+  const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
 
   const price3 = suite.priceTiers[3];
   const price4 = suite.priceTiers[4];
   const usdBase = mxnToUsd(suite.price);
+
+  const handleReservar = useCallback(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    let ci = today, co = tomorrow, adults = '2';
+    try {
+      const raw = sessionStorage.getItem('pe_last_dates');
+      if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; adults = d.adults || '2'; }
+    } catch { /* ignore */ }
+    router.push(`/reservar?checkin=${ci}&checkout=${co}&adults=${adults}&suiteId=${suite.id}&autoselect=1`);
+  }, [suite.id, router]);
 
   return (
     <main className={styles.main}>
@@ -143,13 +156,13 @@ export default function SuitePageClient({ suite }: Props) {
           </div>
 
           {/* CTA */}
-          <a
-            href={BOOKING_URL}
+          <button
+            onClick={handleReservar}
             className={styles.reserveBtn}
             aria-label={`Reservar ${suite.name}`}
           >
             Asegura Tu Escapada
-          </a>
+          </button>
           <p className={styles.reserveNote}>
             Confirmación instantánea · Cancela hasta 48hrs antes
           </p>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
+  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const shownRef = useRef(false);
 
@@ -22,14 +23,10 @@ export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
   }, [suiteId, suiteName]);
 
   useEffect(() => {
-    // Track suite entry
     trackEvent('SUITE_ENTER', { suite: suiteId, suiteName });
 
     const timer = setTimeout(show, 3000);
-
-    const handleScroll = () => {
-      if (window.scrollY > 300) show();
-    };
+    const handleScroll = () => { if (window.scrollY > 300) show(); };
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
@@ -39,8 +36,20 @@ export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
     };
   }, [suiteId, suiteName, show]);
 
+  function buildReservarUrl() {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    let ci = today, co = tomorrow, adults = '2';
+    try {
+      const raw = sessionStorage.getItem('pe_last_dates');
+      if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; adults = d.adults || '2'; }
+    } catch { /* ignore */ }
+    return `/reservar?checkin=${ci}&checkout=${co}&adults=${adults}&suiteId=${suiteId}&autoselect=1`;
+  }
+
   const handleClick = () => {
     trackEvent('STICKY_CTA_CLICK', { suite: suiteId, suiteName, price });
+    router.push(buildReservarUrl());
   };
 
   if (!visible) return null;
@@ -101,7 +110,8 @@ export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
           font-weight: 700;
           padding: 12px 18px;
           border-radius: 2px;
-          text-decoration: none;
+          border: none;
+          cursor: pointer;
           font-size: 0.875rem;
           min-height: 44px;
           min-width: 120px;
@@ -124,17 +134,9 @@ export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
             from { transform: translateY(-100%); }
             to   { transform: translateY(0); }
           }
-          .sticky-cta-info {
-            flex-direction: row;
-            align-items: center;
-            gap: 12px;
-          }
-          .sticky-cta-name {
-            font-size: 0.875rem;
-          }
-          .sticky-cta-btn {
-            padding: 10px 24px;
-          }
+          .sticky-cta-info { flex-direction: row; align-items: center; gap: 12px; }
+          .sticky-cta-name { font-size: 0.875rem; }
+          .sticky-cta-btn  { padding: 10px 24px; }
         }
       `}</style>
       <div className="sticky-suite-cta" role="complementary" aria-label="Reservar suite">
@@ -145,13 +147,9 @@ export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
             <small> /noche</small>
           </span>
         </div>
-        <Link
-          href={`/reservar?suiteId=${suiteId}`}
-          className="sticky-cta-btn"
-          onClick={handleClick}
-        >
+        <button className="sticky-cta-btn" onClick={handleClick}>
           Reservar →
-        </Link>
+        </button>
       </div>
     </>
   );

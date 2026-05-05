@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle, Check, Ban } from 'lucide-react';
 import {
   BOOKING_ROOMS,
+  SUITE_ID_TO_ROOM_ID,
   BookingRoom,
   CartItem,
   BookingState,
@@ -207,19 +208,49 @@ function ReservarPageInner() {
       .catch(() => {});
   }, []);
 
+  // Suite a agregar automáticamente al carrito después de la búsqueda
+  const pendingAutoSelectId = useRef<number | null>(null);
+
   // ── Pre-fill + auto-search from URL params ────────────
   useEffect(() => {
     const ci = searchParams.get('checkin');
     const co = searchParams.get('checkout');
     const a = searchParams.get('adults');
-    if (ci) setCheckin(ci);
-    if (co) setCheckout(co);
-    if (a) setAdults(Math.max(1, Math.min(12, parseInt(a, 10) || 2)));
-    // If both dates provided via URL, auto-trigger search
-    if (ci && co && calcNights(ci, co) > 0) {
-      triggerSearch(ci, co);
+    const suiteSlug = searchParams.get('suiteId');
+    const autoselect = searchParams.get('autoselect') === '1';
+
+    // Leer fechas guardadas en sessionStorage si no vienen en la URL
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    let saved: { checkin: string; checkout: string; adults: string } | null = null;
+    try {
+      const raw = sessionStorage.getItem('pe_last_dates');
+      if (raw) saved = JSON.parse(raw);
+    } catch { /* ignore */ }
+
+    const finalCi = ci || saved?.checkin || today;
+    const finalCo = co || saved?.checkout || tomorrow;
+    const finalA  = a  || saved?.adults  || '2';
+
+    setCheckin(finalCi);
+    setCheckout(finalCo);
+    setAdults(Math.max(1, Math.min(12, parseInt(finalA, 10) || 2)));
+
+    // Guardar fechas para que las páginas de suite puedan leerlas
+    try {
+      sessionStorage.setItem('pe_last_dates', JSON.stringify({ checkin: finalCi, checkout: finalCo, adults: finalA }));
+    } catch { /* ignore */ }
+
+    // Si viene con suiteId + autoselect, preparar auto-agregar al carrito
+    if (autoselect && suiteSlug && SUITE_ID_TO_ROOM_ID[suiteSlug]) {
+      pendingAutoSelectId.current = SUITE_ID_TO_ROOM_ID[suiteSlug];
     }
-  }, []);
+
+    // Auto-buscar si hay fechas válidas
+    if (calcNights(finalCi, finalCo) > 0) {
+      triggerSearch(finalCi, finalCo);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Warn when selected dates overlap fully-booked ────
   useEffect(() => {
@@ -245,16 +276,11 @@ function ReservarPageInner() {
   // ── Analytics tracking ────────────────────────────────
   const startTime = useRef(Date.now());
   const cartAbandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchedRef = useRef(false);
 
   useEffect(() => {
     trackEvent('PAGE_VIEW', { path: '/reservar' });
     trackEvent('BOOKING_START');
-    cartAbandonTimer.current = setTimeout(() => {
-      trackEvent('CART_ABANDON', {
-        timeOnPage: Math.round((Date.now() - startTime.current) / 1000),
-        checkin, checkout, guests: adults,
-      });
-    }, 60_000);
     return () => { if (cartAbandonTimer.current) clearTimeout(cartAbandonTimer.current); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -294,6 +320,32 @@ function ReservarPageInner() {
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 150);
+      // Auto-agregar suite al carrito si viene de una página de habitación
+      if (pendingAutoSelectId.current !== null) {
+        const roomId = pendingAutoSelectId.current;
+        pendingAutoSelectId.current = null;
+        const room = BOOKING_ROOMS.find(r => r.id === roomId);
+        if (room) {
+          const guestCount = Math.max(1, Math.min(adults, room.maxGuests));
+          setCart([{ roomId: room.id, guestCount }]);
+          trackEvent('SUITE_SELECTED', { suite: room.name, guests: guestCount, source: 'suite_page_cta' });
+          // Scroll al sidebar después de agregar
+          setTimeout(() => {
+            sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 400);
+        }
+      }
+      // Arrancar timer de abandono SOLO después de ver resultados (primera vez)
+      if (!searchedRef.current) {
+        searchedRef.current = true;
+        if (cartAbandonTimer.current) clearTimeout(cartAbandonTimer.current);
+        cartAbandonTimer.current = setTimeout(() => {
+          trackEvent('CART_ABANDON', {
+            timeOnPage: Math.round((Date.now() - startTime.current) / 1000),
+            checkin: ci, checkout: co, guests: adults,
+          });
+        }, 180_000);
+      }
     }
   }
 
@@ -301,13 +353,19 @@ function ReservarPageInner() {
     await triggerSearch(checkin, checkout);
   }
 
+  function saveDatesToSession(ci: string, co: string, a: number) {
+    try { sessionStorage.setItem('pe_last_dates', JSON.stringify({ checkin: ci, checkout: co, adults: String(a) })); } catch { /* ignore */ }
+  }
+
   function handleCheckinChange(v: string) {
     setCheckin(v);
+    let newCo = checkout;
     if (checkout && v >= checkout) {
       const next = new Date(new Date(v).getTime() + 86400000).toISOString().split('T')[0];
       setCheckout(next);
+      newCo = next;
     }
-    // Clear stale results when dates change
+    saveDatesToSession(v, newCo, adults);
     setSearched(false);
     setUnavailable([]);
     setCart([]);
@@ -317,6 +375,7 @@ function ReservarPageInner() {
 
   function handleCheckoutChange(v: string) {
     setCheckout(v);
+    saveDatesToSession(checkin, v, adults);
     setSearched(false);
     setUnavailable([]);
     setCart([]);
@@ -333,6 +392,8 @@ function ReservarPageInner() {
   function addToCart(room: BookingRoom) {
     if (cart.find(c => c.roomId === room.id)) return;
     setCart(prev => [...prev, { roomId: room.id, guestCount: getRoomGuests(room.id) }]);
+    // Usuario eligió habitación — ya no es abandono
+    if (cartAbandonTimer.current) { clearTimeout(cartAbandonTimer.current); cartAbandonTimer.current = null; }
   }
 
   function removeFromCart(roomId: number) {

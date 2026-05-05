@@ -473,7 +473,7 @@ export default function CheckoutPage() {
       <ExitIntentPopup sessionId={sessionId} />
       <CheckoutProgressBar currentStep={2} />
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => router.back()}>
+        <button className={styles.backBtn} onClick={() => router.push('/reservar')}>
           <ChevronLeft size={15} strokeWidth={2} /> Volver
         </button>
         <span className={styles.topTitle}>Confirmar Reserva</span>
