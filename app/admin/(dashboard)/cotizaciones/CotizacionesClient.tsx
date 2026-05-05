@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Send, MessageSquare, RefreshCw, Loader2, X, Download } from 'lucide-react';
+import { Plus, Send, MessageSquare, RefreshCw, Loader2, X, Download, Pencil, Trash2 } from 'lucide-react';
 import type { AdminQuote } from '@/lib/admin/sheets-admin';
 import styles from './cotizaciones.module.css';
 
@@ -286,9 +286,77 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   );
 }
 
+function EditQuoteModal({ quote, onClose, onSaved }: {
+  quote: AdminQuote;
+  onClose: () => void;
+  onSaved: (q: AdminQuote, changes: Partial<AdminQuote>) => void;
+}) {
+  const [form, setForm] = useState({
+    cliente: quote.cliente, telefono: quote.telefono, email: quote.email,
+    suite: quote.suite, checkin: quote.checkin, checkout: quote.checkout,
+    huespedes: 2, notas: quote.notas,
+  });
+  const [loading, setLoading] = useState(false);
+  function set(k: string, v: string | number) { setForm(f => ({ ...f, [k]: v })); }
+  const noches = calcNights(form.checkin, form.checkout);
+  const precioNoche = getPrecioNoche(form.suite, form.huespedes);
+  const precioTotal = precioNoche * Math.max(noches, 1);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    await onSaved(quote, { ...form, noches, precioTotal });
+    setLoading(false);
+  }
+
+  return (
+    <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <h2>Editar Cotización <span style={{ fontSize: '0.75rem', color: '#888', fontFamily: 'monospace' }}>{quote.id}</span></h2>
+          <button onClick={onClose}><X size={18} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className={styles.modalForm}>
+          <div className={styles.grid2}>
+            <label className={styles.field}><span>Cliente</span><input value={form.cliente} onChange={e => set('cliente', e.target.value)} /></label>
+            <label className={styles.field}><span>Teléfono</span><input value={form.telefono} onChange={e => set('telefono', e.target.value)} /></label>
+            <label className={styles.field}><span>Email</span><input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></label>
+            <label className={styles.field}>
+              <span>Suite</span>
+              <select value={form.suite} onChange={e => set('suite', e.target.value)}>
+                {SUITES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </label>
+            <label className={styles.field}><span>Check-in</span><input type="date" value={form.checkin} onChange={e => set('checkin', e.target.value)} /></label>
+            <label className={styles.field}><span>Check-out</span><input type="date" value={form.checkout} onChange={e => set('checkout', e.target.value)} /></label>
+            <label className={styles.field}>
+              <span>Personas</span>
+              <select value={form.huespedes} onChange={e => set('huespedes', parseInt(e.target.value))}>
+                {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} persona{n !== 1 ? 's' : ''}</option>)}
+              </select>
+            </label>
+            <div className={styles.field}>
+              <span>Total calculado</span>
+              <div className={styles.pricePreview}><strong>${precioTotal.toLocaleString('es-MX')} MXN</strong></div>
+            </div>
+          </div>
+          <label className={styles.field}><span>Notas</span><textarea rows={2} value={form.notas} onChange={e => set('notas', e.target.value)} /></label>
+          <div className={styles.actions}>
+            <button type="button" className={styles.secondaryBtn} onClick={onClose}>Cancelar</button>
+            <button type="submit" className={styles.primaryBtn} disabled={loading}>
+              {loading ? <Loader2 size={14} className={styles.spin} /> : null} Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function CotizacionesClient({ initialQuotes }: Props) {
   const [quotes, setQuotes] = useState(initialQuotes);
   const [showModal, setShowModal] = useState(false);
+  const [editQuote, setEditQuote] = useState<AdminQuote | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   async function refresh() {
@@ -304,6 +372,22 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
       if (res.ok) { alert(`✅ Email enviado a ${q.email}`); refresh(); }
       else alert('Error al enviar email');
     } finally { setSendingId(null); }
+  }
+
+  async function deleteQuote(q: AdminQuote) {
+    if (!confirm(`¿Eliminar cotización ${q.id}?`)) return;
+    await fetch(`/api/admin/cotizaciones/${q.id}`, { method: 'DELETE' });
+    refresh();
+  }
+
+  async function saveEdit(q: AdminQuote, changes: Partial<AdminQuote>) {
+    await fetch(`/api/admin/cotizaciones/${q.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(changes),
+    });
+    setEditQuote(null);
+    refresh();
   }
 
   function openWhatsApp(q: AdminQuote) {
@@ -368,6 +452,12 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
                     <button className={styles.pdfBtn} onClick={() => printQuotePDF(q)} title="Descargar PDF">
                       <Download size={14} />
                     </button>
+                    <button className={styles.editBtn} onClick={() => setEditQuote(q)} title="Editar">
+                      <Pencil size={14} />
+                    </button>
+                    <button className={styles.deleteBtn} onClick={() => deleteQuote(q)} title="Eliminar">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -377,6 +467,7 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
       </div>
 
       {showModal && <QuoteModal onClose={() => setShowModal(false)} onSaved={() => { refresh(); setShowModal(false); }} />}
+      {editQuote && <EditQuoteModal quote={editQuote} onClose={() => setEditQuote(null)} onSaved={saveEdit} />}
     </div>
   );
 }

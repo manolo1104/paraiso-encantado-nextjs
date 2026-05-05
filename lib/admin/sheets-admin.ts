@@ -1,4 +1,5 @@
 import { getSheetsClient } from '@/lib/sheets';
+export { getSheetsClient };
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
 const RESERVAS_SHEET = process.env.GOOGLE_SHEET_TAB || 'Reservas';

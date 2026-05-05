@@ -41,3 +41,8 @@
 .secondaryBtn { background: none; border: 1px solid #d4cec7; border-radius: 4px; padding: 9px 16px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; color: var(--clay); cursor: pointer; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.7s linear infinite; }
+
+.editBtn { background: var(--jade); color: #fff; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; display: flex; align-items: center; }
+.editBtn:hover { opacity: 0.85; }
+.deleteBtn { background: #c9484a; color: #fff; border: none; border-radius: 4px; padding: 6px 8px; cursor: pointer; display: flex; align-items: center; }
+.deleteBtn:hover { opacity: 0.85; }

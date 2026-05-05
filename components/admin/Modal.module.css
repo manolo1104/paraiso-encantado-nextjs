@@ -175,3 +175,55 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.7s linear infinite; }
+
+/* Calculador de precio */
+.priceCalc {
+  background: var(--parch);
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.priceCalcRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--clay);
+}
+.priceCalcRow strong {
+  font-size: 1rem;
+  color: var(--forest);
+}
+.totalRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.resetPrice {
+  background: none;
+  border: 1px solid var(--sage);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  color: var(--sage);
+  cursor: pointer;
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+.resetPrice:hover { background: var(--parch); }
+
+/* Disponibilidad */
+.availBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 0.83rem;
+  font-weight: 500;
+}
+.availChecking { background: #f5f3ef; color: var(--clay); }
+.availOk       { background: #f0f7f0; color: #2d7a34; }
+.availNo       { background: #fdf0f0; color: #c9484a; }
