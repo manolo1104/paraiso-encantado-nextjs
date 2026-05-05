@@ -1,0 +1,455 @@
+import { getSheetsClient } from '@/lib/sheets';
+
+const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
+const RESERVAS_SHEET = process.env.GOOGLE_SHEET_TAB || 'Reservas';
+const COTIZACIONES_SHEET = 'Cotizaciones';
+const NOTAS_CRM_SHEET = 'NotasCRM';
+const METRICAS_REDES_SHEET = 'MetricasRedes';
+const AVAILABILITY_SHEET = 'Disponibilidad';
+
+export interface AdminBooking {
+  rowIndex: number;
+  fecha: string;
+  confirmacion: string;
+  cliente: string;
+  telefono: string;
+  email: string;
+  total: number;
+  checkin: string;
+  checkout: string;
+  noches: number;
+  huespedes: number;
+  habitaciones: string;
+  notas: string;
+  paymentId: string;
+  estado: 'CONFIRMADA' | 'CANCELADA' | 'MANUAL';
+  comoNosConocio: string;
+}
+
+export interface AdminQuote {
+  rowIndex: number;
+  id: string;
+  fecha: string;
+  cliente: string;
+  telefono: string;
+  email: string;
+  suite: string;
+  checkin: string;
+  checkout: string;
+  noches: number;
+  precioTotal: number;
+  estado: 'BORRADOR' | 'ENVIADA' | 'ACEPTADA' | 'EXPIRADA';
+  notas: string;
+}
+
+export interface GuestProfile {
+  email: string;
+  nombre: string;
+  telefono: string;
+  totalReservas: number;
+  totalGastado: number;
+  ultimaEstancia: string;
+  suitesFavoritas: string[];
+  notas: string;
+}
+
+function parseTotal(raw: string | number): number {
+  if (typeof raw === 'number') return raw;
+  return parseInt(String(raw).replace(/[^0-9]/g, ''), 10) || 0;
+}
+
+// ── RESERVAS ─────────────────────────────────────────────────────────────────
+
+export async function getAllBookings(): Promise<AdminBooking[]> {
+  const client = await getSheetsClient();
+  if (!client) return [];
+  try {
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${RESERVAS_SHEET}!A:N`,
+    });
+    const rows = res.data.values || [];
+    if (rows.length < 2) return [];
+
+    return rows.slice(1).map((row, i) => ({
+      rowIndex: i + 2,
+      fecha: row[0] || '',
+      confirmacion: row[1] || '',
+      cliente: row[2] || '',
+      telefono: row[3] || '',
+      email: row[4] || '',
+      total: parseTotal(row[5]),
+      checkin: row[6] || '',
+      checkout: row[7] || '',
+      noches: parseInt(row[8]) || 0,
+      huespedes: parseInt(row[9]) || 0,
+      habitaciones: row[10] || '',
+      notas: row[11] || '',
+      paymentId: row[12] || '',
+      comoNosConocio: row[13] || '',
+      estado: row[12] === 'CANCELADA' ? 'CANCELADA'
+            : row[12] === 'MANUAL' ? 'MANUAL'
+            : 'CONFIRMADA',
+    }));
+  } catch (e: any) {
+    console.error('getAllBookings error:', e.message);
+    return [];
+  }
+}
+
+export async function createManualBooking(data: {
+  cliente: string; telefono: string; email: string; habitacion: string;
+  checkin: string; checkout: string; noches: number; huespedes: number;
+  total: number; notas: string;
+}): Promise<string> {
+  const client = await getSheetsClient();
+  if (!client) throw new Error('No sheets client');
+
+  const confirmacion = 'PE-M-' + Date.now().toString(36).toUpperCase();
+  const ts = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+
+  await client.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,
+    range: `${RESERVAS_SHEET}!A:N`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[
+        ts, confirmacion, data.cliente, data.telefono, data.email,
+        `$${data.total.toLocaleString('es-MX')} MXN`,
+        data.checkin, data.checkout, data.noches, data.huespedes,
+        data.habitacion, data.notas, 'MANUAL', '',
+      ]],
+    },
+  });
+
+  // Bloquear fechas en Disponibilidad
+  await blockDatesForRoom(data.habitacion, data.checkin, data.checkout);
+
+  return confirmacion;
+}
+
+export async function updateBooking(rowIndex: number, changes: Partial<{
+  cliente: string; telefono: string; email: string; checkin: string;
+  checkout: string; noches: number; huespedes: number; total: number;
+  habitaciones: string; notas: string; estado: string;
+}>): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+
+  const colMap: Record<string, string> = {
+    cliente: 'C', telefono: 'D', email: 'E', total: 'F',
+    checkin: 'G', checkout: 'H', noches: 'I', huespedes: 'J',
+    habitaciones: 'K', notas: 'L',
+  };
+
+  for (const [key, col] of Object.entries(colMap)) {
+    if (key in changes) {
+      const val = key === 'total'
+        ? `$${(changes as any)[key].toLocaleString('es-MX')} MXN`
+        : String((changes as any)[key]);
+      await client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${RESERVAS_SHEET}!${col}${rowIndex}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[val]] },
+      });
+    }
+  }
+}
+
+export async function cancelBooking(rowIndex: number, habitaciones: string, checkin: string, checkout: string): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+
+  // Marcar como CANCELADA en columna M (Payment ID usamos para estado manual)
+  await client.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range: `${RESERVAS_SHEET}!M${rowIndex}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [['CANCELADA']] },
+  });
+
+  // Liberar fechas en Disponibilidad
+  await unblockDatesForRoom(habitaciones, checkin, checkout);
+}
+
+// ── DISPONIBILIDAD ────────────────────────────────────────────────────────────
+
+async function blockDatesForRoom(roomName: string, checkin: string, checkout: string) {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${AVAILABILITY_SHEET}!A:Z`,
+    });
+    const data = res.data.values || [];
+    if (!data.length) return;
+    const headers = data[0];
+    const colIdx = headers.findIndex((h: string) => h === roomName);
+    if (colIdx === -1) return;
+
+    const start = new Date(checkin + 'T00:00:00');
+    const end = new Date(checkout + 'T00:00:00');
+
+    for (let i = 1; i < data.length; i++) {
+      if (!data[i][0]) continue;
+      const rowDate = new Date(data[i][0].trim() + 'T00:00:00');
+      if (rowDate >= start && rowDate < end) {
+        const col = String.fromCharCode(65 + colIdx);
+        await client.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `${AVAILABILITY_SHEET}!${col}${i + 1}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: [['RESERVADO']] },
+        });
+      }
+    }
+  } catch (e: any) {
+    console.error('blockDatesForRoom error:', e.message);
+  }
+}
+
+async function unblockDatesForRoom(roomName: string, checkin: string, checkout: string) {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${AVAILABILITY_SHEET}!A:Z`,
+    });
+    const data = res.data.values || [];
+    if (!data.length) return;
+    const headers = data[0];
+    const colIdx = headers.findIndex((h: string) => h === roomName);
+    if (colIdx === -1) return;
+
+    const start = new Date(checkin + 'T00:00:00');
+    const end = new Date(checkout + 'T00:00:00');
+
+    for (let i = 1; i < data.length; i++) {
+      if (!data[i][0]) continue;
+      const rowDate = new Date(data[i][0].trim() + 'T00:00:00');
+      if (rowDate >= start && rowDate < end) {
+        const col = String.fromCharCode(65 + colIdx);
+        await client.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `${AVAILABILITY_SHEET}!${col}${i + 1}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: [['']] },
+        });
+      }
+    }
+  } catch (e: any) {
+    console.error('unblockDatesForRoom error:', e.message);
+  }
+}
+
+// ── COTIZACIONES ──────────────────────────────────────────────────────────────
+
+export async function getAllQuotes(): Promise<AdminQuote[]> {
+  const client = await getSheetsClient();
+  if (!client) return [];
+  try {
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${COTIZACIONES_SHEET}!A:L`,
+    });
+    const rows = res.data.values || [];
+    if (rows.length < 2) return [];
+
+    return rows.slice(1).map((row, i) => ({
+      rowIndex: i + 2,
+      id: row[0] || '',
+      fecha: row[1] || '',
+      cliente: row[2] || '',
+      telefono: row[3] || '',
+      email: row[4] || '',
+      suite: row[5] || '',
+      checkin: row[6] || '',
+      checkout: row[7] || '',
+      noches: parseInt(row[8]) || 0,
+      precioTotal: parseTotal(row[9]),
+      estado: (row[10] || 'BORRADOR') as AdminQuote['estado'],
+      notas: row[11] || '',
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function createQuote(data: Omit<AdminQuote, 'rowIndex' | 'id' | 'fecha' | 'estado'>): Promise<string> {
+  const client = await getSheetsClient();
+  if (!client) throw new Error('No sheets client');
+
+  const id = 'COT-' + Date.now().toString(36).toUpperCase();
+  const fecha = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+
+  await client.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,
+    range: `${COTIZACIONES_SHEET}!A:L`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[
+        id, fecha, data.cliente, data.telefono, data.email,
+        data.suite, data.checkin, data.checkout, data.noches,
+        data.precioTotal, 'BORRADOR', data.notas,
+      ]],
+    },
+  });
+
+  return id;
+}
+
+export async function updateQuoteStatus(rowIndex: number, estado: AdminQuote['estado']): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  await client.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range: `${COTIZACIONES_SHEET}!K${rowIndex}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [[estado]] },
+  });
+}
+
+// ── CRM ───────────────────────────────────────────────────────────────────────
+
+export async function buildCRM(bookings: AdminBooking[]): Promise<GuestProfile[]> {
+  const map = new Map<string, GuestProfile>();
+
+  for (const b of bookings) {
+    if (!b.email || b.email === 'N/A') continue;
+    const key = b.email.toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, {
+        email: b.email,
+        nombre: b.cliente,
+        telefono: b.telefono,
+        totalReservas: 0,
+        totalGastado: 0,
+        ultimaEstancia: '',
+        suitesFavoritas: [],
+        notas: '',
+      });
+    }
+    const g = map.get(key)!;
+    g.totalReservas++;
+    g.totalGastado += b.total;
+    if (!g.ultimaEstancia || b.checkin > g.ultimaEstancia) g.ultimaEstancia = b.checkin;
+    if (b.habitaciones && !g.suitesFavoritas.includes(b.habitaciones)) {
+      g.suitesFavoritas.push(b.habitaciones);
+    }
+  }
+
+  // Cargar notas
+  const notas = await getGuestNotes();
+  for (const [email, nota] of Object.entries(notas)) {
+    const profile = map.get(email.toLowerCase());
+    if (profile) profile.notas = nota;
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.totalGastado - a.totalGastado);
+}
+
+async function getGuestNotes(): Promise<Record<string, string>> {
+  const client = await getSheetsClient();
+  if (!client) return {};
+  try {
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${NOTAS_CRM_SHEET}!A:C`,
+    });
+    const rows = res.data.values || [];
+    const result: Record<string, string> = {};
+    for (const row of rows.slice(1)) {
+      if (row[0]) result[row[0].toLowerCase()] = row[1] || '';
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+export async function saveGuestNote(email: string, notas: string): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${NOTAS_CRM_SHEET}!A:A`,
+    });
+    const rows = res.data.values || [];
+    const rowIdx = rows.findIndex((r) => r[0]?.toLowerCase() === email.toLowerCase());
+    const ts = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+
+    if (rowIdx > 0) {
+      await client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${NOTAS_CRM_SHEET}!B${rowIdx + 1}:C${rowIdx + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[notas, ts]] },
+      });
+    } else {
+      await client.spreadsheets.values.append({
+        spreadsheetId: SHEET_ID,
+        range: `${NOTAS_CRM_SHEET}!A:C`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[email, notas, ts]] },
+      });
+    }
+  } catch (e: any) {
+    console.error('saveGuestNote error:', e.message);
+  }
+}
+
+// ── MÉTRICAS REDES ────────────────────────────────────────────────────────────
+
+export interface RedMetrica {
+  fecha: string;
+  ig_seguidores: number;
+  ig_alcance: number;
+  ig_interacciones: number;
+  fb_seguidores: number;
+  fb_alcance: number;
+  notas: string;
+}
+
+export async function getRedMetricas(): Promise<RedMetrica[]> {
+  const client = await getSheetsClient();
+  if (!client) return [];
+  try {
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${METRICAS_REDES_SHEET}!A:G`,
+    });
+    const rows = res.data.values || [];
+    return rows.slice(1).map((r) => ({
+      fecha: r[0] || '',
+      ig_seguidores: parseInt(r[1]) || 0,
+      ig_alcance: parseInt(r[2]) || 0,
+      ig_interacciones: parseInt(r[3]) || 0,
+      fb_seguidores: parseInt(r[4]) || 0,
+      fb_alcance: parseInt(r[5]) || 0,
+      notas: r[6] || '',
+    })).reverse();
+  } catch {
+    return [];
+  }
+}
+
+export async function saveRedMetrica(data: Omit<RedMetrica, 'fecha'>): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  const fecha = new Date().toLocaleDateString('es-MX');
+  await client.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,
+    range: `${METRICAS_REDES_SHEET}!A:G`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[
+        fecha, data.ig_seguidores, data.ig_alcance, data.ig_interacciones,
+        data.fb_seguidores, data.fb_alcance, data.notas,
+      ]],
+    },
+  });
+}

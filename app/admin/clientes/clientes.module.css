@@ -1,0 +1,47 @@
+.pageHeader { margin-bottom: 20px; }
+.pageTitle { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.8rem; font-weight: 400; color: var(--forest); margin: 0 0 4px; }
+.pageSub { font-size: 0.83rem; color: var(--sage); margin: 0; }
+.searchWrap { position: relative; margin-bottom: 14px; }
+.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; }
+.searchInput { width: 100%; max-width: 400px; padding: 9px 12px 9px 34px; border: 1px solid #d4cec7; border-radius: 4px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; background: #fff; outline: none; }
+.searchInput:focus { border-color: var(--forest); }
+.tableWrap { background: #fff; border-radius: 8px; border: 1px solid #e4ddd3; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.table thead th { background: var(--forest); color: var(--cream); padding: 11px 14px; text-align: left; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; }
+.row { cursor: pointer; }
+.row:hover { background: var(--parch); }
+.row td { padding: 12px 14px; border-bottom: 1px solid #f0ebe3; vertical-align: middle; }
+.row:last-child td { border-bottom: none; }
+.clienteName { font-weight: 500; }
+.clienteEmail { font-size: 0.78rem; color: var(--sage); }
+.total { font-weight: 600; color: var(--forest); }
+.notaBadge { font-size: 0.85rem; }
+.empty { text-align: center; padding: 40px; color: var(--sage); }
+
+/* Drawer */
+.drawerOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; justify-content: flex-end; }
+.drawer { width: 100%; max-width: 400px; height: 100%; background: var(--cream); overflow-y: auto; display: flex; flex-direction: column; animation: slideIn 0.25s ease-out; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.drawerHeader { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px; border-bottom: 1px solid #e4ddd3; }
+.drawerName { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.4rem; font-weight: 400; color: var(--forest); margin: 0 0 4px; }
+.drawerEmail { font-size: 0.83rem; color: var(--sage); margin: 0; }
+.closeBtn { background: none; border: none; cursor: pointer; color: #aaa; padding: 4px; }
+.drawerBody { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.statsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat { background: var(--parch); border-radius: 6px; padding: 12px; }
+.statLabel { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--sage); display: block; margin-bottom: 4px; }
+.statVal { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.1rem; color: var(--forest); }
+.contact { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--parch); border-radius: 6px; padding: 12px; }
+.waBtn { display: flex; align-items: center; gap: 6px; background: #25D366; color: #fff; border: none; border-radius: 4px; padding: 7px 12px; font-size: 0.83rem; cursor: pointer; }
+.suites { }
+.suitesLabel { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); margin: 0 0 8px; }
+.suiteTags { display: flex; flex-wrap: wrap; gap: 6px; }
+.suiteTag { background: var(--forest); color: var(--cream); font-size: 0.72rem; padding: 3px 8px; border-radius: 3px; }
+.notasSection { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.notasLabel { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); }
+.notasInput { width: 100%; padding: 10px 12px; border: 1px solid #d4cec7; border-radius: 4px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; resize: vertical; outline: none; }
+.notasInput:focus { border-color: var(--forest); }
+.saveBtn { align-self: flex-end; display: flex; align-items: center; gap: 6px; background: var(--forest); color: var(--cream); border: none; border-radius: 4px; padding: 9px 16px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; cursor: pointer; }
+.saveBtn:disabled { opacity: 0.6; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.7s linear infinite; }

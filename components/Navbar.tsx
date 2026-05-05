@@ -55,6 +55,10 @@ export default function Navbar() {
           Reservar
         </a>
 
+        {/* Botón admin discreto — solo visible al pasar el cursor */}
+        <a href="/admin/login" className={styles.adminDot} aria-label="Panel admin" title="Admin" />
+
+
         {/* Hamburger mobile */}
         <button
           className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ''}`}

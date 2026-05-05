@@ -1,0 +1,844 @@
+[
+  {
+    "folio": "WA-MMZIE8LP",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5215546056098@c.us",
+    "userName": "J Glez",
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2025-07-15",
+    "checkout": "2025-07-16",
+    "guests": 2,
+    "nights": 1,
+    "totalPrice": 1990,
+    "bankInfo": {
+      "banco": "(configura BANK_NAME en .env)",
+      "titular": "(configura BANK_TITULAR en .env)",
+      "clabe": "(configura BANK_CLABE en .env)",
+      "cuenta": "(configura BANK_CUENTA en .env)"
+    },
+    "createdAt": "2026-03-20T23:07:15.085Z"
+  },
+  {
+    "folio": "WA-MN420PQB",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891251800@c.us",
+    "userName": "Mario",
+    "room": {
+      "id": "suite_jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2025-11-20",
+    "checkout": "2025-11-30",
+    "guests": 1,
+    "nights": 10,
+    "totalPrice": 19900,
+    "bankInfo": {
+      "banco": "(configura BANK_NAME en .env)",
+      "titular": "(configura BANK_TITULAR en .env)",
+      "clabe": "(configura BANK_CLABE en .env)",
+      "cuenta": "(configura BANK_CUENTA en .env)"
+    },
+    "createdAt": "2026-03-24T03:27:41.123Z"
+  },
+  {
+    "folio": "WA-MN422UCN",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891251800@c.us",
+    "userName": "Mario",
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2025-11-20",
+    "checkout": "2025-11-30",
+    "guests": 1,
+    "nights": 10,
+    "totalPrice": 19900,
+    "bankInfo": {
+      "banco": "(configura BANK_NAME en .env)",
+      "titular": "(configura BANK_TITULAR en .env)",
+      "clabe": "(configura BANK_CLABE en .env)",
+      "cuenta": "(configura BANK_CUENTA en .env)"
+    },
+    "createdAt": "2026-03-24T03:29:20.423Z"
+  },
+  {
+    "folio": "WA-MN5RL3C1",
+    "status": "PENDIENTE_PAGO",
+    "userId": "test-user-001",
+    "userName": "Manolo (prueba)",
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-03-26",
+    "checkout": "2026-03-27",
+    "guests": 2,
+    "nights": 1,
+    "totalPrice": 1990,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217 4700 5878 0996"
+    },
+    "createdAt": "2026-03-25T08:11:08.449Z"
+  },
+  {
+    "folio": "WA-MN7060GG",
+    "status": "PENDIENTE_PAGO",
+    "userId": "test-user@local",
+    "userName": "Usuario de prueba",
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-04-15",
+    "checkout": "2026-04-18",
+    "guests": 2,
+    "nights": 3,
+    "totalPrice": 5970,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217 4700 5878 0996"
+    },
+    "createdAt": "2026-03-26T04:59:07.600Z"
+  },
+  {
+    "folio": "WA-MN71G755",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Covarrubias",
+    "guestEmail": "daftpunkmanolo@gmail.com",
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-08-08",
+    "checkout": "2026-08-10",
+    "guests": 4,
+    "nights": 2,
+    "totalPrice": 4980,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217 4700 5878 0996"
+    },
+    "createdAt": "2026-03-26T05:35:02.441Z"
+  },
+  {
+    "folio": "WA-MN73QJ3H",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo",
+    "guestEmail": "correo@tec.mx",
+    "room": {
+      "id": "lirios_2",
+      "name": "Lirios 2"
+    },
+    "checkin": "2026-04-01",
+    "checkout": "2026-04-02",
+    "guests": 3,
+    "nights": 1,
+    "totalPrice": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T06:39:03.725Z"
+  },
+  {
+    "folio": "WA-MN73QJPC",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo",
+    "guestEmail": "correo@tec.mx",
+    "room": {
+      "id": "orquídeas_king",
+      "name": "Orquídeas King"
+    },
+    "checkin": "2026-04-01",
+    "checkout": "2026-04-02",
+    "guests": 3,
+    "nights": 1,
+    "totalPrice": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T06:39:04.512Z"
+  },
+  {
+    "folio": "WA-MN749G23",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo Covarrubias Martínez",
+    "guestEmail": "manolo@correo.com",
+    "room": {
+      "id": "lirios_1",
+      "name": "Lirios 1"
+    },
+    "checkin": "2026-03-29",
+    "checkout": "2026-03-30",
+    "guests": 2,
+    "nights": 1,
+    "totalPrice": 1500,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T06:53:46.251Z"
+  },
+  {
+    "folio": "WA-MN74MP8W",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-03-31",
+    "checkout": "2026-04-01",
+    "guests": 2,
+    "nights": 1,
+    "totalPrice": 1990,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T07:04:04.689Z"
+  },
+  {
+    "folio": "WA-MN751KMS",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": "daftpunkmanolo@gmail.com",
+    "room": {
+      "id": "helechos_1",
+      "name": "Helechos I Familiar"
+    },
+    "checkin": "2026-03-31",
+    "checkout": "2026-04-01",
+    "guests": 5,
+    "nights": 1,
+    "totalPrice": 2400,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T07:15:38.548Z"
+  },
+  {
+    "folio": "WA-MN75GW6A",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-03-31",
+    "checkout": "2026-04-01",
+    "guests": 3,
+    "nights": 1,
+    "totalPrice": 2490,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T07:27:33.347Z"
+  },
+  {
+    "folio": "WA-MN75Q5KZ",
+    "status": "CONFIRMADA",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Arturo Covarrubias Martínez",
+    "guestEmail": null,
+    "room": {
+      "id": "orquideas_king",
+      "name": "Orquídeas King"
+    },
+    "checkin": "2026-03-31",
+    "checkout": "2026-04-01",
+    "guests": 3,
+    "nights": 1,
+    "totalPrice": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T07:34:45.443Z",
+    "confirmedAt": "2026-03-26T07:36:16.869Z"
+  },
+  {
+    "folio": "WA-MN7URJJQ",
+    "status": "CONFIRMADA",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Arturo Covarrubias Martínez",
+    "guestEmail": null,
+    "room": {
+      "id": "lindavista",
+      "name": "Suite LindaVista"
+    },
+    "checkin": "2026-04-01",
+    "checkout": "2026-04-02",
+    "guests": 2,
+    "nights": 1,
+    "totalPrice": 3980,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T19:15:40.598Z",
+    "confirmedAt": "2026-03-26T19:18:08.110Z"
+  },
+  {
+    "folio": "WA-MN7VC3MO",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Arturo Covarrubias",
+    "guestEmail": null,
+    "room": {
+      "id": "helechos-i-familiar",
+      "name": "Helechos I Familiar"
+    },
+    "checkin": "2026-05-04",
+    "checkout": "2026-05-05",
+    "guests": 5,
+    "nights": 1,
+    "totalPrice": 2400,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T19:31:39.745Z"
+  },
+  {
+    "folio": "WA-MN7VO1VY",
+    "status": "PENDIENTE_PAGO",
+    "userId": "5214891255181@c.us",
+    "userName": "Irma Martínez Hernández",
+    "guestEmail": null,
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-04-06",
+    "checkout": "2026-04-07",
+    "guests": 2,
+    "nights": 1,
+    "totalPrice": 1990,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T19:40:57.358Z"
+  },
+  {
+    "folio": "WA-MN7VVP2U",
+    "status": "RESERVADO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Arturo Covarrubias",
+    "guestEmail": null,
+    "room": {
+      "id": "helechos_1",
+      "name": "Helechos I Familiar"
+    },
+    "checkin": "2026-05-04",
+    "checkout": "2026-05-05",
+    "guests": 5,
+    "nights": 1,
+    "totalPrice": 2400,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-26T19:46:54.006Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-03-26T19:54:28.348Z"
+  },
+  {
+    "folio": "WA-MN8II1CK",
+    "status": "RESERVADO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Arturo Covarrubias Martínez",
+    "guestEmail": null,
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-05-07",
+    "checkout": "2026-05-09",
+    "guests": 4,
+    "nights": 2,
+    "totalPrice": 4980,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-27T06:20:07.892Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-03-27T06:37:09.902Z"
+  },
+  {
+    "folio": "WA-MN8KN93Z",
+    "status": "RESERVADO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Arturo Covarrubias",
+    "guestEmail": "daftpunkmanolo@gmail.com",
+    "room": {
+      "id": "flor_de_liz_2",
+      "name": "Suite Flor de Liz 2"
+    },
+    "checkin": "2026-04-21",
+    "checkout": "2026-04-22",
+    "guests": 4,
+    "nights": 1,
+    "totalPrice": 2400,
+    "depositAmount": 2400,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-27T07:20:10.463Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-03-27T07:25:30.534Z"
+  },
+  {
+    "folio": "WA-MN8LFELR",
+    "status": "RESERVADO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla"
+    },
+    "checkin": "2026-04-14",
+    "checkout": "2026-04-15",
+    "guests": 2,
+    "nights": 1,
+    "totalPrice": 1200,
+    "depositAmount": 1200,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-27T07:42:03.952Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-03-27T07:43:53.039Z"
+  },
+  {
+    "folio": "WA-MN8LFF4N",
+    "status": "RESERVADO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "room": {
+      "id": "bromelias1",
+      "name": "Bromelias 1"
+    },
+    "checkin": "2026-04-14",
+    "checkout": "2026-04-15",
+    "guests": 3,
+    "nights": 1,
+    "totalPrice": 1500,
+    "depositAmount": 1500,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-27T07:42:04.631Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-03-27T07:44:29.970Z"
+  },
+  {
+    "folio": "WA-MN8LFFCL",
+    "status": "RESERVADO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "room": {
+      "id": "helechos2",
+      "name": "Helechos II Familiar"
+    },
+    "checkin": "2026-04-14",
+    "checkout": "2026-04-15",
+    "guests": 3,
+    "nights": 1,
+    "totalPrice": 2000,
+    "depositAmount": 2000,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-27T07:42:04.917Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-03-27T07:44:44.274Z"
+  },
+  {
+    "folio": "WA-MN8M9X77",
+    "status": "RESERVADO",
+    "userId": "5214891007679@c.us",
+    "userName": "Manuel Covarrubias",
+    "guestEmail": null,
+    "rooms": [
+      {
+        "id": "flor_liz_1",
+        "name": "Suite Flor de Liz 1",
+        "backendName": "Suite Flor de Liz 1",
+        "guests": 2,
+        "price": 1900
+      },
+      {
+        "id": "flor_liz_2",
+        "name": "Suite Flor de Liz 2",
+        "backendName": "Suite Flor de Liz 2",
+        "guests": 3,
+        "price": 2400
+      },
+      {
+        "id": "lindavista",
+        "name": "Suite LindaVista",
+        "backendName": "Suite LindaVista",
+        "guests": 3,
+        "price": 2400
+      }
+    ],
+    "room": {
+      "id": "flor_liz_1",
+      "name": "Suite Flor de Liz 1",
+      "backendName": "Suite Flor de Liz 1",
+      "guests": 2,
+      "price": 1900
+    },
+    "checkin": "2026-04-14",
+    "checkout": "2026-04-15",
+    "guests": 8,
+    "nights": 1,
+    "totalPrice": 6700,
+    "depositAmount": 6700,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-27T08:05:47.731Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-04-10T02:54:08.901Z"
+  },
+  {
+    "folio": "WA-MNBBYRIV",
+    "status": "PENDIENTE_PAGO",
+    "userId": "247145370230927@lid",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "rooms": [
+      {
+        "id": "helechos-i-familiar",
+        "name": "Helechos I Familiar",
+        "backendName": "Helechos I Familiar",
+        "guests": 3,
+        "price": 2400
+      }
+    ],
+    "room": {
+      "id": "helechos-i-familiar",
+      "name": "Helechos I Familiar",
+      "backendName": "Helechos I Familiar",
+      "guests": 3,
+      "price": 2400
+    },
+    "checkin": "2026-03-29",
+    "checkout": "2026-03-30",
+    "guests": 3,
+    "nights": 1,
+    "totalPrice": 2400,
+    "depositAmount": 2400,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-29T05:40:29.527Z"
+  },
+  {
+    "folio": "WA-MNF0673C",
+    "status": "RESERVADO",
+    "userId": "247145370230927@lid",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": "daftpunkmanolo@gmail.com",
+    "rooms": [
+      {
+        "id": "lirios-1",
+        "name": "Lirios 1",
+        "backendName": "Lirios 1",
+        "guests": 4,
+        "price": 1900
+      }
+    ],
+    "room": {
+      "id": "lirios-1",
+      "name": "Lirios 1",
+      "backendName": "Lirios 1",
+      "guests": 4,
+      "price": 1900
+    },
+    "checkin": "2026-04-02",
+    "checkout": "2026-04-03",
+    "guests": 4,
+    "nights": 1,
+    "totalPrice": 1900,
+    "depositAmount": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-03-31T19:21:25.609Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-03-31T19:24:03.464Z"
+  },
+  {
+    "folio": "WA-MNQFYD39",
+    "status": "RESERVADO",
+    "userId": "247145370230927@lid",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "rooms": [
+      {
+        "id": "jungla",
+        "name": "Suite Jungla",
+        "backendName": "Jungla",
+        "guests": 2,
+        "price": 3800
+      }
+    ],
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla",
+      "backendName": "Jungla",
+      "guests": 2,
+      "price": 3800
+    },
+    "checkin": "2026-04-28",
+    "checkout": "2026-04-30",
+    "guests": 2,
+    "nights": 2,
+    "totalPrice": 3800,
+    "depositAmount": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-04-08T19:28:41.925Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-04-08T19:36:35.997Z"
+  },
+  {
+    "folio": "WA-MNSK76FL",
+    "status": "RESERVADO",
+    "userId": "247145370230927@lid",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": null,
+    "rooms": [
+      {
+        "id": "suite-lindavista",
+        "name": "Suite LindaVista",
+        "backendName": "Suite LindaVista",
+        "guests": 2,
+        "price": 1900
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "suite-lindavista",
+      "name": "Suite LindaVista",
+      "backendName": "Suite LindaVista",
+      "guests": 2,
+      "price": 1900
+    },
+    "checkin": "2026-04-25",
+    "checkout": "2026-04-26",
+    "guests": 2,
+    "nights": 1,
+    "roomsTotal": 1900,
+    "toursTotal": 0,
+    "totalPrice": 1900,
+    "depositAmount": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-04-10T07:03:04.017Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-04-10T07:04:25.103Z"
+  },
+  {
+    "folio": "WA-MNUKLPJJ",
+    "status": "PENDIENTE_PAGO",
+    "userId": "56801529741517@lid",
+    "userName": "Esperanza Curvas Martinez",
+    "guestEmail": null,
+    "rooms": [
+      {
+        "id": "suite_jungla",
+        "name": "Suite Jungla",
+        "backendName": "Suite Jungla",
+        "guests": 1,
+        "price": 1900
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "suite_jungla",
+      "name": "Suite Jungla",
+      "backendName": "Suite Jungla",
+      "guests": 1,
+      "price": 1900
+    },
+    "checkin": "2026-04-13",
+    "checkout": "2026-04-14",
+    "guests": 1,
+    "nights": 1,
+    "roomsTotal": 1900,
+    "toursTotal": 0,
+    "totalPrice": 1900,
+    "depositAmount": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-04-11T16:49:54.319Z"
+  },
+  {
+    "folio": "WA-MNXLEIIC",
+    "status": "PENDIENTE_PAGO",
+    "userId": "42047897645240@lid",
+    "userName": "Rodolfo Ramírez Barrientos",
+    "guestEmail": null,
+    "rooms": [
+      {
+        "id": "helechos_1_familiar",
+        "name": "Helechos I Familiar",
+        "backendName": "Helechos I Familiar",
+        "guests": 4,
+        "price": 2400
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "helechos_1_familiar",
+      "name": "Helechos I Familiar",
+      "backendName": "Helechos I Familiar",
+      "guests": 4,
+      "price": 2400
+    },
+    "checkin": "2026-04-18",
+    "checkout": "2026-04-19",
+    "guests": 4,
+    "nights": 1,
+    "roomsTotal": 2400,
+    "toursTotal": 0,
+    "totalPrice": 2400,
+    "depositAmount": 2400,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-04-13T19:35:36.757Z"
+  },
+  {
+    "folio": "WA-MO58FYH9",
+    "status": "PENDIENTE_PAGO",
+    "userId": "151719770112107@lid",
+    "userName": "Armando Leyva Alvarado",
+    "guestEmail": "armandoleyvaalvarado@gmail.com",
+    "howFound": "Google",
+    "rooms": [
+      {
+        "id": "lindavista",
+        "name": "Suite LindaVista",
+        "backendName": "Suite LindaVista",
+        "guests": 3,
+        "price": 2400
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "lindavista",
+      "name": "Suite LindaVista",
+      "backendName": "Suite LindaVista",
+      "guests": 3,
+      "price": 2400
+    },
+    "checkin": "2026-04-19",
+    "checkout": "2026-04-20",
+    "guests": 3,
+    "nights": 1,
+    "roomsTotal": 2400,
+    "toursTotal": 0,
+    "totalPrice": 2400,
+    "depositAmount": 2400,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-04-19T03:54:58.509Z"
+  }
+]

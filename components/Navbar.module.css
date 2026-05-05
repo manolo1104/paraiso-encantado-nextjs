@@ -212,3 +212,20 @@
     display: block;
   }
 }
+
+
+/* Botón admin discreto */
+.adminDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  margin-left: 4px;
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s;
+}
+.adminDot:hover {
+  background: rgba(201,169,122,0.4);
+  border-color: rgba(201,169,122,0.6);
+}
