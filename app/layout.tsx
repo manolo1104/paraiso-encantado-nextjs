@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Jost } from 'next/font/google';
+import { headers } from 'next/headers';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -94,7 +95,11 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+  const isAdmin = pathname.startsWith('/admin');
+
   return (
     <html lang="es" className={`${cormorant.variable} ${jost.variable}`}>
       <head>
@@ -109,10 +114,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Google Tag Manager (noscript) */}
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N98DFD9V" height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe></noscript>
         <TrackingSetup />
-        <Navbar />
+        {!isAdmin && <Navbar />}
         {children}
-        <Footer />
-        <WhatsAppButton />
+        {!isAdmin && <Footer />}
+        {!isAdmin && <WhatsAppButton />}
       </body>
     </html>
   );

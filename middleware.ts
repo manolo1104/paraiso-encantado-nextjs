@@ -22,7 +22,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // ── Cookie de sesión pública ──────────────────────────────
-  const res = NextResponse.next();
+  const res = NextResponse.next({
+    request: { headers: new Headers({ ...Object.fromEntries(req.headers), 'x-pathname': pathname }) },
+  });
   if (!req.cookies.get('pe_session')) {
     const sid = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     res.cookies.set('pe_session', sid, {
