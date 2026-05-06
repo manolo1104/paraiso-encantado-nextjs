@@ -54,81 +54,101 @@ function fmtDate(d: string) {
   return `${day}/${m}/${y}`;
 }
 
-// ── PDF en nueva ventana ────────────────────────────────────────────────────
+const PDF_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Jost','Helvetica Neue',Arial,sans-serif;color:#2a2218;background:#f0ebe3;line-height:1.6}
+  .page{max-width:680px;margin:0 auto;background:#faf8f5}
+  .hero{background:#2f281f;padding:36px 40px 32px;text-align:left}
+  .hero-eye{font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin:0 0 10px;font-family:'Jost',sans-serif}
+  .hero-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;font-style:italic;font-weight:300;color:#fff;line-height:1.1;margin:0 0 8px}
+  .hero-sub{font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,0.72);margin:0}
+  .body{padding:40px}
+  .ref-box{border:1px solid #c9b99a;background:#fdf9f4;padding:22px 28px;margin:0 0 32px}
+  .ref-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9a8a74;margin:0 0 6px}
+  .ref-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:500;color:#2a2218;margin:0}
+  .greeting{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;color:#2a2218;margin:0 0 24px}
+  .greeting em{font-style:italic;color:#7a6a52}
+  .divider{height:1px;background:#c9b99a;width:48px;margin:0 0 28px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e4ddd3;margin:0 0 28px}
+  .cell{padding:18px 20px;border-right:1px solid #e4ddd3;border-bottom:1px solid #e4ddd3}
+  .cell:nth-child(2n){border-right:none}
+  .cell:nth-last-child(-n+2){border-bottom:none}
+  .cell-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;margin:0 0 8px}
+  .cell-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;margin:0}
+  .cell-sub{font-family:'Jost',sans-serif;font-size:11px;color:#9a8a74;margin:4px 0 0}
+  .total-bar{background:#2a2218;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;margin:0 0 28px}
+  .total-label{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#c9b99a}
+  .total-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#faf8f5}
+  .total-currency{font-size:14px;color:#c9b99a;margin-left:4px}
+  .notes-box{border-left:2px solid #c9b99a;padding:0 0 0 20px;margin:0 0 28px}
+  .notes-text{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-style:italic;font-weight:300;color:#5a4e3c;line-height:1.7}
+  .validity{font-family:'Jost',sans-serif;font-size:12px;color:#9a8a74;margin:0 0 20px;text-align:center}
+  .cta{text-align:center;margin:0 0 40px}
+  .cta-btn{display:inline-block;background:#2a2218;color:#faf8f5;text-decoration:none;padding:14px 36px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase}
+  .contact{background:#faf8f5;padding:24px 40px;border-top:1px solid #e4ddd3}
+  .contact p{font-family:'Jost',sans-serif;font-size:13px;color:#2a2218;margin:0 0 6px}
+  .footer-bar{background:#f0ebe3;padding:32px 40px;text-align:center}
+  .footer-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;letter-spacing:3px;text-transform:uppercase;color:#8a7d6b;margin:0 0 8px}
+  .footer-addr{font-family:'Jost',sans-serif;font-size:11px;color:#a09080;line-height:1.6;margin:0}
+  @media print{body{background:#fff}@page{margin:0.5cm}
+    .page{max-width:100%;box-shadow:none}}
+`;
+
+// ── PDF Cotización ──────────────────────────────────────────────────────────
 function printQuotePDF(q: AdminQuote) {
   const win = window.open('', '_blank');
   if (!win) return;
   win.document.write(`<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8">
-<title>Cotización ${q.id}</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Georgia,serif;color:#1a1a1a;background:#fff;padding:40px;max-width:720px;margin:0 auto}
-  .header{text-align:center;border-bottom:2px solid #1e3012;padding-bottom:24px;margin-bottom:32px}
-  .logo{font-size:28px;color:#1e3012;font-style:italic;font-weight:300}
-  .tagline{font-size:12px;color:#6b8e4e;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
-  .badge{display:inline-block;background:#1e3012;color:#fff;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:2px;margin-top:12px}
-  h1{font-size:22px;font-weight:400;color:#1e3012;margin-bottom:6px}
-  .meta{color:#888;font-size:12px;margin-bottom:32px}
-  .client-box{background:#f0ebe3;padding:20px;border-radius:4px;margin-bottom:24px}
-  .client-box h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#6b8e4e;margin-bottom:10px}
-  .client-box p{font-size:15px;margin:3px 0;color:#1a1a1a}
-  table{width:100%;border-collapse:collapse;margin-bottom:24px}
-  th{background:#1e3012;color:#fff;padding:10px 14px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:400}
-  td{padding:12px 14px;border-bottom:1px solid #e4ddd3;font-size:14px}
-  .total-row td{font-size:17px;font-weight:bold;color:#1e3012;border-top:2px solid #1e3012;border-bottom:none}
-  .notes{background:#f9f7f4;padding:16px;border-radius:4px;font-size:13px;color:#555;margin-bottom:24px}
-  .footer{text-align:center;border-top:1px solid #e4ddd3;padding-top:20px;color:#888;font-size:12px}
-  .cta{text-align:center;margin:24px 0}
-  .cta a{display:inline-block;background:#1e3012;color:#fff;padding:12px 28px;text-decoration:none;border-radius:3px;font-size:14px}
-  .validity{text-align:center;color:#c9484a;font-size:12px;margin-bottom:16px}
-  @media print{body{padding:20px}@page{margin:1cm}}
-</style>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cotización ${q.id} · Paraíso Encantado</title>
+<style>${PDF_STYLES}</style>
 </head><body>
-<div class="header">
-  <div class="logo">Paraíso Encantado</div>
-  <div class="tagline">Xilitla · Huasteca Potosina · México</div>
-  <div class="badge">Cotización</div>
+<div class="page">
+  <div class="hero">
+    <p class="hero-eye">Cotización Personalizada</p>
+    <h1 class="hero-title">Tu escapada perfecta.</h1>
+    <p class="hero-sub">Paraíso Encantado · Xilitla, San Luis Potosí</p>
+  </div>
+  <div class="body">
+    <div class="ref-box">
+      <p class="ref-label">Referencia de cotización</p>
+      <p class="ref-num">${q.id}</p>
+    </div>
+    <p class="greeting">Estimado/a, <em>${q.cliente}</em></p>
+    <div class="divider"></div>
+    <div class="grid">
+      <div class="cell"><p class="cell-label">Suite</p><p class="cell-value">${q.suite}</p></div>
+      <div class="cell"><p class="cell-label">Duración</p><p class="cell-value">${q.noches} noche${q.noches !== 1 ? 's' : ''}</p></div>
+      <div class="cell"><p class="cell-label">Check-in</p><p class="cell-value">${fmtDate(q.checkin)}</p><p class="cell-sub">A partir de las 3:00 PM</p></div>
+      <div class="cell"><p class="cell-label">Check-out</p><p class="cell-value">${fmtDate(q.checkout)}</p><p class="cell-sub">Antes de las 12:00 PM</p></div>
+    </div>
+    <div class="total-bar">
+      <span class="total-label">Total cotización</span>
+      <span class="total-value">$${q.precioTotal.toLocaleString('es-MX')}<span class="total-currency">MXN</span></span>
+    </div>
+    ${q.notas ? `<div class="notes-box"><p class="notes-text">${q.notas}</p></div>` : ''}
+    <p class="validity">Esta cotización es válida por 48 horas a partir de su emisión.</p>
+    <div class="cta">
+      <a class="cta-btn" href="https://www.paraisoencantado.com/reservar?checkin=${q.checkin}&checkout=${q.checkout}">Confirmar Reserva</a>
+    </div>
+  </div>
+  <div class="contact">
+    <p>📞 <a href="tel:+524891007679" style="color:#2a2218">+52 489-100-7679</a></p>
+    <p>📧 <a href="mailto:reservas@paraisoencantado.com" style="color:#2a2218">reservas@paraisoencantado.com</a></p>
+    <p>💬 <a href="https://wa.me/524891007679" style="color:#2a2218">WhatsApp directo</a></p>
+  </div>
+  <div class="footer-bar">
+    <p class="footer-name">Paraíso Encantado</p>
+    <p class="footer-addr">Hotel Paraíso Encantado · Xilitla, San Luis Potosí 79910 · México<br>A pasos del Jardín Surrealista de Edward James · paraisoencantado.com</p>
+  </div>
 </div>
-
-<h1>Cotización ${q.id}</h1>
-<p class="meta">Fecha: ${fmtDate(q.fecha?.split(',')[0] || q.fecha)} · Válida por 48 horas</p>
-
-<div class="client-box">
-  <h2>Datos del cliente</h2>
-  <p><strong>${q.cliente}</strong></p>
-  ${q.email ? `<p>${q.email}</p>` : ''}
-  ${q.telefono ? `<p>${q.telefono}</p>` : ''}
-</div>
-
-<table>
-  <tr><th>Concepto</th><th>Detalle</th></tr>
-  <tr><td>Suite</td><td><strong>${q.suite}</strong></td></tr>
-  <tr><td>Check-in</td><td>${fmtDate(q.checkin)}</td></tr>
-  <tr><td>Check-out</td><td>${fmtDate(q.checkout)}</td></tr>
-  <tr><td>Noches</td><td>${q.noches} noche${q.noches !== 1 ? 's' : ''}</td></tr>
-  <tr class="total-row"><td>Total</td><td>$${q.precioTotal.toLocaleString('es-MX')} MXN</td></tr>
-</table>
-
-${q.notas ? `<div class="notes"><strong>Notas:</strong> ${q.notas}</div>` : ''}
-
-<p class="validity">⏱ Esta cotización vence en 48 horas</p>
-<div class="cta">
-  <a href="https://www.paraisoencantado.com/reservar?checkin=${q.checkin}&checkout=${q.checkout}">Confirmar mi reserva en línea</a>
-</div>
-
-<div class="footer">
-  <p>Hotel Paraíso Encantado · Xilitla, San Luis Potosí</p>
-  <p>+52 489-100-7679 · reservas@paraisoencantado.com</p>
-  <p style="margin-top:8px">paraisoencantado.com</p>
-</div>
-
 <script>window.onload=function(){window.print()}<\/script>
 </body></html>`);
   win.document.close();
 }
 
-// ── PDF confirmación de reserva ─────────────────────────────────────────────
+// ── PDF Confirmación de reserva ─────────────────────────────────────────────
 export function printBookingPDF(b: {
   confirmacion: string; cliente: string; email: string; telefono: string;
   habitaciones: string; checkin: string; checkout: string; noches: number;
@@ -137,69 +157,74 @@ export function printBookingPDF(b: {
   const win = window.open('', '_blank');
   if (!win) return;
   win.document.write(`<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8">
-<title>Confirmación ${b.confirmacion}</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Georgia,serif;color:#1a1a1a;background:#fff;padding:40px;max-width:720px;margin:0 auto}
-  .header{text-align:center;border-bottom:2px solid #1e3012;padding-bottom:24px;margin-bottom:32px}
-  .logo{font-size:28px;color:#1e3012;font-style:italic;font-weight:300}
-  .tagline{font-size:12px;color:#6b8e4e;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
-  .badge{display:inline-block;background:#2d7a34;color:#fff;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:2px;margin-top:12px}
-  .conf-num{text-align:center;font-size:24px;color:#1e3012;font-weight:bold;letter-spacing:2px;margin:16px 0 4px}
-  .conf-date{text-align:center;color:#888;font-size:13px;margin-bottom:32px}
-  .client-box{background:#f0ebe3;padding:20px;border-radius:4px;margin-bottom:24px}
-  .client-box h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#6b8e4e;margin-bottom:10px}
-  .client-box p{font-size:15px;margin:3px 0}
-  table{width:100%;border-collapse:collapse;margin-bottom:24px}
-  th{background:#1e3012;color:#fff;padding:10px 14px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:400}
-  td{padding:12px 14px;border-bottom:1px solid #e4ddd3;font-size:14px}
-  .total-row td{font-size:17px;font-weight:bold;color:#1e3012;border-top:2px solid #1e3012;border-bottom:none}
-  .guarantee{background:#f0f7f0;border:1px solid #6b8e4e;padding:16px;border-radius:4px;margin-bottom:24px}
-  .guarantee p{font-size:13px;color:#2d7a34;margin:3px 0}
-  .footer{text-align:center;border-top:1px solid #e4ddd3;padding-top:20px;color:#888;font-size:12px}
-  @media print{body{padding:20px}@page{margin:1cm}}
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirmación ${b.confirmacion} · Paraíso Encantado</title>
+<style>${PDF_STYLES}
+  .confirm-badge{display:inline-block;background:#2d7a34;color:#fff;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:5px 14px;margin-top:14px}
+  .guarantee-box{background:#f0f7f0;border:1px solid #6b8e4e;padding:18px 22px;margin:0 0 28px}
+  .guarantee-box p{font-family:'Jost',sans-serif;font-size:13px;color:#2d7a34;margin:0 0 4px}
+  .guarantee-box p:last-child{margin:0}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;background:#f4f0e8;margin:0 0 28px}
+  .info-cell{padding:18px 20px;border-right:1px solid #e4ddd3;border-bottom:1px solid #e4ddd3}
+  .info-cell:nth-child(2n){border-right:none}
+  .info-cell:nth-last-child(-n+2){border-bottom:none}
+  .info-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#9a8a74;margin:0 0 6px}
+  .info-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;color:#2a2218;margin:0}
 </style>
 </head><body>
-<div class="header">
-  <div class="logo">Paraíso Encantado</div>
-  <div class="tagline">Xilitla · Huasteca Potosina · México</div>
-  <div class="badge">✓ Reserva Confirmada</div>
+<div class="page">
+  <div class="hero">
+    <p class="hero-eye">Confirmación de Reserva</p>
+    <h1 class="hero-title">Tu paraíso te espera.</h1>
+    <p class="hero-sub">Paraíso Encantado · Xilitla, San Luis Potosí</p>
+    <span class="confirm-badge">✓ Reserva Confirmada</span>
+  </div>
+  <div class="body">
+    <div class="ref-box">
+      <p class="ref-label">Número de Confirmación</p>
+      <p class="ref-num">${b.confirmacion}</p>
+    </div>
+    <p class="greeting">Bienvenido/a, <em>${b.cliente}</em></p>
+    <div class="divider"></div>
+
+    <div class="grid">
+      <div class="cell"><p class="cell-label">Suite</p><p class="cell-value">${b.habitaciones}</p></div>
+      <div class="cell"><p class="cell-label">Huéspedes</p><p class="cell-value">${b.huespedes} persona${b.huespedes !== 1 ? 's' : ''}</p></div>
+      <div class="cell"><p class="cell-label">Check-in</p><p class="cell-value">${fmtDate(b.checkin)}</p><p class="cell-sub">A partir de las 3:00 PM</p></div>
+      <div class="cell"><p class="cell-label">Check-out</p><p class="cell-value">${fmtDate(b.checkout)}</p><p class="cell-sub">Antes de las 12:00 PM</p></div>
+      <div class="cell"><p class="cell-label">Noches</p><p class="cell-value">${b.noches}</p></div>
+      ${b.notas ? `<div class="cell"><p class="cell-label">Notas</p><p class="cell-value" style="font-size:14px">${b.notas}</p></div>` : '<div class="cell"></div>'}
+    </div>
+
+    <div class="total-bar">
+      <span class="total-label">Total Estadía</span>
+      <span class="total-value">$${b.total.toLocaleString('es-MX')}<span class="total-currency">MXN</span></span>
+    </div>
+
+    <div class="guarantee-box">
+      <p>✓ Reserva directa sin comisiones de intermediarios</p>
+      <p>✓ Cancelación gratuita hasta 48 hrs antes del check-in</p>
+      <p>✓ Estacionamiento privado gratuito · WiFi de alta velocidad</p>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-cell"><p class="info-label">Cómo llegar</p><p class="info-value" style="font-size:13px">Xilitla, San Luis Potosí 79910<br>A 7 min del centro</p></div>
+      <div class="info-cell"><p class="info-label">Cerca de ti</p><p class="info-value" style="font-size:13px">A pasos del Jardín<br>de Edward James</p></div>
+      <div class="info-cell"><p class="info-label">Al llegar presenta</p><p class="info-value" style="font-size:14px;font-family:'Cormorant Garamond',serif;font-weight:500">${b.confirmacion}</p></div>
+      <div class="info-cell"><p class="info-label">Contacto directo</p><p class="info-value" style="font-size:13px">+52 489-100-7679</p></div>
+    </div>
+  </div>
+
+  <div class="contact">
+    <p>📞 <a href="tel:+524891007679" style="color:#2a2218">+52 489-100-7679</a></p>
+    <p>📧 <a href="mailto:reservas@paraisoencantado.com" style="color:#2a2218">reservas@paraisoencantado.com</a></p>
+    <p>💬 <a href="https://wa.me/524891007679" style="color:#2a2218">WhatsApp directo</a></p>
+  </div>
+  <div class="footer-bar">
+    <p class="footer-name">Paraíso Encantado</p>
+    <p class="footer-addr">Hotel Paraíso Encantado · Xilitla, San Luis Potosí 79910 · México<br>A pasos del Jardín Surrealista de Edward James · paraisoencantado.com</p>
+  </div>
 </div>
-
-<div class="conf-num">${b.confirmacion}</div>
-<p class="conf-date">Reserva realizada: ${b.fecha}</p>
-
-<div class="client-box">
-  <h2>Huésped</h2>
-  <p><strong>${b.cliente}</strong></p>
-  ${b.email ? `<p>${b.email}</p>` : ''}
-  ${b.telefono && b.telefono !== 'N/A' ? `<p>${b.telefono}</p>` : ''}
-</div>
-
-<table>
-  <tr><th>Concepto</th><th>Detalle</th></tr>
-  <tr><td>Suite</td><td><strong>${b.habitaciones}</strong></td></tr>
-  <tr><td>Check-in</td><td>${fmtDate(b.checkin)} <em style="color:#888;font-size:12px">(15:00 hrs)</em></td></tr>
-  <tr><td>Check-out</td><td>${fmtDate(b.checkout)} <em style="color:#888;font-size:12px">(12:00 hrs)</em></td></tr>
-  <tr><td>Noches</td><td>${b.noches}</td></tr>
-  <tr><td>Huéspedes</td><td>${b.huespedes} persona${b.huespedes !== 1 ? 's' : ''}</td></tr>
-  ${b.notas ? `<tr><td>Notas</td><td>${b.notas}</td></tr>` : ''}
-  <tr class="total-row"><td>Total</td><td>$${b.total.toLocaleString('es-MX')} MXN</td></tr>
-</table>
-
-<div class="guarantee">
-  <p>✓ Reserva directa sin comisiones</p>
-  <p>✓ Cancelación gratuita hasta 48 hrs antes del check-in</p>
-  <p>✓ Confirmación instantánea</p>
-</div>
-
-<div class="footer">
-  <p>Hotel Paraíso Encantado · Xilitla, San Luis Potosí</p>
-  <p>+52 489-100-7679 · reservas@paraisoencantado.com</p>
-  <p style="margin-top:8px">paraisoencantado.com</p>
-</div>
-
 <script>window.onload=function(){window.print()}<\/script>
 </body></html>`);
   win.document.close();
