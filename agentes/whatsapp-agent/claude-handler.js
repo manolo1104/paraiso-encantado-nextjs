@@ -12,6 +12,23 @@ import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservat
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const BOOKING_API = process.env.BOOKING_API_URL || 'https://paraisoencantado.com';
 
+// ── Estado del bot (caché 30s para no saturar la API) ─────
+let botEnabledCache = { value: true, expiresAt: 0 };
+
+async function isBotEnabled() {
+  const now = Date.now();
+  if (now < botEnabledCache.expiresAt) return botEnabledCache.value;
+  try {
+    const res = await fetch(`${BOOKING_API}/api/admin/bot-status`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const { enabled } = await res.json();
+      botEnabledCache = { value: Boolean(enabled), expiresAt: now + 30_000 };
+      return botEnabledCache.value;
+    }
+  } catch { /* si falla, asumir encendido */ }
+  return botEnabledCache.value;
+}
+
 const conversations = new Map();
 const MAX_HISTORY = 6; // 3 intercambios — suficiente contexto, ~40% menos tokens
 
@@ -724,6 +741,13 @@ async function executeTool(toolName, toolInput, userId, userName) {
 // ── Manejar mensaje de texto ───────────────────────────────
 
 export async function handleMessage(userId, userText, userName = '') {
+  // Verificar si el bot está activo
+  const enabled = await isBotEnabled();
+  if (!enabled) {
+    console.log(`🔴 Bot pausado — mensaje de ${userName || userId} ignorado`);
+    return null; // null = no responder
+  }
+
   if (!conversations.has(userId)) conversations.set(userId, []);
   const history = conversations.get(userId);
 

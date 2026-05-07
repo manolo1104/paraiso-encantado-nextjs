@@ -1,6 +1,76 @@
 import { getSheetsClient } from '@/lib/sheets';
 export { getSheetsClient };
 
+const CONFIG_SHEET = 'Config';
+
+export async function getBotStatus(): Promise<boolean> {
+  const client = await getSheetsClient();
+  if (!client) return true; // default: encendido si no hay conexión
+  try {
+    await ensureConfigSheet(client);
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${CONFIG_SHEET}!A:B`,
+    });
+    const rows = res.data.values || [];
+    const row = rows.find(r => r[0] === 'bot_enabled');
+    return row ? row[1] !== 'false' : true;
+  } catch {
+    return true;
+  }
+}
+
+export async function setBotStatus(enabled: boolean): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    await ensureConfigSheet(client);
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${CONFIG_SHEET}!A:A`,
+    });
+    const rows = res.data.values || [];
+    const rowIdx = rows.findIndex(r => r[0] === 'bot_enabled');
+    if (rowIdx >= 0) {
+      await client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${CONFIG_SHEET}!B${rowIdx + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[String(enabled)]] },
+      });
+    } else {
+      await client.spreadsheets.values.append({
+        spreadsheetId: SHEET_ID,
+        range: `${CONFIG_SHEET}!A:B`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [['bot_enabled', String(enabled)]] },
+      });
+    }
+  } catch (e: any) {
+    console.error('setBotStatus error:', e.message);
+  }
+}
+
+async function ensureConfigSheet(client: Awaited<ReturnType<typeof getSheetsClient>>) {
+  if (!client) return;
+  try {
+    const meta = await client.spreadsheets.get({ spreadsheetId: SHEET_ID });
+    const exists = meta.data.sheets?.some(s => s.properties?.title === CONFIG_SHEET);
+    if (!exists) {
+      await client.spreadsheets.batchUpdate({
+        spreadsheetId: SHEET_ID,
+        requestBody: { requests: [{ addSheet: { properties: { title: CONFIG_SHEET } } }] },
+      });
+      await client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${CONFIG_SHEET}!A1:B1`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [['bot_enabled', 'true']] },
+      });
+    }
+  } catch { /* ignorar */ }
+}
+
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
 const RESERVAS_SHEET = process.env.GOOGLE_SHEET_TAB || 'Reservas';
 const COTIZACIONES_SHEET = 'Cotizaciones';

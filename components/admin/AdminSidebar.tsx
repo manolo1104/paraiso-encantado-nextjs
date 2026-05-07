@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { Calendar, BookOpen, FileText, TrendingUp, Users, BarChart2, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './AdminSidebar.module.css';
 
 const NAV = [
@@ -18,10 +18,35 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [botEnabled, setBotEnabled] = useState<boolean | null>(null);
+  const [toggling, setToggling] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/bot-status')
+      .then(r => r.json())
+      .then(d => setBotEnabled(d.enabled))
+      .catch(() => setBotEnabled(true));
+  }, []);
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' });
     router.push('/admin/login');
+  }
+
+  async function toggleBot() {
+    if (toggling || botEnabled === null) return;
+    setToggling(true);
+    const next = !botEnabled;
+    try {
+      const res = await fetch('/api/admin/bot-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: next }),
+      });
+      if (res.ok) setBotEnabled(next);
+    } finally {
+      setToggling(false);
+    }
   }
 
   return (
@@ -53,6 +78,25 @@ export default function AdminSidebar() {
             </a>
           ))}
         </nav>
+
+        {/* Toggle Bot WhatsApp */}
+        <div className={styles.botToggle}>
+          <div className={styles.botToggleInfo}>
+            <span className={styles.botToggleLabel}>Bot WhatsApp</span>
+            <span className={`${styles.botToggleDot} ${botEnabled ? styles.botOn : styles.botOff}`} />
+            <span className={styles.botToggleStatus}>
+              {botEnabled === null ? '...' : botEnabled ? 'Activo' : 'Pausado'}
+            </span>
+          </div>
+          <button
+            className={`${styles.botToggleBtn} ${botEnabled ? styles.botToggleBtnOn : styles.botToggleBtnOff}`}
+            onClick={toggleBot}
+            disabled={toggling || botEnabled === null}
+            title={botEnabled ? 'Pausar bot' : 'Activar bot'}
+          >
+            {toggling ? '...' : botEnabled ? 'Pausar' : 'Activar'}
+          </button>
+        </div>
 
         <button className={styles.logout} onClick={handleLogout}>
           <LogOut size={16} strokeWidth={1.5} />
