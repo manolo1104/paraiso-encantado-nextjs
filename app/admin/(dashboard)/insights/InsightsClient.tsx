@@ -8,7 +8,7 @@ import {
 import {
   BedDouble, TrendingUp, CalendarCheck, DollarSign,
   MessageCircle, Mail, PenSquare, PhoneCall, Send, Sparkles,
-  LogIn, LogOut, RefreshCw, ChevronRight,
+  LogIn, LogOut, RefreshCw, ChevronRight, Trash2,
 } from 'lucide-react';
 import type { InsightsData } from '@/lib/admin/insights';
 import styles from './insights.module.css';
@@ -16,16 +16,36 @@ import styles from './insights.module.css';
 const fmt = (n: number) => `$${n.toLocaleString('es-MX')}`;
 const pct = (n: number) => `${n}%`;
 
+const CHAT_STORAGE_KEY = 'pe_insights_chat';
+const MAX_STORED_MSGS = 20;
+
 const SUGGESTED = [
-  '¿Cuáles suites están disponibles esta semana?',
-  '¿Cómo va mi ocupación vs el mes pasado?',
-  '¿Cuánto he ganado este año evitando OTAs?',
-  '¿Qué días tengo más llegadas esta semana?',
+  '¿Cuáles suites tienen check-in hoy?',
+  '¿Cómo va mi ocupación este mes?',
+  '¿Cuánto he ahorrado en comisiones OTA?',
+  '¿Qué días de la semana tengo más llegadas?',
 ];
 
 interface ChatMsg {
   role: 'user' | 'assistant';
   content: string;
+}
+
+function loadChatHistory(): ChatMsg[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveChatHistory(msgs: ChatMsg[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-MAX_STORED_MSGS)));
+  } catch { /* ignore */ }
 }
 
 export default function InsightsClient() {
@@ -35,6 +55,15 @@ export default function InsightsClient() {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
+
+  // Load chat history from sessionStorage on mount
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      setChatMessages(loadChatHistory());
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,16 +81,23 @@ export default function InsightsClient() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, streaming]);
 
+  function clearChat() {
+    setChatMessages([]);
+    sessionStorage.removeItem(CHAT_STORAGE_KEY);
+  }
+
   async function sendMessage(text?: string) {
     const msg = (text ?? input).trim();
     if (!msg || streaming) return;
     setInput('');
+
     const next: ChatMsg[] = [...chatMessages, { role: 'user', content: msg }];
     setChatMessages(next);
+    saveChatHistory(next);
     setStreaming(true);
 
-    const assistantMsg: ChatMsg = { role: 'assistant', content: '' };
-    setChatMessages([...next, assistantMsg]);
+    const placeholder: ChatMsg = { role: 'assistant', content: '' };
+    setChatMessages([...next, placeholder]);
 
     try {
       const res = await fetch('/api/admin/ai-chat', {
@@ -85,12 +121,16 @@ export default function InsightsClient() {
           return updated;
         });
       }
+
+      // Save final conversation to sessionStorage
+      const finalMsgs: ChatMsg[] = [...next, { role: 'assistant', content: fullText }];
+      saveChatHistory(finalMsgs);
+      setChatMessages(finalMsgs);
+
     } catch {
-      setChatMessages(prev => {
-        const updated = [...prev];
-        updated[updated.length - 1] = { role: 'assistant', content: 'Error al conectar con el asistente.' };
-        return updated;
-      });
+      const errorMsgs: ChatMsg[] = [...next, { role: 'assistant', content: 'Error al conectar con el asistente. Intenta de nuevo.' }];
+      setChatMessages(errorMsgs);
+      saveChatHistory(errorMsgs);
     } finally {
       setStreaming(false);
     }
@@ -109,6 +149,8 @@ export default function InsightsClient() {
   const checkins = hoy.movimientos.filter(m => m.tipo === 'checkin');
   const checkouts = hoy.movimientos.filter(m => m.tipo === 'checkout');
 
+  const FOREST = '#2d4a3e';
+
   return (
     <div className={styles.page}>
       {/* Header */}
@@ -122,41 +164,41 @@ export default function InsightsClient() {
           </p>
         </div>
         <button className={styles.refreshBtn} onClick={load} title="Actualizar">
-          <RefreshCw size={16} />
-          <span>Actualizar</span>
+          <RefreshCw size={15} />
+          Actualizar
         </button>
       </div>
 
       {/* ── KPI CARDS ─────────────────────────────────────────── */}
       <div className={styles.kpiGrid}>
         <KpiCard
-          icon={<BedDouble size={22} />}
+          icon={<BedDouble size={20} />}
           label="Ocupación hoy"
           value={`${hoy.suitesOcupadas}/13`}
           sub={pct(hoy.porcentajeOcupacion)}
-          accent="#C9A97A"
+          accent={FOREST}
           bar={hoy.porcentajeOcupacion}
         />
         <KpiCard
-          icon={<TrendingUp size={22} />}
+          icon={<TrendingUp size={20} />}
           label="RevPAR del mes"
           value={fmt(mes.revpar)}
           sub={`ADR: ${fmt(mes.adr)}`}
-          accent="#4ade80"
+          accent={FOREST}
         />
         <KpiCard
-          icon={<CalendarCheck size={22} />}
+          icon={<CalendarCheck size={20} />}
           label="Reservas del mes"
           value={String(mes.reservas)}
           sub={`Ocupación ${pct(mes.ocupacion)}`}
-          accent="#93c5fd"
+          accent={FOREST}
         />
         <KpiCard
-          icon={<DollarSign size={22} />}
+          icon={<DollarSign size={20} />}
           label="Ingresos del mes"
           value={fmt(mes.ingresos)}
-          sub={`Ahorro OTAs: ${fmt(ahorroOTAs)}`}
-          accent="#f9a8d4"
+          sub={`Ahorro OTAs año: ${fmt(ahorroOTAs)}`}
+          accent={FOREST}
         />
       </div>
 
@@ -170,23 +212,19 @@ export default function InsightsClient() {
             {checkins.length > 0 && (
               <div className={styles.movGroup}>
                 <div className={styles.movGroupLabel}>
-                  <LogIn size={14} color="#4ade80" />
-                  <span style={{ color: '#4ade80' }}>Check-ins ({checkins.length})</span>
+                  <LogIn size={13} color="#2d7a34" />
+                  <span style={{ color: '#2d7a34' }}>Check-ins ({checkins.length})</span>
                 </div>
-                {checkins.map((m, i) => (
-                  <MovRow key={i} mov={m} />
-                ))}
+                {checkins.map((m, i) => <MovRow key={i} mov={m} />)}
               </div>
             )}
             {checkouts.length > 0 && (
               <div className={styles.movGroup}>
                 <div className={styles.movGroupLabel}>
-                  <LogOut size={14} color="#f87171" />
-                  <span style={{ color: '#f87171' }}>Check-outs ({checkouts.length})</span>
+                  <LogOut size={13} color="#c9484a" />
+                  <span style={{ color: '#c9484a' }}>Check-outs ({checkouts.length})</span>
                 </div>
-                {checkouts.map((m, i) => (
-                  <MovRow key={i} mov={m} />
-                ))}
+                {checkouts.map((m, i) => <MovRow key={i} mov={m} />)}
               </div>
             )}
           </div>
@@ -195,14 +233,13 @@ export default function InsightsClient() {
 
       {/* ── FORECAST + ORIGEN ─────────────────────────────────── */}
       <div className={styles.chartRow}>
-        {/* 7-day forecast */}
-        <section className={`${styles.section} ${styles.chartCard}`}>
+        <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Ocupación próximos 7 días</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={forecast7dias} barCategoryGap="30%">
               <XAxis
                 dataKey="label"
-                tick={{ fill: 'rgba(250,248,245,0.6)', fontSize: 12, fontFamily: 'var(--font-jost)' }}
+                tick={{ fill: '#7a7060', fontSize: 12, fontFamily: 'var(--font-jost)' }}
                 axisLine={false} tickLine={false}
               />
               <YAxis domain={[0, 13]} hide />
@@ -222,21 +259,20 @@ export default function InsightsClient() {
                 {forecast7dias.map((d, i) => (
                   <Cell
                     key={i}
-                    fill={d.porcentaje >= 80 ? '#4ade80' : d.porcentaje >= 50 ? '#C9A97A' : 'rgba(201,169,122,0.35)'}
+                    fill={d.porcentaje >= 80 ? '#2d7a34' : d.porcentaje >= 50 ? '#C9A97A' : '#e4ddd3'}
                   />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
           <div className={styles.chartLegend}>
-            <span><span className={styles.dot} style={{ background: '#4ade80' }} /> +80%</span>
+            <span><span className={styles.dot} style={{ background: '#2d7a34' }} /> +80%</span>
             <span><span className={styles.dot} style={{ background: '#C9A97A' }} /> 50-79%</span>
-            <span><span className={styles.dot} style={{ background: 'rgba(201,169,122,0.35)' }} /> &lt;50%</span>
+            <span><span className={styles.dot} style={{ background: '#e4ddd3' }} /> &lt;50%</span>
           </div>
         </section>
 
-        {/* Origen */}
-        <section className={`${styles.section} ${styles.chartCard}`}>
+        <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Origen de reservas</h2>
           {origen.length === 0 ? (
             <p className={styles.empty}>Sin reservas este mes aún.</p>
@@ -260,7 +296,7 @@ export default function InsightsClient() {
                   </Pie>
                   <Legend
                     formatter={(value) => (
-                      <span style={{ color: 'rgba(250,248,245,0.75)', fontSize: 12, fontFamily: 'var(--font-jost)' }}>
+                      <span style={{ color: '#7a7060', fontSize: 12, fontFamily: 'var(--font-jost)' }}>
                         {value}
                       </span>
                     )}
@@ -294,18 +330,16 @@ export default function InsightsClient() {
         <h2 className={styles.sectionTitle}>Actividad de agentes</h2>
         <div className={styles.agentGrid}>
           <AgentCard
-            icon={<MessageCircle size={20} />}
+            icon={<MessageCircle size={18} color="#25D366" />}
             title="Bot WhatsApp"
-            color="#4ade80"
             rows={[
               { label: 'Conversaciones hoy', value: String(agentes.whatsapp.conversacionesHoy) },
               { label: 'Conversaciones mes', value: String(agentes.whatsapp.conversacionesMes) },
             ]}
           />
           <AgentCard
-            icon={<Mail size={20} />}
-            title="Emails enviados (mes)"
-            color="#93c5fd"
+            icon={<Mail size={18} color="#2d4a3e" />}
+            title="Emails (mes)"
             rows={[
               { label: 'Confirmación', value: String(agentes.emails.confirmacion) },
               { label: 'Pre-estancia', value: String(agentes.emails.preestancia) },
@@ -313,16 +347,14 @@ export default function InsightsClient() {
             ]}
           />
           <AgentCard
-            icon={<PhoneCall size={20} />}
-            title="Agente de Llamadas"
-            color="rgba(250,248,245,0.3)"
+            icon={<PhoneCall size={18} color="#bbb" />}
+            title="Agente Llamadas"
             rows={[{ label: 'Estado', value: 'Próximamente' }]}
             disabled
           />
           <AgentCard
-            icon={<PenSquare size={20} />}
+            icon={<PenSquare size={18} color="#C9A97A" />}
             title="Blogs publicados"
-            color="#f9a8d4"
             rows={[{ label: 'Este mes', value: String(agentes.blogs) }]}
           />
         </div>
@@ -330,10 +362,18 @@ export default function InsightsClient() {
 
       {/* ── ASISTENTE IA ──────────────────────────────────────── */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>
-          <Sparkles size={16} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-          Asistente IA
-        </h2>
+        <div className={styles.chatHeader}>
+          <h2 className={styles.sectionTitle} style={{ margin: 0 }}>
+            <Sparkles size={15} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle', color: '#C9A97A' }} />
+            Asistente IA
+          </h2>
+          {chatMessages.length > 0 && (
+            <button className={styles.chatClearBtn} onClick={clearChat} title="Borrar conversación">
+              <Trash2 size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+              Limpiar
+            </button>
+          )}
+        </div>
 
         <div className={styles.chatWrap}>
           {chatMessages.length === 0 && (
@@ -342,7 +382,7 @@ export default function InsightsClient() {
               <div className={styles.suggestedWrap}>
                 {SUGGESTED.map((s, i) => (
                   <button key={i} className={styles.suggestedChip} onClick={() => sendMessage(s)}>
-                    <ChevronRight size={12} />
+                    <ChevronRight size={11} />
                     {s}
                   </button>
                 ))}
@@ -372,7 +412,7 @@ export default function InsightsClient() {
             disabled={streaming}
           />
           <button className={styles.chatSend} type="submit" disabled={streaming || !input.trim()}>
-            <Send size={16} />
+            <Send size={15} />
           </button>
         </form>
       </section>
@@ -393,23 +433,21 @@ function KpiCard({
   bar?: number;
 }) {
   return (
-    <div className={styles.kpiCard} style={{ '--accent': accent } as React.CSSProperties}>
-      <div className={styles.kpiIcon}>{icon}</div>
-      <div className={styles.kpiBody}>
-        <p className={styles.kpiLabel}>{label}</p>
-        <p className={styles.kpiValue}>{value}</p>
-        <p className={styles.kpiSub}>{sub}</p>
-        {bar !== undefined && (
-          <div className={styles.kpiBar}>
-            <div className={styles.kpiBarFill} style={{ width: `${bar}%`, background: accent }} />
-          </div>
-        )}
-      </div>
+    <div className={styles.kpiCard}>
+      <div className={styles.kpiIcon} style={{ color: accent }}>{icon}</div>
+      <p className={styles.kpiLabel}>{label}</p>
+      <p className={styles.kpiValue}>{value}</p>
+      <p className={styles.kpiSub}>{sub}</p>
+      {bar !== undefined && (
+        <div className={styles.kpiBar}>
+          <div className={styles.kpiBarFill} style={{ width: `${bar}%`, background: accent }} />
+        </div>
+      )}
     </div>
   );
 }
 
-function MovRow({ mov }: { mov: { cliente: string; habitaciones: string; huespedes: number; noches: number; total: number; confirmacion: string } }) {
+function MovRow({ mov }: { mov: { cliente: string; habitaciones: string; huespedes: number; noches: number; total: number } }) {
   return (
     <div className={styles.movRow}>
       <div className={styles.movMain}>
@@ -425,26 +463,23 @@ function MovRow({ mov }: { mov: { cliente: string; habitaciones: string; huesped
 }
 
 function AgentCard({
-  icon, title, color, rows, disabled,
+  icon, title, rows, disabled,
 }: {
   icon: React.ReactNode;
   title: string;
-  color: string;
   rows: { label: string; value: string }[];
   disabled?: boolean;
 }) {
   return (
     <div className={`${styles.agentCard} ${disabled ? styles.agentDisabled : ''}`}>
       <div className={styles.agentHeader}>
-        <span style={{ color }}>{icon}</span>
+        {icon}
         <span className={styles.agentTitle}>{title}</span>
       </div>
       {rows.map((r, i) => (
         <div key={i} className={styles.agentRow}>
           <span className={styles.agentLabel}>{r.label}</span>
-          <span className={styles.agentValue} style={{ color: disabled ? 'rgba(250,248,245,0.3)' : color }}>
-            {r.value}
-          </span>
+          <span className={styles.agentValue}>{r.value}</span>
         </div>
       ))}
     </div>
