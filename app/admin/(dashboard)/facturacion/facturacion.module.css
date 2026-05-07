@@ -1,0 +1,210 @@
+.page {
+  padding: 28px 32px 60px;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-family: var(--font-jost), sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.headerIcon {
+  width: 52px;
+  height: 52px;
+  background: rgba(201, 169, 122, 0.12);
+  border: 1px solid rgba(201, 169, 122, 0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C9A97A;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--forest);
+  margin: 0 0 2px;
+}
+
+.subtitle {
+  font-size: 0.83rem;
+  color: var(--sage);
+  margin: 0;
+}
+
+.statusChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  color: #92750a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fffbe6;
+  border: 1px solid #f5e7a0;
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-size: 0.875rem;
+  color: #6b5300;
+  line-height: 1.6;
+}
+
+.alert svg { flex-shrink: 0; margin-top: 2px; color: #d4a017; }
+
+.section {
+  background: #fff;
+  border: 1px solid #e4ddd3;
+  border-radius: 10px;
+  padding: 22px 26px;
+}
+
+.sectionTitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin: 0 0 16px;
+}
+
+/* Requirements */
+.reqList { display: flex; flex-direction: column; gap: 10px; }
+
+.reqItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconDone { color: #2d7a34; flex-shrink: 0; }
+.iconPending { color: #ccc; flex-shrink: 0; }
+.reqDone { text-decoration: line-through; color: #aaa; font-size: 0.875rem; }
+.reqText { font-size: 0.875rem; color: var(--clay); }
+
+/* Plan */
+.planList { display: flex; flex-direction: column; gap: 16px; }
+
+.faseCard {
+  background: var(--parch);
+  border: 1px solid #e4ddd3;
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+
+.faseHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.faseNum {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--forest);
+  color: var(--cream);
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.faseTitulo {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--forest);
+  margin: 0;
+}
+
+.faseDesc {
+  font-size: 0.83rem;
+  color: var(--clay);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.faseOpts { margin: 0 0 10px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+
+.faseOpt {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--clay);
+  line-height: 1.4;
+}
+
+.faseOptIcon { flex-shrink: 0; color: var(--sand); margin-top: 2px; }
+
+.faseRec {
+  font-size: 0.78rem;
+  color: #2d7a34;
+  background: #f0f7f0;
+  border: 1px solid #c8e2c8;
+  border-radius: 4px;
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+
+/* Estimates */
+.estimGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.estimCard {
+  background: var(--parch);
+  border: 1px solid #e4ddd3;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.estimLabel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sage);
+}
+
+.estimVal {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.4rem;
+  color: var(--forest);
+}
+
+.estimSub {
+  font-size: 0.72rem;
+  color: #aaa;
+}
+
+@media (max-width: 640px) {
+  .page { padding: 16px 14px 40px; }
+  .estimGrid { grid-template-columns: 1fr; }
+  .header { gap: 12px; }
+  .statusChip { margin-left: 0; }
+}

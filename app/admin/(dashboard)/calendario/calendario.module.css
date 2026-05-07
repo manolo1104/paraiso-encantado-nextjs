@@ -32,6 +32,32 @@
   text-align: center;
 }
 
+/* View toggle */
+.viewToggle {
+  display: flex;
+  border: 1px solid #d4cec7;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.viewBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #fff;
+  border: none;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-family: var(--font-jost), sans-serif;
+  cursor: pointer;
+  color: var(--clay);
+  transition: background 0.15s, color 0.15s;
+  border-right: 1px solid #d4cec7;
+}
+.viewBtn:last-child { border-right: none; }
+.viewBtn:hover { background: var(--parch); }
+.viewBtnActive { background: var(--forest) !important; color: var(--cream) !important; }
+
 .iconBtn {
   background: #fff;
   border: 1px solid #d4cec7;

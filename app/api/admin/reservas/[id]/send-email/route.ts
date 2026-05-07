@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllBookings } from '@/lib/admin/sheets-admin';
+import { getAllBookings, logAgentActivity } from '@/lib/admin/sheets-admin';
 import { buildEmailHtml } from '@/lib/email';
 import { Resend } from 'resend';
 
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       subject: `✓ Reserva confirmada ${b.confirmacion} — Paraíso Encantado`,
       html,
     });
+    await logAgentActivity('email_confirmacion', b.confirmacion);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

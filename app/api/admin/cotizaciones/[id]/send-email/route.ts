@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllQuotes, updateQuoteStatus } from '@/lib/admin/sheets-admin';
+import { getAllQuotes, updateQuoteStatus, logAgentActivity } from '@/lib/admin/sheets-admin';
 import { buildQuoteEmailHtml } from '@/lib/email';
 import { Resend } from 'resend';
 
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       html,
     });
     await updateQuoteStatus(quote.rowIndex, 'ENVIADA');
+    await logAgentActivity('email_confirmacion', quote.id);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

@@ -435,6 +435,18 @@ const TOOLS = [
     }
   },
   {
+    name: 'get_guest_notes',
+    description: 'Consulta las notas internas del staff sobre un huésped por número de teléfono o email. Úsala cuando el cliente ya se identificó para personalizar la atención. Las notas pueden incluir preferencias, restricciones especiales, VIP status, etc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        phone: { type: 'string', description: 'Número de teléfono del huésped (sin espacios ni guiones)' },
+        email: { type: 'string', description: 'Email del huésped (opcional, si se conoce)' }
+      },
+      required: ['phone']
+    }
+  },
+  {
     name: 'create_reservation_quote',
     description: 'Genera UNA sola cotización con UN solo folio para toda la reserva (hospedaje + tours, o solo hospedaje). SIEMPRE llama esta herramienta UNA sola vez por reserva; incluye todas las habitaciones en "rooms" y todos los tours en "tours". No usar cuando el cliente elija Opción 2 (motor de reservas).',
     input_schema: {
@@ -587,6 +599,21 @@ async function executeTool(toolName, toolInput, userId, userName) {
         unavailable_rooms: unavailableRooms,
         alternative_dates: alternatives?.alternatives || []
       };
+    }
+
+    if (toolName === 'get_guest_notes') {
+      const { phone } = toolInput;
+      try {
+        const cleanPhone = String(phone || '').replace(/\D/g, '');
+        const res = await fetch(`${BOOKING_API}/api/admin/guest-notes?phone=${encodeURIComponent(cleanPhone)}`, {
+          signal: AbortSignal.timeout(4000)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return { found: data.found, notas: data.notas || '', nombre: data.nombre || '' };
+        }
+      } catch { /* si no hay conexión, continuar sin notas */ }
+      return { found: false, notas: '' };
     }
 
     if (toolName === 'get_price') {

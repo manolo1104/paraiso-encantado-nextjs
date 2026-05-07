@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.0",
     "@schedule-x/calendar": "^4.5.0",
     "@schedule-x/react": "^4.1.0",
     "@stripe/react-stripe-js": "^6.1.0",

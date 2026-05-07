@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CalendarDays, LayoutGrid } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
+import RoomMap from '@/components/admin/RoomMap';
 import styles from './calendario.module.css';
 
 const SUITE_COLORS = [
@@ -30,6 +31,7 @@ interface Props { initialBookings: AdminBooking[] }
 
 export default function CalendarioClient({ initialBookings }: Props) {
   const now = new Date();
+  const [view, setView] = useState<'calendario' | 'mapa'>('calendario');
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [modal, setModal] = useState<{ booking?: AdminBooking; defaultCheckin?: string } | null>(null);
@@ -79,16 +81,35 @@ export default function CalendarioClient({ initialBookings }: Props) {
           <p className={styles.sub}>{monthBookings.length} reservas este mes</p>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.iconBtn} onClick={prevMonth}><ChevronLeft size={18} /></button>
-          <span className={styles.monthLabel}>{MONTHS[month]} {year}</span>
-          <button className={styles.iconBtn} onClick={nextMonth}><ChevronRight size={18} /></button>
+          {/* View toggle */}
+          <div className={styles.viewToggle}>
+            <button
+              className={`${styles.viewBtn} ${view === 'calendario' ? styles.viewBtnActive : ''}`}
+              onClick={() => setView('calendario')}
+            >
+              <CalendarDays size={14} /> Calendario
+            </button>
+            <button
+              className={`${styles.viewBtn} ${view === 'mapa' ? styles.viewBtnActive : ''}`}
+              onClick={() => setView('mapa')}
+            >
+              <LayoutGrid size={14} /> Mapa
+            </button>
+          </div>
+          {view === 'calendario' && <>
+            <button className={styles.iconBtn} onClick={prevMonth}><ChevronLeft size={18} /></button>
+            <span className={styles.monthLabel}>{MONTHS[month]} {year}</span>
+            <button className={styles.iconBtn} onClick={nextMonth}><ChevronRight size={18} /></button>
+          </>}
           <button className={styles.primaryBtn} onClick={() => setModal({})}>
             <Plus size={15} /> Nueva
           </button>
         </div>
       </div>
 
-      <div className={styles.calWrap}>
+      {view === 'mapa' && <RoomMap />}
+
+      {view === 'calendario' && <div className={styles.calWrap}>
         {/* Cabecera días */}
         <div className={styles.weekdays}>
           {WEEKDAYS.map(d => <div key={d} className={styles.weekday}>{d}</div>)}
@@ -134,17 +155,17 @@ export default function CalendarioClient({ initialBookings }: Props) {
             );
           })}
         </div>
-      </div>
+      </div>}
 
-      {/* Leyenda */}
-      <div className={styles.legend}>
+      {/* Leyenda — solo en vista calendario */}
+      {view === 'calendario' && <div className={styles.legend}>
         {SUITES_LIST.map((s, i) => (
           <span key={s} className={styles.legendItem}>
             <span className={styles.legendDot} style={{ background: SUITE_COLORS[i] }} />
             {s}
           </span>
         ))}
-      </div>
+      </div>}
 
       {modal && (
         <ReservationModal

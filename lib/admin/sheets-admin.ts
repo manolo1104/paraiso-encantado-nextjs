@@ -113,6 +113,16 @@ export interface AdminQuote {
   notas: string;
 }
 
+export interface GuestStay {
+  confirmacion: string;
+  checkin: string;
+  checkout: string;
+  habitaciones: string;
+  total: number;
+  noches: number;
+  huespedes: number;
+}
+
 export interface GuestProfile {
   email: string;
   nombre: string;
@@ -122,6 +132,8 @@ export interface GuestProfile {
   ultimaEstancia: string;
   suitesFavoritas: string[];
   notas: string;
+  historial: GuestStay[];
+  waConversaciones: number;
 }
 
 function parseTotal(raw: string | number): number {
@@ -426,6 +438,8 @@ export async function buildCRM(bookings: AdminBooking[]): Promise<GuestProfile[]
         ultimaEstancia: '',
         suitesFavoritas: [],
         notas: '',
+        historial: [],
+        waConversaciones: 0,
       });
     }
     const g = map.get(key)!;
@@ -435,6 +449,22 @@ export async function buildCRM(bookings: AdminBooking[]): Promise<GuestProfile[]
     if (b.habitaciones && !g.suitesFavoritas.includes(b.habitaciones)) {
       g.suitesFavoritas.push(b.habitaciones);
     }
+    if (b.estado !== 'CANCELADA') {
+      g.historial.push({
+        confirmacion: b.confirmacion,
+        checkin: b.checkin,
+        checkout: b.checkout,
+        habitaciones: b.habitaciones,
+        total: b.total,
+        noches: b.noches,
+        huespedes: b.huespedes,
+      });
+    }
+  }
+
+  // Sort historial by date desc
+  for (const g of map.values()) {
+    g.historial.sort((a, b) => b.checkin.localeCompare(a.checkin));
   }
 
   // Cargar notas
@@ -496,6 +526,131 @@ export async function saveGuestNote(email: string, notas: string): Promise<void>
     }
   } catch (e: any) {
     console.error('saveGuestNote error:', e.message);
+  }
+}
+
+// ── ROOM STATUS ───────────────────────────────────────────────────────────────
+
+const ROOM_STATUS_SHEET = 'RoomStatus';
+
+export type RoomStatusType = 'DISPONIBLE' | 'OCUPADA' | 'MANTENIMIENTO' | 'LIMPIEZA';
+
+export interface RoomStatus {
+  suite: string;
+  estado: RoomStatusType;
+  notas: string;
+  actualizacion: string;
+}
+
+const ALL_SUITES = [
+  'Suite Flor de Liz 1','Suite Flor de Liz 2','Suite LindaVista','Jungla','Suite Lajas',
+  'Lirios 1','Lirios 2','Orquídeas 2','Orquídeas Doble','Orquídeas 3',
+  'Bromelias','Helechos 1','Helechos 2',
+];
+
+export async function getRoomStatuses(): Promise<RoomStatus[]> {
+  const client = await getSheetsClient();
+  if (!client) return ALL_SUITES.map(s => ({ suite: s, estado: 'DISPONIBLE', notas: '', actualizacion: '' }));
+  try {
+    await ensureSheet(ROOM_STATUS_SHEET, ['Suite','Estado','Notas','Actualizacion']);
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${ROOM_STATUS_SHEET}!A:D`,
+    });
+    const rows = res.data.values || [];
+    const map = new Map<string, RoomStatus>();
+    for (const row of rows.slice(1)) {
+      if (row[0]) map.set(row[0], {
+        suite: row[0],
+        estado: (row[1] as RoomStatusType) || 'DISPONIBLE',
+        notas: row[2] || '',
+        actualizacion: row[3] || '',
+      });
+    }
+    return ALL_SUITES.map(s => map.get(s) ?? { suite: s, estado: 'DISPONIBLE', notas: '', actualizacion: '' });
+  } catch {
+    return ALL_SUITES.map(s => ({ suite: s, estado: 'DISPONIBLE', notas: '', actualizacion: '' }));
+  }
+}
+
+export async function setRoomStatus(suite: string, estado: RoomStatusType, notas = ''): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    await ensureSheet(ROOM_STATUS_SHEET, ['Suite','Estado','Notas','Actualizacion']);
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${ROOM_STATUS_SHEET}!A:A`,
+    });
+    const rows = res.data.values || [];
+    const rowIdx = rows.findIndex(r => r[0] === suite);
+    const ts = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+
+    if (rowIdx > 0) {
+      await client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${ROOM_STATUS_SHEET}!B${rowIdx + 1}:D${rowIdx + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[estado, notas, ts]] },
+      });
+    } else {
+      await client.spreadsheets.values.append({
+        spreadsheetId: SHEET_ID,
+        range: `${ROOM_STATUS_SHEET}!A:D`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[suite, estado, notas, ts]] },
+      });
+    }
+  } catch (e: any) {
+    console.error('setRoomStatus error:', e.message);
+  }
+}
+
+// ── AGENT METRICS ─────────────────────────────────────────────────────────────
+
+const AGENT_METRICS_SHEET = 'AgentMetrics';
+
+export type AgentActivityType =
+  | 'whatsapp_conv'
+  | 'email_confirmacion'
+  | 'email_preestancia'
+  | 'email_postestancia'
+  | 'blog_publicado';
+
+export async function logAgentActivity(tipo: AgentActivityType, detalle = ''): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    await ensureSheet(AGENT_METRICS_SHEET, ['Fecha', 'Tipo', 'Detalle']);
+    const fecha = new Date().toISOString().split('T')[0];
+    await client.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: `${AGENT_METRICS_SHEET}!A:C`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[fecha, tipo, detalle]] },
+    });
+  } catch (e: any) {
+    console.error('logAgentActivity error:', e.message);
+  }
+}
+
+export async function getAgentMetrics(): Promise<{ tipo: string; fecha: string; detalle: string }[]> {
+  const client = await getSheetsClient();
+  if (!client) return [];
+  try {
+    await ensureSheet(AGENT_METRICS_SHEET, ['Fecha', 'Tipo', 'Detalle']);
+    const res = await client.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${AGENT_METRICS_SHEET}!A:C`,
+    });
+    const rows = res.data.values || [];
+    return rows.slice(1).map(r => ({
+      fecha: r[0] || '',
+      tipo: r[1] || '',
+      detalle: r[2] || '',
+    }));
+  } catch {
+    return [];
   }
 }
 

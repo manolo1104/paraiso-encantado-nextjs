@@ -1,17 +1,19 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Calendar, BookOpen, FileText, TrendingUp, Users, BarChart2, LogOut, Menu, X } from 'lucide-react';
+import { Calendar, BookOpen, FileText, TrendingUp, Users, BarChart2, LogOut, Menu, X, LayoutDashboard, Receipt } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './AdminSidebar.module.css';
 
 const NAV = [
+  { href: '/admin/insights',     label: 'Insights',      icon: LayoutDashboard },
   { href: '/admin/calendario',   label: 'Calendario',    icon: Calendar },
   { href: '/admin/reservas',     label: 'Reservas',      icon: BookOpen },
   { href: '/admin/cotizaciones', label: 'Cotizaciones',  icon: FileText },
   { href: '/admin/ingresos',     label: 'Ingresos',      icon: TrendingUp },
   { href: '/admin/clientes',     label: 'Clientes',      icon: Users },
   { href: '/admin/redes',        label: 'Redes Sociales',icon: BarChart2 },
+  { href: '/admin/facturacion',  label: 'Facturación',   icon: Receipt },
 ];
 
 export default function AdminSidebar() {
