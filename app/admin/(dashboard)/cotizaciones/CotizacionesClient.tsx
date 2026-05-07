@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Send, MessageSquare, RefreshCw, Loader2, X, Download, Pencil, Trash2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Send, MessageSquare, RefreshCw, Loader2, X, Download, Pencil, Trash2, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import type { AdminQuote } from '@/lib/admin/sheets-admin';
 import styles from './cotizaciones.module.css';
 
@@ -383,6 +383,29 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
   const [showModal, setShowModal] = useState(false);
   const [editQuote, setEditQuote] = useState<AdminQuote | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [estadoFilter, setEstadoFilter] = useState('');
+  const [suiteFilter, setSuiteFilter] = useState('');
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return quotes.filter(x => {
+      if (q && !x.cliente.toLowerCase().includes(q) &&
+          !x.email.toLowerCase().includes(q) &&
+          !x.id.toLowerCase().includes(q)) return false;
+      if (estadoFilter && x.estado !== estadoFilter) return false;
+      if (suiteFilter && !x.suite.includes(suiteFilter)) return false;
+      if (fechaDesde && x.checkin < fechaDesde) return false;
+      if (fechaHasta && x.checkin > fechaHasta) return false;
+      return true;
+    });
+  }, [quotes, search, estadoFilter, suiteFilter, fechaDesde, fechaHasta]);
+
+  const hasActiveFilters = estadoFilter || suiteFilter || fechaDesde || fechaHasta;
+  function clearFilters() { setEstadoFilter(''); setSuiteFilter(''); setFechaDesde(''); setFechaHasta(''); }
 
   async function refresh() {
     const res = await fetch('/api/admin/cotizaciones');
@@ -433,15 +456,63 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Cotizaciones</h1>
-          <p className={styles.pageSub}>{quotes.length} cotizaciones · {quotes.filter(q => q.estado === 'ENVIADA').length} enviadas</p>
+          <p className={styles.pageSub}>
+            {filtered.length} cotizaciones · {filtered.filter(q => q.estado === 'ENVIADA').length} enviadas
+            {hasActiveFilters && <span className={styles.filterBadge}>Filtros activos</span>}
+          </p>
         </div>
         <div className={styles.headerActions}>
           <button className={styles.iconBtn} onClick={refresh} title="Actualizar"><RefreshCw size={16} /></button>
+          <button className={`${styles.iconBtn} ${showFilters ? styles.iconBtnActive : ''}`}
+            onClick={() => setShowFilters(s => !s)}>
+            Filtros {showFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
           <button className={styles.primaryBtn} onClick={() => setShowModal(true)}>
             <Plus size={16} /> Nueva cotización
           </button>
         </div>
       </div>
+
+      {/* Búsqueda */}
+      <div className={styles.searchWrap}>
+        <Search size={15} className={styles.searchIcon} />
+        <input className={styles.searchInput} placeholder="Buscar por cliente, email o ID…"
+          value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+
+      {/* Filtros avanzados */}
+      {showFilters && (
+        <div className={styles.filtersPanel}>
+          <div className={styles.filtersGrid}>
+            <label className={styles.filterField}>
+              <span>Estado</span>
+              <select value={estadoFilter} onChange={e => setEstadoFilter(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="BORRADOR">Borrador</option>
+                <option value="ENVIADA">Enviada</option>
+                <option value="ACEPTADA">Aceptada</option>
+                <option value="EXPIRADA">Expirada</option>
+              </select>
+            </label>
+            <label className={styles.filterField}>
+              <span>Suite</span>
+              <select value={suiteFilter} onChange={e => setSuiteFilter(e.target.value)}>
+                <option value="">Todas</option>
+                {SUITES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </label>
+            <label className={styles.filterField}>
+              <span>Check-in desde</span>
+              <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+            </label>
+            <label className={styles.filterField}>
+              <span>Check-in hasta</span>
+              <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+            </label>
+          </div>
+          {hasActiveFilters && <button className={styles.clearBtn} onClick={clearFilters}>Limpiar filtros</button>}
+        </div>
+      )}
 
       <div className={styles.tableWrap}>
         <table className={styles.table}>
@@ -452,9 +523,9 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
             </tr>
           </thead>
           <tbody>
-            {quotes.length === 0 ? (
-              <tr><td colSpan={8} className={styles.empty}>Sin cotizaciones — crea la primera</td></tr>
-            ) : quotes.map(q => (
+            {filtered.length === 0 ? (
+              <tr><td colSpan={8} className={styles.empty}>Sin cotizaciones que mostrar</td></tr>
+            ) : filtered.map(q => (
               <tr key={q.id} className={styles.row}>
                 <td className={styles.mono}>{q.id}</td>
                 <td>
