@@ -10,10 +10,10 @@ import { createQuote, getByUser, getLocallyReservedBackendNames } from './reserv
 import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservationByFolioFromSheet, findAlternativeDates } from './google-sheets.js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const BOOKING_API = process.env.BOOKING_API_URL || 'https://booking-paraisoencantado.up.railway.app';
+const BOOKING_API = process.env.BOOKING_API_URL || 'https://paraisoencantado.com';
 
 const conversations = new Map();
-const MAX_HISTORY = 10;
+const MAX_HISTORY = 6; // 3 intercambios — suficiente contexto, ~40% menos tokens
 
 const HUMAN_REQUEST_REGEX = /\b(humano|asesor|agente|recepcion|recepción|gerente|manager|ejecutivo)\b|hablar con (alguien|una persona)|quiero hablar con|human support|real person/i;
 const ESCALATION_RESPONSE_REGEX = /te comunico con nuestro equipo|en breve te contactan|te contacta nuestro equipo|te atiende una persona/i;
@@ -101,11 +101,50 @@ function getDeterministicResponse(userText = '') {
   }
 
   if (text.includes('perrito') || text.includes('mascota') || text.includes('perro')) {
-    return 'Las *mascotas no permitidas* forman parte de la política del hotel. 🐾🌿 Si quieres, te ayudo a encontrar la mejor opción de habitación para tu viaje.';
+    return 'Las *mascotas no están permitidas* en el hotel. 🐾🌿 ¿Te ayudo a buscar la suite ideal para tu visita?';
   }
 
-  if (text.includes('que tours tienen') || text.includes('que tours manejan') || text.includes('tours tienen')) {
-    return 'Tenemos tours increíbles por la Huasteca: *Expedición Tamul* — Destinos: Sótano de las Huahuas + Cascada de Tamul — https://www.huasteca-potosina.com/tours/expedicion-tamul. 🌿 *Ruta Surrealista* — Destinos: Jardín Edward James + Huichihuayán — https://www.huasteca-potosina.com/tours/ruta-surrealista-edward-james. ¿Cuál te interesa más? ✨';
+  if (text.includes('checkin') || text.includes('check in') || text.includes('hora de llegada') || text.includes('a que hora entro')) {
+    return 'Check-in: *3:00 PM* · Check-out: *12:00 PM* 📅\nLlegada anticipada sujeta a disponibilidad. ¿Tienes fechas en mente?';
+  }
+
+  if (text.includes('desayuno incluido') || text.includes('incluye desayuno')) {
+    return 'El desayuno *no está incluido* en la tarifa de hospedaje. 🍳 Lo puedes tomar en nuestro restaurante *El Papán Huasteco* (8:00 AM – 8:00 PM) — aprox. $100–$200 MXN por persona. ¿Te ayudo con tu reserva?';
+  }
+
+  if (text.includes('cancelacion') || text.includes('cancelación') || text.includes('puedo cancelar') || text.includes('politica')) {
+    return '📋 *Política de cancelación:*\n· +7 días antes: reembolso del *100%*\n· 3–7 días antes: reembolso del *50%*\n· Menos de 3 días: *sin reembolso*\n\n¿Tienes alguna duda adicional? 🌿';
+  }
+
+  if (text.includes('wifi') || text.includes('internet')) {
+    return 'Sí, todas las suites tienen *WiFi Starlink* de alta velocidad incluido. 📶✨';
+  }
+
+  if (text.includes('estacionamiento') || text.includes('estacion') || text.includes('puedo llegar en carro')) {
+    return 'Sí, contamos con *estacionamiento privado y seguro* incluido sin costo. 🚗🌿 ¿Te ayudo con tu reserva?';
+  }
+
+  // Precio específico de una suite sin fechas — responder localmente
+  const suiteKeywords = {
+    'jungla': '*Suite Jungla* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Piscina privada · vistas a montañas · la más solicitada 🌿\n🔗 paraisoencantado.com/habitaciones/jungla',
+    'lindavista': '*Suite LindaVista* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Tina de hidromasaje · vistas al bosque · terraza privada 🌺',
+    'flor de liz': '*Suite Flor de Liz* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Piscina spa privada · vistas panorámicas ✨',
+    'lajas': '*Suite Lajas* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Sala de estar · terraza panorámica · 2 baños 🏡',
+    'helechos': '*Helechos Familiar* — $1,900/noche (2 personas) · $2,400/noche (3–6 personas)\n✦ Hasta 6 personas · múltiples camas · ideal para familias 👨‍👩‍👧‍👦',
+    'lirios': '*Lirios* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Vistas al jardín · balcón privado · tranquilidad 🌿',
+    'orquideas': '*Orquídeas* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Frente a la piscina · vista a la selva ✨',
+    'bromelias': '*Bromelias* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Planta baja · acceso directo a piscina · fácil acceso 🏊',
+  };
+  if (asksPrice && !hasDateHint) {
+    for (const [keyword, response] of Object.entries(suiteKeywords)) {
+      if (text.includes(keyword)) {
+        return `${response}\n\n¿Para cuántas personas y qué fechas tienes en mente? 📅`;
+      }
+    }
+  }
+
+  if (text.includes('que tours tienen') || text.includes('que tours manejan') || text.includes('tours tienen') || (text.includes('tours') && (text.includes('tienen') || text.includes('ofrecen') || text.includes('manejan')))) {
+    return '🌊 Nuestros tours por la Huasteca:\n\n· *Expedición Tamul* — Sótano de las Huahuas + Cascada de Tamul — $1,450/persona\n· *Ruta Surrealista (Edward James)* — Jardín + Huichihuayán — $1,300/persona\n· *Cascadas del Meco* — Meco + Mirador + Salto — $1,600/persona\n· *Paraíso Escalonado* — Minas Viejas + Micos — $1,500/persona\n· *Ruta Acuática* — Puente de Dios + 7 Cascadas — $1,500/persona\n\n🔗 huasteca-potosina.com · ¿Te ayudo a reservar hospedaje primero? 🏡';
   }
 
   if ((text.includes('agregar 1 huesped') || text.includes('agregar un huesped') || text.includes('agregar huespedes') || text.includes('cambia el precio')) && text.includes('reserva confirmada')) {
@@ -363,11 +402,6 @@ const TOOLS = [
     }
   },
   {
-    name: 'get_booked_dates',
-    description: 'Fechas en que el hotel está completamente lleno.',
-    input_schema: { type: 'object', properties: {} }
-  },
-  {
     name: 'get_current_time',
     description: 'Devuelve la fecha y hora actual del hotel en la zona horaria America/Mexico_City. Úsala cuando el cliente pregunte la hora, hoy, mañana, o para validar horarios de atención.',
     input_schema: { type: 'object', properties: {} }
@@ -541,40 +575,21 @@ async function executeTool(toolName, toolInput, userId, userName) {
     if (toolName === 'get_price') {
       const { room_id, checkin, checkout, guests = 2 } = toolInput;
       const room = ROOMS.find(r => r.id === room_id);
-
-      // Precio autoritativo desde hotel-knowledge.js — siempre tiene prioridad
       const g = Number(guests);
-      const authPrice = room
+      // Precios fijos de hotel-knowledge — fuente autoritativa, sin llamadas a backend
+      const pricePerNight = room
         ? (g <= 2 ? room.price_2 : (room.price_3_4 ?? room.price_2))
-        : null;
-
-      // Llamada al backend solo para referencia dinámica (temporadas, etc.)
-      let backendPrice = null;
-      try {
-        const res = await fetch(`${BOOKING_API}/get-dynamic-price`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roomId: room_id, checkinDate: checkin, checkoutDate: checkout, guests })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          backendPrice = data?.total_price || data?.price_per_night || null;
-        }
-      } catch { /* ignorar */ }
-
-      const finalPrice = authPrice ?? backendPrice;
+        : 1500;
+      const nights = checkin && checkout
+        ? Math.max(1, Math.round((new Date(checkout) - new Date(checkin)) / 86400000))
+        : 1;
       return {
         room_name: room?.name || room_id,
         checkin, checkout, guests,
-        price_per_night: finalPrice,
-        total_price: finalPrice,
-        source: authPrice != null ? 'hotel-knowledge (autoritativo)' : 'backend'
+        price_per_night: pricePerNight,
+        total_price: pricePerNight * nights,
+        nights
       };
-    }
-
-    if (toolName === 'get_booked_dates') {
-      const res = await fetch(`${BOOKING_API}/api/fully-booked-dates`);
-      return await res.json();
     }
 
     if (toolName === 'get_current_time') {
@@ -845,10 +860,14 @@ export async function handlePaymentProof(userId, userName, caption = '') {
     const roomsSection = roomLines ? `🏨 *Hospedaje:*\n${roomLines}` : '';
     const toursSection = tourLines ? `\n\n🌊 *Tours:*\n${tourLines}` : '';
 
+    const toursUpsell = !tourLines
+      ? `\n\n🌊 *¿Quieres agregar un tour a tu estadía?*\n· Expedición Tamul — $1,450/persona\n· Ruta Surrealista (Edward James) — $1,300/persona\n· Cascadas del Meco — $1,600/persona\n· Paraíso Escalonado — $1,500/persona\n· Ruta Acuática — $1,500/persona\n\nRespóndeme "sí" con el nombre del tour y número de personas para agregarlo. 🏞️`
+      : '';
+
     return {
       hasPendingReservation: true,
       reservation: pending,
-      message: `✅ ¡Comprobante recibido!\n\n*Folio:* ${pending.folio}\n${roomsSection}${toursSection}\n\n📅 Check-in: ${pending.checkin}\n📅 Check-out: ${pending.checkout}\n💰 *Total: $${pending.totalPrice.toLocaleString('es-MX')} MXN*\n\nNuestro equipo verificará tu pago y te enviaremos la confirmación final en breve. ¡Te esperamos en el Paraíso Encantado! 🌿`
+      message: `✅ ¡Comprobante recibido!\n\n*Folio:* ${pending.folio}\n${roomsSection}${toursSection}\n\n📅 Check-in: ${pending.checkin}\n📅 Check-out: ${pending.checkout}\n💰 *Total: $${pending.totalPrice.toLocaleString('es-MX')} MXN*\n\nNuestro equipo verificará tu pago y te enviará la *confirmación final* en breve. ¡Te esperamos en el Paraíso Encantado! 🌿${toursUpsell}`
     };
   }
 
