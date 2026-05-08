@@ -712,6 +712,46 @@ async function processConfirmarCommand(msg) {
         await msg.reply(`✅ Reserva *${folio}* confirmada. Se notificó al huésped por WhatsApp. No pude confirmar registro en Google Sheets, revísalo por favor.`);
       }
     }
+
+    // Notificar al equipo del hotel en Control Hotel cuando la reserva es nueva
+    if (!sheetResult?.alreadyExists) {
+      const rooms = Array.isArray(reservation.rooms) && reservation.rooms.length > 0
+        ? reservation.rooms.map(r => `· ${r?.name || ''}${r?.guests ? ` (${r.guests}p)` : ''}`).join('\n')
+        : `· ${reservation.room?.name || '—'}`;
+      const teamAlert =
+        `🏨 *Nueva reserva confirmada*\n\n` +
+        `👤 *${reservation.guestName || reservation.userName || 'Sin nombre'}*\n` +
+        `🧾 Folio: ${reservation.folio}\n` +
+        `📅 Check-in: ${reservation.checkin}\n` +
+        `📅 Check-out: ${reservation.checkout}\n` +
+        `🛏️ Habitaciones:\n${rooms}\n` +
+        `💰 Total: $${Number(reservation.totalPrice || 0).toLocaleString('es-MX')} MXN\n` +
+        `💳 Anticipo pagado: $${paidAmount.toLocaleString('es-MX')} MXN`;
+
+      const sendTeamAlert = async (to) => {
+        try {
+          markRecentBotOutgoing(to);
+          await client.sendMessage(to, teamAlert);
+        } catch (e) {
+          console.warn(`⚠️ No se pudo enviar alerta de reserva a ${to}:`, String(e?.message || '').split('\n')[0]);
+        }
+      };
+
+      if (CONTROL_HOTEL_GROUP_ID) {
+        const gid = CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`;
+        await sendTeamAlert(gid);
+      } else {
+        try {
+          const chats = await client.getChats();
+          const controlGroup = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
+          if (controlGroup?.id?._serialized) await sendTeamAlert(controlGroup.id._serialized);
+        } catch {}
+      }
+      if (process.env.HOTEL_WHATSAPP_NUMBER) {
+        await sendTeamAlert(`${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`);
+      }
+      console.log(`📣 Alerta de reserva ${reservation.folio} enviada al equipo`);
+    }
   } catch (cmdErr) {
     console.error('❌ Error en /reservar:', cmdErr.message);
         await msg.reply(`No pude procesar /reservar ${folio}: ${cmdErr.message}`);

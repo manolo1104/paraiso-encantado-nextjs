@@ -69,6 +69,7 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
   const [error, setError] = useState('');
   const [availStatus, setAvailStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
   const [totalOverride, setTotalOverride] = useState(false);
+  const [loyalty, setLoyalty] = useState<{ tier: string; discountPct: number; totalReservas: number } | null>(null);
 
   function set(key: string, value: string | number) {
     setForm(f => ({ ...f, [key]: value }));
@@ -123,6 +124,26 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     }, 600);
     return () => clearTimeout(timer);
   }, [form.checkin, form.checkout, habitaciones, isEdit]);
+
+  // Buscar tier de lealtad cuando se escribe el email
+  useEffect(() => {
+    const email = form.email?.trim();
+    if (!email || isEdit) { setLoyalty(null); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/loyalty?email=${encodeURIComponent(email)}`);
+        if (res.ok) { const d = await res.json(); if (d.tier) setLoyalty(d); else setLoyalty(null); }
+      } catch { setLoyalty(null); }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [form.email, isEdit]);
+
+  function applyLoyaltyDiscount() {
+    if (!loyalty) return;
+    const discounted = Math.round(precioCalculado * (1 - loyalty.discountPct / 100));
+    setTotalOverride(true);
+    setForm(f => ({ ...f, total: discounted }));
+  }
 
   function handleCheckin(v: string) {
     set('checkin', v);
@@ -276,6 +297,27 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
               )}
             </div>
           </div>
+
+          {/* Badge de lealtad */}
+          {loyalty && loyalty.tier && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: loyalty.tier === 'ORO' ? '#fdf9f0' : '#fdf5e6', borderRadius: 4, border: `1px solid ${loyalty.tier === 'ORO' ? '#c9a97a' : '#d4a84b'}` }}>
+              <span style={{ fontSize: '1.1rem' }}>{loyalty.tier === 'ORO' ? '🥇' : '🥈'}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: loyalty.tier === 'ORO' ? '#8a6830' : '#7a5a20' }}>
+                  Huésped {loyalty.tier} · {loyalty.discountPct}% descuento ({loyalty.totalReservas} estancias)
+                </div>
+              </div>
+              {!totalOverride && (
+                <button
+                  type="button"
+                  onClick={applyLoyaltyDiscount}
+                  style={{ background: '#2a2218', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  Aplicar {loyalty.discountPct}%
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Estado de disponibilidad */}
           {!isEdit && form.checkin && form.checkout && (
