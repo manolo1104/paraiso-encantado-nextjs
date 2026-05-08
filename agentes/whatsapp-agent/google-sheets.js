@@ -313,7 +313,8 @@ function buildReservationRowByHeaders(headers = [], reservation = {}) {
       return formatPhoneFromUserId(reservation?.userId || '');
     }
     if (h === 'total' || h.includes('monto')) {
-      return Number(reservation?.totalPrice || 0);
+      const t = Math.round(Number(reservation?.totalPrice || 0));
+      return `$${t.toLocaleString('es-MX')} MXN`;
     }
     if (h.includes('check in') || h === 'checkin' || h.includes('entrada')) {
       return reservation?.checkin || '';
@@ -526,7 +527,7 @@ export async function appendTempBlockToSheet({ room, checkin, checkout, folio, s
   const tab = process.env.GOOGLE_DISPONIBILIDAD_TAB || 'Disponibilidad';
   if (!sheetId) return { success: false, reason: 'Falta GOOGLE_SHEET_ID.' };
 
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
+  const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(); // 3 horas
 
   try {
     const token = await getGoogleAccessToken();

@@ -43,6 +43,8 @@ const ESTADO_COLOR: Record<string, string> = {
 };
 const WA = '524891007679';
 
+interface HabItem { suite: string; huespedes: number }
+
 function calcNights(ci: string, co: string) {
   if (!ci || !co) return 0;
   return Math.max(0, Math.round((new Date(co).getTime() - new Date(ci).getTime()) / 86400000));
@@ -233,28 +235,43 @@ export function printBookingPDF(b: {
 interface Props { initialQuotes: AdminQuote[] }
 
 function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState({
-    cliente: '', telefono: '', email: '', suite: SUITES[3],
-    checkin: '', checkout: '', huespedes: 2, notas: '',
-  });
+  const [form, setForm] = useState({ cliente: '', telefono: '', email: '', checkin: '', checkout: '', notas: '' });
+  const [habitaciones, setHabitaciones] = useState<HabItem[]>([{ suite: SUITES[3], huespedes: 2 }]);
+  const [precioManual, setPrecioManual] = useState<number | null>(null);
+  const [promoActiva, setPromoActiva] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  function set(k: string, v: string | number) { setForm(f => ({ ...f, [k]: v })); }
+  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+  function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); }
+  function removeHab(i: number) { setHabitaciones(h => h.filter((_, idx) => idx !== i)); setPrecioManual(null); setPromoActiva(false); }
+  function updateHab(i: number, key: 'suite' | 'huespedes', val: string | number) {
+    setHabitaciones(h => h.map((item, idx) => idx === i ? { ...item, [key]: val } : item));
+    setPrecioManual(null); setPromoActiva(false);
+  }
 
   const noches = calcNights(form.checkin, form.checkout);
-  const precioNoche = getPrecioNoche(form.suite, form.huespedes);
-  const precioTotal = precioNoche * Math.max(noches, 1);
+  const precioAuto = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * Math.max(noches, 1), 0);
+  const precio2Noches = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * 2, 0);
+  const precioTotal = precioManual ?? precioAuto;
+
+  function aplicarPromo3x2() {
+    setPrecioManual(precio2Noches);
+    setPromoActiva(true);
+  }
+  function resetPrecio() { setPrecioManual(null); setPromoActiva(false); }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
+      const suite = habitaciones.map(h => h.suite).join(', ');
+      const huespedes = habitaciones.reduce((sum, h) => sum + h.huespedes, 0);
       const res = await fetch('/api/admin/cotizaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, noches, precioTotal }),
+        body: JSON.stringify({ ...form, suite, huespedes, noches, precioTotal }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al crear');
@@ -276,27 +293,79 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
             <label className={styles.field}><span>Cliente *</span><input value={form.cliente} onChange={e => set('cliente', e.target.value)} required /></label>
             <label className={styles.field}><span>Teléfono</span><input value={form.telefono} onChange={e => set('telefono', e.target.value)} /></label>
             <label className={styles.field}><span>Email</span><input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></label>
-            <label className={styles.field}>
-              <span>Suite *</span>
-              <select value={form.suite} onChange={e => set('suite', e.target.value)}>
-                {SUITES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </label>
             <label className={styles.field}><span>Check-in</span><input type="date" value={form.checkin} onChange={e => set('checkin', e.target.value)} /></label>
             <label className={styles.field}><span>Check-out</span><input type="date" value={form.checkout} onChange={e => set('checkout', e.target.value)} /></label>
-            <label className={styles.field}>
-              <span>Personas</span>
-              <select value={form.huespedes} onChange={e => set('huespedes', parseInt(e.target.value))}>
-                {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} persona{n !== 1 ? 's' : ''}</option>)}
-              </select>
-            </label>
-            <div className={styles.field}>
-              <span>Precio estimado</span>
-              <div className={styles.pricePreview}>
-                ${precioNoche.toLocaleString('es-MX')}/noche × {Math.max(noches, 1)} = <strong>${precioTotal.toLocaleString('es-MX')} MXN</strong>
+          </div>
+
+          {/* Habitaciones */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>Habitaciones *</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addHab}>
+                <Plus size={13} /> Agregar habitación
+              </button>
+            </div>
+            {habitaciones.map((hab, i) => (
+              <div key={i} className={styles.roomRow}>
+                <select className={styles.roomRowSelect} value={hab.suite} onChange={e => updateHab(i, 'suite', e.target.value)}>
+                  {SUITES.map(s => <option key={s}>{s}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={hab.huespedes} onChange={e => updateHab(i, 'huespedes', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                {habitaciones.length > 1 && (
+                  <button type="button" className={styles.removeRoomBtn} onClick={() => removeHab(i)}><X size={13} /></button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Precio */}
+          <div className={styles.priceBreakdown}>
+            {habitaciones.map((hab, i) => {
+              const pn = getPrecioNoche(hab.suite, hab.huespedes);
+              return (
+                <div key={i} className={styles.priceBreakdownRow}>
+                  <span>{hab.suite} ({hab.huespedes}p)</span>
+                  <span>${pn.toLocaleString('es-MX')}/noche × {Math.max(noches,1)} = ${(pn * Math.max(noches,1)).toLocaleString('es-MX')}</span>
+                </div>
+              );
+            })}
+
+            {/* Botón promo 3x2 */}
+            <div className={styles.promoRow}>
+              <button
+                type="button"
+                className={`${styles.promoBtn} ${promoActiva ? styles.promoBtnActive : ''}`}
+                onClick={promoActiva ? resetPrecio : aplicarPromo3x2}
+                disabled={noches !== 3}
+                title={noches !== 3 ? 'Solo aplica para estadías de exactamente 3 noches' : ''}
+              >
+                🎁 {promoActiva ? '✓ Promo 3×2 activa' : 'Aplicar 3×2 (3ª noche gratis)'}
+              </button>
+              {promoActiva && (
+                <span className={styles.promoSaving}>
+                  Ahorro: ${(precioAuto - precio2Noches).toLocaleString('es-MX')} MXN
+                </span>
+              )}
+            </div>
+
+            <div className={styles.priceTotalRow}>
+              <span className={styles.priceTotalLabel}>Precio final (MXN)</span>
+              <div className={styles.priceEditRow}>
+                <input
+                  type="number" min={0}
+                  className={styles.priceInput}
+                  value={precioTotal}
+                  onChange={e => { setPrecioManual(parseInt(e.target.value) || 0); setPromoActiva(false); }}
+                />
+                {(precioManual !== null) && (
+                  <button type="button" className={styles.resetPriceBtn} onClick={resetPrecio}>↩ Calcular</button>
+                )}
               </div>
             </div>
           </div>
+
           <label className={styles.field}><span>Notas</span><textarea rows={3} value={form.notas} onChange={e => set('notas', e.target.value)} /></label>
           {error && <p className={styles.error}>{error}</p>}
           <div className={styles.actions}>
@@ -318,19 +387,36 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
 }) {
   const [form, setForm] = useState({
     cliente: quote.cliente, telefono: quote.telefono, email: quote.email,
-    suite: quote.suite, checkin: quote.checkin, checkout: quote.checkout,
-    huespedes: 2, notas: quote.notas,
+    checkin: quote.checkin, checkout: quote.checkout, notas: quote.notas,
   });
+  const [habitaciones, setHabitaciones] = useState<HabItem[]>(() =>
+    quote.suite.split(', ').filter(Boolean).map(s => ({ suite: s.trim(), huespedes: 2 }))
+  );
+  const [precioManual, setPrecioManual] = useState<number | null>(quote.precioTotal || null);
+  const [promoActiva, setPromoActiva] = useState(false);
   const [loading, setLoading] = useState(false);
-  function set(k: string, v: string | number) { setForm(f => ({ ...f, [k]: v })); }
+
+  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
+  function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); }
+  function removeHab(i: number) { setHabitaciones(h => h.filter((_, idx) => idx !== i)); setPromoActiva(false); }
+  function updateHab(i: number, key: 'suite' | 'huespedes', val: string | number) {
+    setHabitaciones(h => h.map((item, idx) => idx === i ? { ...item, [key]: val } : item));
+    setPromoActiva(false);
+  }
+
   const noches = calcNights(form.checkin, form.checkout);
-  const precioNoche = getPrecioNoche(form.suite, form.huespedes);
-  const precioTotal = precioNoche * Math.max(noches, 1);
+  const precioAuto = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * Math.max(noches, 1), 0);
+  const precio2Noches = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * 2, 0);
+  const precioTotal = precioManual ?? precioAuto;
+
+  function aplicarPromo3x2() { setPrecioManual(precio2Noches); setPromoActiva(true); }
+  function resetPrecio() { setPrecioManual(null); setPromoActiva(false); }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await onSaved(quote, { ...form, noches, precioTotal });
+    const suite = habitaciones.map(h => h.suite).join(', ');
+    await onSaved(quote, { ...form, suite, noches, precioTotal });
     setLoading(false);
   }
 
@@ -346,25 +432,78 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
             <label className={styles.field}><span>Cliente</span><input value={form.cliente} onChange={e => set('cliente', e.target.value)} /></label>
             <label className={styles.field}><span>Teléfono</span><input value={form.telefono} onChange={e => set('telefono', e.target.value)} /></label>
             <label className={styles.field}><span>Email</span><input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></label>
-            <label className={styles.field}>
-              <span>Suite</span>
-              <select value={form.suite} onChange={e => set('suite', e.target.value)}>
-                {SUITES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </label>
             <label className={styles.field}><span>Check-in</span><input type="date" value={form.checkin} onChange={e => set('checkin', e.target.value)} /></label>
             <label className={styles.field}><span>Check-out</span><input type="date" value={form.checkout} onChange={e => set('checkout', e.target.value)} /></label>
-            <label className={styles.field}>
-              <span>Personas</span>
-              <select value={form.huespedes} onChange={e => set('huespedes', parseInt(e.target.value))}>
-                {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} persona{n !== 1 ? 's' : ''}</option>)}
-              </select>
-            </label>
-            <div className={styles.field}>
-              <span>Total calculado</span>
-              <div className={styles.pricePreview}><strong>${precioTotal.toLocaleString('es-MX')} MXN</strong></div>
+          </div>
+
+          {/* Habitaciones */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>Habitaciones</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addHab}>
+                <Plus size={13} /> Agregar
+              </button>
+            </div>
+            {habitaciones.map((hab, i) => (
+              <div key={i} className={styles.roomRow}>
+                <select className={styles.roomRowSelect} value={hab.suite} onChange={e => updateHab(i, 'suite', e.target.value)}>
+                  {SUITES.map(s => <option key={s}>{s}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={hab.huespedes} onChange={e => updateHab(i, 'huespedes', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                {habitaciones.length > 1 && (
+                  <button type="button" className={styles.removeRoomBtn} onClick={() => removeHab(i)}><X size={13} /></button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Precio */}
+          <div className={styles.priceBreakdown}>
+            {habitaciones.map((hab, i) => {
+              const pn = getPrecioNoche(hab.suite, hab.huespedes);
+              return (
+                <div key={i} className={styles.priceBreakdownRow}>
+                  <span>{hab.suite} ({hab.huespedes}p)</span>
+                  <span>${pn.toLocaleString('es-MX')}/noche × {Math.max(noches,1)} = ${(pn * Math.max(noches,1)).toLocaleString('es-MX')}</span>
+                </div>
+              );
+            })}
+
+            <div className={styles.promoRow}>
+              <button
+                type="button"
+                className={`${styles.promoBtn} ${promoActiva ? styles.promoBtnActive : ''}`}
+                onClick={promoActiva ? resetPrecio : aplicarPromo3x2}
+                disabled={noches !== 3}
+                title={noches !== 3 ? 'Solo aplica para estadías de exactamente 3 noches' : ''}
+              >
+                🎁 {promoActiva ? '✓ Promo 3×2 activa' : 'Aplicar 3×2 (3ª noche gratis)'}
+              </button>
+              {promoActiva && (
+                <span className={styles.promoSaving}>
+                  Ahorro: ${(precioAuto - precio2Noches).toLocaleString('es-MX')} MXN
+                </span>
+              )}
+            </div>
+
+            <div className={styles.priceTotalRow}>
+              <span className={styles.priceTotalLabel}>Precio final (MXN)</span>
+              <div className={styles.priceEditRow}>
+                <input
+                  type="number" min={0}
+                  className={styles.priceInput}
+                  value={precioTotal}
+                  onChange={e => { setPrecioManual(parseInt(e.target.value) || 0); setPromoActiva(false); }}
+                />
+                {precioManual !== null && (
+                  <button type="button" className={styles.resetPriceBtn} onClick={resetPrecio}>↩ Calcular</button>
+                )}
+              </div>
             </div>
           </div>
+
           <label className={styles.field}><span>Notas</span><textarea rows={2} value={form.notas} onChange={e => set('notas', e.target.value)} /></label>
           <div className={styles.actions}>
             <button type="button" className={styles.secondaryBtn} onClick={onClose}>Cancelar</button>

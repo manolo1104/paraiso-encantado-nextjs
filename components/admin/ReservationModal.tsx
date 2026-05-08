@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Loader2, AlertTriangle, CheckCircle, Plus } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import styles from './Modal.module.css';
 
@@ -10,6 +10,8 @@ const SUITES = [
   'Suite Lajas','Lirios 1','Lirios 2','Orquídeas 2','Orquídeas Doble',
   'Orquídeas 3','Bromelias','Helechos 1','Helechos 2',
 ];
+
+interface HabItem { suite: string; huespedes: number }
 
 const PRECIO_TIERS: Record<string, Record<number, number>> = {
   'Jungla':              { 2: 1900, 3: 2400, 4: 2400 },
@@ -49,13 +51,18 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     cliente: booking?.cliente || '',
     telefono: booking?.telefono || '',
     email: booking?.email || '',
-    habitacion: booking?.habitaciones || SUITES[3],
     checkin: booking?.checkin || defaultCheckin || '',
     checkout: booking?.checkout || '',
     noches: booking?.noches || 1,
-    huespedes: booking?.huespedes || 2,
     total: booking?.total || 0,
     notas: booking?.notas || '',
+  });
+
+  const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
+    if (booking?.habitaciones) {
+      return booking.habitaciones.split(', ').filter(Boolean).map(s => ({ suite: s.trim(), huespedes: 2 }));
+    }
+    return [{ suite: SUITES[3], huespedes: 2 }];
   });
 
   const [loading, setLoading] = useState(false);
@@ -68,24 +75,34 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     setAvailStatus('idle');
   }
 
+  function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); }
+  function removeHab(i: number) { setHabitaciones(h => h.filter((_, idx) => idx !== i)); setTotalOverride(false); }
+  function updateHab(i: number, key: 'suite' | 'huespedes', val: string | number) {
+    setHabitaciones(h => h.map((item, idx) => idx === i ? { ...item, [key]: val } : item));
+    setTotalOverride(false);
+    setAvailStatus('idle');
+  }
+
+  const totalHuespedes = habitaciones.reduce((sum, h) => sum + h.huespedes, 0);
+
   // Auto-calcular noches y precio
   useEffect(() => {
-    const { checkin, checkout, habitacion, huespedes } = form;
+    const { checkin, checkout } = form;
     if (checkin && checkout) {
       const n = Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000));
-      const precioNoche = getPrecioNoche(habitacion, huespedes);
+      const precioAuto = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * n, 0);
       setForm(f => ({
         ...f,
         noches: n,
-        total: totalOverride ? f.total : precioNoche * n,
+        total: totalOverride ? f.total : precioAuto,
       }));
     }
-  }, [form.checkin, form.checkout, form.habitacion, form.huespedes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form.checkin, form.checkout, habitaciones, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Verificar disponibilidad cuando cambian fechas o suite
+  // Verificar disponibilidad cuando cambian fechas o suites
   useEffect(() => {
-    const { checkin, checkout, habitacion } = form;
-    if (!checkin || !checkout || !habitacion || isEdit) return;
+    const { checkin, checkout } = form;
+    if (!checkin || !checkout || isEdit) return;
     const n = Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000);
     if (n <= 0) return;
 
@@ -95,7 +112,7 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
         const res = await fetch('/api/check-availability', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkin, checkout, rooms: [habitacion] }),
+          body: JSON.stringify({ checkin, checkout, rooms: habitaciones.map(h => h.suite) }),
         });
         const data = await res.json();
         const unavailable: string[] = data.unavailableRooms || [];
@@ -105,7 +122,7 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [form.checkin, form.checkout, form.habitacion, isEdit]);
+  }, [form.checkin, form.checkout, habitaciones, isEdit]);
 
   function handleCheckin(v: string) {
     set('checkin', v);
@@ -117,24 +134,24 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     }
   }
 
-  const precioNoche = getPrecioNoche(form.habitacion, form.huespedes);
-  const precioCalculado = precioNoche * Math.max(form.noches, 1);
+  const precioCalculado = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * Math.max(form.noches, 1), 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isEdit && availStatus === 'unavailable') {
-      setError('La habitación no está disponible en esas fechas.');
+      setError('Una o más habitaciones no están disponibles en esas fechas.');
       return;
     }
     setLoading(true);
     setError('');
     try {
+      const habitacion = habitaciones.map(h => h.suite).join(', ');
       const url = isEdit ? `/api/admin/reservas/${booking!.confirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, habitacion, huespedes: totalHuespedes }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al guardar');
@@ -186,12 +203,6 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)} />
             </label>
             <label className={styles.field}>
-              <span>Suite *</span>
-              <select value={form.habitacion} onChange={e => set('habitacion', e.target.value)} required>
-                {SUITES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </label>
-            <label className={styles.field}>
               <span>Check-in *</span>
               <input type="date" value={form.checkin} onChange={e => handleCheckin(e.target.value)} required />
             </label>
@@ -202,49 +213,69 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
                 onChange={e => set('checkout', e.target.value)} required />
             </label>
             <label className={styles.field}>
-              <span>Huéspedes</span>
-              <select value={form.huespedes} onChange={e => set('huespedes', parseInt(e.target.value))}>
-                {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} persona{n !== 1 ? 's' : ''}</option>)}
-              </select>
-            </label>
-            <label className={styles.field}>
               <span>Noches</span>
               <input type="number" min={1} value={form.noches} readOnly style={{ background: '#f5f3ef' }} />
             </label>
           </div>
 
-          {/* Calculador de precio */}
-          {!isEdit && (
-            <div className={styles.priceCalc}>
-              <div className={styles.priceCalcRow}>
-                <span>${precioNoche.toLocaleString('es-MX')}/noche × {Math.max(form.noches, 1)} noches</span>
-                <strong>${precioCalculado.toLocaleString('es-MX')} MXN</strong>
-              </div>
-              <div className={styles.totalRow}>
-                <label className={styles.field} style={{ flex: 1 }}>
-                  <span>Total a cobrar (MXN) *</span>
-                  <input
-                    type="number" min={0} value={form.total}
-                    onChange={e => { setTotalOverride(true); set('total', parseInt(e.target.value) || 0); }}
-                    required
-                  />
-                </label>
-                {form.total !== precioCalculado && (
-                  <button type="button" className={styles.resetPrice}
-                    onClick={() => { setTotalOverride(false); set('total', precioCalculado); }}>
-                    ↩ Usar precio calculado
-                  </button>
+          {/* Habitaciones */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>Habitaciones *</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addHab}>
+                <Plus size={13} /> Agregar habitación
+              </button>
+            </div>
+            {habitaciones.map((hab, i) => (
+              <div key={i} className={styles.roomRow}>
+                <select className={styles.roomRowSelect} value={hab.suite} onChange={e => updateHab(i, 'suite', e.target.value)}>
+                  {SUITES.map(s => <option key={s}>{s}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={hab.huespedes} onChange={e => updateHab(i, 'huespedes', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                {habitaciones.length > 1 && (
+                  <button type="button" className={styles.removeRoomBtn} onClick={() => removeHab(i)}><X size={13} /></button>
                 )}
               </div>
-            </div>
-          )}
+            ))}
+            <p className={styles.roomsTotal}>{totalHuespedes} huésped{totalHuespedes !== 1 ? 'es' : ''} en total</p>
+          </div>
 
-          {isEdit && (
-            <label className={styles.field}>
-              <span>Total (MXN)</span>
-              <input type="number" min={0} value={form.total} onChange={e => set('total', parseInt(e.target.value))} />
-            </label>
-          )}
+          {/* Calculador de precio */}
+          <div className={styles.priceCalc}>
+            {habitaciones.length > 1 && habitaciones.map((hab, i) => {
+              const pn = getPrecioNoche(hab.suite, hab.huespedes);
+              return (
+                <div key={i} className={styles.priceCalcRow}>
+                  <span>{hab.suite} ({hab.huespedes}p) × {Math.max(form.noches,1)} noches</span>
+                  <span>${(pn * Math.max(form.noches,1)).toLocaleString('es-MX')}</span>
+                </div>
+              );
+            })}
+            {habitaciones.length === 1 && (
+              <div className={styles.priceCalcRow}>
+                <span>${getPrecioNoche(habitaciones[0].suite, habitaciones[0].huespedes).toLocaleString('es-MX')}/noche × {Math.max(form.noches, 1)} noches</span>
+                <strong>${precioCalculado.toLocaleString('es-MX')} MXN</strong>
+              </div>
+            )}
+            <div className={styles.totalRow}>
+              <label className={styles.field} style={{ flex: 1 }}>
+                <span>Total a cobrar (MXN) *</span>
+                <input
+                  type="number" min={0} value={form.total}
+                  onChange={e => { setTotalOverride(true); set('total', parseInt(e.target.value) || 0); }}
+                  required
+                />
+              </label>
+              {form.total !== precioCalculado && (
+                <button type="button" className={styles.resetPrice}
+                  onClick={() => { setTotalOverride(false); set('total', precioCalculado); }}>
+                  ↩ Usar calculado
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Estado de disponibilidad */}
           {!isEdit && form.checkin && form.checkout && (

@@ -30,13 +30,33 @@ async function isBotEnabled() {
 }
 
 const conversations = new Map();
-const MAX_HISTORY = 6; // 3 intercambios — suficiente contexto, ~40% menos tokens
+const MAX_HISTORY = 15; // 15 mensajes — contexto amplio para no perder fechas
+
+// Datos de sesión por usuario — persisten fuera del historial de Claude
+// para que las fechas/nombre/email no se pierdan cuando el historial se trunca.
+const sessionData = new Map(); // userId -> { checkin, checkout, guestName, guestEmail, phone, rooms }
+
+function getSession(userId) {
+  if (!sessionData.has(userId)) sessionData.set(userId, {});
+  return sessionData.get(userId);
+}
+function updateSession(userId, data) {
+  const s = getSession(userId);
+  Object.assign(s, data);
+}
 
 const HUMAN_REQUEST_REGEX = /\b(humano|asesor|agente|recepcion|recepción|gerente|manager|ejecutivo)\b|hablar con (alguien|una persona)|quiero hablar con|human support|real person/i;
 const ESCALATION_RESPONSE_REGEX = /te comunico con nuestro equipo|en breve te contactan|te contacta nuestro equipo|te atiende una persona/i;
 
+const TOUR_BOOKING_INTENT_REGEX = /\b(quiero|quisiera|me interesa|me gustar[íi]a|podemos|podría|puedo|reservar|contratar|apartar|tomar|agendar)\b.{0,40}\b(tour|tours|excursion|excursiones|recorrido|paquete)\b|\b(tour|tours)\b.{0,40}\b(reservar|contratar|apartar|pagar|agendar|incluir)\b/i;
+
 function needsHumanIntervention(userText = '', assistantText = '') {
   return HUMAN_REQUEST_REGEX.test(userText) || ESCALATION_RESPONSE_REGEX.test(assistantText);
+}
+
+function wantsTourBooking(userText = '', assistantText = '') {
+  return TOUR_BOOKING_INTENT_REGEX.test(userText) ||
+    /huasteca-potosina\.com|para reservar.*tour|tour.*reservar/i.test(assistantText);
 }
 
 function parseFirstInteger(value = '') {
@@ -44,7 +64,19 @@ function parseFirstInteger(value = '') {
   return match ? Number(match[1]) : null;
 }
 
-function getDeterministicResponse(userText = '') {
+// Calcula precio por noche considerando personas extra (ej. Helechos 5-6 personas)
+function getRoomPricePerNight(room, guests) {
+  if (!room) return 1900;
+  const g = Number(guests || 2);
+  if (g <= 2) return room.price_2 || 1900;
+  if (g <= 4) return room.price_3_4 || room.price_2 || 1900;
+  // 5-6 personas: precio base (4p) + extra_person por cada persona adicional
+  const base = room.price_3_4 || room.price_2 || 1900;
+  const extra = room.extra_person || 0;
+  return base + (g - 4) * extra;
+}
+
+function getDeterministicResponse(userText = '', session = {}) {
   const text = normalizeText(userText);
 
   if (!text) return null;
@@ -53,12 +85,19 @@ function getDeterministicResponse(userText = '') {
     return 'Te comunico con nuestro equipo, en breve te contactan. 🤝📞';
   }
 
-  if ((text.includes('detalles de mi reserva') || text.includes('datlles de mi reserva') || text.includes('mi reserva')) && !/wa-[a-z0-9]{4,}/i.test(userText)) {
+  // "mi reserva/reservación" — si hay folio activo en sesión, mostrar datos sin pedir folio
+  if ((text.includes('mi reserva') || text.includes('mi reservacion') || text.includes('mi reservación') || text.includes('detalles de mi reserva')) && !/wa-[a-z0-9]{4,}/i.test(userText)) {
+    if (session.lastFolio && session.checkin && session.checkout) {
+      return `Tu cotización activa:\n📋 *Folio:* ${session.lastFolio}\n📅 Check-in: ${session.checkin}\n📅 Check-out: ${session.checkout}\n\n¿Tienes alguna duda o ya enviaste el comprobante? 🌿`;
+    }
     return 'Para mostrarte los detalles de tu reserva necesito tu *número de folio* — formato *WA-XXXXXXXX*. 🧾📌';
   }
 
   if ((text.includes('quiero reservar') || text.includes('reservar por whatsapp')) && !text.includes('check-in') && !text.includes('check out')) {
-    return 'Tenemos *dos formas fáciles de reservar*: 📱 *Opción 1 — Por WhatsApp:* cotización + pago por SPEI u OXXO. 🏠 *Opción 2 — Motor en línea:* https://paraisoencantado.com/reservar (simple y rápido). ¿Me compartes tu *check-in y check-out* y cuántos huéspedes serían? 🌿📅';
+    const urlMotor = (session.checkin && session.checkout)
+      ? `https://paraisoencantado.com/reservar?checkin=${session.checkin}&checkout=${session.checkout}`
+      : 'https://paraisoencantado.com/reservar';
+    return `Tenemos *dos formas fáciles de reservar*: 📱 *Opción 1 — Por WhatsApp:* cotización + pago por SPEI u OXXO. 🌐 *Opción 2 — Motor en línea:* ${urlMotor} (tarjeta, confirmación instantánea). ¿Me compartes tu *check-in y check-out* y cuántos huéspedes serían? 🌿📅`;
   }
 
   const looksGroupFlow =
@@ -121,7 +160,9 @@ function getDeterministicResponse(userText = '') {
     return 'Las *mascotas no están permitidas* en el hotel. 🐾🌿 ¿Te ayudo a buscar la suite ideal para tu visita?';
   }
 
-  if (text.includes('checkin') || text.includes('check in') || text.includes('hora de llegada') || text.includes('a que hora entro')) {
+  // Solo responder con el horario si el cliente PREGUNTA por el check-in, no si está DANDO fechas
+  const mentionsMonthInCheckin = /(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|\d{1,2}\/\d{1,2}|\d{4}-\d{2}-\d{2})/i.test(userText);
+  if (!mentionsMonthInCheckin && (text.includes('checkin') || text.includes('check in') || text.includes('hora de llegada') || text.includes('a que hora entro') || text.includes('a que hora es la entrada'))) {
     return 'Check-in: *3:00 PM* · Check-out: *12:00 PM* 📅\nLlegada anticipada sujeta a disponibilidad. ¿Tienes fechas en mente?';
   }
 
@@ -147,7 +188,7 @@ function getDeterministicResponse(userText = '') {
     'lindavista': '*Suite LindaVista* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Tina de hidromasaje · vistas al bosque · terraza privada 🌺',
     'flor de liz': '*Suite Flor de Liz* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Piscina spa privada · vistas panorámicas ✨',
     'lajas': '*Suite Lajas* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Sala de estar · terraza panorámica · 2 baños 🏡',
-    'helechos': '*Helechos Familiar* — $1,900/noche (2 personas) · $2,400/noche (3–6 personas)\n✦ Hasta 6 personas · múltiples camas · ideal para familias 👨‍👩‍👧‍👦',
+    'helechos': '*Helechos Familiar* — $1,900/noche (2p) · $2,400/noche (3–4p) · $2,700/noche (5p) · $3,000/noche (6p)\n✦ Hasta 6 personas · múltiples camas · ideal para familias 👨‍👩‍👧‍👦',
     'lirios': '*Lirios* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Vistas al jardín · balcón privado · tranquilidad 🌿',
     'orquideas': '*Orquídeas* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Frente a la piscina · vista a la selva ✨',
     'bromelias': '*Bromelias* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Planta baja · acceso directo a piscina · fácil acceso 🏊',
@@ -179,16 +220,30 @@ function getDeterministicResponse(userText = '') {
     }
   }
 
+  // Solo disparar videos si el mensaje trata principalmente de eso
+  // (evitar falsos positivos como "3. En YouTube" en formularios)
+  const isNumberedListItem = /^\s*\d+[\.\)]\s/.test(userText); // ej: "3. En YouTube"
+  const isShortVideoMention = text.length > 60 && !text.includes('video') && !text.includes('reel');
+  if (!isNumberedListItem && !isShortVideoMention && (text.includes('video') || text.includes('videos') || (text.includes('youtube') && text.length < 80) || text.includes('reel') || text.includes('reels'))) {
+    const videoLinks = [
+      '🎬 *AMLO en Paraíso Encantado:* https://www.youtube.com/watch?v=Y8h8CuTNLcA&t=1s',
+      '🌺 *Brenda Catalán en Xilitla:* https://www.youtube.com/watch?v=v2cc-49uYEU&t=15s',
+      '✨ *Experiencia Paraíso Encantado:* https://www.youtube.com/watch?v=hD7LbX9Xoqw',
+      '🏨 *Tour Paraíso Encantado:* https://www.youtube.com/watch?v=i3R_OBwoucw&t=1s',
+      '🍽️ *Restaurante El Papán Huasteco:* https://www.youtube.com/watch?v=SrZ8ZtcacKc&t=1s',
+    ];
+    return `Aquí algunos videos del hotel 🎥\n\n${videoLinks.join('\n\n')}\n\n¿Alguna pregunta sobre las suites o fechas? 🌿`;
+  }
+
   if (text.includes('fotos') || text.includes('foto') || text.includes('imagenes') || text.includes('imagen') || text.includes('ver fotos')) {
     const roomNames = ['flor de liz', 'lindavista', 'lajas', 'jungla', 'lirios', 'orquideas', 'helechos', 'bromelias'];
     if (roomNames.some(r => text.includes(r))) {
       const matched = ROOMS.find(r => normalizeText(r.name).includes(roomNames.find(rn => text.includes(rn))));
       if (matched) {
-        return `Aquí están las fotos y detalles completos de *${matched.name}*:\n🔗 ${matched.url}\n\n✨ Verás las imágenes, descripción, características y disponibilidad. 📸`;
+        return `Aquí están las fotos y detalles completos de *${matched.name}*:\n🔗 ${matched.url}\n\n¿Alguna duda sobre la suite? 📸`;
       }
-    } else {
-      return `Puedes ver *todas nuestras habitaciones* con fotos en:\n🔗 https://paraisoencantado.com/habitaciones\n\n¿Alguna en particular que te llame la atención? 🏠✨`;
     }
+    return `Puedes ver *todas nuestras suites* con fotos en:\n🔗 paraisoencantado.com/habitaciones\n\n¿Alguna en particular que te llame la atención? 🏠✨`;
   }
 
   if (text.includes('compara') || text.includes('cual es mejor') || text.includes('cual me recomiendas') || text.includes('diferencia entre')) {
@@ -502,6 +557,8 @@ async function executeTool(toolName, toolInput, userId, userName) {
   try {
     if (toolName === 'check_availability') {
       const { checkin, checkout, room_ids } = toolInput;
+      // Guardar fechas en sesión para que no se pierdan al truncar el historial
+      if (checkin && checkout) updateSession(userId, { checkin, checkout });
       const rooms = (room_ids?.length > 0) ? room_ids : ROOMS.map(r => r.id);
       const requestedRooms = ROOMS.filter(r => rooms.includes(r.id));
       if (requestedRooms.length === 0) {
@@ -618,12 +675,9 @@ async function executeTool(toolName, toolInput, userId, userName) {
 
     if (toolName === 'get_price') {
       const { room_id, checkin, checkout, guests = 2 } = toolInput;
-      const room = ROOMS.find(r => r.id === room_id);
+      const room = ROOMS.find(r => r.id === room_id || normalizeText(r.name) === normalizeText(room_id));
       const g = Number(guests);
-      // Precios fijos de hotel-knowledge — fuente autoritativa, sin llamadas a backend
-      const pricePerNight = room
-        ? (g <= 2 ? room.price_2 : (room.price_3_4 ?? room.price_2))
-        : 1500;
+      const pricePerNight = room ? getRoomPricePerNight(room, g) : 1500;
       const nights = checkin && checkout
         ? Math.max(1, Math.round((new Date(checkout) - new Date(checkin)) / 86400000))
         : 1;
@@ -650,25 +704,45 @@ async function executeTool(toolName, toolInput, userId, userName) {
     }
 
     if (toolName === 'create_reservation_quote') {
+      // Recuperar fechas de la sesión si Claude no las incluyó bien
+      const session = getSession(userId);
       const {
         guest_name,
         guest_email,
         how_found,
         rooms: inputRooms,
         tours: inputTours,
-        checkin,
-        checkout,
+        checkin: rawCheckin,
+        checkout: rawCheckout,
         nights,
         deposit_amount
       } = toolInput;
 
+      // Usar fechas de la sesión si las de Claude no coinciden con lo que el cliente dijo
+      const checkin = (session.checkin && rawCheckin !== session.checkin) ? session.checkin : rawCheckin;
+      const checkout = (session.checkout && rawCheckout !== session.checkout) ? session.checkout : rawCheckout;
+
+      // Guardar datos del huésped en sesión (incluyendo folio cuando se cree)
+      updateSession(userId, {
+        checkin, checkout,
+        guestName: guest_name,
+        guestEmail: guest_email,
+      });
+
       // Normalizar rooms: mapear IDs a datos de ROOMS y calcular precio oficial
       const resolvedRooms = (inputRooms || []).map(r => {
-        const known = ROOMS.find(k => k.id === r.room_id);
+        // Buscar por id exacto o por nombre normalizado (ej: 'suite-jungla' → 'jungla')
+        const known = ROOMS.find(k =>
+          k.id === r.room_id ||
+          k.id === r.room_id?.replace(/^suite-/, '') ||
+          normalizeText(k.name) === normalizeText(r.room_name || '')
+        );
         const g = Number(r.guests || 2);
-        const officialPrice = known
-          ? (g <= 2 ? known.price_2 : (known.price_3_4 ?? known.price_2)) * Number(nights || 1)
-          : r.price;
+        const nightsNum = Number(nights || 1);
+        const pricePerNight = known ? getRoomPricePerNight(known, g) : null;
+        // Sanity check: precio máximo razonable por habitación por estancia = $99,999
+        const rawPrice = pricePerNight ? pricePerNight * nightsNum : Number(r.price || 0);
+        const officialPrice = rawPrice > 99999 ? (pricePerNight ? pricePerNight * nightsNum : rawPrice / 100) : rawPrice;
         return {
           id: r.room_id,
           name: known?.name || r.room_name,
@@ -716,6 +790,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
         depositAmount: deposit_amount ?? officialTotal
       });
 
+      updateSession(userId, { lastFolio: quote.folio });
       const sessionId = `wa-${quote.folio}`;
       const roomNamesForBackend = resolvedRooms.map(r => r.backendName);
 
@@ -724,8 +799,8 @@ async function executeTool(toolName, toolInput, userId, userName) {
         message: 'No se pudo crear bloqueo temporal en este momento.',
         rooms: roomNamesForBackend,
         checkin, checkout,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-        durationMinutes: 60
+        expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+        durationMinutes: 180
       };
 
       try {
@@ -751,11 +826,58 @@ async function executeTool(toolName, toolInput, userId, userName) {
         }
       }
 
+      // ── Integración con ecosistema admin ─────────────────
+      // 1) Guardar cotización en Google Sheets (pestaña Cotizaciones)
+      let adminCotizacionId = null;
+      if (guest_email) {
+        try {
+          const suiteNames = resolvedRooms.map(r => r.name).join(', ');
+          const cotRes = await fetch(`${BOOKING_API}/api/admin/cotizaciones`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cliente: guest_name,
+              telefono: '',
+              email: guest_email,
+              suite: suiteNames,
+              checkin,
+              checkout,
+              noches: Number(nights) || 2,
+              precioTotal: officialTotal,
+              notas: `Cotización generada por WhatsApp · Folio WA: ${quote.folio}`,
+            })
+          });
+          if (cotRes.ok) {
+            const cotData = await cotRes.json();
+            adminCotizacionId = cotData.id;
+            console.log(`📋 Cotización guardada en admin: ${adminCotizacionId}`);
+
+            // 2) Enviar email de cotización
+            const emailRes = await fetch(`${BOOKING_API}/api/admin/cotizaciones/${adminCotizacionId}/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            if (emailRes.ok) {
+              console.log(`📧 Email de cotización enviado a ${guest_email}`);
+            } else {
+              const emailErr = await emailRes.json().catch(() => ({}));
+              console.warn(`⚠️ No se pudo enviar email de cotización:`, emailErr.error || emailRes.status);
+            }
+          } else {
+            const errData = await cotRes.json().catch(() => ({}));
+            console.warn(`⚠️ No se pudo guardar cotización en admin:`, errData.error || cotRes.status);
+          }
+        } catch (ecoErr) {
+          console.warn(`⚠️ Error integrando con ecosistema admin:`, ecoErr.message);
+        }
+      }
+
       return {
         ...quote,
         rooms: resolvedRooms,
         tours: resolvedTours,
-        temporaryBlock
+        temporaryBlock,
+        emailSent: Boolean(adminCotizacionId && guest_email)
       };
     }
 
@@ -777,12 +899,13 @@ export async function handleMessage(userId, userText, userName = '') {
 
   if (!conversations.has(userId)) conversations.set(userId, []);
   const history = conversations.get(userId);
+  const session = getSession(userId); // debe ir antes de getDeterministicResponse
 
   const incomingText = typeof userText === 'string' ? userText.trim() : String(userText || '').trim();
   if (!incomingText) {
     return {
       text: '¿Me compartes tu mensaje en texto para ayudarte mejor? 🌿',
-      requiresHumanIntervention: false
+      requiresHumanIntervention: false, requiresTourNotification: false
     };
   }
 
@@ -792,10 +915,10 @@ export async function handleMessage(userId, userText, userName = '') {
     history.push({ role: 'user', content: incomingText });
     history.push({ role: 'assistant', content: confirmationText });
     while (history.length > MAX_HISTORY) history.shift();
-    return { text: confirmationText, requiresHumanIntervention: false };
+    return { text: confirmationText, requiresHumanIntervention: false, requiresTourNotification: false };
   }
 
-  const deterministicResponse = getDeterministicResponse(incomingText);
+  const deterministicResponse = getDeterministicResponse(incomingText, session);
   if (deterministicResponse) {
     history.push({ role: 'user', content: incomingText });
     history.push({ role: 'assistant', content: deterministicResponse });
@@ -804,7 +927,7 @@ export async function handleMessage(userId, userText, userName = '') {
     console.log(`🤖 → ${deterministicResponse.slice(0, 100)}...`);
     return {
       text: deterministicResponse,
-      requiresHumanIntervention: needsHumanIntervention(incomingText, deterministicResponse)
+      requiresHumanIntervention: needsHumanIntervention(incomingText, deterministicResponse), requiresTourNotification: wantsTourBooking(incomingText, deterministicResponse)
     };
   }
 
@@ -824,7 +947,14 @@ export async function handleMessage(userId, userText, userName = '') {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     timeZone: 'America/Mexico_City'
   });
-  const dynamicContext = `Hoy es ${hoy}. Usa esta fecha como referencia para calcular disponibilidad, cancelaciones y plazos.${userName ? `\nEl huésped se llama *${userName}*.` : ''}`;
+  const sessionLines = [];
+  if (session.checkin && session.checkout) {
+    sessionLines.push(`⚠️ FECHAS CONFIRMADAS DEL HUÉSPED (usa ESTAS, no inventes otras): check-in ${session.checkin}, check-out ${session.checkout}.`);
+    sessionLines.push(`URL del motor de reservas con fechas del huésped (usa SIEMPRE esta URL cuando el cliente quiera reservar en línea): https://paraisoencantado.com/reservar?checkin=${session.checkin}&checkout=${session.checkout}`);
+  }
+  if (session.guestName) sessionLines.push(`Nombre del huésped: ${session.guestName}.`);
+  if (session.guestEmail) sessionLines.push(`Email del huésped: ${session.guestEmail}.`);
+  const dynamicContext = `Hoy es ${hoy}. Usa esta fecha como referencia para calcular disponibilidad, cancelaciones y plazos.${userName ? `\nEl huésped se llama *${userName}*.` : ''}${sessionLines.length ? '\n' + sessionLines.join('\n') : ''}`;
 
   // El prompt estático se cachea (bloque 1); la fecha/nombre cambian pero son pequeños (bloque 2).
   const systemBlocks = [
@@ -855,7 +985,7 @@ export async function handleMessage(userId, userText, userName = '') {
       console.log(`🤖 → ${text.slice(0, 100)}...`);
       return {
         text: finalText,
-        requiresHumanIntervention: needsHumanIntervention(userText, finalText)
+        requiresHumanIntervention: needsHumanIntervention(userText, finalText), requiresTourNotification: wantsTourBooking(userText, finalText)
       };
     }
 
@@ -868,12 +998,12 @@ export async function handleMessage(userId, userText, userName = '') {
         if (partialText) {
           console.warn('⚠️ Claude: tool_use sin bloques; usando texto parcial como respuesta.');
           effectiveHistory.push({ role: 'assistant', content: partialText });
-          return { text: partialText, requiresHumanIntervention: needsHumanIntervention(userText, partialText) };
+          return { text: partialText, requiresHumanIntervention: needsHumanIntervention(userText, partialText), requiresTourNotification: wantsTourBooking(userText, partialText) };
         }
         console.warn('⚠️ Claude devolvió stop_reason=tool_use pero sin bloques tool_use; se omite ese turno.');
         const fallback = 'Hubo un problema temporal al procesar tu solicitud. ¿Me lo repites por favor? 🌿';
         effectiveHistory.push({ role: 'assistant', content: fallback });
-        return { text: fallback, requiresHumanIntervention: false };
+        return { text: fallback, requiresHumanIntervention: false, requiresTourNotification: false };
       }
       messages.push({ role: 'assistant', content: response.content });
 
@@ -887,6 +1017,18 @@ export async function handleMessage(userId, userText, userName = '') {
       }
     }
   }
+}
+
+// ── Resumen de conversación para escalación humana ──────────
+
+export function getConversationSummary(userId, maxMessages = 6) {
+  const history = conversations.get(userId) || [];
+  const recent = history.slice(-maxMessages);
+  if (!recent.length) return '';
+  return recent
+    .filter(m => m.role && typeof m.content === 'string')
+    .map(m => `${m.role === 'user' ? '👤' : '🤖'} ${String(m.content).slice(0, 120)}`)
+    .join('\n');
 }
 
 // ── Manejar comprobante de pago (imagen) ───────────────────

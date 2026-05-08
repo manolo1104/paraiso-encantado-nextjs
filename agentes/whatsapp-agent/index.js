@@ -15,7 +15,7 @@ import 'dotenv/config';
 import pkg from 'whatsapp-web.js';
 const { Client, LocalAuth, MessageMedia } = pkg;
 import qrcode from 'qrcode-terminal';
-import { handleMessage, handlePaymentProof, getStats, addToHistory } from './claude-handler.js';
+import { handleMessage, handlePaymentProof, getStats, addToHistory, getConversationSummary } from './claude-handler.js';
 import { confirmPayment, getByUser } from './reservations.js';
 import { appendConfirmedReservationToSheet, updateRoomStatusInDisponibilidad } from './google-sheets.js';
 import { readFile } from 'node:fs/promises';
@@ -200,27 +200,29 @@ function trackBotReply(ms = 5000) {
 
 function markRecentBotOutgoing(chatId, ms = 20000) {
   if (!chatId) return;
-  recentBotOutgoingByChat.set(chatId, Date.now() + ms);
+  recentBotOutgoingByChat.set(normalizeChatId(chatId), Date.now() + ms);
 }
 
 function isRecentBotOutgoing(chatId) {
   if (!chatId) return false;
-  const expiresAt = recentBotOutgoingByChat.get(chatId);
+  const key = normalizeChatId(chatId);
+  const expiresAt = recentBotOutgoingByChat.get(key);
   if (!expiresAt) return false;
   if (Date.now() > expiresAt) {
-    recentBotOutgoingByChat.delete(chatId);
+    recentBotOutgoingByChat.delete(key);
     return false;
   }
   return true;
 }
 
 function pauseBotForChat(chatId) {
-  if (pausedChats.has(chatId)) return; // ya estaba pausado, evitar spam de logs
+  const key = normalizeChatId(chatId);
+  if (pausedChats.has(key)) return; // ya estaba pausado, evitar spam de logs
   const startedAt = Date.now();
   const expiresAt = startedAt + HUMAN_TAKEOVER_MS;
-  pausedChats.set(chatId, { expiresAt, startedAt });
+  pausedChats.set(key, { expiresAt, startedAt });
   const until = new Date(expiresAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' });
-  console.log(`⏸️  Bot pausado para ${chatId} — humano tomó la conversación hasta las ${until}`);
+  console.log(`⏸️  Bot pausado para ${key} — humano tomó la conversación hasta las ${until}`);
 }
 
 /**
@@ -229,10 +231,11 @@ function pauseBotForChat(chatId) {
  * { paused: false, justResumed: true, startedAt, resumedAt } si acaba de expirar.
  */
 function checkBotPause(chatId) {
-  const info = pausedChats.get(chatId);
+  const key = normalizeChatId(chatId);
+  const info = pausedChats.get(key);
   if (!info) return { paused: false };
   if (Date.now() > info.expiresAt) {
-    pausedChats.delete(chatId);
+    pausedChats.delete(key);
     return { paused: false, justResumed: true, startedAt: info.startedAt, resumedAt: Date.now() };
   }
   return { paused: true };
@@ -263,6 +266,14 @@ function digitsOnly(value = '') {
 
 function extractDigitsFromJid(jid = '') {
   return digitsOnly(String(jid).split('@')[0] || '');
+}
+
+// Normaliza cualquier formato de chatId (@c.us, @lid, número puro) a dígitos@c.us
+// para evitar mismatch entre el evento message_create (usa @lid) y message (usa @c.us)
+function normalizeChatId(chatId = '') {
+  if (!chatId) return chatId;
+  const digits = extractDigitsFromJid(chatId);
+  return digits ? `${digits}@c.us` : chatId;
 }
 
 function normalizeMxCandidates(rawNumber = '') {
@@ -317,6 +328,12 @@ const BLOCKED_INCOMING_NUMBERS = (() => {
 const CONTROL_HOTEL_GROUP_NAME = process.env.CONTROL_HOTEL_GROUP_NAME || 'Control Hotel';
 const CONTROL_HOTEL_GROUP_ID = process.env.CONTROL_HOTEL_GROUP_ID || '';
 const HUMAN_ESCALATION_ALERT_NUMBER = (process.env.HUMAN_ESCALATION_ALERT_NUMBER || '524891007601').replace(/\D/g, '');
+const TOUR_AGENT_NUMBER = (process.env.TOUR_AGENT_NUMBER || '524891251458').replace(/\D/g, '');
+const BREAKFAST_AGENT_NUMBER = (process.env.BREAKFAST_AGENT_NUMBER || '524891255181').replace(/\D/g, '');
+
+// Evitar notificar dos veces por conversación en la misma sesión
+const tourNotifiedChats = new Set();
+const breakfastNotifiedChats = new Set();
 
 function isBlockedIncomingSender(msg) {
   if (!msg || msg.fromMe) return false;
@@ -477,13 +494,13 @@ async function tagChatForHumanIntervention(client, chat, msg, userName, botText)
   }
 
   // 2) Aviso interno al equipo del hotel para seguimiento humano
-  const preview = (botText || '').slice(0, 220);
+  const conversationSummary = getConversationSummary(chatId, 6);
   const escalationMessage =
-    `🏷️ *${tagName}*\n\n` +
-    `Cliente: ${userName || 'Sin nombre'}\n` +
-    `WhatsApp: ${chatId.split('@')[0]}\n` +
-    `Chat ID: ${chatId}\n\n` +
-    `Última respuesta del bot:\n${preview}`;
+    `🏷️ *ATENCIÓN HUMANA REQUERIDA*\n\n` +
+    `👤 *${userName || 'Sin nombre'}*\n` +
+    `📱 ${chatId.split('@')[0]}\n\n` +
+    `📋 *Últimos mensajes:*\n${conversationSummary || '(sin historial disponible)'}\n\n` +
+    `💬 *Bot respondió:* ${(botText || '').slice(0, 160)}`;
 
   const recipients = new Set();
   if (process.env.HOTEL_WHATSAPP_NUMBER) recipients.add(`${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`);
@@ -578,6 +595,27 @@ client.on('disconnected', (reason) => {
 
 async function processConfirmarCommand(msg) {
   const body = (msg.body || '').trim();
+
+  // /continua +52XXXXXXXXXX — reactivar bot para ese número antes de que expire la hora
+  if (/^\/(continua|reanudar|activar)\b/i.test(body)) {
+    const numMatch = body.match(/\+?1?52?(\d{10})/);
+    const rawMatch = body.match(/\+?(\d{10,13})/);
+    const digits = (numMatch?.[0] || rawMatch?.[0] || '').replace(/\D/g, '');
+    if (!digits) {
+      await msg.reply('Uso: /continua +52XXXXXXXXXX');
+      return true;
+    }
+    const chatId = normalizeChatId(digits);
+    if (pausedChats.has(chatId)) {
+      pausedChats.delete(chatId);
+      await msg.reply(`▶️ Bot reactivado para ${digits}. El agente retomará la conversación.`);
+      console.log(`▶️  Bot reactivado manualmente para ${chatId}`);
+    } else {
+      await msg.reply(`ℹ️ El bot no estaba pausado para ${digits}.`);
+    }
+    return true;
+  }
+
   if (!/^\/(reservar|confirmar)\s+/i.test(body)) return false;
 
   const parts = body.split(/\s+/);
@@ -735,6 +773,13 @@ client.on('message', async (msg) => {
   if (msg.fromMe) return;
   if (msg.isStatus) return;
 
+  // Filtrar mensajes que son IDs internos de WhatsApp (@lid, @c.us) enviados como texto
+  // Esto ocurre cuando WhatsApp Web filtra eventos del sistema como mensajes
+  if (/^\d{10,25}@(lid|c\.us|g\.us)$/.test((msg.body || '').trim())) {
+    console.log(`🚫 Mensaje de sistema ignorado (JID interno): ${msg.body}`);
+    return;
+  }
+
   // Detectar y descartar spam/broadcasts de terceros
   if (isSpamOrBroadcast(msg.body)) {
     console.log(`🚫 Spam detectado y ignorado: ${msg.from}`);
@@ -742,9 +787,18 @@ client.on('message', async (msg) => {
   }
 
   // Grupos: solo responder si mencionan al bot (@)
-  // Para activar en grupos, cambia esto a: if (msg.hasMedia) return;
   const chat = await msg.getChat();
   if (chat.isGroup) return; // Solo chats individuales por ahora
+
+  // Solo atender números desconocidos (nuevos prospectos)
+  // No intervenir en chats con contactos ya guardados en la agenda del teléfono
+  const contact = await msg.getContact();
+  if (contact.isMyContact) {
+    // Registrar el mensaje pero no responder automáticamente
+    if (msg.body?.trim()) addToHistory(msg.from, 'user', msg.body.trim());
+    console.log(`📋 Contacto conocido ${contact.pushname || msg.from} — sin respuesta automática`);
+    return;
+  }
 
   // Primer mensaje del chat en esta sesión: recuperar historial previo
   await hydratePreviousConversationIfNeeded(msg, chat);
@@ -759,8 +813,6 @@ client.on('message', async (msg) => {
     console.log(`⏸️  Mensaje guardado en historial (bot pausado): ${msg.from}`);
     return;
   }
-
-  const contact = await msg.getContact();
   const userName = contact.pushname || contact.name || '';
 
   // Si el bot acaba de retomar la conversación tras intervención humana,
@@ -825,6 +877,8 @@ client.on('message', async (msg) => {
     const requiresHumanIntervention = typeof result === 'object' && result?.requiresHumanIntervention;
 
     if (responseText) {
+      // Pausa natural de 1 segundo antes de responder
+      await new Promise(r => setTimeout(r, 1000));
       trackBotReply();
       markRecentBotOutgoing(msg.from);
       await safeReply(client, msg, chat, responseText);
@@ -854,6 +908,52 @@ client.on('message', async (msg) => {
       if (requiresHumanIntervention) {
         await tagChatForHumanIntervention(client, chat, msg, userName, responseText);
       }
+
+      // Notificación de desayunos grupales
+      const bodyLower = normalizeText(msg.body || '');
+      const responseLower = normalizeText(responseText || '');
+      const looksBreakfastInterest =
+        (bodyLower.includes('desayuno') || bodyLower.includes('desayunos') || bodyLower.includes('breakfast')) &&
+        (bodyLower.includes('grupo') || bodyLower.includes('somos') || bodyLower.includes('personas') ||
+         responseLower.includes('desayuno') || responseLower.includes('papan'));
+
+      if (looksBreakfastInterest && !breakfastNotifiedChats.has(msg.from)) {
+        breakfastNotifiedChats.add(msg.from);
+        setTimeout(() => breakfastNotifiedChats.delete(msg.from), 4 * 60 * 60 * 1000);
+        const clientPhone = msg.from.split('@')[0];
+        const breakfastAlert =
+          `🍳 *Grupo interesado en desayunos*\n\n` +
+          `👤 *${userName || 'Sin nombre'}*\n` +
+          `📱 wa.me/${clientPhone}\n\n` +
+          `Están preguntando por el servicio de desayunos grupales en el Papán Huasteco. 🌿`;
+        try {
+          markRecentBotOutgoing(`${BREAKFAST_AGENT_NUMBER}@c.us`);
+          await client.sendMessage(`${BREAKFAST_AGENT_NUMBER}@c.us`, breakfastAlert);
+          console.log(`🍳 Notificación de desayunos enviada a ${BREAKFAST_AGENT_NUMBER}`);
+        } catch (brkErr) {
+          console.warn('⚠️ No se pudo notificar al coordinador de desayunos:', String(brkErr?.message || '').split('\n')[0]);
+        }
+      }
+
+      const requiresTourNotification = typeof result === 'object' && result?.requiresTourNotification;
+      if (requiresTourNotification && !tourNotifiedChats.has(msg.from)) {
+        tourNotifiedChats.add(msg.from);
+        // Limpiar después de 2 horas para permitir notificar de nuevo si retoma el tema
+        setTimeout(() => tourNotifiedChats.delete(msg.from), 2 * 60 * 60 * 1000);
+        const clientPhone = msg.from.split('@')[0];
+        const tourAlert =
+          `🌊 *Cliente interesado en tours*\n\n` +
+          `👤 *${userName || 'Sin nombre'}*\n` +
+          `📱 wa.me/${clientPhone}\n\n` +
+          `Está hablando con el agente del hotel. Puedes tomar la conversación para ayudarle a reservar su tour. 🌿`;
+        try {
+          markRecentBotOutgoing(`${TOUR_AGENT_NUMBER}@c.us`);
+          await client.sendMessage(`${TOUR_AGENT_NUMBER}@c.us`, tourAlert);
+          console.log(`🌊 Notificación de tour enviada a ${TOUR_AGENT_NUMBER}`);
+        } catch (tourErr) {
+          console.warn('⚠️ No se pudo notificar al agente de tours:', String(tourErr?.message || '').split('\n')[0]);
+        }
+      }
     }
 
     const textNorm = normalizeText(String(responseText || ''));
@@ -865,6 +965,52 @@ client.on('message', async (msg) => {
 
     if (quoteWasGenerated) {
       scheduleAvailabilityFollowup(client, msg.from, userName, 'cart_abandoned');
+
+      // Notificar a Control Hotel con los detalles de la cotización
+      const folioMatch = String(responseText || '').match(/\bWA-[A-Z0-9]+\b/i);
+      const folio = folioMatch?.[0];
+      if (folio) {
+        const pending = getByUser(msg.from);
+        const clientPhone = msg.from.split('@')[0];
+        const rooms = Array.isArray(pending?.rooms) && pending.rooms.length
+          ? pending.rooms.map(r => `· ${r.name} (${r.guests} personas) — $${Number(r.price).toLocaleString('es-MX')} MXN`).join('\n')
+          : '(ver folio)';
+        const quoteAlert =
+          `📋 *Nueva cotización generada*\n\n` +
+          `👤 *${userName || pending?.userName || 'Sin nombre'}*\n` +
+          `📱 wa.me/${clientPhone}\n` +
+          `🧾 *Folio:* ${folio}\n` +
+          `📅 Check-in: ${pending?.checkin || '—'}\n` +
+          `📅 Check-out: ${pending?.checkout || '—'}\n` +
+          `🌙 Noches: ${pending?.nights || '—'}\n\n` +
+          `🏨 *Habitaciones:*\n${rooms}\n\n` +
+          `💰 *Total: $${Number(pending?.totalPrice || 0).toLocaleString('es-MX')} MXN*\n` +
+          `💳 Anticipo: $${Number(pending?.depositAmount || 0).toLocaleString('es-MX')} MXN`;
+
+        // Enviar al grupo Control Hotel
+        const sendQuoteAlert = async (to) => {
+          try {
+            markRecentBotOutgoing(to);
+            await client.sendMessage(to, quoteAlert);
+          } catch (e) {
+            console.warn(`⚠️ No se pudo enviar alerta de cotización a ${to}:`, String(e?.message || '').split('\n')[0]);
+          }
+        };
+
+        if (CONTROL_HOTEL_GROUP_ID) {
+          const gid = CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`;
+          await sendQuoteAlert(gid);
+        } else {
+          try {
+            const chats = await client.getChats();
+            const controlGroup = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
+            if (controlGroup?.id?._serialized) await sendQuoteAlert(controlGroup.id._serialized);
+          } catch (ge) {
+            console.warn('⚠️ No se pudo encontrar grupo Control Hotel para alerta de cotización.');
+          }
+        }
+        console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
+      }
     } else if (noAvailabilityFound) {
       scheduleAvailabilityFollowup(client, msg.from, userName, 'no_availability_found');
     } else if (looksAvailabilityRequest(msg.body || '')) {
@@ -886,6 +1032,55 @@ setInterval(() => {
     console.log(`\n📊 [${new Date().toLocaleTimeString('es-MX')}] Conversaciones activas: ${stats.active_conversations}`);
   }
 }, 60 * 60 * 1000);
+
+// ── Manejo global de errores de Puppeteer/WhatsApp ───────
+
+let isRestarting = false;
+
+async function safeRestart(reason = '') {
+  if (isRestarting) return;
+  isRestarting = true;
+  console.warn(`\n⚠️  ${reason}`);
+  console.log('🔄  Reiniciando cliente WhatsApp en 8 segundos...');
+  try { await client.destroy(); } catch { /* ignorar errores al destruir */ }
+  setTimeout(() => {
+    isRestarting = false;
+    client.initialize().catch(e => {
+      console.error('❌ Error al reinicializar:', e.message);
+      isRestarting = false;
+    });
+  }, 8000);
+}
+
+process.on('unhandledRejection', (reason) => {
+  const msg = String(reason?.message || reason || '');
+  if (
+    msg.includes('Execution context was destroyed') ||
+    msg.includes('Navigation') ||
+    msg.includes('Protocol error') ||
+    msg.includes('Target closed') ||
+    msg.includes('Session closed')
+  ) {
+    safeRestart(`Error de Puppeteer: ${msg.split('\n')[0]}`);
+  } else {
+    console.error('❌ Promesa rechazada no manejada:', msg.split('\n')[0]);
+  }
+});
+
+process.on('uncaughtException', (err) => {
+  const msg = String(err?.message || '');
+  if (
+    msg.includes('Execution context was destroyed') ||
+    msg.includes('Protocol error') ||
+    msg.includes('Target closed') ||
+    msg.includes('Session closed')
+  ) {
+    safeRestart(`Excepción de Puppeteer: ${msg.split('\n')[0]}`);
+  } else {
+    console.error('❌ Excepción no capturada:', msg);
+    process.exit(1);
+  }
+});
 
 // ── Iniciar ───────────────────────────────────────────────
 

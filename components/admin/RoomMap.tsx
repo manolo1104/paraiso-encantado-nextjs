@@ -15,10 +15,10 @@ interface RoomData {
 }
 
 const STATUS_CONFIG: Record<RoomStatusType, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  DISPONIBLE:   { label: 'Disponible',         color: '#4ade80', bg: 'rgba(74,222,128,0.12)',  icon: <CheckCircle size={14} /> },
-  OCUPADA:      { label: 'Ocupada',             color: '#facc15', bg: 'rgba(250,204,21,0.12)',  icon: <BedDouble size={14} /> },
-  MANTENIMIENTO:{ label: 'Mantenimiento',       color: '#f87171', bg: 'rgba(248,113,113,0.12)', icon: <AlertTriangle size={14} /> },
-  LIMPIEZA:     { label: 'Limpieza pendiente',  color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  icon: <Sparkles size={14} /> },
+  DISPONIBLE:   { label: 'Disponible',         color: '#4ade80', bg: 'rgba(74,222,128,0.22)',  icon: <CheckCircle size={14} /> },
+  OCUPADA:      { label: 'Ocupada',             color: '#facc15', bg: 'rgba(250,204,21,0.22)',  icon: <BedDouble size={14} /> },
+  MANTENIMIENTO:{ label: 'Mantenimiento',       color: '#f87171', bg: 'rgba(248,113,113,0.28)', icon: <AlertTriangle size={14} /> },
+  LIMPIEZA:     { label: 'Limpieza pendiente',  color: '#60a5fa', bg: 'rgba(96,165,250,0.22)',  icon: <Sparkles size={14} /> },
 };
 
 interface EditModal {
@@ -43,7 +43,11 @@ export default function RoomMap() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
+  }, [load]);
 
   async function saveStatus() {
     if (!editModal || saving) return;
@@ -100,7 +104,7 @@ export default function RoomMap() {
             <div
               key={room.suite}
               className={styles.card}
-              style={{ background: cfg.bg, borderColor: cfg.color + '55' }}
+              style={{ background: cfg.bg, borderColor: cfg.color + 'cc' }}
               onClick={() => setEditModal({ room, estado: room.estado, notas: room.notas })}
             >
               <div className={styles.cardHeader}>

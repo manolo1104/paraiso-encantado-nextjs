@@ -61,3 +61,35 @@
 .filterField input:focus, .filterField select:focus { border-color: var(--forest); }
 .clearBtn { background: none; border: 1px solid #d4cec7; border-radius: 4px; padding: 6px 14px; font-size: 0.78rem; font-family: var(--font-jost), sans-serif; color: var(--clay); cursor: pointer; }
 .clearBtn:hover { border-color: var(--forest); color: var(--forest); }
+
+/* Multi-habitación */
+.roomsSection { display: flex; flex-direction: column; gap: 8px; border: 1px solid #e4ddd3; border-radius: 6px; padding: 12px 14px; }
+.roomsSectionHeader { display: flex; align-items: center; justify-content: space-between; }
+.roomsSectionLabel { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); }
+.addRoomBtn { display: flex; align-items: center; gap: 5px; background: none; border: 1px dashed #c9b99a; border-radius: 4px; padding: 5px 10px; font-size: 0.75rem; color: var(--clay); cursor: pointer; font-family: var(--font-jost), sans-serif; }
+.addRoomBtn:hover { border-color: var(--forest); color: var(--forest); }
+.roomRow { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+.roomRowSelect { padding: 8px 10px; border: 1px solid #d4cec7; border-radius: 4px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; background: #fff; color: var(--ink); outline: none; }
+.roomRowSelect:focus { border-color: var(--forest); }
+.removeRoomBtn { background: none; border: 1px solid #e4ddd3; border-radius: 4px; padding: 7px; cursor: pointer; color: #c9484a; display: flex; align-items: center; }
+.removeRoomBtn:hover { background: #fdf0f0; border-color: #c9484a; }
+
+/* Precio editable */
+.priceBreakdown { background: var(--parch); border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.priceBreakdownRow { display: flex; justify-content: space-between; font-size: 0.83rem; color: var(--clay); }
+.priceTotalRow { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #d4cec7; padding-top: 10px; gap: 12px; }
+.priceTotalLabel { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); white-space: nowrap; }
+.priceEditRow { display: flex; align-items: center; gap: 8px; }
+.priceInput { padding: 8px 12px; border: 1px solid #d4cec7; border-radius: 4px; font-size: 1rem; font-weight: 700; color: var(--forest); font-family: var(--font-jost), sans-serif; background: #fff; outline: none; width: 140px; text-align: right; }
+.priceInput:focus { border-color: var(--forest); }
+.resetPriceBtn { background: none; border: 1px solid var(--sage); border-radius: 4px; padding: 7px 10px; font-size: 0.75rem; color: var(--sage); cursor: pointer; white-space: nowrap; font-family: var(--font-jost), sans-serif; }
+.resetPriceBtn:hover { background: var(--parch); }
+
+/* Promo 3x2 */
+.promoRow { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.promoBtn { display: flex; align-items: center; gap: 6px; border: 1px dashed #c9a97a; border-radius: 4px; padding: 7px 14px; font-size: 0.8rem; color: #8a6830; background: #fdf9f0; cursor: pointer; font-family: var(--font-jost), sans-serif; transition: all 0.15s; white-space: nowrap; }
+.promoBtn:hover:not(:disabled) { border-color: #8a6830; background: #fdf3e0; }
+.promoBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.promoBtnActive { border-style: solid; border-color: #2d7a34; background: #f0f7f0; color: #2d7a34; font-weight: 600; }
+.promoBtnActive:hover:not(:disabled) { background: #e6f4e8; }
+.promoSaving { font-size: 0.78rem; color: #2d7a34; font-weight: 600; }
