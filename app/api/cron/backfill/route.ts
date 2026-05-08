@@ -133,16 +133,16 @@ export async function GET(req: NextRequest) {
         buildReturnOfferEmailHtml({ customerName: b.cliente, confirmacion: b.confirmacion, promoExpiry: promoExpiry() }));
     }
 
-    // Pre-llegada -3: checkin es en 3+ días (futuro)
+    // Pre-llegada -3: SOLO si hoy ES exactamente el día -3 antes del checkin
     const pre3Date = shiftDate(checkin, -3);
-    if (pre3Date >= today && checkin > today) {
+    if (pre3Date === today) {
       await handle('pre_day3', `checkin el ${checkin}`,
         `${first}, ¿una cena especial en El Papán Huasteco?`,
         buildRestaurantEmailHtml({ customerName: b.cliente, confirmacion: b.confirmacion, checkin, checkinFormatted: formatDateEs(checkin) }));
     }
 
-    // Pre-llegada: día del checkin (futuro o hoy)
-    if (checkin >= today) {
+    // Pre-llegada: SOLO si hoy ES el día del checkin
+    if (checkin === today) {
       const attachments = welcomePdf
         ? [{ filename: 'Guia-de-Bienvenida-Paraiso-Encantado.pdf', content: welcomePdf }]
         : undefined;
