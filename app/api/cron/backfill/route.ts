@@ -48,7 +48,10 @@ function promoExpiry(): string {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get('secret');
-  const dryRun = searchParams.get('dryRun') !== 'false'; // por defecto: simulación
+  const dryRun = searchParams.get('dryRun') !== 'false';
+  const skipEmails = new Set(
+    (searchParams.get('skipEmails') || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+  );
 
   if (!secret || secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -72,6 +75,7 @@ export async function GET(req: NextRequest) {
     if (b.estado === 'CANCELADA') continue;
     if (!b.email || b.email === 'N/A') continue;
     if (!b.checkin || !b.checkout) continue;
+    if (skipEmails.has(b.email.toLowerCase())) continue;
 
     const checkin = b.checkin;
     const checkout = b.checkout;
