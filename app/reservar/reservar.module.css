@@ -623,6 +623,16 @@
 
 .cartMinors { color: #8a9a8a; }
 
+.guestDistNote {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  color: #6a7a6a;
+  padding: 4px 2px 0;
+}
+
 .cartItemPrice {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.88rem;

@@ -73,11 +73,13 @@ export function getRoomBasePrice(room: BookingRoom, guests: number): number {
   return room.price;
 }
 
-/** Mon–Thu get -$300 MXN/night (same logic as motor) */
+/** Mon–Thu get -$300 MXN/night; from Jun 15, 2026 onwards: same price all week */
 export function getRoomNightPrice(room: BookingRoom, guests: number, dateStr: string): number {
   const base = getRoomBasePrice(room, guests);
   const d = new Date(`${dateStr}T12:00:00`);
   if (isNaN(d.getTime())) return base;
+  // From June 15, 2026: no weekday discount — weekend prices apply all week
+  if (d >= new Date('2026-06-15T12:00:00')) return base;
   const day = d.getDay(); // 0=Sun, 1=Mon … 4=Thu
   const isWeekdayDiscount = day >= 1 && day <= 4;
   return isWeekdayDiscount ? Math.max(0, base - 300) : base;

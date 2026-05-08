@@ -391,9 +391,25 @@ function ReservarPageInner() {
 
   function addToCart(room: BookingRoom) {
     if (cart.find(c => c.roomId === room.id)) return;
-    setCart(prev => [...prev, { roomId: room.id, guestCount: getRoomGuests(room.id) }]);
+    // Assign remaining unassigned adults to this room
+    const assignedSoFar = cart.reduce((sum, item) => sum + item.guestCount, 0);
+    const remaining = Math.max(1, adults - assignedSoFar);
+    const guestCount = Math.min(remaining, room.maxGuests);
+    setCart(prev => [...prev, { roomId: room.id, guestCount }]);
     // Usuario eligió habitación — ya no es abandono
     if (cartAbandonTimer.current) { clearTimeout(cartAbandonTimer.current); cartAbandonTimer.current = null; }
+  }
+
+  function updateCartGuestCount(roomId: number, delta: number) {
+    const next = cart.map(item => {
+      if (item.roomId !== roomId) return item;
+      const r = BOOKING_ROOMS.find(r => r.id === roomId)!;
+      return { ...item, guestCount: Math.max(1, Math.min(r.maxGuests, item.guestCount + delta)) };
+    });
+    setCart(next);
+    if (promoCode) {
+      setPromoDiscount(calcPromoDiscount(promoCode, next, checkin, checkout, nights));
+    }
   }
 
   function removeFromCart(roomId: number) {
@@ -717,13 +733,24 @@ function ReservarPageInner() {
                         </button>
                       </div>
                       <div className={styles.cartItemGuests}>
+                        <button onClick={() => updateCartGuestCount(item.roomId, -1)} aria-label="Menos adultos" disabled={item.guestCount <= 1}><Minus size={11} /></button>
                         <span>{item.guestCount} adulto{item.guestCount !== 1 ? 's' : ''}</span>
+                        <button onClick={() => updateCartGuestCount(item.roomId, 1)} aria-label="Más adultos" disabled={item.guestCount >= room.maxGuests}><Plus size={11} /></button>
                         {children > 0 && <span className={styles.cartMinors}>· {children} menor{children > 1 ? 'es' : ''}</span>}
                       </div>
                       <div className={styles.cartItemPrice}>{formatMXN(roomTotal)}</div>
                     </div>
                   );
                 })}
+                {cart.length > 1 && (() => {
+                  const assigned = cart.reduce((s, i) => s + i.guestCount, 0);
+                  return (
+                    <div className={styles.guestDistNote}>
+                      <Users size={11} strokeWidth={1.5} />
+                      <span>{assigned} de {adults} adulto{adults !== 1 ? 's' : ''} asignado{assigned !== 1 ? 's' : ''}</span>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
