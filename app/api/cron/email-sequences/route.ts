@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { getAllBookings } from '@/lib/admin/sheets-admin';
 import { getEmailsSent, markEmailSent, type EmailSequenceType } from '@/lib/email-tracking';
 import {
@@ -64,6 +66,16 @@ export async function GET(req: NextRequest) {
     getEmailsSent(),
   ]);
 
+  // Cargar PDF de guía de bienvenida (adjunto para el email del día de checkin)
+  let welcomePdf: Buffer | null = null;
+  try {
+    welcomePdf = Buffer.from(
+      await readFile(path.join(process.cwd(), 'public', 'guia-bienvenida.pdf'))
+    );
+  } catch {
+    console.warn('[cron] No se pudo cargar guia-bienvenida.pdf — se enviará sin adjunto');
+  }
+
   const results = { sent: 0, skipped: 0, errors: 0, details: [] as string[] };
 
   async function send(
@@ -72,12 +84,13 @@ export async function GET(req: NextRequest) {
     emailType: EmailSequenceType,
     subject: string,
     html: string,
+    attachments?: { filename: string; content: Buffer }[],
   ) {
     const key = `${confirmacion}:${emailType}`;
     if (sentSet.has(key)) { results.skipped++; return; }
 
     try {
-      const res = await resend.emails.send({ from: FROM, to: email, subject, html });
+      const res = await resend.emails.send({ from: FROM, to: email, subject, html, attachments });
       const resendId = res.data?.id || '';
       await markEmailSent({
         confirmacion, emailType,
@@ -120,6 +133,9 @@ export async function GET(req: NextRequest) {
 
     // ── Pre-llegada: día del checkin ────────────────────────────────────
     if (checkin === today) {
+      const attachments = welcomePdf
+        ? [{ filename: 'Guia-de-Bienvenida-Paraiso-Encantado.pdf', content: welcomePdf }]
+        : undefined;
       await send(
         b.confirmacion, b.email, 'pre_checkin',
         `¡Hoy es el día, ${first}! — Tu suite te espera`,
@@ -127,6 +143,7 @@ export async function GET(req: NextRequest) {
           customerName: b.cliente, confirmacion: b.confirmacion,
           checkin, habitaciones: b.habitaciones,
         }),
+        attachments,
       );
     }
 
