@@ -1,0 +1,171 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { getAllBookings } from '@/lib/admin/sheets-admin';
+import { getEmailsSent, markEmailSent, type EmailSequenceType } from '@/lib/email-tracking';
+import {
+  buildSurveyEmailHtml,
+  buildReviewEmailHtml,
+  buildReturnOfferEmailHtml,
+  buildRestaurantEmailHtml,
+  buildWelcomeGuideEmailHtml,
+} from '@/lib/email-sequences';
+
+export const dynamic = 'force-dynamic';
+
+const FROM = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
+// Lookback máximo: no enviar post-stay a reservas con más de 45 días de antigüedad
+const MAX_LOOKBACK_DAYS = 45;
+
+function todayMX(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+}
+
+function shiftDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function formatDateEs(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  const f = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+  return f.charAt(0).toUpperCase() + f.slice(1);
+}
+
+function addDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function promoExpiry(): string {
+  return addDays(new Date(), 30).toLocaleDateString('es-MX', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Mexico_City',
+  });
+}
+
+export async function GET(req: NextRequest) {
+  // Autenticación: Railway envía Authorization: Bearer $CRON_SECRET
+  const auth = req.headers.get('authorization');
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const today = todayMX();
+  const maxPastDate = shiftDate(today, -MAX_LOOKBACK_DAYS);
+
+  const [bookings, sentSet] = await Promise.all([
+    getAllBookings(),
+    getEmailsSent(),
+  ]);
+
+  const results = { sent: 0, skipped: 0, errors: 0, details: [] as string[] };
+
+  async function send(
+    confirmacion: string,
+    email: string,
+    emailType: EmailSequenceType,
+    subject: string,
+    html: string,
+  ) {
+    const key = `${confirmacion}:${emailType}`;
+    if (sentSet.has(key)) { results.skipped++; return; }
+
+    try {
+      const res = await resend.emails.send({ from: FROM, to: email, subject, html });
+      const resendId = res.data?.id || '';
+      await markEmailSent({
+        confirmacion, emailType,
+        enviadoAt: new Date().toISOString(),
+        emailDestino: email,
+        resendId,
+      });
+      results.sent++;
+      results.details.push(`✓ ${emailType} → ${email} (${confirmacion})`);
+    } catch (e: any) {
+      results.errors++;
+      results.details.push(`✗ ${emailType} → ${email}: ${e.message}`);
+    }
+  }
+
+  for (const b of bookings) {
+    if (b.estado === 'CANCELADA') continue;
+    if (!b.email || b.email === 'N/A') continue;
+    if (!b.checkin || !b.checkout) continue;
+
+    const checkin  = b.checkin;  // YYYY-MM-DD
+    const checkout = b.checkout; // YYYY-MM-DD
+
+    // No procesar reservas demasiado antiguas
+    if (checkout < maxPastDate) continue;
+
+    const first = b.cliente.trim().split(' ')[0];
+
+    // ── Pre-llegada: -3 días antes del checkin ──────────────────────────
+    if (shiftDate(checkin, -3) === today) {
+      await send(
+        b.confirmacion, b.email, 'pre_day3',
+        `${first}, ¿una cena especial en El Papán Huasteco?`,
+        buildRestaurantEmailHtml({
+          customerName: b.cliente, confirmacion: b.confirmacion,
+          checkin, checkinFormatted: formatDateEs(checkin),
+        }),
+      );
+    }
+
+    // ── Pre-llegada: día del checkin ────────────────────────────────────
+    if (checkin === today) {
+      await send(
+        b.confirmacion, b.email, 'pre_checkin',
+        `¡Hoy es el día, ${first}! — Tu suite te espera`,
+        buildWelcomeGuideEmailHtml({
+          customerName: b.cliente, confirmacion: b.confirmacion,
+          checkin, habitaciones: b.habitaciones,
+        }),
+      );
+    }
+
+    // ── Post-estancia: +1 día ────────────────────────────────────────────
+    if (shiftDate(checkout, 1) === today) {
+      await send(
+        b.confirmacion, b.email, 'post_day1',
+        `${first}, ¿cómo fue tu estancia en Paraíso Encantado?`,
+        buildSurveyEmailHtml({
+          customerName: b.cliente, confirmacion: b.confirmacion,
+          checkin, checkout, habitaciones: b.habitaciones,
+        }),
+      );
+    }
+
+    // ── Post-estancia: +7 días ───────────────────────────────────────────
+    if (shiftDate(checkout, 7) === today) {
+      await send(
+        b.confirmacion, b.email, 'post_day7',
+        `${first}, ¿nos dejas una reseña en Google?`,
+        buildReviewEmailHtml({
+          customerName: b.cliente, confirmacion: b.confirmacion, checkin,
+        }),
+      );
+    }
+
+    // ── Post-estancia: +30 días ──────────────────────────────────────────
+    if (shiftDate(checkout, 30) === today) {
+      await send(
+        b.confirmacion, b.email, 'post_day30',
+        `${first}, tu paraíso te espera — 10% de descuento exclusivo`,
+        buildReturnOfferEmailHtml({
+          customerName: b.cliente, confirmacion: b.confirmacion,
+          promoExpiry: promoExpiry(),
+        }),
+      );
+    }
+  }
+
+  console.log(`[cron/email-sequences] ${today} → sent:${results.sent} skipped:${results.skipped} errors:${results.errors}`);
+  return NextResponse.json({ ok: true, date: today, ...results });
+}
