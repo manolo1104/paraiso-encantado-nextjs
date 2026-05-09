@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -30,6 +30,7 @@ const PROMO_CODE = 'PARAISO10';
 
 // ── Exit-intent popup ─────────────────────────────────────
 function ExitIntentPopup({ sessionId }: { sessionId: string }) {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -38,6 +39,7 @@ function ExitIntentPopup({ sessionId }: { sessionId: string }) {
   const fired = useRef(false);
 
   useEffect(() => {
+    if (pathname.includes('/checkout')) return;
     function trigger() {
       if (fired.current) return;
       fired.current = true;
@@ -69,7 +71,7 @@ function ExitIntentPopup({ sessionId }: { sessionId: string }) {
       document.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [sessionId]);
+  }, [sessionId, pathname]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -424,8 +426,21 @@ export default function CheckoutPage() {
 
     trackEvent('CHECKOUT_STEP_2', { rooms: state.cart.length, checkin: state.checkin, checkout: state.checkout });
 
-    // Cleanup: remove block if user leaves
+    // CART_ABANDON: si el usuario llega a checkout pero no completa el pago en 180s
+    const startTime = Date.now();
+    const abandonTimer = setTimeout(() => {
+      trackEvent('CART_ABANDON', {
+        step: 'checkout',
+        timeOnPage: Math.round((Date.now() - startTime) / 1000),
+        checkin: state.checkin,
+        checkout: state.checkout,
+        guests: state.adults,
+      });
+    }, 180_000);
+
+    // Cleanup: remove block + cancel abandon timer if user leaves
     return () => {
+      clearTimeout(abandonTimer);
       fetch(`${API}/api/remove-temporary-block`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

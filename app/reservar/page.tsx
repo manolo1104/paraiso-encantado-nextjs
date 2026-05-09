@@ -179,6 +179,7 @@ function ReservarPageInner() {
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [datesOverlapBlocked, setDatesOverlapBlocked] = useState(false);
+  const [checkinError, setCheckinError] = useState('');
 
   // ── Cart ──────────────────────────────────────────────
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -280,7 +281,11 @@ function ReservarPageInner() {
 
   useEffect(() => {
     trackEvent('PAGE_VIEW', { path: '/reservar' });
-    trackEvent('BOOKING_START');
+    // Solo disparar BOOKING_START si las fechas iniciales son válidas (no en el pasado)
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (!checkin || checkin >= todayStr) {
+      trackEvent('BOOKING_START');
+    }
     return () => { if (cartAbandonTimer.current) clearTimeout(cartAbandonTimer.current); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -358,6 +363,12 @@ function ReservarPageInner() {
   }
 
   function handleCheckinChange(v: string) {
+    if (v && v < today) {
+      setCheckinError('Esta fecha ya pasó. Selecciona una fecha futura.');
+      setCheckin('');
+      return;
+    }
+    setCheckinError('');
     setCheckin(v);
     let newCo = checkout;
     if (checkout && v >= checkout) {
@@ -475,6 +486,15 @@ function ReservarPageInner() {
       <TrustBadgesReservar />
       <RecentBookingsTicker />
       <ReservationUrgencyBar />
+
+      {/* ── Checkin error ── */}
+      {checkinError && (
+        <div style={{ maxWidth: 1100, margin: '0 auto 8px', padding: '0 24px' }}>
+          <p style={{ background: '#fff3cd', border: '1px solid #f5c542', borderRadius: 8, padding: '10px 16px', fontSize: '0.85rem', color: '#7a4f00', margin: 0 }}>
+            ⚠️ {checkinError}
+          </p>
+        </div>
+      )}
 
       {/* ── Search bar ── */}
       <div className={styles.searchBar}>
