@@ -4,12 +4,6 @@ const SHEET_NAME = process.env.GOOGLE_SHEET_TAB || 'Reservas';
 const AVAILABILITY_SHEET = 'Disponibilidad';
 const TEMP_BLOCKS_SHEET = 'BloqueosTemporal';
 
-const HEADER_ROW = [
-  'Fecha', 'Confirmación', 'Cliente', 'Teléfono', 'Email', 'Total',
-  'Check-in', 'Check-out', 'Noches', 'Huéspedes', 'Habitaciones', 'Notas',
-  'Payment ID', '¿Cómo nos conociste?',
-];
-
 const ROOM_NAMES = [
   'Suite Flor de Liz 1', 'Suite Flor de Liz 2', 'Suite LindaVista', 'Jungla',
   'Suite Lajas', 'Lirios 1', 'Lirios 2', 'Orquídeas 2', 'Orquídeas Doble',
@@ -28,8 +22,45 @@ function normalizeRoomName(name: string): string {
   return ROOM_NAME_ALIASES[trimmed] || trimmed;
 }
 
-// Singleton — se reutiliza dentro del mismo proceso
+// ── Singleton ─────────────────────────────────────────────
 let sheetsClient: ReturnType<typeof google.sheets> | null = null;
+
+const SHEETS_TIMEOUT_MS = 10_000;
+
+/**
+ * Envuelve cualquier llamada a la Sheets API con:
+ * - AbortController abortado al vencer el timeout de 10 s
+ * - Promise.race que garantiza que el await no cuelga más de 10 s
+ * - Reset del singleton al detectar 401/403/invalid_grant → fuerza re-auth
+ */
+export async function sheetsCall<T>(fn: () => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  let timerId!: ReturnType<typeof setTimeout>;
+
+  const timeoutP = new Promise<never>((_, reject) => {
+    timerId = setTimeout(() => {
+      controller.abort();
+      reject(Object.assign(new Error('Google Sheets timeout (10 s)'), { code: 'ETIMEOUT' }));
+    }, SHEETS_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([fn(), timeoutP]);
+  } catch (e: any) {
+    const status = e?.status ?? e?.code;
+    const msg = String(e?.message ?? '');
+    if (
+      status === 401 || status === 403 ||
+      /invalid_grant|UNAUTHENTICATED|token.*expir/i.test(msg)
+    ) {
+      sheetsClient = null;
+      console.warn('🔄 Sheets auth error → singleton reset, reautenticando en próxima llamada');
+    }
+    throw e;
+  } finally {
+    clearTimeout(timerId);
+  }
+}
 
 function loadCredentials() {
   const raw = process.env.GOOGLE_SHEETS_CREDENTIALS;
@@ -78,6 +109,7 @@ function getDateRange(checkin: string, checkout: string): string[] {
 export async function addBookingToSheet(bookingData: any) {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
+  const sid = process.env.GOOGLE_SHEET_ID;
   try {
     const { confirmation_number, customer_name, customer_phone, email, total,
             payment_intent_id, booking_details, rooms, how_did_you_hear, created_at } = bookingData;
@@ -94,12 +126,14 @@ export async function addBookingToSheet(bookingData: any) {
       how_did_you_hear || '',
     ];
 
-    await client.spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${SHEET_NAME}!A:N`,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [row] },
-    });
+    await sheetsCall(() =>
+      client.spreadsheets.values.append({
+        spreadsheetId: sid,
+        range: `${SHEET_NAME}!A:N`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [row] },
+      })
+    );
     console.log('✅ Reserva guardada en Google Sheets');
   } catch (e: any) {
     console.error('❌ addBookingToSheet error:', e.message);
@@ -111,11 +145,14 @@ export async function addBookingToSheet(bookingData: any) {
 export async function getFullyBookedDates(monthsAhead = 6): Promise<string[]> {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return [];
+  const sid = process.env.GOOGLE_SHEET_ID;
   try {
-    const res = await client.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${AVAILABILITY_SHEET}!A:Z`,
-    });
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({
+        spreadsheetId: sid,
+        range: `${AVAILABILITY_SHEET}!A:Z`,
+      })
+    );
     const data = res.data.values || [];
     if (data.length < 2) return [];
 
@@ -159,6 +196,7 @@ export async function checkAvailability(
 ): Promise<{ available: boolean; unavailableRooms: string[] }> {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return { available: true, unavailableRooms: [] };
+  const sid = process.env.GOOGLE_SHEET_ID;
 
   try {
     const dateRange = getDateRange(checkin, checkout);
@@ -169,10 +207,12 @@ export async function checkAvailability(
     );
     const activeRooms = normalizedRooms.filter(r => ROOM_NAMES.includes(r.name));
 
-    const res = await client.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${AVAILABILITY_SHEET}!A:Z`,
-    });
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({
+        spreadsheetId: sid,
+        range: `${AVAILABILITY_SHEET}!A:Z`,
+      })
+    );
     const data = res.data.values || [];
     if (data.length === 0) return { available: true, unavailableRooms: [] };
 
@@ -200,7 +240,6 @@ export async function checkAvailability(
       }
     }
 
-    // Verificar bloqueos temporales
     const tempBlocked = await checkTemporaryBlocks(dateRange, normalizedRooms, sessionId);
     for (const r of tempBlocked) {
       if (!unavailableRooms.includes(r)) unavailableRooms.push(r);
@@ -218,11 +257,14 @@ async function checkTemporaryBlocks(
 ): Promise<string[]> {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return [];
+  const sid = process.env.GOOGLE_SHEET_ID;
   try {
-    const res = await client.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${TEMP_BLOCKS_SHEET}!A:D`,
-    });
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({
+        spreadsheetId: sid,
+        range: `${TEMP_BLOCKS_SHEET}!A:D`,
+      })
+    );
     const data = res.data.values || [];
     const now = new Date();
     const blockedRooms: string[] = [];
@@ -246,6 +288,7 @@ export async function createTemporaryBlock(
 ) {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
+  const sid = process.env.GOOGLE_SHEET_ID;
   try {
     const normalizedRooms = rooms
       .map(r => typeof r === 'string' ? { name: normalizeRoomName(r) } : { name: normalizeRoomName(r.name) })
@@ -259,12 +302,14 @@ export async function createTemporaryBlock(
         rows.push([date, room.name, expiration, sessionId]);
       }
     }
-    await client.spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${TEMP_BLOCKS_SHEET}!A:D`,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values: rows },
-    });
+    await sheetsCall(() =>
+      client.spreadsheets.values.append({
+        spreadsheetId: sid,
+        range: `${TEMP_BLOCKS_SHEET}!A:D`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: rows },
+      })
+    );
     console.log(`✅ Bloqueo temporal creado: sesión ${sessionId}`);
   } catch (e: any) {
     console.error('❌ createTemporaryBlock error:', e.message);
@@ -274,25 +319,32 @@ export async function createTemporaryBlock(
 export async function removeTemporaryBlock(sessionId: string) {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
+  const sid = process.env.GOOGLE_SHEET_ID;
   try {
-    const res = await client.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${TEMP_BLOCKS_SHEET}!A:D`,
-    });
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({
+        spreadsheetId: sid,
+        range: `${TEMP_BLOCKS_SHEET}!A:D`,
+      })
+    );
     const data = res.data.values || [];
     const filtered = data.filter((row, i) => i === 0 || row[3] !== sessionId);
 
-    await client.spreadsheets.values.clear({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${TEMP_BLOCKS_SHEET}!A:D`,
-    });
+    await sheetsCall(() =>
+      client.spreadsheets.values.clear({
+        spreadsheetId: sid,
+        range: `${TEMP_BLOCKS_SHEET}!A:D`,
+      })
+    );
     if (filtered.length > 0) {
-      await client.spreadsheets.values.update({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
-        range: `${TEMP_BLOCKS_SHEET}!A1`,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: { values: filtered },
-      });
+      await sheetsCall(() =>
+        client.spreadsheets.values.update({
+          spreadsheetId: sid,
+          range: `${TEMP_BLOCKS_SHEET}!A1`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: filtered },
+        })
+      );
     }
     console.log(`✅ Bloqueo temporal removido: sesión ${sessionId}`);
   } catch (e: any) {
@@ -303,14 +355,17 @@ export async function removeTemporaryBlock(sessionId: string) {
 export async function addLead(email: string) {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
+  const sid = process.env.GOOGLE_SHEET_ID;
   try {
     const ts = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
-    await client.spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'Leads!A:B',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [[ts, email]] },
-    });
+    await sheetsCall(() =>
+      client.spreadsheets.values.append({
+        spreadsheetId: sid,
+        range: 'Leads!A:B',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[ts, email]] },
+      })
+    );
     console.log(`✅ Lead guardado: ${email.slice(0, 4)}***`);
   } catch (e: any) {
     console.error('❌ addLead error:', e.message);
@@ -323,16 +378,19 @@ export async function blockDates(
 ) {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
+  const sid = process.env.GOOGLE_SHEET_ID;
   try {
     const normalizedRooms = rooms
       .map(r => typeof r === 'string' ? { name: normalizeRoomName(r) } : { name: normalizeRoomName(r.name) })
       .filter(r => ROOM_NAMES.includes(r.name));
 
     const dateRange = getDateRange(checkin, checkout);
-    const res = await client.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${AVAILABILITY_SHEET}!A:Z`,
-    });
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({
+        spreadsheetId: sid,
+        range: `${AVAILABILITY_SHEET}!A:Z`,
+      })
+    );
 
     let data: string[][] = res.data.values || [];
     const headers = data[0] || ['Fecha', ...ROOM_NAMES];
@@ -354,16 +412,20 @@ export async function blockDates(
       new Date(a[0] || '1970-01-01').getTime() - new Date(b[0] || '1970-01-01').getTime()
     )];
 
-    await client.spreadsheets.values.clear({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${AVAILABILITY_SHEET}!A:Z`,
-    });
-    await client.spreadsheets.values.update({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: `${AVAILABILITY_SHEET}!A1`,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values: sorted },
-    });
+    await sheetsCall(() =>
+      client.spreadsheets.values.clear({
+        spreadsheetId: sid,
+        range: `${AVAILABILITY_SHEET}!A:Z`,
+      })
+    );
+    await sheetsCall(() =>
+      client.spreadsheets.values.update({
+        spreadsheetId: sid,
+        range: `${AVAILABILITY_SHEET}!A1`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: sorted },
+      })
+    );
     console.log(`✅ Fechas bloqueadas: ${dateRange.length} noches`);
   } catch (e: any) {
     console.error('❌ blockDates error:', e.message);

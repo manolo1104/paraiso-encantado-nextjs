@@ -12,11 +12,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'messages requerido' }, { status: 400 });
   }
 
-  const [bookings, agentMetrics, quotes] = await Promise.all([
-    getAllBookings(),
-    getAgentMetrics(),
-    getAllQuotes(),
-  ]);
+  let bookings: Awaited<ReturnType<typeof getAllBookings>>;
+  let agentMetrics: Awaited<ReturnType<typeof getAgentMetrics>>;
+  let quotes: Awaited<ReturnType<typeof getAllQuotes>>;
+
+  try {
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Sheets data timeout (8 s)')), 8_000)
+    );
+    [bookings, agentMetrics, quotes] = await Promise.race([
+      Promise.all([getAllBookings(), getAgentMetrics(), getAllQuotes()]),
+      timeout,
+    ]) as [
+      Awaited<ReturnType<typeof getAllBookings>>,
+      Awaited<ReturnType<typeof getAgentMetrics>>,
+      Awaited<ReturnType<typeof getAllQuotes>>,
+    ];
+  } catch (e: any) {
+    console.error('[ai-chat] Sheets fetch timeout/error:', e.message);
+    return NextResponse.json(
+      { error: 'Datos del hotel no disponibles temporalmente. Intenta de nuevo en unos segundos.', retry: true },
+      { status: 503 },
+    );
+  }
 
   const insights = calcInsights(bookings, agentMetrics);
   const now = new Date();

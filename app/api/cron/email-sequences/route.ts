@@ -49,6 +49,9 @@ function promoExpiry(): string {
   });
 }
 
+const BATCH_SIZE = 50;
+const WALL_CLOCK_MS = 25_000;
+
 export async function GET(req: NextRequest) {
   // Autenticación: Railway envía Authorization: Bearer $CRON_SECRET
   const auth = req.headers.get('authorization');
@@ -57,9 +60,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // cursor: offset de bookings elegibles para esta ejecución
+  const cursorParam = req.nextUrl.searchParams.get('cursor');
+  const cursor = Math.max(0, parseInt(cursorParam ?? '0', 10) || 0);
+
   const resend = new Resend(process.env.RESEND_API_KEY);
   const today = todayMX();
   const maxPastDate = shiftDate(today, -MAX_LOOKBACK_DAYS);
+  const deadline = Date.now() + WALL_CLOCK_MS;
 
   const [bookings, sentSet] = await Promise.all([
     getAllBookings(),
@@ -76,7 +84,17 @@ export async function GET(req: NextRequest) {
     console.warn('[cron] No se pudo cargar guia-bienvenida.pdf — se enviará sin adjunto');
   }
 
-  const results = { sent: 0, skipped: 0, errors: 0, details: [] as string[] };
+  // Filtrar elegibles primero, luego paginar con cursor
+  const eligible = bookings.filter(b =>
+    b.estado !== 'CANCELADA' &&
+    b.email && b.email !== 'N/A' &&
+    b.checkin && b.checkout &&
+    b.checkout >= maxPastDate
+  );
+  const page = eligible.slice(cursor, cursor + BATCH_SIZE);
+  const nextCursor = cursor + page.length < eligible.length ? cursor + BATCH_SIZE : null;
+
+  const results = { sent: 0, skipped: 0, errors: 0, cutByTime: false, details: [] as string[] };
 
   async function send(
     confirmacion: string,
@@ -106,16 +124,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  for (const b of bookings) {
-    if (b.estado === 'CANCELADA') continue;
-    if (!b.email || b.email === 'N/A') continue;
-    if (!b.checkin || !b.checkout) continue;
+  for (const b of page) {
+    // Cortar si se superó el límite de tiempo
+    if (Date.now() > deadline) {
+      results.cutByTime = true;
+      const remaining = eligible.length - cursor - page.indexOf(b);
+      console.warn(`[cron/email-sequences] Wall-clock de 25 s superado — ${remaining} bookings pendientes`);
+      break;
+    }
 
     const checkin  = b.checkin;  // YYYY-MM-DD
     const checkout = b.checkout; // YYYY-MM-DD
-
-    // No procesar reservas demasiado antiguas
-    if (checkout < maxPastDate) continue;
 
     const first = b.cliente.trim().split(' ')[0];
 
@@ -183,6 +202,18 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  console.log(`[cron/email-sequences] ${today} → sent:${results.sent} skipped:${results.skipped} errors:${results.errors}`);
-  return NextResponse.json({ ok: true, date: today, ...results });
+  console.log(
+    `[cron/email-sequences] ${today} cursor:${cursor}→${nextCursor ?? 'fin'} ` +
+    `sent:${results.sent} skipped:${results.skipped} errors:${results.errors}` +
+    (results.cutByTime ? ' ⚠️ cortado por tiempo' : '')
+  );
+  return NextResponse.json({
+    ok: true,
+    date: today,
+    cursor,
+    nextCursor,
+    processed: page.length,
+    pending: nextCursor !== null ? eligible.length - (cursor + BATCH_SIZE) : 0,
+    ...results,
+  });
 }
