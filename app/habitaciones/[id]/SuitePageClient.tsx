@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Bed, Sofa, ShowerHead, Bath, Droplets, Mountain, Wifi,
-  Wind, Trees, Waves, CheckCircle, MessageCircle
+  Wind, Trees, Waves, CheckCircle, MessageCircle, X, ChevronLeft, ChevronRight, ZoomIn
 } from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import StickySuiteCTA from '@/components/StickySuiteCTA';
+import SuiteTestimonials from '@/components/SuiteTestimonials';
 import { mxnToUsd } from '@/lib/config';
 import { suites } from '@/data/suites';
 import styles from './suite.module.css';
@@ -43,9 +44,83 @@ interface Props {
   suite: Suite;
 }
 
+function Lightbox({
+  images,
+  initialIndex,
+  suiteName,
+  onClose,
+}: {
+  images: string[];
+  initialIndex: number;
+  suiteName: string;
+  onClose: () => void;
+}) {
+  const [idx, setIdx] = useState(initialIndex);
+
+  const prev = useCallback(() => setIdx((i) => (i - 1 + images.length) % images.length), [images.length]);
+  const next = useCallback(() => setIdx((i) => (i + 1) % images.length), [images.length]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') prev();
+      if (e.key === 'ArrowRight') next();
+    }
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose, prev, next]);
+
+  return (
+    <div className={styles.lightboxOverlay} onClick={onClose} role="dialog" aria-modal="true" aria-label="Galería ampliada">
+      <button className={styles.lightboxClose} onClick={onClose} aria-label="Cerrar galería">
+        <X size={22} strokeWidth={1.5} />
+      </button>
+      <div className={styles.lightboxContent} onClick={(e) => e.stopPropagation()}>
+        <button className={styles.lightboxNav} onClick={prev} aria-label="Foto anterior" style={{ left: 0 }}>
+          <ChevronLeft size={28} strokeWidth={1.5} />
+        </button>
+        <div className={styles.lightboxImg}>
+          <Image
+            src={images[idx]}
+            alt={`${suiteName} foto ${idx + 1}`}
+            fill
+            sizes="(max-width: 768px) 100vw, 90vw"
+            className={styles.lightboxPhoto}
+          />
+        </div>
+        <button className={styles.lightboxNav} onClick={next} aria-label="Siguiente foto" style={{ right: 0 }}>
+          <ChevronRight size={28} strokeWidth={1.5} />
+        </button>
+      </div>
+      <div className={styles.lightboxCounter}>{idx + 1} / {images.length}</div>
+      <div className={styles.lightboxDots}>
+        {images.map((_, i) => (
+          <button
+            key={i}
+            className={`${styles.lightboxDot} ${i === idx ? styles.lightboxDotActive : ''}`}
+            onClick={(e) => { e.stopPropagation(); setIdx(i); }}
+            aria-label={`Ir a foto ${i + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SuitePageClient({ suite }: Props) {
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxStart, setLightboxStart] = useState(0);
+
+  const openLightbox = useCallback((idx: number) => {
+    setLightboxStart(idx);
+    setLightboxOpen(true);
+  }, []);
 
   const price3 = suite.priceTiers[3];
   const price4 = suite.priceTiers[4];
@@ -64,6 +139,15 @@ export default function SuitePageClient({ suite }: Props) {
 
   return (
     <main className={styles.main}>
+      {lightboxOpen && (
+        <Lightbox
+          images={suite.images}
+          initialIndex={lightboxStart}
+          suiteName={suite.name}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
+
       {/* Breadcrumb */}
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
         <Link href="/">Inicio</Link>
@@ -76,7 +160,11 @@ export default function SuitePageClient({ suite }: Props) {
       <div className={styles.layout}>
         {/* ---- GALERÍA ---- */}
         <section className={styles.gallerySection} aria-label="Galería de fotos">
-          <div className={styles.mainImage}>
+          <button
+            className={styles.mainImage}
+            onClick={() => openLightbox(activeImg)}
+            aria-label="Abrir galería de fotos"
+          >
             <Image
               src={suite.images[activeImg]}
               alt={`${suite.name} — foto ${activeImg + 1}`}
@@ -91,7 +179,11 @@ export default function SuitePageClient({ suite }: Props) {
                 {activeImg + 1} / {suite.images.length}
               </div>
             )}
-          </div>
+            <div className={styles.zoomHint} aria-hidden="true">
+              <ZoomIn size={16} strokeWidth={1.5} />
+              <span>Ver en grande</span>
+            </div>
+          </button>
 
           {suite.images.length > 1 && (
             <div className={styles.thumbnails} role="list" aria-label="Miniaturas">
@@ -100,6 +192,7 @@ export default function SuitePageClient({ suite }: Props) {
                   key={i}
                   className={`${styles.thumb} ${i === activeImg ? styles.thumbActive : ''}`}
                   onClick={() => setActiveImg(i)}
+                  onDoubleClick={() => openLightbox(i)}
                   aria-label={`Ver foto ${i + 1}`}
                   aria-pressed={i === activeImg}
                   role="listitem"
@@ -181,6 +274,9 @@ export default function SuitePageClient({ suite }: Props) {
               ))}
             </ul>
           </section>
+
+          {/* Reseñas contextuales */}
+          <SuiteTestimonials suiteName={suite.name} />
 
           <div className={styles.guarantees}>
             <span><CheckCircle size={13} strokeWidth={2} /> Reserva directa sin comisiones</span>

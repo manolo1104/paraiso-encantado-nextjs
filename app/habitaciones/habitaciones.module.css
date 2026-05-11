@@ -420,6 +420,168 @@
   border-bottom-color: var(--sand);
 }
 
+/* ---- CARD WRAPPER (para comparar) ---- */
+.cardWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardWrapSelected .card {
+  border-color: var(--sand);
+  box-shadow: 0 0 0 2px rgba(201, 169, 122, 0.5), 0 12px 32px rgba(30, 48, 18, 0.1);
+}
+
+/* Botón comparar sobre la card */
+.compareToggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(250, 248, 245, 0.92);
+  border: 1px solid rgba(201, 169, 122, 0.5);
+  color: var(--forest);
+  font-family: var(--font-jost), sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  z-index: 5;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(4px);
+}
+
+.compareToggle:hover {
+  background: var(--parch);
+  border-color: var(--sand);
+}
+
+.compareToggleActive {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--cream);
+}
+
+.compareToggleActive:hover {
+  background: #8a1a1a;
+  border-color: #8a1a1a;
+}
+
+.compareToggleDisabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* ---- BARRA COMPARAR STICKY ---- */
+.compareBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--forest);
+  color: var(--cream);
+  z-index: 200;
+  padding: 14px 24px;
+  box-shadow: 0 -4px 24px rgba(30, 48, 18, 0.35);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.compareBarInner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.compareBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.compareBarCount {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.compareBarHint {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: rgba(250, 248, 245, 0.65);
+}
+
+.compareBarActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.compareBarClear {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid rgba(250, 248, 245, 0.3);
+  color: rgba(250, 248, 245, 0.75);
+  font-family: var(--font-jost), sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.compareBarClear:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.compareBarCta {
+  background: var(--sand);
+  border: none;
+  color: var(--forest);
+  font-family: var(--font-jost), sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 12px 28px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.compareBarCta:hover:not(:disabled) {
+  background: var(--gold);
+  color: var(--cream);
+  transform: translateY(-1px);
+}
+
+.compareBarCta:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ---- MOBILE ---- */
 @media (max-width: 768px) {
   .header {

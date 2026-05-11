@@ -208,6 +208,63 @@
   margin: 0;
 }
 
+/* WhatsApp alternative payment */
+.altPayDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.altPayDivider::before,
+.altPayDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(201, 169, 122, 0.25);
+}
+
+.altPayDivider span {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  color: #9a8a7a;
+  white-space: nowrap;
+}
+
+.whatsappPayBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  background: #25d366;
+  color: #fff;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.whatsappPayBtn:hover {
+  background: #1da855;
+  transform: translateY(-1px);
+}
+
+.whatsappPayNote {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  color: #9a8a7a;
+  text-align: center;
+  margin: -4px 0 0;
+  line-height: 1.5;
+}
+
 /* Summary sidebar */
 .summary {
   background: #fff;

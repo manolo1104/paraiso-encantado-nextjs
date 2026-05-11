@@ -1,0 +1,120 @@
+.section {
+  border-top: 1px solid rgba(201, 169, 122, 0.2);
+  padding-top: 24px;
+}
+
+.title {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 300;
+  color: var(--forest);
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.title em {
+  font-style: italic;
+  color: var(--clay);
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--parch);
+  border: 1px solid rgba(201, 169, 122, 0.2);
+  border-radius: 2px;
+  padding: 18px 20px;
+  margin: 0;
+}
+
+.cardHeader {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--moss), var(--jade));
+  color: var(--cream);
+  font-family: var(--font-cormorant), serif;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+}
+
+.location {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--clay);
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+  color: #c9a96e;
+}
+
+.date {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(168, 132, 42, 0.7);
+}
+
+.verified {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: #2d7a27;
+  letter-spacing: 0.3px;
+}
+
+.text {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(42, 34, 24, 0.85);
+  margin: 0 0 10px;
+  font-style: italic;
+}
+
+.meta {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--clay);
+}
+
+.meta strong {
+  font-weight: 500;
+  color: var(--forest);
+}
