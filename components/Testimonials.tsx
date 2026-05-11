@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Star, CheckCircle } from 'lucide-react';
 import styles from './Testimonials.module.css';
 
@@ -12,6 +13,7 @@ const testimonials = [
     suite: 'Jungla',
     nights: 3,
     verified: true,
+    avatar: '/images/reviews/alejandra.jpeg',
   },
   {
     id: 2,
@@ -23,6 +25,7 @@ const testimonials = [
     suite: 'Suite LindaVista',
     nights: 2,
     verified: true,
+    avatar: '/images/reviews/carlos-sofia.jpg',
   },
   {
     id: 3,
@@ -34,6 +37,7 @@ const testimonials = [
     suite: 'Suite Flor de Liz 1',
     nights: 4,
     verified: true,
+    avatar: '/images/reviews/isabel.jpg',
   },
   {
     id: 4,
@@ -45,6 +49,7 @@ const testimonials = [
     suite: 'Suite Lajas',
     nights: 2,
     verified: true,
+    avatar: '/images/reviews/rodrigo-ana.jpg',
   },
   {
     id: 5,
@@ -56,6 +61,7 @@ const testimonials = [
     suite: 'Helechos 1',
     nights: 3,
     verified: true,
+    avatar: '/images/reviews/fernando.jpg',
   },
   {
     id: 6,
@@ -67,6 +73,7 @@ const testimonials = [
     suite: 'Lirios 2',
     nights: 2,
     verified: true,
+    avatar: '/images/reviews/sofia-r.jpeg',
   },
 ];
 
@@ -105,7 +112,11 @@ export default function Testimonials() {
           <blockquote key={t.id} className={styles.card}>
             <header className={styles.cardHeader}>
               <div className={styles.avatar} aria-hidden="true">
-                {t.name.charAt(0)}
+                {t.avatar ? (
+                  <Image src={t.avatar} alt={t.name} fill sizes="48px" className={styles.avatarImg} />
+                ) : (
+                  t.name.charAt(0)
+                )}
               </div>
               <div className={styles.info}>
                 <strong className={styles.name}>{t.name}</strong>

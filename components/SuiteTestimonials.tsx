@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Star, CheckCircle } from 'lucide-react';
 import styles from './SuiteTestimonials.module.css';
 
@@ -13,6 +14,7 @@ interface Testimonial {
   suite: string;
   nights: number;
   verified: boolean;
+  avatar?: string;
 }
 
 const ALL_TESTIMONIALS: Testimonial[] = [
@@ -26,6 +28,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Jungla',
     nights: 3,
     verified: true,
+    avatar: '/images/reviews/alejandra.jpeg',
   },
   {
     id: 2,
@@ -37,6 +40,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Suite LindaVista',
     nights: 2,
     verified: true,
+    avatar: '/images/reviews/carlos-sofia.jpg',
   },
   {
     id: 3,
@@ -48,6 +52,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Suite Flor de Liz 1',
     nights: 4,
     verified: true,
+    avatar: '/images/reviews/isabel.jpg',
   },
   {
     id: 4,
@@ -59,6 +64,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Suite Lajas',
     nights: 2,
     verified: true,
+    avatar: '/images/reviews/rodrigo-ana.jpg',
   },
   {
     id: 5,
@@ -70,6 +76,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Helechos 1',
     nights: 3,
     verified: true,
+    avatar: '/images/reviews/fernando.jpg',
   },
   {
     id: 6,
@@ -81,6 +88,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Lirios 2',
     nights: 2,
     verified: true,
+    avatar: '/images/reviews/sofia-r.jpeg',
   },
   {
     id: 7,
@@ -92,6 +100,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Suite Flor de Liz 2',
     nights: 3,
     verified: true,
+    avatar: '/images/reviews/mariana.jpg',
   },
   {
     id: 8,
@@ -103,6 +112,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Orquídeas 3',
     nights: 2,
     verified: true,
+    avatar: '/images/reviews/diego-paola.jpg',
   },
   {
     id: 9,
@@ -114,6 +124,7 @@ const ALL_TESTIMONIALS: Testimonial[] = [
     suite: 'Bromelias',
     nights: 3,
     verified: true,
+    avatar: '/images/reviews/laura-marco.jpeg',
   },
 ];
 
@@ -153,7 +164,13 @@ export default function SuiteTestimonials({ suiteName }: { suiteName: string }) 
         {reviews.map((t) => (
           <blockquote key={t.id} className={styles.card}>
             <header className={styles.cardHeader}>
-              <div className={styles.avatar}>{t.name.charAt(0)}</div>
+              <div className={styles.avatar}>
+                {t.avatar ? (
+                  <Image src={t.avatar} alt={t.name} fill sizes="36px" className={styles.avatarImg} />
+                ) : (
+                  t.name.charAt(0)
+                )}
+              </div>
               <div className={styles.info}>
                 <strong className={styles.name}>{t.name}</strong>
                 <span className={styles.location}>{t.location}</span>

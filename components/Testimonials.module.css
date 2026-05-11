@@ -95,6 +95,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.avatarImg {
+  object-fit: cover;
+  object-position: center top;
 }
 
 .info {

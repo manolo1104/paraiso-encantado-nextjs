@@ -180,6 +180,7 @@ function ReservarPageInner() {
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [datesOverlapBlocked, setDatesOverlapBlocked] = useState(false);
   const [checkinError, setCheckinError] = useState('');
+  const [autoSelectUnavailable, setAutoSelectUnavailable] = useState<string | null>(null);
 
   // ── Cart ──────────────────────────────────────────────
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -307,6 +308,8 @@ function ReservarPageInner() {
     setCart([]);
     setPromoCode(null);
     setPromoDiscount(0);
+    setAutoSelectUnavailable(null);
+    let currentUnavailable: string[] = [];
     try {
       const roomNames = BOOKING_ROOMS.map(r => r.name);
       const res = await fetch(`${API}/api/check-availability`, {
@@ -315,7 +318,8 @@ function ReservarPageInner() {
         body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames }),
       });
       const data = await res.json();
-      setUnavailable(data.unavailableRooms || []);
+      currentUnavailable = data.unavailableRooms || [];
+      setUnavailable(currentUnavailable);
     } catch {
       setUnavailable([]);
     } finally {
@@ -331,13 +335,20 @@ function ReservarPageInner() {
         pendingAutoSelectId.current = null;
         const room = BOOKING_ROOMS.find(r => r.id === roomId);
         if (room) {
-          const guestCount = Math.max(1, Math.min(adults, room.maxGuests));
-          setCart([{ roomId: room.id, guestCount }]);
-          trackEvent('SUITE_SELECTED', { suite: room.name, guests: guestCount, source: 'suite_page_cta' });
-          // Scroll al sidebar después de agregar
-          setTimeout(() => {
-            sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 400);
+          if (currentUnavailable.includes(room.name)) {
+            // Suite no disponible para estas fechas — mostrar aviso, no agregar
+            setAutoSelectUnavailable(room.name);
+            setTimeout(() => {
+              resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+          } else {
+            const guestCount = Math.max(1, Math.min(adults, room.maxGuests));
+            setCart([{ roomId: room.id, guestCount }]);
+            trackEvent('SUITE_SELECTED', { suite: room.name, guests: guestCount, source: 'suite_page_cta' });
+            setTimeout(() => {
+              sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 400);
+          }
         }
       }
       // Arrancar timer de abandono SOLO después de ver resultados (primera vez)
@@ -450,6 +461,12 @@ function ReservarPageInner() {
   // ── Proceed to checkout ───────────────────────────────
   function goToCheckout() {
     if (cart.length === 0 || !checkin || !checkout) return;
+    // Block if any cart room is unavailable for current dates
+    const hasUnavailableInCart = cart.some(item => {
+      const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
+      return room && unavailable.includes(room.name);
+    });
+    if (hasUnavailableInCart) return;
     const state: BookingState = {
       checkin, checkout, nights, adults, children,
       cart, promoCode, promoDiscount,
@@ -465,6 +482,10 @@ function ReservarPageInner() {
     const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
     return sum + (room?.maxGuests ?? 0);
   }, 0);
+  const cartHasUnavailable = cart.some(item => {
+    const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
+    return room && unavailable.includes(room.name);
+  });
   const capacityOk = cart.length === 0 || cartCapacity >= adults;
 
   // ── Room grid helpers ─────────────────────────────────
@@ -577,6 +598,16 @@ function ReservarPageInner() {
             <div className={styles.searchingBanner}>
               <div className={styles.searchSpinner} />
               <span>Consultando disponibilidad en tiempo real…</span>
+            </div>
+          )}
+
+          {autoSelectUnavailable && (
+            <div className={styles.autoSelectWarning}>
+              <AlertTriangle size={15} strokeWidth={2} />
+              <span>
+                <strong>{autoSelectUnavailable}</strong> no está disponible para las fechas seleccionadas.
+                Cambia las fechas o elige otra suite.
+              </span>
             </div>
           )}
 
@@ -833,9 +864,18 @@ function ReservarPageInner() {
               </div>
             )}
 
+            {cartHasUnavailable && cart.length > 0 && (
+              <div className={styles.capacityWarning}>
+                <AlertTriangle size={14} strokeWidth={2} />
+                <span>
+                  Una o más habitaciones del carrito no están disponibles para estas fechas. Cámbialas o elige otras fechas.
+                </span>
+              </div>
+            )}
+
             <button
               className={styles.checkoutBtn}
-              disabled={cart.length === 0 || !checkin || !checkout || !capacityOk}
+              disabled={cart.length === 0 || !checkin || !checkout || !capacityOk || cartHasUnavailable}
               onClick={goToCheckout}
             >
               Continuar <ChevronRight size={16} strokeWidth={2} />

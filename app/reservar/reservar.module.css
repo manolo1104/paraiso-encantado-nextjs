@@ -917,6 +917,21 @@
 }
 .capacityWarning svg { flex-shrink: 0; margin-top: 1px; color: #c9860a; }
 
+.autoSelectWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff3f3;
+  border: 1px solid #e87b7b;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  color: #7a1a1a;
+  margin-bottom: 16px;
+}
+.autoSelectWarning svg { flex-shrink: 0; margin-top: 1px; color: #c93a3a; }
+
 /* ── Over-capacity badge on room card ── */
 .overCapacityBadge {
   position: absolute;

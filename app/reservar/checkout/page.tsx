@@ -345,10 +345,17 @@ function CheckoutForm({
         ) : (
           <>
             <Lock size={15} strokeWidth={2} />
-            Pagar {formatMXN(total)} — Confirmar Reserva
+            {booking.isDeposit
+              ? `Pagar ${formatMXN(booking.amountPaid ?? total)} — Depósito 50%`
+              : `Pagar ${formatMXN(total)} — Confirmar Reserva`}
           </>
         )}
       </button>
+      {booking.isDeposit && (
+        <p className={styles.depositNote}>
+          Pagas ahora el 50% ({formatMXN(booking.amountPaid ?? 0)}). El resto ({formatMXN(booking.amountPending ?? 0)}) se liquida al llegar.
+        </p>
+      )}
 
       <p className={styles.secureNote}>
         <ShieldCheck size={12} strokeWidth={1.5} /> Pago cifrado con Stripe. Nunca almacenamos datos de tarjeta.
