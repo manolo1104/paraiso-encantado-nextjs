@@ -276,7 +276,7 @@ export default function SuitePageClient({ suite }: Props) {
           </section>
 
           {/* Reseñas contextuales */}
-          <SuiteTestimonials suiteName={suite.name} />
+          <SuiteTestimonials suiteId={suite.id} />
 
           <div className={styles.guarantees}>
             <span><CheckCircle size={13} strokeWidth={2} /> Reserva directa sin comisiones</span>
