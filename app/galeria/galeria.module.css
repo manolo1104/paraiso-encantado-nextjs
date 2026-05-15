@@ -303,3 +303,187 @@
     grid-column: span 1;
   }
 }
+
+/* ── Lightbox actions ──────────────────────────────────────────────────────── */
+.lbActions {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+.lbActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lbActionBtn:hover { background: rgba(255,255,255,0.25); }
+
+/* ── Videos section ───────────────────────────────────────────────────────── */
+.videosSection {
+  padding: 48px 24px;
+  background: #0e1f10;
+}
+.videosTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 300;
+  color: #f5f0e8;
+  text-align: center;
+  margin-bottom: 32px;
+}
+.videosGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.videoCard {
+  position: relative;
+  height: 180px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  background: #1a2e1a;
+  padding: 0;
+  transition: transform 0.2s;
+}
+.videoCard:hover { transform: scale(1.02); }
+.videoThumb { object-fit: cover; }
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+}
+.playBtn {
+  width: 56px;
+  height: 56px;
+  background: rgba(201,169,110,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.videoCard:hover .playBtn { background: #c9a97a; }
+.videoTitle {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #f5f0e8;
+  text-align: center;
+  margin: 0;
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+}
+
+/* ── Video modal ──────────────────────────────────────────────────────────── */
+.videoModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+.videoModalContent {
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 16/9;
+  position: relative;
+}
+.videoEmbed {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 6px;
+}
+
+/* ── Category CTA ─────────────────────────────────────────────────────────── */
+.categoryCta {
+  text-align: center;
+  padding: 40px 24px;
+  background: #f4f0e8;
+  margin-top: 8px;
+}
+.categoryCtaText {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: #1a2e1a;
+  margin-bottom: 14px;
+  font-style: italic;
+}
+.categoryCtaBtn {
+  display: inline-block;
+  background: #1a2e1a;
+  color: #f5f0e8;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 13px 28px;
+  border-radius: 2px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.categoryCtaBtn:hover { background: #2d4a2d; }
+
+/* ── Final CTA ────────────────────────────────────────────────────────────── */
+.finalCta {
+  text-align: center;
+  padding: 56px 24px;
+  background: #1a2e1a;
+}
+.finalCtaText {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: rgba(245,240,232,0.7);
+  margin-bottom: 16px;
+  font-style: italic;
+}
+.finalCtaBtn {
+  display: inline-block;
+  background: #c9a97a;
+  color: #1a2218;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border-radius: 2px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.finalCtaBtn:hover { background: #d9ba8e; }
