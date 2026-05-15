@@ -26,19 +26,19 @@ export default function LocationSection() {
             <ul className={styles.distList}>
               <li>
                 <span className={styles.distCity}>Ciudad de México</span>
-                <span className={styles.distTime}>~5.5 horas en auto · 450 km</span>
+                <span className={styles.distTime}>~7.5 horas en auto · 450 km</span>
               </li>
               <li>
                 <span className={styles.distCity}>Monterrey</span>
-                <span className={styles.distTime}>~5 horas en auto · 380 km</span>
+                <span className={styles.distTime}>~7 horas en auto · 380 km</span>
               </li>
               <li>
                 <span className={styles.distCity}>San Luis Potosí</span>
-                <span className={styles.distTime}>~3 horas en auto · 210 km</span>
+                <span className={styles.distTime}>~5 horas en auto · 210 km</span>
               </li>
               <li>
                 <span className={styles.distCity}>Tampico</span>
-                <span className={styles.distTime}>~2.5 horas en auto · 170 km</span>
+                <span className={styles.distTime}>~3.5 horas en auto · 170 km</span>
               </li>
             </ul>
           </div>

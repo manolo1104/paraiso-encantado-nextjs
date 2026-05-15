@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { Star } from 'lucide-react';
 import styles from './VIPQuote.module.css';
 
@@ -6,16 +5,18 @@ export default function VIPQuote() {
   return (
     <section className={styles.section} aria-labelledby="vip-quote-heading">
       <div className={styles.inner}>
-        {/* Imagen + Badge */}
+        {/* Video de YouTube en lugar de foto */}
         <div className={styles.imageWrap}>
-          <Image
-            src="/images/amlo-xilitla.webp"
-            alt="Visita oficial a Xilitla — Paraíso Encantado 2023"
-            fill
-            sizes="(max-width: 768px) 100vw, 45vw"
-            className={styles.image}
-          />
-          <div className={styles.imageOverlay} aria-hidden="true" />
+          <div className={styles.videoContainer}>
+            <iframe
+              src="https://www.youtube.com/embed/Y8h8CuTNLcA?start=1&rel=0&modestbranding=1"
+              title="Paraíso Encantado — Visita presidencial a Xilitla 2023"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className={styles.videoIframe}
+              loading="lazy"
+            />
+          </div>
           <div className={styles.badge} aria-label="Validación VIP">
             <Star size={12} strokeWidth={0} fill="currentColor" className={styles.badgeStar} />
             <span>Validación VIP</span>

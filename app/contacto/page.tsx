@@ -185,10 +185,10 @@ export default function ContactoPage() {
         </div>
         <div className={styles.distanceRow}>
           {[
-            { city: 'CDMX', time: '~5.5 hrs', km: '460 km' },
-            { city: 'Monterrey', time: '~5 hrs', km: '430 km' },
-            { city: 'SLP', time: '~3 hrs', km: '250 km' },
-            { city: 'Tampico', time: '~2.5 hrs', km: '200 km' },
+            { city: 'CDMX', time: '~7.5 hrs', km: '460 km' },
+            { city: 'Monterrey', time: '~7 hrs', km: '430 km' },
+            { city: 'SLP', time: '~5 hrs', km: '250 km' },
+            { city: 'Tampico', time: '~3.5 hrs', km: '200 km' },
           ].map((d) => (
             <div key={d.city} className={styles.distanceItem}>
               <strong>{d.city}</strong>

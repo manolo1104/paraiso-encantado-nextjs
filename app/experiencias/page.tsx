@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 
 const WHATSAPP_URL = 'https://wa.me/524891007679';
 const BOOKING_URL = '/reservar';
+const TOURS_EXTERNAL_URL = 'https://www.huasteca-potosina.com/';
 
 const tours = [
   {
@@ -263,7 +264,7 @@ export default function ExperienciasPage() {
                     <span className={styles.tourDuration}><Clock size={13} strokeWidth={1.5} /> {tour.duration}</span>
                   </div>
                   <a
-                    href={whatsappTour(tour.name)}
+                    href={TOURS_EXTERNAL_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.tourBtn}

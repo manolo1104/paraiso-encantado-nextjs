@@ -13,7 +13,7 @@ const amenities = [
     Icon: SunriseIcon,
     title: 'Terraza Panorámica',
     desc: 'Desayuna frente a las montañas de la Huasteca. La vista más impresionante de toda la región.',
-    image: '/images/LINDAVISTA/Copia de DSC09539-HDR.jpg',
+    image: '/images/FLOR DE LIS 2/PORTADA.jpeg',
   },
   {
     Icon: UtensilsIcon,
@@ -25,7 +25,7 @@ const amenities = [
     Icon: CompassIcon,
     title: 'Tours a Las Pozas',
     desc: 'A 5 minutos caminando del Jardín Surrealista de Edward James. Te organizamos la visita desde el hotel.',
-    image: '/images/atracciones/jardin_de_edward_james.jpg',
+    image: '/images/atracciones/ruta-surrealista-pozas.png',
   },
   {
     Icon: WifiIcon,

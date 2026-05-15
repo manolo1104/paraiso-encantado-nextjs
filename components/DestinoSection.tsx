@@ -61,7 +61,7 @@ export default function DestinoSection() {
         <div className={styles.imageCol}>
           <div className={styles.imageFrame}>
             <Image
-              src="/images/atracciones/jardin_de_edward_james.jpg"
+              src="/images/atracciones/jardin-edward-james-aerial.png"
               alt="Jardín Surrealista de Edward James — Las Pozas, Xilitla"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
