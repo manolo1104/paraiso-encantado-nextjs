@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Loader2, AlertTriangle, CheckCircle, Plus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Loader2, AlertTriangle, CheckCircle, Plus, MessageSquare, Mail, Download, Pencil } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
+import { printBookingPDF } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import styles from './Modal.module.css';
 
 const SUITES = [
@@ -41,6 +42,107 @@ function getHabPrecio(hab: HabItem): number {
   return hab.precioOverride ?? getPrecioNoche(hab.suite, hab.huespedes);
 }
 
+function fmtDate(d: string) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+interface CRMClient { nombre: string; email: string; telefono: string; totalReservas: number }
+
+// ── Success panel after creating a booking ───────────────────────────────────
+interface SuccessData {
+  confirmacion: string; cliente: string; email: string; telefono: string;
+  habitaciones: string; checkin: string; checkout: string;
+  noches: number; huespedes: number; total: number;
+  anticipo: number; notas: string; fecha: string;
+}
+
+function SuccessPanel({ data, onEdit, onClose }: {
+  data: SuccessData;
+  onEdit: () => void;
+  onClose: () => void;
+}) {
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  function openWA() {
+    const msg = encodeURIComponent(
+      `Hola ${data.cliente}, confirmamos tu reserva en Paraíso Encantado:\n\n` +
+      `✅ Folio: ${data.confirmacion}\n` +
+      `🏡 Suite: ${data.habitaciones}\n` +
+      `📅 Check-in: ${fmtDate(data.checkin)}\n` +
+      `📅 Check-out: ${fmtDate(data.checkout)}\n` +
+      `🌙 ${data.noches} noche${data.noches !== 1 ? 's' : ''}\n` +
+      `💰 Total: $${data.total.toLocaleString('es-MX')} MXN\n\n` +
+      `¡Te esperamos!`
+    );
+    const tel = (data.telefono || '524891007679').replace(/\D/g, '');
+    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+  }
+
+  async function sendEmail() {
+    if (!data.email || data.email === 'N/A') return alert('Sin email registrado');
+    setSendingEmail(true);
+    try {
+      const res = await fetch(`/api/admin/reservas/${data.confirmacion}/send-email`, { method: 'POST' });
+      if (res.ok) alert(`✅ Confirmación enviada a ${data.email}`);
+      else { const d = await res.json(); alert('Error: ' + (d.error || 'No se pudo enviar')); }
+    } finally { setSendingEmail(false); }
+  }
+
+  function downloadPDF() {
+    printBookingPDF({ ...data });
+  }
+
+  return (
+    <div className={styles.successPanel}>
+      <div className={styles.successHeader}>
+        <CheckCircle size={20} style={{ color: '#2d7a34' }} />
+        <span className={styles.successTitle}>Reserva creada</span>
+        <button className={styles.closeBtn} onClick={onClose}><X size={16} /></button>
+      </div>
+
+      <div className={styles.successBody}>
+        <div className={styles.successConfNum}>{data.confirmacion}</div>
+
+        <div className={styles.successGrid}>
+          <div><span className={styles.successLabel}>Cliente</span><span className={styles.successVal}>{data.cliente}</span></div>
+          <div><span className={styles.successLabel}>Suite</span><span className={styles.successVal}>{data.habitaciones}</span></div>
+          <div><span className={styles.successLabel}>Check-in</span><span className={styles.successVal}>{fmtDate(data.checkin)}</span></div>
+          <div><span className={styles.successLabel}>Check-out</span><span className={styles.successVal}>{fmtDate(data.checkout)}</span></div>
+          <div><span className={styles.successLabel}>Noches</span><span className={styles.successVal}>{data.noches}</span></div>
+          <div><span className={styles.successLabel}>Total</span><span className={styles.successVal} style={{ color: 'var(--forest)', fontWeight: 700 }}>${data.total.toLocaleString('es-MX')} MXN</span></div>
+          {data.anticipo > 0 && <>
+            <div><span className={styles.successLabel}>Anticipo</span><span className={styles.successVal}>${data.anticipo.toLocaleString('es-MX')} MXN</span></div>
+            <div><span className={styles.successLabel}>Restante</span><span className={styles.successVal}>${(data.total - data.anticipo).toLocaleString('es-MX')} MXN</span></div>
+          </>}
+        </div>
+
+        <div className={styles.successActions}>
+          <button className={styles.successActionBtn} style={{ background: '#25D366' }} onClick={openWA}>
+            <MessageSquare size={14} /> WhatsApp
+          </button>
+          <button className={styles.successActionBtn} style={{ background: 'var(--forest)' }} onClick={sendEmail} disabled={sendingEmail}>
+            {sendingEmail ? <Loader2 size={14} className={styles.spin} /> : <Mail size={14} />} Email
+          </button>
+          <button className={styles.successActionBtn} style={{ background: '#624820' }} onClick={downloadPDF}>
+            <Download size={14} /> PDF
+          </button>
+          <button className={styles.successActionBtn} style={{ background: 'var(--clay)' }} onClick={onEdit}>
+            <Pencil size={14} /> Editar
+          </button>
+        </div>
+
+        <button className={styles.secondaryBtn} onClick={onClose} style={{ width: '100%', marginTop: 4 }}>
+          Cerrar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main modal ───────────────────────────────────────────────────────────────
+
 interface Props {
   booking?: AdminBooking;
   defaultCheckin?: string;
@@ -74,7 +176,12 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
 
   const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
     if (booking?.habitaciones) {
-      return booking.habitaciones.split(', ').filter(Boolean).map(s => ({ suite: s.trim(), huespedes: 2 }));
+      const suiteList = booking.habitaciones.split(', ').filter(Boolean).map(s => s.trim());
+      // Bug fix: use booking.huespedes for single-room, distribute for multi-room
+      const guestsPerRoom = suiteList.length === 1
+        ? Math.min(booking.huespedes || 2, 8)
+        : 2;
+      return suiteList.map(s => ({ suite: s, huespedes: guestsPerRoom }));
     }
     return [{ suite: SUITES[3], huespedes: 2 }];
   });
@@ -82,12 +189,60 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [availStatus, setAvailStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
-  const [totalOverride, setTotalOverride] = useState(false);
+  // Bug fix: start with totalOverride=true when editing to preserve stored total
+  const [totalOverride, setTotalOverride] = useState(isEdit);
   const [loyalty, setLoyalty] = useState<{ tier: string; discountPct: number; totalReservas: number } | null>(null);
+  const [successData, setSuccessData] = useState<SuccessData | null>(null);
+
+  // CRM autocomplete
+  const [crmClients, setCrmClients] = useState<CRMClient[]>([]);
+  const [activeSuggestField, setActiveSuggestField] = useState<'cliente' | 'email' | 'telefono' | null>(null);
+  const suggestRef = useRef<HTMLDivElement>(null);
 
   // Anticipo / Restante
   const [anticipo, setAnticipo] = useState(booking?.anticipo || 0);
   const [restanteOverride, setRestanteOverride] = useState<number | null>(null);
+
+  // Load CRM clients once for autocomplete (new reservations only)
+  useEffect(() => {
+    if (isEdit) return;
+    fetch('/api/admin/clientes')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: any[]) => setCrmClients(data.map((c: any) => ({
+        nombre: c.nombre || '',
+        email: c.email || '',
+        telefono: c.telefono || '',
+        totalReservas: c.totalReservas || 0,
+      }))))
+      .catch(() => {});
+  }, [isEdit]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
+        setActiveSuggestField(null);
+      }
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  function getSuggestions(field: 'cliente' | 'email' | 'telefono') {
+    const val = form[field].trim().toLowerCase();
+    if (val.length < 2) return [];
+    return crmClients.filter(c => {
+      if (field === 'cliente') return c.nombre.toLowerCase().includes(val);
+      if (field === 'email') return c.email.toLowerCase().includes(val);
+      if (field === 'telefono') return c.telefono.includes(val);
+      return false;
+    }).slice(0, 5);
+  }
+
+  function applySuggestion(c: CRMClient) {
+    setForm(f => ({ ...f, cliente: c.nombre, email: c.email, telefono: c.telefono }));
+    setActiveSuggestField(null);
+  }
 
   function set(key: string, value: string | number) {
     setForm(f => ({ ...f, [key]: value }));
@@ -116,7 +271,7 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
   const precioCalculado = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * Math.max(form.noches, 1), 0);
   const restante = restanteOverride ?? (form.total - anticipo);
 
-  // Auto-calcular noches y precio
+  // Auto-calcular noches y precio (only when NOT editing)
   useEffect(() => {
     const { checkin, checkout } = form;
     if (checkin && checkout) {
@@ -130,18 +285,15 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     }
   }, [form.checkin, form.checkout, habitaciones, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset restante override when total changes
   useEffect(() => {
     if (!totalOverride) setRestanteOverride(null);
   }, [form.total, totalOverride]);
 
-  // Verificar disponibilidad cuando cambian fechas o suites
   useEffect(() => {
     const { checkin, checkout } = form;
     if (!checkin || !checkout || isEdit) return;
     const n = Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000);
     if (n <= 0) return;
-
     setAvailStatus('checking');
     const timer = setTimeout(async () => {
       try {
@@ -151,16 +303,12 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
           body: JSON.stringify({ checkin, checkout, rooms: habitaciones.map(h => h.suite) }),
         });
         const data = await res.json();
-        const unavailable: string[] = data.unavailableRooms || [];
-        setAvailStatus(unavailable.length > 0 ? 'unavailable' : 'available');
-      } catch {
-        setAvailStatus('idle');
-      }
+        setAvailStatus((data.unavailableRooms || []).length > 0 ? 'unavailable' : 'available');
+      } catch { setAvailStatus('idle'); }
     }, 600);
     return () => clearTimeout(timer);
   }, [form.checkin, form.checkout, habitaciones, isEdit]);
 
-  // Buscar tier de lealtad cuando se escribe el email
   useEffect(() => {
     const email = form.email?.trim();
     if (!email || isEdit) { setLoyalty(null); return; }
@@ -200,9 +348,9 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     setError('');
     try {
       const habitacion = habitaciones.map(h => h.suite).join(', ');
+      const notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
       const url = isEdit ? `/api/admin/reservas/${booking!.confirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
-      const notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -210,8 +358,29 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al guardar');
-      onSaved();
-      onClose();
+
+      onSaved(); // refresh parent
+
+      if (!isEdit && data.confirmacion) {
+        // Show success panel instead of closing
+        setSuccessData({
+          confirmacion: data.confirmacion,
+          cliente: form.cliente,
+          email: form.email,
+          telefono: form.telefono,
+          habitaciones: habitacion,
+          checkin: form.checkin,
+          checkout: form.checkout,
+          noches: form.noches,
+          huespedes: totalHuespedes,
+          total: form.total,
+          anticipo,
+          notas,
+          fecha: new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' }),
+        });
+      } else {
+        onClose();
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -234,6 +403,37 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     }
   }
 
+  // Show success panel
+  if (successData) {
+    return (
+      <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div className={styles.modal}>
+          <SuccessPanel
+            data={successData}
+            onEdit={() => setSuccessData(null)} // go back to form (will show as new, just informational)
+            onClose={onClose}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Autocomplete helper ──────────────────────────────────────────────────────
+  function AutoSuggest({ field }: { field: 'cliente' | 'email' | 'telefono' }) {
+    const suggestions = getSuggestions(field);
+    if (activeSuggestField !== field || suggestions.length === 0) return null;
+    return (
+      <div ref={suggestRef} className={styles.suggestDropdown}>
+        {suggestions.map(c => (
+          <div key={c.email} className={styles.suggestItem} onMouseDown={() => applySuggestion(c)}>
+            <span className={styles.suggestName}>{c.nombre}</span>
+            <span className={styles.suggestMeta}>{c.email} · {c.telefono} · {c.totalReservas} estancia{c.totalReservas !== 1 ? 's' : ''}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
@@ -245,18 +445,44 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.grid2}>
-            <label className={styles.field}>
+            {/* Cliente con autocomplete */}
+            <label className={styles.field} style={{ position: 'relative' }}>
               <span>Cliente *</span>
-              <input value={form.cliente} onChange={e => set('cliente', e.target.value)} required />
+              <input
+                value={form.cliente}
+                onChange={e => { set('cliente', e.target.value); setActiveSuggestField('cliente'); }}
+                onFocus={() => setActiveSuggestField('cliente')}
+                required
+                autoComplete="off"
+              />
+              <AutoSuggest field="cliente" />
             </label>
-            <label className={styles.field}>
+
+            {/* Teléfono con autocomplete */}
+            <label className={styles.field} style={{ position: 'relative' }}>
               <span>Teléfono / WhatsApp</span>
-              <input value={form.telefono} onChange={e => set('telefono', e.target.value)} />
+              <input
+                value={form.telefono}
+                onChange={e => { set('telefono', e.target.value); setActiveSuggestField('telefono'); }}
+                onFocus={() => setActiveSuggestField('telefono')}
+                autoComplete="off"
+              />
+              <AutoSuggest field="telefono" />
             </label>
-            <label className={styles.field}>
+
+            {/* Email con autocomplete */}
+            <label className={styles.field} style={{ position: 'relative' }}>
               <span>Email</span>
-              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} />
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => { set('email', e.target.value); setActiveSuggestField('email'); }}
+                onFocus={() => setActiveSuggestField('email')}
+                autoComplete="off"
+              />
+              <AutoSuggest field="email" />
             </label>
+
             <label className={styles.field}>
               <span>Check-in *</span>
               <input type="date" value={form.checkin} onChange={e => handleCheckin(e.target.value)} required />
@@ -382,18 +608,15 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
                 </div>
               </div>
               {!totalOverride && (
-                <button
-                  type="button"
-                  onClick={applyLoyaltyDiscount}
-                  style={{ background: '#2a2218', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                >
+                <button type="button" onClick={applyLoyaltyDiscount}
+                  style={{ background: '#2a2218', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: '0.78rem', cursor: 'pointer' }}>
                   Aplicar {loyalty.discountPct}%
                 </button>
               )}
             </div>
           )}
 
-          {/* Estado de disponibilidad */}
+          {/* Disponibilidad */}
           {!isEdit && form.checkin && form.checkout && (
             <div className={`${styles.availBadge} ${
               availStatus === 'available' ? styles.availOk :
@@ -406,6 +629,7 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
             </div>
           )}
 
+          {/* Notas */}
           <div className={styles.grid2}>
             <label className={styles.field}>
               <span>Notas para el cliente (aparece en PDF)</span>

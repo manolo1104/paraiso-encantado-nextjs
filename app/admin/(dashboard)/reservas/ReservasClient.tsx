@@ -82,6 +82,7 @@ export default function ReservasClient({ initialBookings }: Props) {
   const [fechaHasta, setFechaHasta] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [vistaHoy, setVistaHoy] = useState(false);
+  const [sortBy, setSortBy] = useState<'checkin' | 'reciente'>('checkin');
   const [modal, setModal] = useState<{ mode: 'new' | 'edit'; booking?: AdminBooking } | null>(null);
   const [loading, setLoading] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -110,15 +111,15 @@ export default function ReservasClient({ initialBookings }: Props) {
       return true;
     }).sort((a, b) => {
       if (vistaHoy) {
-        // Sort by operational priority: check-in first, then in-house, then check-out
         const order = { CHECK_IN_HOY: 0, EN_CASA: 1, CHECK_OUT_HOY: 2 };
         const ao = order[getOpsState(a, today) as keyof typeof order] ?? 9;
         const bo = order[getOpsState(b, today) as keyof typeof order] ?? 9;
         return ao - bo;
       }
+      if (sortBy === 'reciente') return b.rowIndex - a.rowIndex; // más alto rowIndex = más reciente en Sheets
       return b.checkin.localeCompare(a.checkin);
     });
-  }, [bookings, search, suiteFilter, estadoFilter, fechaDesde, fechaHasta, vistaHoy, today]);
+  }, [bookings, search, suiteFilter, estadoFilter, fechaDesde, fechaHasta, vistaHoy, sortBy, today]);
 
   // Counters for "today" badge
   const todayCounts = useMemo(() => ({
@@ -187,6 +188,15 @@ export default function ReservasClient({ initialBookings }: Props) {
             )}
           </button>
 
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as 'checkin' | 'reciente')}
+            className={styles.select}
+            style={{ fontSize: '0.8rem', padding: '6px 10px', minWidth: 0 }}
+          >
+            <option value="checkin">Por check-in</option>
+            <option value="reciente">Más recientes</option>
+          </select>
           <button className={styles.iconBtn} onClick={refresh} disabled={loading} title="Actualizar">
             <RefreshCw size={16} className={loading ? styles.spin : ''} />
           </button>

@@ -161,6 +161,55 @@ export function buildQuoteEmailHtml(data: {
 </html>`;
 }
 
+
+import { buildBookingHtml, calcCancelDate72h, fmtDateFull } from './booking-html';
+
+const SUITE_IMAGES_EMAIL: Record<string, string> = {
+  'Suite Flor de Liz 1': '/images/FLOR DE LIS 1/PORTADA.jpg',
+  'Suite Flor de Liz 2': '/images/FLOR DE LIS 2/PORTADA.jpeg',
+  'Suite LindaVista': '/images/LINDAVISTA/PORTADA.jpg',
+  'Jungla': '/images/JUNGLA/PORTADA.JPG',
+  'Suite Lajas': '/images/LAJAS/PORTADA.jpg',
+  'Lirios 1': '/images/LIRIOS 1/PORTADA.jpg',
+  'Lirios 2': '/images/LIRIOS 2/PORTADA.jpg',
+  'Orquídeas 2': '/images/ORQUIDEAS 2/PORTADA.jpg',
+  'Orquídeas Doble': '/images/ORQUIDEAS DOBLE/PORTADA.jpg',
+  'Orquídeas 3': '/images/ORQUIDEAS 3/PORTADA.jpg',
+  'Bromelias': '/images/BROMELIAS 1/PORTADA.jpg',
+  'Helechos 1': '/images/HELECHOS 1/PORTADA.jpg',
+  'Helechos 2': '/images/HELECHOS 2/PORTADA.jpg',
+};
+const SUITE_IMAGES_EMAIL_2: Record<string, string> = {
+  'Suite Flor de Liz 1': '/images/FLOR DE LIS 1/DSCF1191.jpg',
+  'Suite Flor de Liz 2': '/images/FLOR DE LIS 2/Copia de FDL2.jpg',
+  'Suite LindaVista': '/images/LINDAVISTA/Copia de DSC09539-HDR.jpg',
+  'Jungla': '/images/JUNGLA/DSCF1065.jpg',
+  'Suite Lajas': '/images/LAJAS/Copia de DSC09589-HDR.jpg',
+  'Lirios 1': '/images/LIRIOS 1/Copia de DSC09524-HDR.jpg',
+  'Lirios 2': '/images/LIRIOS 2/Copia de DSC09483-HDR.jpg',
+  'Orquídeas 2': '/images/ORQUIDEAS 2/Copia de DSC09568-HDR.jpg',
+  'Orquídeas Doble': '/images/ORQUIDEAS DOBLE/Copia de DSC09602-HDR.jpg',
+  'Orquídeas 3': '/images/ORQUIDEAS 3/Copia de DSC09567-HDR.jpg',
+  'Bromelias': '/images/BROMELIAS 1/Copia de DSC09385-HDR.jpg',
+  'Helechos 1': '/images/HELECHOS 1/Copia de DSC09461-HDR 2.jpg',
+  'Helechos 2': '/images/HELECHOS 2/Copia de DSC09461-HDR.jpg',
+};
+const SUITE_IMAGES_EMAIL_3: Record<string, string> = {
+  'Suite Flor de Liz 1': '/images/FLOR DE LIS 1/DSCF1312.jpeg',
+  'Suite Flor de Liz 2': '/images/FLOR DE LIS 2/DSCF1191.jpg',
+  'Suite LindaVista': '/images/LINDAVISTA/Copia de DSC09569.jpg',
+  'Jungla': '/images/JUNGLA/DSCF1078.jpg',
+  'Suite Lajas': '/images/LAJAS/Copia de DSC09610-HDR.jpg',
+  'Lirios 1': '/images/LIRIOS 1/Copia de DSCF1620.jpg',
+  'Lirios 2': '/images/LIRIOS 2/Copia de DSC09489-2.jpg',
+  'Orquídeas 2': '/images/ORQUIDEAS 2/DSCF1607.jpg',
+  'Orquídeas Doble': '/images/ORQUIDEAS DOBLE/Copia de DSCF1607.jpg',
+  'Orquídeas 3': '/images/ORQUIDEAS 3/PORTADA.jpg',
+  'Bromelias': '/images/BROMELIAS 1/Copia de DSC09419-HDR.jpg',
+  'Helechos 1': '/images/HELECHOS 1/Copia de DSC09516-HDR.jpg',
+  'Helechos 2': '/images/HELECHOS 2/Copia de DSC09556-HDR.jpg',
+};
+
 export function buildEmailHtml(data: {
   customerName: string;
   confirmationNumber: string;
@@ -180,279 +229,44 @@ export function buildEmailHtml(data: {
   notas?: string;
 }): string {
   const base = 'https://www.paraisoencantado.com';
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Por confirmar';
-    const d = new Date(dateStr + 'T12:00:00');
-    const f = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'short' });
-    return f.charAt(0).toUpperCase() + f.slice(1);
-  };
-
-  const calcCancelDate = (checkin?: string): string => {
-    if (!checkin) return 'Ver política de cancelación';
-    const d = new Date(checkin + 'T00:00:00');
-    d.setDate(d.getDate() - 3);
-    const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    return `${d.getDate()} de ${months[d.getMonth()]} ${d.getFullYear()} a las 11:59 PM`;
-  };
-
   const INTERNO_SEP = '||INTERNO||';
-  const notasCliente = (() => {
-    const n = data.notas || '';
-    const idx = n.indexOf(INTERNO_SEP);
-    return idx === -1 ? n.trim() : n.slice(0, idx).trim();
-  })();
 
-  const adults = Number(data.adults ?? data.guests ?? 0) || 0;
-  const minors = Number(data.minors ?? 0) || 0;
-  const guestsBreakdown = `${adults} adulto${adults === 1 ? '' : 's'} · ${minors} menor${minors === 1 ? '' : 'es'}`;
-  const nights = data.nights || 0;
+  const suites = (data.rooms || []).map(r => r.name).filter(Boolean);
+  if (suites.length === 0 && data.rooms?.[0]?.name) suites.push(data.rooms[0].name);
 
-  const roomsRows = (data.rooms || []).map(room => `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;">
-      <tr>
-        <td style="padding:20px 0;vertical-align:top;width:80%;">
-          <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:400;color:#2a2218;margin:0 0 4px 0;">${room.name || 'Habitación'}</p>
-          <p style="font-size:12px;color:#9a8a74;font-weight:300;margin:0;">${room.guestCount || 1} persona${(room.guestCount || 1) > 1 ? 's' : ''} · ${nights} noche${nights > 1 ? 's' : ''}</p>
-        </td>
-        <td style="padding:20px 0 20px 20px;text-align:right;vertical-align:top;white-space:nowrap;">
-          <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:500;color:#2a2218;margin:0;">$${Number(room.totalPrice || 0).toLocaleString('es-MX')}</p>
-        </td>
-      </tr>
-    </table>`).join('');
+  const firstSuite = suites[0] || '';
+  const suiteImgSrc  = firstSuite && SUITE_IMAGES_EMAIL[firstSuite]   ? base + SUITE_IMAGES_EMAIL[firstSuite]   : '';
+  const suiteImgSrc2 = firstSuite && SUITE_IMAGES_EMAIL_2[firstSuite] ? base + SUITE_IMAGES_EMAIL_2[firstSuite] : '';
+  const suiteImgSrc3 = firstSuite && SUITE_IMAGES_EMAIL_3[firstSuite] ? base + SUITE_IMAGES_EMAIL_3[firstSuite] : '';
 
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tu estadía está confirmada — ${data.confirmationNumber}</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
-    * { margin:0; padding:0; }
-    body { font-family:'Jost','Helvetica Neue',Arial,sans-serif; background-color:#f0ebe3; line-height:1.6; }
-    table { border-collapse:collapse; }
-    img { display:block; max-width:100%; height:auto; }
-    a { color:#2a2218; text-decoration:none; }
-    .wrapper { background-color:#f0ebe3; padding:20px 0; }
-    .container { max-width:620px; margin:0 auto; background-color:#faf8f5; }
-    @media only screen and (max-width:640px) {
-      .wrapper { padding:0!important; }
-      .container,.full-width { width:100%!important; max-width:100%!important; }
-      .mobile-padding { padding-left:24px!important; padding-right:24px!important; }
-      .mobile-padding-lg { padding:34px 24px!important; }
-      .hero-title { font-size:34px!important; line-height:1.15!important; }
-      .split-left { border-left:1px solid #e4ddd3!important; }
-      .cta-button { width:100%!important; }
-    }
-  </style>
-</head>
-<body>
-<div class="wrapper">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-    <tr><td style="padding:16px 0;text-align:center;">
-      <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8a7d6b;">Xilitla &middot; San Luis Potosí &middot; México</p>
-    </td></tr>
-  </table>
+  const notasRaw = data.notas || '';
+  const idx = notasRaw.indexOf(INTERNO_SEP);
+  const notasClienteText = idx === -1 ? notasRaw.trim() : notasRaw.slice(0, idx).trim();
 
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-    <tr><td align="center" style="padding:0;">
-      <table class="container full-width" role="presentation" width="620" cellspacing="0" cellpadding="0" border="0">
+  const checkin  = data.checkin  || '';
+  const checkout = data.checkout || '';
+  const noches   = data.nights   || 0;
+  const huespedes = data.adults || data.guests || 0;
+  const total     = data.total || 0;
+  const anticipo  = data.anticipo || 0;
 
-        <!-- HERO -->
-        <tr><td class="mobile-padding-lg" style="padding:34px 40px 38px 40px;background-color:#2f281f;">
-            <p style="margin:0 0 8px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,0.72);">Confirmación de Reserva</p>
-            <h1 class="hero-title" style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:46px;font-style:italic;font-weight:300;color:#ffffff;line-height:1.1;">Tu paraíso te espera.</h1>
-            <p style="margin:14px 0 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;font-weight:300;color:rgba(255,255,255,0.8);line-height:1.7;">Tu estancia en Hotel Paraíso Encantado ya está lista. Aquí tienes todos los detalles de tu llegada.</p>
-          </td>
-        </tr>
-
-        <!-- MAIN CARD -->
-        <tr><td class="mobile-padding-lg" style="background-color:#faf8f5;padding:52px 48px;">
-
-          <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;color:#2a2218;line-height:1.2;">
-            Bienvenido/a,<br><span style="font-style:italic;color:#7a6a52;">${data.customerName}</span>
-          </p>
-
-          <p style="margin:24px 0 32px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:15px;font-weight:300;color:#4a3f30;line-height:1.85;">
-            Todo está listo. Tu reserva ha sido confirmada y el equipo de Paraíso Encantado ya prepara tu llegada. Pronto estarás despertando con el canto de las aves, rodeado de la selva surreal de Xilitla.
-          </p>
-
-          <table role="presentation" width="48" cellspacing="0" cellpadding="0" border="0">
-            <tr><td style="height:1px;background-color:#c9b99a;"></td></tr>
-          </table>
-
-          <!-- CONFIRMATION NUMBER -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:32px 0;">
-            <tr><td style="border:1px solid #c9b99a;background-color:#fdf9f4;padding:28px 32px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td>
-                    <p style="margin:0 0 10px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9a8a74;">Número de Confirmación</p>
-                    <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:500;color:#2a2218;letter-spacing:1px;">${data.confirmationNumber}</p>
-                  </td>
-                  <td style="vertical-align:middle;text-align:right;width:44px;">
-                    <table role="presentation" width="44" height="44" cellspacing="0" cellpadding="0" border="0" style="border:1.5px solid #c9b99a;background-color:#2a2218;border-radius:50%;">
-                      <tr><td align="center" style="vertical-align:middle;font-size:24px;color:#faf8f5;height:44px;">✓</td></tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td></tr>
-          </table>
-
-          <!-- STAY DETAILS -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:32px 0;">
-            <tr>
-              <td style="width:50%;border:1px solid #e4ddd3;background-color:#faf8f5;padding:22px 24px;vertical-align:top;">
-                <p style="margin:0 0 12px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;">Llegada</p>
-                <p style="margin:0 0 4px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;">${formatDate(data.checkin)}</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#9a8a74;">Check-in a partir de las 3:00 PM</p>
-              </td>
-              <td class="split-left" style="width:50%;border:1px solid #e4ddd3;border-left:none;background-color:#faf8f5;padding:22px 24px;vertical-align:top;">
-                <p style="margin:0 0 12px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;">Salida</p>
-                <p style="margin:0 0 4px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;">${formatDate(data.checkout)}</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#9a8a74;">Check-out antes de las 12:00 PM</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="width:50%;border:1px solid #e4ddd3;border-top:none;background-color:#faf8f5;padding:22px 24px;vertical-align:top;">
-                <p style="margin:0 0 12px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;">Duración</p>
-                <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;">${nights} noche${nights === 1 ? '' : 's'}</p>
-              </td>
-              <td class="split-left" style="width:50%;border:1px solid #e4ddd3;border-top:none;border-left:none;background-color:#faf8f5;padding:22px 24px;vertical-align:top;">
-                <p style="margin:0 0 12px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;">Huéspedes</p>
-                <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;">${guestsBreakdown}</p>
-              </td>
-            </tr>
-          </table>
-
-          <!-- ROOMS -->
-          <p style="margin:32px 0 20px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:#9a8a74;">Habitaciones Reservadas</p>
-          ${roomsRows}
-
-          <!-- TOTAL + ANTICIPO -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#2a2218;margin:32px 0 0 0;">
-            <tr><td class="mobile-padding" style="padding:24px 48px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#c9b99a;">Total Estadía</p></td>
-                  <td style="text-align:right;">
-                    <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#faf8f5;">
-                      $${Number(data.total || 0).toLocaleString('es-MX')}<span style="font-size:14px;color:#c9b99a;"> MXN</span>
-                    </p>
-                  </td>
-                </tr>
-                ${(data.anticipo || 0) > 0 ? `
-                <tr><td colspan="2" style="padding-top:16px;border-top:1px solid rgba(201,185,154,0.3);">
-                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                    <tr>
-                      <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#7ecf86;">— Anticipo recibido</p></td>
-                      <td style="text-align:right;"><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;font-weight:500;color:#7ecf86;">$${Number(data.anticipo).toLocaleString('es-MX')} MXN</p></td>
-                    </tr>
-                    <tr>
-                      <td><p style="margin:8px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#f0b97a;">Saldo pendiente al check-in</p></td>
-                      <td style="text-align:right;"><p style="margin:8px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;color:#f0b97a;">$${Number((data.total||0) - (data.anticipo||0)).toLocaleString('es-MX')} MXN</p></td>
-                    </tr>
-                  </table>
-                </td></tr>` : ''}
-              </table>
-            </td></tr>
-          </table>
-          ${(data.anticipo || 0) > 0 && ((data.total||0) - (data.anticipo||0)) > 0 ? `
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 32px 0;">
-            <tr><td style="background:#fff8ee;border-left:3px solid #c9a96e;padding:12px 20px;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#7a6a40;line-height:1.6;">
-              Tendrás que pagar $${Number((data.total||0) - (data.anticipo||0)).toLocaleString('es-MX')} MXN al llegar. Aceptamos efectivo y transferencia.
-            </td></tr>
-          </table>` : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 32px 0;"><tr><td style="height:1px;"></td></tr></table>`}
-
-          <!-- QUOTE -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-left:2px solid #c9b99a;padding-left:24px;margin:32px 0;">
-            <tr><td>
-              <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-style:italic;font-weight:300;color:#5a4e3c;line-height:1.7;">
-                "En Paraíso Encantado, cada amanecer es una obra de arte que la selva pinta para ti. Te esperamos con los brazos abiertos y el corazón lleno."
-              </p>
-            </td></tr>
-          </table>
-
-          <!-- CANCELACION -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4faf4;border:1px solid #c8dfc9;margin:0 0 24px 0;">
-            <tr><td style="padding:18px 22px;">
-              <p style="margin:0 0 4px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;font-weight:500;color:#1e1e18;">Cancelación gratuita disponible</p>
-              <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#5a7a5c;line-height:1.5;">Puedes cancelar sin costo hasta el <strong style="color:#1e1e18;">${calcCancelDate(data.checkin)}</strong>. Después aplica el cargo total.</p>
-            </td></tr>
-          </table>
-
-          ${notasCliente ? `
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-left:2px solid #c9b99a;padding-left:20px;margin:0 0 24px 0;">
-            <tr><td><p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-style:italic;font-weight:300;color:#5a4e3c;line-height:1.7;">${notasCliente}</p></td></tr>
-          </table>` : ''}
-
-          <!-- ARRIVAL INFO -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f0e8;margin:0 0 0 0;">
-            <tr>
-              <td style="width:50%;padding:20px;vertical-align:top;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Cómo Llegar</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">Al llegar a Xilitla, busca Las Pozas. Estamos 400m antes de la entrada.<br><strong>A 5 min caminando del Jardín de Edward James.</strong></p>
-              </td>
-              <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-left:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Contacto Directo</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;"><a href="tel:+524891007679" style="color:#2a2218;">489-100-7679</a><br><a href="https://wa.me/524891007679" style="color:#2a2218;">WhatsApp</a></p>
-              </td>
-            </tr>
-            <tr>
-              <td style="width:50%;padding:20px;vertical-align:top;border-top:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Al Llegar</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;">Presenta: <strong>${data.confirmationNumber}</strong></p>
-              </td>
-              <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-top:1px solid #e4ddd3;border-left:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Redes Sociales</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#4a3f30;line-height:1.8;"><a href="https://www.instagram.com/_paraiso_encantado/" style="color:#2a2218;">IG: @_paraiso_encantado</a><br><a href="https://www.facebook.com/cabanas.encantado/" style="color:#2a2218;">FB: cabanas.encantado</a></p>
-              </td>
-            </tr>
-          </table>
-
-        </td></tr>
-
-        <!-- CTA -->
-        <tr><td class="mobile-padding-lg" style="background-color:#f4f0e8;padding:44px 48px;text-align:center;">
-          <p style="margin:0 0 12px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9a8a74;">Antes de tu Llegada</p>
-          <h2 style="margin:0 0 24px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-style:italic;font-weight:300;color:#2a2218;">Descubre todo lo que puedes vivir en Xilitla.</h2>
-          <table class="cta-button" role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
-            <tr><td style="background-color:#2a2218;padding:16px 38px;">
-              <a href="${base}" style="font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#faf8f5;text-decoration:none;display:block;">Explorar la Huasteca</a>
-            </td></tr>
-          </table>
-        </td></tr>
-
-        <!-- CONTACT -->
-        <tr><td class="mobile-padding" style="background-color:#faf8f5;padding:32px 48px;border-top:1px solid #e4ddd3;">
-          <p style="margin:0 0 16px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9a8a74;">¿Tienes Preguntas?</p>
-          <p style="margin:0 0 8px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#2a2218;">
-            📧 <a href="mailto:reservas@paraisoencantado.com" style="color:#2a2218;border-bottom:1px solid #c9b99a;">reservas@paraisoencantado.com</a>
-          </p>
-          <p style="margin:0 0 12px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#2a2218;">
-            📞 <a href="tel:+524891007679" style="color:#2a2218;">489-100-7679</a>
-          </p>
-          <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;">ID de Pago: ${data.paymentIntentId || 'N/A'}</p>
-        </td></tr>
-
-        <!-- FOOTER -->
-        <tr><td class="mobile-padding-lg" style="background-color:#f0ebe3;padding:44px 48px;text-align:center;">
-          <p style="margin:0 0 12px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;letter-spacing:3px;text-transform:uppercase;color:#8a7d6b;">Paraíso Encantado</p>
-          <p style="margin:0 0 16px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#a09080;line-height:1.6;">
-            Hotel Paraíso Encantado &middot; Xilitla, San Luis Potosí 79910 &middot; México<br>
-            A pasos del Jardín Surrealista de Edward James
-          </p>
-          <p style="margin:16px 0 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;color:#b8aa9a;">
-            © ${new Date().getFullYear()} Hotel Paraíso Encantado · Todos los derechos reservados
-          </p>
-        </td></tr>
-
-      </table>
-    </td></tr>
-  </table>
-</div>
-</body>
-</html>`;
+  return buildBookingHtml({
+    confirmacion: data.confirmationNumber,
+    cliente: data.customerName,
+    suites: suites.length > 0 ? suites : ['Suite'],
+    checkin,
+    checkout,
+    noches,
+    huespedes,
+    total,
+    anticipo,
+    restante: total - anticipo,
+    cancelDateStr: calcCancelDate72h(checkin),
+    fechaLimiteStr: fmtDateFull(checkin),
+    notasClienteText,
+    suiteImgSrc,
+    suiteImgSrc2,
+    suiteImgSrc3,
+    forPrint: false,
+  });
 }
