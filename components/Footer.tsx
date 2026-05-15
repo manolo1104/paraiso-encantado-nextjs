@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { MessageCircle } from 'lucide-react';
 import styles from './Footer.module.css';
 
@@ -10,9 +11,18 @@ export default function Footer() {
 
         {/* Marca */}
         <div className={`${styles.section} ${styles.brand}`}>
-          <h3 className={styles.logo}>
-            <em>Paraíso Encantado</em>
-          </h3>
+          <div className={styles.logoWrap}>
+            <Image
+              src="/logo.png"
+              alt="Paraíso Encantado logo"
+              width={48}
+              height={48}
+              className={styles.logoImg}
+            />
+            <h3 className={styles.logo}>
+              <em>Paraíso Encantado</em>
+            </h3>
+          </div>
           <p className={styles.tagline}>Tu casa en la Huasteca Potosina</p>
           <div className={styles.contact}>
             <p>

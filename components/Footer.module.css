@@ -19,6 +19,20 @@
   gap: 12px;
 }
 
+.logoWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.logoImg {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .logo {
   font-family: var(--font-cormorant);
   font-size: 26px;

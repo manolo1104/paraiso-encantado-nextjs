@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import styles from './Navbar.module.css';
 
 const BOOKING_URL = '/reservar';
@@ -32,6 +33,14 @@ export default function Navbar() {
       <div className={styles.navContainer}>
         {/* Logo */}
         <a href="/" className={styles.navLogo} aria-label="Paraíso Encantado - Inicio">
+          <Image
+            src="/logo.png"
+            alt="Paraíso Encantado"
+            width={36}
+            height={36}
+            className={styles.navLogoImg}
+            priority
+          />
           <em>Paraíso Encantado</em>
         </a>
 
