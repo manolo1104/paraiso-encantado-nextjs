@@ -44,6 +44,9 @@ function getFeatureIcon(feature: string) {
 
 interface Props {
   suite: Suite;
+  initialCheckin?: string;
+  initialCheckout?: string;
+  initialGuests?: number;
 }
 
 function Lightbox({
@@ -129,13 +132,14 @@ function getSimilarSuites(current: Suite, allSuites: Suite[]): Suite[] {
   return [...sameGroup, ...similarPrice].slice(0, 4);
 }
 
-export default function SuitePageClient({ suite }: Props) {
+export default function SuitePageClient({ suite, initialCheckin = '', initialCheckout = '', initialGuests = 2 }: Props) {
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxStart, setLightboxStart] = useState(0);
-  const [selectedCheckin, setSelectedCheckin] = useState('');
-  const [selectedCheckout, setSelectedCheckout] = useState('');
+  const [selectedCheckin, setSelectedCheckin] = useState(initialCheckin);
+  const [selectedCheckout, setSelectedCheckout] = useState(initialCheckout);
+  const [selectedGuests, setSelectedGuests] = useState(initialGuests);
 
   const openLightbox = useCallback((idx: number) => {
     setLightboxStart(idx);
@@ -148,26 +152,26 @@ export default function SuitePageClient({ suite }: Props) {
   const urgency = getUrgencyBadge(suite);
   const similarSuites = getSimilarSuites(suite, suites);
 
-  const handleDatesSelected = useCallback((ci: string, co: string) => {
+  const handleDatesSelected = useCallback((ci: string, co: string, guestsCount: number) => {
     setSelectedCheckin(ci);
     setSelectedCheckout(co);
+    setSelectedGuests(guestsCount);
   }, []);
 
   const handleReservar = useCallback(() => {
     const today = new Date().toISOString().split('T')[0];
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    // Prefer dates selected in the date picker
     let ci = selectedCheckin || today;
     let co = selectedCheckout || tomorrow;
-    let adults = '2';
+    const adults = selectedGuests || 2;
     if (!selectedCheckin) {
       try {
         const raw = sessionStorage.getItem('pe_last_dates');
-        if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; adults = d.adults || '2'; }
+        if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; }
       } catch { /* ignore */ }
     }
     router.push(`/reservar?checkin=${ci}&checkout=${co}&adults=${adults}&suiteId=${suite.id}&autoselect=1`);
-  }, [suite.id, router, selectedCheckin, selectedCheckout]);
+  }, [suite.id, router, selectedCheckin, selectedCheckout, selectedGuests]);
 
   return (
     <main className={styles.main}>
@@ -292,8 +296,15 @@ export default function SuitePageClient({ suite }: Props) {
             </p>
           </div>
 
-          {/* Date picker de disponibilidad */}
-          <SuiteDatePicker suiteName={suite.name} onDatesSelected={handleDatesSelected} />
+          {/* Date picker — pre-llenado con fechas del listado si vienen en la URL */}
+          <SuiteDatePicker
+            suiteName={suite.name}
+            maxGuests={suite.maxOccupancy}
+            initialCheckin={initialCheckin}
+            initialCheckout={initialCheckout}
+            initialGuests={initialGuests}
+            onDatesSelected={handleDatesSelected}
+          />
 
           {/* CTA — más prominente si ya hay fechas seleccionadas */}
           <button

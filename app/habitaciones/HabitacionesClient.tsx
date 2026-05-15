@@ -19,9 +19,10 @@ interface Props {
   unavailableNames?: string[];
   checkin?: string;
   checkout?: string;
+  suiteLinkSuffix?: string; // e.g. "?checkin=X&checkout=Y&guests=2"
 }
 
-export default function HabitacionesClient({ groups, unavailableNames = [], checkin = '', checkout = '' }: Props) {
+export default function HabitacionesClient({ groups, unavailableNames = [], checkin = '', checkout = '', suiteLinkSuffix = '' }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
 
@@ -59,9 +60,8 @@ export default function HabitacionesClient({ groups, unavailableNames = [], chec
                 const urgencyMsg = occupancy ? URGENCY_MESSAGES[occupancy] : undefined;
 
                 // Build link with dates if available
-                const href = checkin && checkout
-                  ? `/habitaciones/${suite.id}?checkin=${checkin}&checkout=${checkout}`
-                  : `/habitaciones/${suite.id}`;
+                // suiteLinkSuffix includes ?checkin=X&checkout=Y&guests=N
+                const href = `/habitaciones/${suite.id}${suiteLinkSuffix}`;
 
                 return (
                   <div key={suite.id} className={`${styles.cardWrap} ${isSelected ? styles.cardWrapSelected : ''} ${isUnavailable ? styles.cardWrapUnavailable : ''}`}>

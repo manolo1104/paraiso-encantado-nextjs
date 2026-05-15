@@ -5,6 +5,7 @@ import SuitePageClient from './SuitePageClient';
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ checkin?: string; checkout?: string; guests?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -31,8 +32,9 @@ export async function generateStaticParams() {
   return suites.map((s) => ({ id: s.id }));
 }
 
-export default async function SuitePage({ params }: Props) {
+export default async function SuitePage({ params, searchParams }: Props) {
   const { id } = await params;
+  const sp = await searchParams;
   const suite = suites.find((s) => s.id === id);
   if (!suite) notFound();
 
@@ -87,7 +89,12 @@ export default async function SuitePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <SuitePageClient suite={suite} />
+      <SuitePageClient
+        suite={suite}
+        initialCheckin={sp.checkin || ''}
+        initialCheckout={sp.checkout || ''}
+        initialGuests={Math.min(8, Math.max(1, parseInt(sp.guests || '2') || 2))}
+      />
     </>
   );
 }
