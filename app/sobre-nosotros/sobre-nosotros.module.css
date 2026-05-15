@@ -353,3 +353,301 @@
   .ecoSection { padding: 60px 16px; }
   .ctaSection { padding: 60px 16px; }
 }
+
+/* ── Image helpers ─────────────────────────────────────────────────────────── */
+.imgCover { object-fit: cover; }
+
+/* ── History images grid ───────────────────────────────────────────────────── */
+.historyImages {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 200px 200px;
+  gap: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  width: 340px;
+}
+.historyImg1 { position: relative; grid-row: span 2; }
+.historyImg2, .historyImg3 { position: relative; }
+@media (max-width: 900px) { .historyImages { width: 100%; grid-template-rows: 160px 160px; } }
+@media (max-width: 600px) { .historyImages { display: none; } }
+
+/* ── Timeline ──────────────────────────────────────────────────────────────── */
+.timelineSection {
+  padding: 72px 24px;
+  background: #0e1f10;
+  overflow: hidden;
+}
+.timelineHeader {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.timelineHeader h2 {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 300;
+  color: #f5f0e8;
+  margin: 0;
+}
+.timelineHeader h2 em { font-style: italic; color: #c9a97a; }
+.timeline {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.timelineLine {
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, rgba(201,169,122,0.5), transparent);
+  transform: translateX(-50%);
+}
+.timelineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  position: relative;
+  padding: 24px 0;
+}
+.timelineLeft { flex-direction: row; padding-right: calc(50% + 24px); }
+.timelineRight { flex-direction: row-reverse; padding-left: calc(50% + 24px); }
+.timelineContent {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(201,169,122,0.2);
+  border-radius: 6px;
+  padding: 16px 20px;
+  flex: 1;
+}
+.timelineYear {
+  display: block;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: #c9a97a;
+  margin-bottom: 4px;
+}
+.timelineEvent {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f5f0e8;
+  margin: 0 0 6px;
+}
+.timelineDesc {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: rgba(245,240,232,0.6);
+  line-height: 1.6;
+  margin: 0;
+}
+.timelineDot {
+  position: absolute;
+  left: 50%;
+  top: 32px;
+  width: 12px; height: 12px;
+  background: #c9a97a;
+  border-radius: 50%;
+  border: 3px solid #0e1f10;
+  transform: translateX(-50%);
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .timelineLine { left: 16px; }
+  .timelineLeft, .timelineRight { flex-direction: row; padding: 0 0 0 48px; }
+  .timelineDot { left: 16px; }
+}
+
+/* ── Video section ─────────────────────────────────────────────────────────── */
+.videoSection {
+  padding: 64px 24px;
+  background: #1a2e1a;
+}
+.videoHeader {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.videoHeader h2 {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 300;
+  color: #f5f0e8;
+  margin: 0;
+}
+.videoHeader h2 em { font-style: italic; color: #c9a97a; }
+.videoWrap {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.videoIframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: 0;
+}
+
+/* ── Team section ──────────────────────────────────────────────────────────── */
+.teamSection {
+  padding: 72px 24px;
+  background: #faf8f5;
+}
+.teamHeader {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.teamHeader h2 {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 300;
+  color: #1a2e1a;
+  margin: 0 0 8px;
+}
+.teamHeader h2 em { font-style: italic; color: #5a7a5c; }
+.teamSubtitle {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.92rem;
+  font-weight: 300;
+  color: #6a6a58;
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.teamCard {
+  background: #fff;
+  border: 1px solid #e8e4da;
+  border-radius: 8px;
+  padding: 28px 22px;
+  text-align: center;
+}
+.teamAvatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.8rem; font-weight: 300;
+  color: #f5f0e8;
+  margin: 0 auto 14px;
+}
+.teamName {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #1a2218;
+  margin: 0 0 4px;
+}
+.teamRole {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9a8a74;
+  margin: 0 0 12px;
+}
+.teamBio {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: #6a6a58;
+  line-height: 1.7;
+  margin: 0;
+}
+.teamNote {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 0.75rem;
+  color: #b0a898;
+  font-family: var(--font-jost), sans-serif;
+  font-style: italic;
+}
+
+/* ── Community images ──────────────────────────────────────────────────────── */
+.communityImages {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  height: 320px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  width: 340px;
+}
+.communityImg1, .communityImg2 { position: relative; }
+@media (max-width: 900px) { .communityImages { width: 100%; } }
+@media (max-width: 600px) { .communityImages { display: none; } }
+
+/* ── Identity Reviews ──────────────────────────────────────────────────────── */
+.identityReviewsSection {
+  padding: 72px 24px;
+  background: #0e1f10;
+}
+.identityReviewsHeader {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.identityReviewsHeader h2 {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 300;
+  color: #f5f0e8;
+  margin: 0;
+}
+.identityReviewsHeader h2 em { font-style: italic; color: #c9a97a; }
+.identityReviewsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.identityReviewCard {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(201,169,122,0.2);
+  border-radius: 8px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.identityReviewQuote { color: #c9a97a; flex-shrink: 0; }
+.identityReviewText {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(245,240,232,0.85);
+  line-height: 1.7;
+  flex: 1;
+  margin: 0;
+}
+.identityReviewMeta { margin-top: auto; }
+.identityReviewName {
+  display: block;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f5f0e8;
+  margin-bottom: 2px;
+}
+.identityReviewDetail {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  color: rgba(245,240,232,0.45);
+}
