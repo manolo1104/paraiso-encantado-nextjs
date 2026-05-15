@@ -2,8 +2,8 @@ import Image from 'next/image';
 import { MapPin, Clock, ArrowRight } from 'lucide-react';
 import styles from './ToursSection.module.css';
 
-const TOURS_URL = 'https://www.huasteca-potosina.com/';
-const TOURS_BOOK_URL = 'https://www.huasteca-potosina.com/tours';
+const TOURS_URL      = 'https://www.huasteca-potosina.com/';
+const TOURS_BOOK_URL = 'https://www.huasteca-potosina.com/';
 
 const tours = [
   {

@@ -27,72 +27,28 @@ export const metadata: Metadata = {
   description:
     '13 suites boutique con spa privado en Xilitla. El hotel más cercano al Jardín Surrealista de Edward James (Las Pozas). Disfruta de esta experiencia desde $1,200/noche.',
   keywords: [
-    'hotel xilitla',
-    'jardín edward james',
-    'las pozas xilitla',
-    'huasteca potosina',
-    'hotel boutique',
-    'hotel paraíso encantado',
-    'san luis potosí',
+    'hotel xilitla', 'jardín edward james', 'las pozas xilitla',
+    'huasteca potosina', 'hotel boutique', 'hotel paraíso encantado',
+    'san luis potosí', 'boutique hotel edward james garden',
+    'hotel near las pozas xilitla', 'huasteca potosina hotel english',
   ],
+  alternates: {
+    canonical: 'https://www.paraisoencantado.com',
+    languages: {
+      'es': 'https://www.paraisoencantado.com',
+      'en': 'https://www.paraisoencantado.com/en',
+      'x-default': 'https://www.paraisoencantado.com',
+    },
+  },
   openGraph: {
     title: 'Hotel Paraíso Encantado | Xilitla, Huasteca Potosina',
     description:
       '13 suites con spa privado a 5 minutos caminando del Jardín de Edward James. Reserva directa sin comisiones.',
     locale: 'es_MX',
+    alternateLocale: ['en_US', 'en_GB'],
     type: 'website',
+    url: 'https://www.paraisoencantado.com',
   },
-};
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'LodgingBusiness',
-  name: 'Hotel Paraíso Encantado',
-  description:
-    '13 suites boutique con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina.',
-  url: 'https://www.paraisoencantado.com',
-  telephone: '+524891007679',
-  email: 'reservas@paraisoencantado.com',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Xilitla',
-    addressRegion: 'San Luis Potosí',
-    addressCountry: 'MX',
-    streetAddress: 'Xilitla, Huasteca Potosina',
-  },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 21.383,
-    longitude: -99.002,
-  },
-  starRating: {
-    '@type': 'Rating',
-    ratingValue: '4',
-  },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.6',
-    reviewCount: '519',
-    bestRating: '5',
-    worstRating: '1',
-  },
-  priceRange: '$$',
-  amenityFeature: [
-    { '@type': 'LocationFeatureSpecification', name: 'Piscina spa privada', value: true },
-    { '@type': 'LocationFeatureSpecification', name: 'WiFi gratuito', value: true },
-    { '@type': 'LocationFeatureSpecification', name: 'Estacionamiento gratuito', value: true },
-    { '@type': 'LocationFeatureSpecification', name: 'Restaurante', value: true },
-    { '@type': 'LocationFeatureSpecification', name: 'Tours a Las Pozas', value: true },
-    { '@type': 'LocationFeatureSpecification', name: 'Terraza panorámica', value: true },
-  ],
-  checkinTime: '15:00',
-  checkoutTime: '12:00',
-  currenciesAccepted: 'MXN, USD',
-  paymentAccepted: 'Cash, Credit Card',
-  sameAs: [
-    'https://www.instagram.com/paraisoencantadoxilitla',
-    'https://www.facebook.com/paraisoencantadoxilitla',
-  ],
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -105,10 +61,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* Google Tag Manager */}
         <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N98DFD9V');` }} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
       </head>
       <body>
         {/* Google Tag Manager (noscript) */}

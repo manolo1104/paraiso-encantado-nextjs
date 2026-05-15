@@ -1,0 +1,215 @@
+/* ── Shared ──────────────────────────────────────────────────────────────── */
+.container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+.eyebrow {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: #8a7d6b; margin-bottom: 12px;
+}
+.sectionTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 300; color: #1a2e1a; line-height: 1.15; margin-bottom: 16px;
+}
+.sectionTitle em { font-style: italic; color: #3d5a30; }
+.sectionSub {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 1rem; font-weight: 300; color: #5a5a4a;
+  line-height: 1.8; max-width: 560px;
+}
+
+.ctaPrimary {
+  display: inline-block;
+  background: #1a2e1a; color: #f5f0e8;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; text-decoration: none;
+  padding: 14px 28px; border-radius: 2px; transition: background 0.2s;
+}
+.ctaPrimary:hover { background: #2d4a2d; }
+
+.ctaSecondary {
+  display: inline-block;
+  background: transparent; color: #f5f0e8;
+  border: 1px solid rgba(245,240,232,0.4);
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem; font-weight: 400; letter-spacing: 0.1em;
+  text-transform: uppercase; text-decoration: none;
+  padding: 13px 24px; border-radius: 2px; transition: border-color 0.2s;
+}
+.ctaSecondary:hover { border-color: rgba(245,240,232,0.75); }
+
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+.hero {
+  position: relative; min-height: 92vh;
+  background: url('/images/JUNGLA/PORTADA.JPG') center/cover no-repeat;
+  display: flex; align-items: flex-end;
+}
+.heroOverlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,20,10,0.88) 0%, rgba(10,20,10,0.3) 50%, rgba(10,20,10,0.15) 100%);
+}
+.heroContent {
+  position: relative; z-index: 1;
+  padding: 0 32px 64px; max-width: 680px;
+}
+.heroEye {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: rgba(201,169,122,0.85); margin-bottom: 16px;
+}
+.heroTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 300; line-height: 1;
+  color: #f5f0e8; margin-bottom: 16px;
+}
+.heroTitle em { font-style: italic; color: #c9a97a; display: block; }
+.heroSub {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 1rem; font-weight: 300; color: rgba(245,240,232,0.8);
+  line-height: 1.7; margin-bottom: 32px;
+}
+.heroCtas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.heroLang { margin: 0; }
+.langLink {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem; color: rgba(245,240,232,0.5);
+  text-decoration: none; letter-spacing: 0.05em;
+  transition: color 0.15s;
+}
+.langLink:hover { color: rgba(245,240,232,0.85); }
+
+/* ── Why section ─────────────────────────────────────────────────────────── */
+.why { padding: 80px 24px; background: #faf8f5; }
+.amenitiesGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px; margin-top: 48px;
+}
+.amenityCard { padding: 28px; background: #fff; border: 1px solid #e8e4da; border-radius: 4px; }
+.amenityIcon { font-size: 1.8rem; display: block; margin-bottom: 12px; }
+.amenityTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.15rem; font-weight: 400; color: #1a2e1a; margin-bottom: 8px;
+}
+.amenityDesc {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.875rem; font-weight: 300; color: #6a6a58; line-height: 1.7;
+}
+
+/* ── Suites ──────────────────────────────────────────────────────────────── */
+.suites { padding: 80px 24px; background: #f0ece4; }
+.suitesGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  gap: 24px; margin-top: 48px;
+}
+.suiteCard { background: #faf8f5; overflow: hidden; border-radius: 4px; }
+.suiteImgWrap { position: relative; height: 260px; overflow: hidden; }
+.suiteImg { object-fit: cover; transition: transform 0.4s ease; }
+.suiteCard:hover .suiteImg { transform: scale(1.03); }
+.suiteBody { padding: 24px 28px 28px; }
+.suiteName {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.4rem; font-weight: 400; color: #1a2e1a; margin-bottom: 8px;
+}
+.suiteDesc {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.875rem; font-weight: 300; color: #6a6a58;
+  line-height: 1.7; margin-bottom: 20px;
+}
+.suiteFooter { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.suitePrice {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.875rem; color: #3d5a30; font-weight: 500;
+}
+.suiteBtn {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase; text-decoration: none;
+  color: #1a2e1a; border-bottom: 1px solid #1a2e1a;
+  padding-bottom: 2px; transition: color 0.15s, border-color 0.15s;
+}
+.suiteBtn:hover { color: #3d5a30; border-color: #3d5a30; }
+.suitesCtaWrap { margin-top: 40px; text-align: center; }
+
+/* ── Context ─────────────────────────────────────────────────────────────── */
+.context { padding: 80px 24px; background: #1a2e1a; }
+.contextInner {
+  max-width: 1120px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+}
+.context .eyebrow { color: rgba(201,169,122,0.7); }
+.contextTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 300;
+  color: #f5f0e8; line-height: 1.2; margin-bottom: 24px;
+}
+.contextTitle em { font-style: italic; color: #c9a97a; }
+.contextBody {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.94rem; font-weight: 300; color: rgba(245,240,232,0.7);
+  line-height: 1.85; margin-bottom: 16px;
+}
+.mapsLink {
+  display: inline-block; margin-top: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.8rem; color: #c9a97a; text-decoration: none;
+  border-bottom: 1px solid rgba(201,169,122,0.4); padding-bottom: 2px;
+}
+.contextStats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.statCard {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(201,169,122,0.2);
+  border-radius: 4px; padding: 24px;
+}
+.statValue {
+  display: block;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 2.2rem; font-weight: 300; color: #c9a97a; margin-bottom: 6px;
+}
+.statLabel {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem; font-weight: 300; color: rgba(245,240,232,0.55); line-height: 1.4;
+}
+
+/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+.faqSection { padding: 80px 24px; background: #faf8f5; }
+.faqGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 24px; margin-top: 40px; }
+.faqItem { padding: 28px 32px; background: #fff; border: 1px solid #e8e4da; border-radius: 4px; }
+.faqQ {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.1rem; font-weight: 400; color: #1a2e1a; margin-bottom: 10px;
+}
+.faqA {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.875rem; font-weight: 300; color: #6a6a58; line-height: 1.75;
+}
+
+/* ── Final CTA ───────────────────────────────────────────────────────────── */
+.finalCta { padding: 80px 24px; background: #0e1f10; text-align: center; }
+.finalCtaInner { max-width: 600px; margin: 0 auto; }
+.finalCtaTitle {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 300;
+  color: #f5f0e8; line-height: 1.15; margin-bottom: 16px;
+}
+.finalCtaTitle em { font-style: italic; color: #c9a97a; }
+.finalCtaSub {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.94rem; font-weight: 300; color: rgba(245,240,232,0.65);
+  line-height: 1.8; margin-bottom: 36px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .heroContent { padding: 0 24px 48px; }
+  .suitesGrid { grid-template-columns: 1fr; }
+  .contextInner { grid-template-columns: 1fr; gap: 40px; }
+  .contextStats { grid-template-columns: 1fr 1fr; }
+  .faqGrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .contextStats { grid-template-columns: 1fr; }
+  .heroCtas { flex-direction: column; }
+  .ctaPrimary, .ctaSecondary { text-align: center; }
+}

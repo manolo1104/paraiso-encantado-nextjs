@@ -10,7 +10,7 @@ const SUITES = ['Jungla', 'LindaVista', 'Helechos 1', 'Lirios 1', 'Flor de Lis']
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
 export default function HeroLiveSignals() {
-  const [viewers, setViewers]   = useState(3);
+  const [viewers, setViewers]   = useState(() => Math.floor(Math.random() * 31) + 15);
   const [scarcity]              = useState(() => Math.floor(Math.random() * 5) + 2);
   const [booking, setBooking]   = useState(() => ({
     name: pick(NAMES), city: pick(CITIES), suite: pick(SUITES),
@@ -21,8 +21,12 @@ export default function HeroLiveSignals() {
 
   useEffect(() => {
     const viewerTimer = setInterval(() => {
-      setViewers(Math.floor(Math.random() * 4) + 2);
-    }, (15 + Math.random() * 15) * 1000);
+      setViewers(v => {
+        // Drift ±5 from current value, clamped to [15, 45]
+        const delta = Math.floor(Math.random() * 11) - 5;
+        return Math.min(45, Math.max(15, v + delta));
+      });
+    }, (20 + Math.random() * 20) * 1000);
 
     const bookingTimer = setInterval(() => {
       setBookFade(false);
