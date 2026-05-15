@@ -186,6 +186,7 @@ function CheckoutForm({
       elements,
       redirect: 'if_required',
       confirmParams: {
+        return_url: 'https://www.paraisoencantado.com/reservar/confirmacion',
         payment_method_data: {
           billing_details: { name, email, phone },
         },
