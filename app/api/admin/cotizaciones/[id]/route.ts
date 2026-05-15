@@ -43,12 +43,29 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const client = await getSheetsClient();
   if (!client) return NextResponse.json({ error: 'Sin conexión a Sheets' }, { status: 500 });
 
-  // Marcar como EXPIRADA en lugar de borrar la fila (para mantener historial)
-  await client.spreadsheets.values.update({
-    spreadsheetId: SHEET_ID,
-    range: `${COTIZACIONES_SHEET}!K${quote.rowIndex}`,
-    valueInputOption: 'USER_ENTERED',
-    requestBody: { values: [['EXPIRADA']] },
-  });
-  return NextResponse.json({ ok: true });
+  // Get sheetId (numeric) for deleteDimension
+  try {
+    const meta = await client.spreadsheets.get({ spreadsheetId: SHEET_ID });
+    const sheet = meta.data.sheets?.find(s => s.properties?.title === COTIZACIONES_SHEET);
+    const sheetId = sheet?.properties?.sheetId ?? 0;
+
+    await client.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      requestBody: {
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: 'ROWS',
+              startIndex: quote.rowIndex - 1, // 0-indexed
+              endIndex: quote.rowIndex,
+            },
+          },
+        }],
+      },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

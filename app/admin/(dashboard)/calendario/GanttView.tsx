@@ -29,6 +29,8 @@ interface Props { bookings: AdminBooking[]; onRefresh: () => void }
 
 function toDate(s: string) { return new Date(s + 'T00:00:00'); }
 function isoToday() { return new Date().toISOString().split('T')[0]; }
+// Web bookings store "Suite Jungla (2 personas)" — strip the parenthetical
+function extractRoom(s: string): string { return s.replace(/\s*\([^)]*\)/g, '').trim(); }
 
 export default function GanttView({ bookings, onRefresh }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -173,7 +175,7 @@ export default function GanttView({ bookings, onRefresh }: Props) {
           {ROOMS.map((room, ri) => {
             const color = ROOM_COLORS[ri];
             const roomBookings = activeBookings.filter(b =>
-              b.habitaciones.split(', ').some(h => h.trim() === room)
+              b.habitaciones.split(', ').some(h => extractRoom(h) === room)
             );
 
             return (

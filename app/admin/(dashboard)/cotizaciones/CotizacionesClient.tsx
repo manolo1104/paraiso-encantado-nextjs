@@ -195,50 +195,161 @@ const PDF_STYLES = `
 
 // ── PDF Cotización ──────────────────────────────────────────────────────────
 function printQuotePDF(q: AdminQuote) {
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const firstSuite = q.suite.split(', ')[0].trim();
+  const suiteImg = SUITE_IMAGES[firstSuite] ? `${baseUrl}${SUITE_IMAGES[firstSuite]}` : '';
+  const notasCliente = parseNotasCliente(q.notas || '');
+  const confirmUrl = `https://www.paraisoencantado.com/reservar?checkin=${q.checkin}&checkout=${q.checkout}`;
+
   const win = window.open('', '_blank');
   if (!win) return;
   win.document.write(`<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cotización ${q.id} · Paraíso Encantado</title>
-<style>${PDF_STYLES}</style>
-</head><body>
-<div class="page">
-  <div class="hero">
-    <p class="hero-eye">Cotización Personalizada</p>
-    <h1 class="hero-title">Tu escapada perfecta.</h1>
-    <p class="hero-sub">Paraíso Encantado · Xilitla, San Luis Potosí</p>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color:#2a2a25; padding:40px 16px; }
+.wrap { max-width:600px; margin:0 auto; background:#fffdf8; border:1px solid #ddd8cc; }
+.header { background:#1c2b1e; padding:40px 40px 36px; text-align:center; position:relative; overflow:hidden; }
+.header::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+.h-eye { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:#c9a96e; margin-bottom:14px; position:relative; }
+.h-logo { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; color:#f5f0e8; margin-bottom:5px; position:relative; }
+.h-logo em { font-style:italic; color:#c9a96e; }
+.h-sub { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8a9e8c; margin-bottom:28px; position:relative; }
+.h-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(201,169,110,0.15); border:1px solid rgba(201,169,110,0.4); color:#c9a96e; padding:8px 20px; font-size:11px; letter-spacing:3px; text-transform:uppercase; position:relative; }
+.suite-photo { height:180px; overflow:hidden; border-bottom:2px solid #c9a96e; background:linear-gradient(160deg,#2d4a2f 0%,#1c3320 50%,#152a1a 100%); }
+.suite-photo img { width:100%; height:180px; object-fit:cover; display:block; }
+.cn-block { background:#1c2b1e; padding:18px 40px; display:flex; align-items:center; justify-content:space-between; }
+.cn-lbl { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#6a8a6e; margin-bottom:4px; }
+.cn-num { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#c9a96e; letter-spacing:2px; }
+.cn-pres { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#6a8a6e; text-align:right; line-height:1.8; }
+.cn-pres span { display:block; color:#f5f0e8; font-size:11px; }
+.body { padding:36px 40px; }
+.greeting { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:#1c2b1e; margin-bottom:6px; }
+.greeting em { font-style:italic; }
+.g-sub { font-size:13px; color:#7a7a6a; line-height:1.7; margin-bottom:32px; }
+.details-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#ddd8cc; border:1px solid #ddd8cc; margin-bottom:28px; }
+.d-cell { background:#fffdf8; padding:18px 22px; }
+.d-lbl { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9a9a8a; margin-bottom:5px; }
+.d-val { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#1c2b1e; line-height:1.3; }
+.d-sub { font-size:11px; color:#9a9a8a; margin-top:3px; }
+.sec-title { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9a9a8a; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #eae6dd; }
+.suites-sec { margin-bottom:28px; }
+.s-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid #eae6dd; }
+.s-row:last-child { border-bottom:none; }
+.s-name { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:400; color:#1c2b1e; }
+.total-block { background:#f5f2ec; border-left:3px solid #c9a96e; padding:18px 22px; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center; }
+.total-lbl { font-size:12px; color:#5a5a4a; }
+.total-amt { font-family:'Cormorant Garamond',serif; font-size:26px; color:#1c2b1e; }
+.validity { background:#fff8ee; border:1px solid #e0d4b4; padding:14px 20px; margin-bottom:28px; font-size:12px; color:#7a6a40; line-height:1.6; text-align:center; }
+.validity strong { color:#1c2b1e; }
+.note-box { background:#f5f2ec; border-left:3px solid #c9a96e; padding:14px 18px; margin-bottom:28px; font-family:'Cormorant Garamond',serif; font-size:16px; font-style:italic; color:#5a4e3c; line-height:1.7; }
+.cta-wrap { text-align:center; margin-bottom:32px; }
+.cta-btn { display:inline-block; background:#1c2b1e; color:#c9a96e; text-decoration:none; padding:14px 36px; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; }
+.contact-row { display:flex; gap:10px; margin-bottom:28px; }
+.c-card { flex:1; border:1px solid #eae6dd; padding:14px; text-align:center; }
+.c-icon { font-size:16px; margin-bottom:5px; }
+.c-type { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#9a9a8a; margin-bottom:3px; }
+.c-val { font-size:11px; color:#1c2b1e; font-weight:400; }
+.footer { background:#f0ece3; padding:24px 40px; text-align:center; border-top:1px solid #ddd8cc; }
+.f-logo { font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; color:#7a7a6a; margin-bottom:8px; }
+.f-addr { font-size:11px; color:#9a9a8a; line-height:1.8; }
+.f-div { width:36px; height:1px; background:#c9a96e; margin:14px auto; }
+@page { size:letter; margin:0.5in; }
+@media print { body { background:#fff; padding:0; } .wrap { border:none; max-width:100%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <p class="h-eye">Cotización personalizada</p>
+    <h1 class="h-logo">Paraíso <em>Encantado</em></h1>
+    <p class="h-sub">Xilitla · Huasteca Potosina</p>
+    <div class="h-badge">Válida por 48 horas</div>
   </div>
+
+  ${suiteImg
+    ? `<div class="suite-photo"><img src="${suiteImg}" alt="${firstSuite}" onerror="this.parentElement.style.background='linear-gradient(160deg,#2d4a2f 0%,#152a1a 100%)'"></div>`
+    : `<div class="suite-photo" style="display:flex;align-items:center;justify-content:center;color:#c9a96e;font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic">${firstSuite}</div>`
+  }
+
+  <div class="cn-block">
+    <div>
+      <p class="cn-lbl">Referencia de cotización</p>
+      <p class="cn-num">${q.id}</p>
+    </div>
+    <p class="cn-pres">Válida hasta<span>48 horas</span></p>
+  </div>
+
   <div class="body">
-    <div class="ref-box">
-      <p class="ref-label">Referencia de cotización</p>
-      <p class="ref-num">${q.id}</p>
+    <h2 class="greeting">Estimado/a, <em>${q.cliente}.</em></h2>
+    <p class="g-sub">Hemos preparado esta cotización especialmente para ti. Confirma antes de que expire para asegurar tus fechas.</p>
+
+    <div class="details-grid">
+      <div class="d-cell">
+        <p class="d-lbl">Check-in</p>
+        <p class="d-val">${fmtDate(q.checkin)}</p>
+        <p class="d-sub">A partir de las 3:00 PM</p>
+      </div>
+      <div class="d-cell">
+        <p class="d-lbl">Check-out</p>
+        <p class="d-val">${fmtDate(q.checkout)}</p>
+        <p class="d-sub">Antes de las 12:00 PM</p>
+      </div>
+      <div class="d-cell">
+        <p class="d-lbl">Noches</p>
+        <p class="d-val">${q.noches}</p>
+      </div>
+      <div class="d-cell">
+        <p class="d-lbl">Estado</p>
+        <p class="d-val" style="font-size:14px;font-family:'Jost',sans-serif">${q.estado}</p>
+      </div>
     </div>
-    <p class="greeting">Estimado/a, <em>${q.cliente}</em></p>
-    <div class="divider"></div>
-    <div class="grid">
-      <div class="cell"><p class="cell-label">Suite</p><p class="cell-value">${q.suite}</p></div>
-      <div class="cell"><p class="cell-label">Duración</p><p class="cell-value">${q.noches} noche${q.noches !== 1 ? 's' : ''}</p></div>
-      <div class="cell"><p class="cell-label">Check-in</p><p class="cell-value">${fmtDate(q.checkin)}</p><p class="cell-sub">A partir de las 3:00 PM</p></div>
-      <div class="cell"><p class="cell-label">Check-out</p><p class="cell-value">${fmtDate(q.checkout)}</p><p class="cell-sub">Antes de las 12:00 PM</p></div>
+
+    <div class="suites-sec">
+      <p class="sec-title">Suite${q.suite.includes(',') ? 's incluidas' : ' incluida'}</p>
+      ${q.suite.split(', ').map(s => `
+      <div class="s-row">
+        <p class="s-name">${s.trim()}</p>
+        <span style="font-size:11px;color:#5a7a5c">incluida</span>
+      </div>`).join('')}
     </div>
-    <div class="total-bar">
-      <span class="total-label">Total cotización</span>
-      <span class="total-value">$${q.precioTotal.toLocaleString('es-MX')}<span class="total-currency">MXN</span></span>
+
+    <div class="total-block">
+      <div>
+        <p class="d-lbl">Total cotización</p>
+        <p class="total-amt">$${q.precioTotal.toLocaleString('es-MX')}</p>
+      </div>
+      <span style="font-size:13px;color:#9a9a8a">MXN</span>
     </div>
-    ${q.notas ? `<div class="notes-box"><p class="notes-text">${q.notas}</p></div>` : ''}
-    <p class="validity">Esta cotización es válida por 48 horas a partir de su emisión.</p>
-    <div class="cta">
-      <a class="cta-btn" href="https://www.paraisoencantado.com/reservar?checkin=${q.checkin}&checkout=${q.checkout}">Confirmar Reserva</a>
+
+    ${notasCliente ? `<div class="note-box">${notasCliente}</div>` : ''}
+
+    <div class="validity">
+      Esta cotización es válida por <strong>48 horas</strong> a partir de su emisión.<br>
+      Confirma tu reserva antes de que expire para asegurar disponibilidad y precio.
+    </div>
+
+    <div class="cta-wrap">
+      <a href="${confirmUrl}" class="cta-btn">Confirmar Reserva →</a>
+      <p style="font-size:10px;color:#9a9a8a;margin-top:10px;letter-spacing:1px">${confirmUrl}</p>
+    </div>
+
+    <div class="contact-row">
+      <div class="c-card"><p class="c-icon">📞</p><p class="c-type">Teléfono</p><p class="c-val"><a href="tel:+524891007679" style="color:#1c2b1e;text-decoration:none">489 100 7679</a></p></div>
+      <div class="c-card"><p class="c-icon">💬</p><p class="c-type">WhatsApp</p><p class="c-val"><a href="https://wa.me/524891007679" style="color:#1c2b1e;text-decoration:none">+52 489 100 7679</a></p></div>
+      <div class="c-card"><p class="c-icon">✉️</p><p class="c-type">Email</p><p class="c-val" style="font-size:10px"><a href="mailto:reservas@paraisoencantado.com" style="color:#1c2b1e;text-decoration:none">reservas@paraisoencantado.com</a></p></div>
     </div>
   </div>
-  <div class="contact">
-    <p>📞 <a href="tel:+524891007679" style="color:#2a2218">+52 489-100-7679</a></p>
-    <p>📧 <a href="mailto:reservas@paraisoencantado.com" style="color:#2a2218">reservas@paraisoencantado.com</a></p>
-    <p>💬 <a href="https://wa.me/524891007679" style="color:#2a2218">WhatsApp directo</a></p>
-  </div>
-  <div class="footer-bar">
-    <p class="footer-name">Paraíso Encantado</p>
-    <p class="footer-addr">Hotel Paraíso Encantado · Xilitla, San Luis Potosí 79910 · México<br>A pasos del Jardín Surrealista de Edward James · paraisoencantado.com</p>
+
+  <div class="footer">
+    <p class="f-logo">Paraíso Encantado</p>
+    <div class="f-div"></div>
+    <p class="f-addr">Xilitla, San Luis Potosí 79910 · México<br>A 5 minutos caminando del Jardín Surrealista de Edward James<br>paraisoencantado.com</p>
   </div>
 </div>
 <script>window.onload=function(){window.print()}<\/script>
@@ -255,9 +366,15 @@ export function printBookingPDF(b: {
 }) {
   const suites = b.habitaciones.split(', ').filter(Boolean).map(s => s.trim());
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const suiteImgSrc  = suites[0] && SUITE_IMAGES[suites[0]]   ? `${baseUrl}${SUITE_IMAGES[suites[0]]}`   : '';
-  const suiteImgSrc2 = suites[0] && SUITE_IMAGES_2[suites[0]] ? `${baseUrl}${SUITE_IMAGES_2[suites[0]]}` : '';
-  const suiteImgSrc3 = suites[0] && SUITE_IMAGES_3[suites[0]] ? `${baseUrl}${SUITE_IMAGES_3[suites[0]]}` : '';
+  const TERRAZA = `${baseUrl}/images/Areas comunes/terraza.jpg`;
+  const FACHADA = `${baseUrl}/images/Areas comunes/DSC09456-HDR.jpg`;
+  const suiteImgSrc  = suites[0] && SUITE_IMAGES[suites[0]] ? `${baseUrl}${SUITE_IMAGES[suites[0]]}` : '';
+  const suiteImgSrc2 = suites.length === 1
+    ? TERRAZA
+    : (suites[1] && SUITE_IMAGES[suites[1]] ? `${baseUrl}${SUITE_IMAGES[suites[1]]}` : TERRAZA);
+  const suiteImgSrc3 = suites.length < 3
+    ? FACHADA
+    : (suites[2] && SUITE_IMAGES[suites[2]] ? `${baseUrl}${SUITE_IMAGES[suites[2]]}` : FACHADA);
 
   const win = window.open('', '_blank');
   if (!win) return;

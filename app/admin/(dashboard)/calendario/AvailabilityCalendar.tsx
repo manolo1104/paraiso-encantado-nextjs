@@ -76,7 +76,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
   function getDayState(room: string, ds: string): DayState {
     const booking = bookings.find(b =>
       b.estado !== 'CANCELADA' &&
-      b.habitaciones.split(', ').some(h => h.trim() === room) &&
+      b.habitaciones.split(', ').some(h => h.replace(/\s*\([^)]*\)/g,'').trim() === room) &&
       ds >= b.checkin && ds < b.checkout
     );
     if (booking) return { status: 'booking', booking };

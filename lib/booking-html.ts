@@ -133,7 +133,16 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
 .arrive-card-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: #c9a96e; line-height: 1; margin-bottom: 7px; }
 .arrive-card-title { font-size: 12px; font-weight: 500; color: #1e1e18; margin-bottom: 4px; }
 .arrive-card-copy { font-size: 12px; color: #7a7a62; line-height: 1.6; }
-.map-block { position: relative; height: 100px; background: linear-gradient(135deg, #d8e8d0 0%, #c8dcc0 100%); overflow: hidden; margin-bottom: 28px; display: flex; align-items: center; justify-content: center; }
+.map-block { position: relative; height: 120px; background: linear-gradient(135deg, #d8e8d0 0%, #c8dcc0 100%); overflow: hidden; margin-bottom: 28px; }
+.map-road-h { position: absolute; top: 50%; left: 0; right: 0; height: 6px; background: rgba(255,255,255,.5); transform: translateY(-50%); }
+.map-road-v { position: absolute; left: 32%; top: 0; bottom: 0; width: 5px; background: rgba(255,255,255,.4); }
+.map-pin-hotel { position: absolute; left: 32%; top: 50%; transform: translate(-50%, -50%); z-index: 2; }
+.map-pin-dot-h { width: 14px; height: 14px; background: #1c2b1e; border-radius: 50%; border: 3px solid #c9a96e; }
+.map-lbl-hotel { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: #1c2b1e; color: #c9a96e; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; white-space: nowrap; }
+.map-pin-pozas { position: absolute; left: 68%; top: 50%; transform: translate(-50%, -50%); z-index: 2; }
+.map-pin-dot-g { width: 11px; height: 11px; background: #3d6e40; border-radius: 50%; border: 2px solid #fff; }
+.map-lbl-pozas { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: #3d6e40; color: #fff; font-size: 8px; letter-spacing: 1px; padding: 2px 7px; white-space: nowrap; }
+.map-dist { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #2d5a30; background: rgba(255,255,255,.85); padding: 3px 10px; white-space: nowrap; }
 .map-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #2d5a30; background: rgba(255,255,255,.8); padding: 5px 16px; text-decoration: none; }
 .upsell { margin: 0 -40px; background: #111d12; padding: 36px 40px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 28px; }
 .upsell-eyebrow { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; color: #4a6a4c; margin-bottom: 8px; }
@@ -321,7 +330,17 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
     </div>
 
     <a href="https://www.google.com/maps/search/Hotel+Paraíso+Encantado,+Xilitla,+San+Luis+Potosí" class="map-block" style="text-decoration:none;">
-      <span class="map-label">📍 Ver en Google Maps · A 5 min del Jardín de Edward James</span>
+      <div class="map-road-h"></div>
+      <div class="map-road-v"></div>
+      <div class="map-pin-hotel">
+        <div class="map-pin-dot-h"></div>
+        <div class="map-lbl-hotel">Paraíso Encantado</div>
+      </div>
+      <div class="map-pin-pozas">
+        <div class="map-pin-dot-g"></div>
+        <div class="map-lbl-pozas">Jardín de Edward James</div>
+      </div>
+      <div class="map-dist">🚶 5 min caminando</div>
     </a>
 
     <div class="upsell">
