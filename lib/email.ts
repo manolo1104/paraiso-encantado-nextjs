@@ -162,7 +162,6 @@ export function buildQuoteEmailHtml(data: {
 }
 
 
-import { buildBookingHtml, calcCancelDate72h, fmtDateFull } from './booking-html';
 
 const SUITE_IMAGES_EMAIL: Record<string, string> = {
   'Suite Flor de Liz 1': '/images/FLOR DE LIS 1/PORTADA.jpg',

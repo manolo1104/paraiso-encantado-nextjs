@@ -15,18 +15,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!b) return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 });
   if (!b.email || b.email === 'N/A') return NextResponse.json({ error: 'Sin email registrado' }, { status: 400 });
 
+  // Split habitaciones string into individual room objects for the email template
+  const suiteNames = b.habitaciones.split(', ').filter(Boolean).map(s => s.trim());
+  const guestsPerRoom = Math.max(1, Math.round(b.huespedes / suiteNames.length));
+  const pricePerRoom  = Math.round(b.total / suiteNames.length);
+
   const html = buildEmailHtml({
-    customerName: b.cliente,
+    customerName:       b.cliente,
     confirmationNumber: b.confirmacion,
-    checkin: b.checkin,
-    checkout: b.checkout,
-    nights: b.noches,
-    adults: b.huespedes,
-    total: b.total,
-    rooms: [{ name: b.habitaciones, guestCount: b.huespedes, totalPrice: b.total }],
-    paymentIntentId: b.paymentId || 'MANUAL',
-    anticipo: b.anticipo || 0,
-    notas: b.notas || '',
+    checkin:            b.checkin,
+    checkout:           b.checkout,
+    nights:             b.noches,
+    adults:             b.huespedes,
+    total:              b.total,
+    rooms:              suiteNames.map(name => ({ name, guestCount: guestsPerRoom, totalPrice: pricePerRoom })),
+    paymentIntentId:    b.paymentId || 'MANUAL',
+    anticipo:           b.anticipo || 0,
+    notas:              b.notas || '',
   });
 
   try {
