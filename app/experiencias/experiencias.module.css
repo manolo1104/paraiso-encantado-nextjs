@@ -814,3 +814,61 @@
     flex-wrap: wrap;
   }
 }
+
+/* ── Reseñas por tour ──────────────────────────────────────────────────────── */
+.tourReviews {
+  background: #faf8f5;
+  border-top: 1px solid #e8e4da;
+  padding: 20px 24px 24px;
+}
+.tourReviewsTitle {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5a7a5c;
+  margin-bottom: 14px;
+}
+.tourReviewsTitle span { color: #9a9a82; font-weight: 400; }
+.tourReviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tourReviewCard {
+  background: #fff;
+  border: 1px solid #e8e4da;
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+.tourReviewHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tourReviewAvatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #1a2e1a; color: #c9a97a;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1rem; font-weight: 400;
+  flex-shrink: 0;
+}
+.tourReviewName {
+  display: block;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem; font-weight: 600; color: #1a2218;
+}
+.tourReviewMeta {
+  display: block;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem; color: #9a9a82;
+}
+.tourReviewText {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 0.95rem; font-style: italic;
+  color: #3a3a30; line-height: 1.6; margin: 0;
+}

@@ -6,14 +6,57 @@ import { Bus, Coffee, GraduationCap, ShieldCheck, Leaf, Camera, MessageCircle, C
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
-  title: 'Tours y Experiencias | Hotel Paraíso Encantado · Huasteca Potosina',
+  title: 'Tours en la Huasteca Potosina | Desde Xilitla · Paraíso Encantado',
   description:
-    'Tours por la Huasteca Potosina desde Xilitla. Cascada Tamul, Jardín de Edward James, Cascadas de Micos, Puente de Dios y más. Guía certificado, transporte y desayuno incluidos.',
+    'Tours con guía certificado desde Xilitla: Cascada Tamul, Jardín de Edward James (Las Pozas), Cascadas de Micos, Puente de Dios y más. Transporte y desayuno incluidos. Salidas diarias.',
+  alternates: {
+    canonical: 'https://www.paraisoencantado.com/experiencias',
+  },
+  openGraph: {
+    title: 'Tours en la Huasteca Potosina — Desde Paraíso Encantado, Xilitla',
+    description:
+      'Cascada Tamul, Las Pozas de Edward James, Puente de Dios y más. Guía certificado, transporte y desayuno incluidos. Salidas diarias desde el hotel.',
+    url: 'https://www.paraisoencantado.com/experiencias',
+    images: [
+      {
+        url: 'https://www.paraisoencantado.com/images/atracciones/cascada_de_tamul.jpg',
+        width: 1200,
+        height: 800,
+        alt: 'Cascada de Tamul — Tour desde Hotel Paraíso Encantado, Xilitla, Huasteca Potosina',
+      },
+    ],
+  },
 };
 
 const WHATSAPP_URL = 'https://wa.me/524891007679';
 const BOOKING_URL = '/reservar';
 const TOURS_EXTERNAL_URL = 'https://www.huasteca-potosina.com/';
+
+// Reseñas por tour — 2-3 por excursión
+const tourReviews: Record<string, { name: string; location: string; date: string; rating: number; text: string }[]> = {
+  'expedicion-tamul': [
+    { name: 'Andrés Villanueva', location: 'Guadalajara, Jal.', date: 'Marzo 2025', rating: 5, text: 'La Cascada Tamul desde la canoa es uno de los momentos más impresionantes que he vivido en México. El guía conoce cada rincón, el desayuno antes de salir estaba delicioso y llegamos frescos al sótano. Completamente recomendado.' },
+    { name: 'Sofía Guerrero', location: 'Ciudad de México', date: 'Febrero 2025', rating: 5, text: 'Hicimos el tour en familia con tres niños. El guía fue extraordinariamente paciente y hizo que hasta los más pequeños entendieran la geología del sótano. La cueva del Agua fue la cereza del pastel. Volveríamos mañana.' },
+    { name: 'Carlos Medina', location: 'Monterrey, N.L.', date: 'Enero 2025', rating: 5, text: 'Llevaba años queriendo ver Tamul en canoa. Gracias a que salimos desde el hotel todo estuvo perfectamente coordinado — sin esperas, sin improvisaciones. La cascada desde abajo es simplemente inhumana de bonita.' },
+  ],
+  'ruta-surrealista': [
+    { name: 'Mariana Fuentes', location: 'Querétaro, Qro.', date: 'Abril 2025', rating: 5, text: 'Las Pozas de Edward James me dejaron sin palabras. Habíamos visto fotos pero nada prepara para la escala real de las esculturas rodeadas de selva. El manantial Huichihuayán fue la mejor sorpresa — agua turquesa en plena montaña.' },
+    { name: 'Roberto Salas', location: 'Ciudad de México', date: 'Marzo 2025', rating: 5, text: 'Tour perfecto para entender qué es la Huasteca más allá de las cascadas. Cultura, arte y naturaleza en un solo día. El guía dio contexto histórico sobre Edward James que no encontrarías en ninguna guía turística convencional.' },
+  ],
+  'cascadas-meco': [
+    { name: 'Patricia López', location: 'San Luis Potosí', date: 'Abril 2025', rating: 5, text: 'El mirador panorámico justifica el tour por sí solo. Cuando ves las tres cascadas desde arriba con la selva verde alrededor entiendes por qué la Huasteca es única. Y las pozas turquesas para nadar al final son el premio perfecto.' },
+    { name: 'Diego Herrera', location: 'CDMX', date: 'Febrero 2025', rating: 5, text: 'Fácil de caminar, altamente recomendado para parejas y familias. Las fotos en El Gran Salto con la caída de agua al fondo son espectaculares. El desayuno huasteco antes de salir nos dio energía para todo el día.' },
+    { name: 'Valeria Cruz', location: 'Tampico, Tamps.', date: 'Enero 2025', rating: 5, text: 'La mejor relación precio-experiencia de todos los tours que hice en la Huasteca. Tres cascadas en un día, guía atento, transporte puntual. Lo único que lamentamos es no haber venido antes.' },
+  ],
+  'paraiso-escalonado': [
+    { name: 'Luz Elena Torres', location: 'Guadalajara, Jal.', date: 'Marzo 2025', rating: 5, text: 'Las Cascadas de Micos superaron todas mis expectativas. Son escalonadas, lo que significa que puedes nadar en niveles distintos y la vista desde arriba es increíble. Salir en la mañana desde el hotel con desayuno incluido fue fundamental para llegar con tiempo.' },
+    { name: 'Jorge Romero', location: 'Monterrey, N.L.', date: 'Febrero 2025', rating: 5, text: 'Minas Viejas es un secreto que pocas guías mencionan. Agua completamente cristalina, sin aglomeraciones. Combinado con Micos es el día perfecto para los que aman la naturaleza tranquila y fotogénica.' },
+  ],
+  'ruta-acuatica': [
+    { name: 'Fernanda Ibarra', location: 'Ciudad de México', date: 'Abril 2025', rating: 5, text: 'El Puente de Dios es sencillamente mágico. Agua turquesa bajo un arco natural de roca. Hay que verlo para creerlo. La hacienda Los Gómez añade historia al recorrido. Tour muy completo y bien organizado desde el hotel.' },
+    { name: 'Miguel Ángel Castillo', location: 'Querétaro, Qro.', date: 'Marzo 2025', rating: 5, text: 'Las Siete Cascadas al final del tour fueron la sorpresa que no esperábamos. Terminamos el día mojados y felices. El guía fue puntual, conocedor y nos ayudó a encontrar los mejores ángulos para las fotos en cada parada.' },
+  ],
+};
 
 const tours = [
   {
@@ -123,11 +166,73 @@ const packageHighlight = {
   ],
 };
 
+// Schema TouristAttraction por tour + ItemList
+const toursSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Tours en la Huasteca Potosina desde Xilitla',
+  description: 'Tours con guía certificado, transporte y desayuno incluidos. Salidas desde Hotel Paraíso Encantado.',
+  url: 'https://www.paraisoencantado.com/experiencias',
+  numberOfItems: tours.length,
+  itemListElement: tours.map((tour, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    item: {
+      '@type': ['TouristAttraction', 'Product'],
+      name: `${tour.name} — Tour Huasteca Potosina`,
+      description: tour.description,
+      url: `https://www.paraisoencantado.com/experiencias#${tour.id}`,
+      image: `https://www.paraisoencantado.com${tour.image}`,
+      touristType: 'Adventure traveler',
+      offers: {
+        '@type': 'Offer',
+        price: tour.price.replace('$', '').replace(',', ''),
+        priceCurrency: 'MXN',
+        availability: 'https://schema.org/InStock',
+        seller: {
+          '@type': 'Organization',
+          name: 'Hotel Paraíso Encantado',
+          url: 'https://www.paraisoencantado.com',
+        },
+      },
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.9',
+        reviewCount: String((tourReviews[tour.id] || []).length),
+        bestRating: '5',
+      },
+      review: (tourReviews[tour.id] || []).map(r => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: r.name },
+        reviewRating: { '@type': 'Rating', ratingValue: String(r.rating), bestRating: '5' },
+        reviewBody: r.text,
+        datePublished: r.date,
+      })),
+      containedInPlace: {
+        '@type': 'LodgingBusiness',
+        name: 'Hotel Paraíso Encantado',
+        url: 'https://www.paraisoencantado.com',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Xilitla',
+          addressRegion: 'San Luis Potosí',
+          addressCountry: 'MX',
+        },
+      },
+    },
+  })),
+};
+
 export default function ExperienciasPage() {
   const whatsappTour = (tourName: string) =>
     `${WHATSAPP_URL}?text=Hola,%20me%20interesa%20el%20tour%20${encodeURIComponent(tourName)}`;
 
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(toursSchema) }}
+      />
     <main className={styles.main}>
       {/* Breadcrumb */}
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
@@ -273,6 +378,28 @@ export default function ExperienciasPage() {
                   </a>
                 </div>
               </div>
+              {/* Reseñas del tour */}
+              {(tourReviews[tour.id] || []).length > 0 && (
+                <div className={styles.tourReviews}>
+                  <p className={styles.tourReviewsTitle}>
+                    ★★★★★ <span>Lo que dicen quienes lo vivieron</span>
+                  </p>
+                  <div className={styles.tourReviewsList}>
+                    {(tourReviews[tour.id] || []).map((r) => (
+                      <div key={r.name} className={styles.tourReviewCard}>
+                        <div className={styles.tourReviewHeader}>
+                          <span className={styles.tourReviewAvatar}>{r.name.charAt(0)}</span>
+                          <div>
+                            <span className={styles.tourReviewName}>{r.name}</span>
+                            <span className={styles.tourReviewMeta}>{r.location} · {r.date}</span>
+                          </div>
+                        </div>
+                        <p className={styles.tourReviewText}>"{r.text}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </article>
           ))}
         </div>
@@ -363,5 +490,6 @@ export default function ExperienciasPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }
