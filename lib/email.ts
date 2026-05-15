@@ -176,6 +176,8 @@ export function buildEmailHtml(data: {
   amountPaid?: number;
   amountPending?: number;
   isDeposit?: boolean;
+  anticipo?: number;
+  notas?: string;
 }): string {
   const base = 'https://www.paraisoencantado.com';
 
@@ -185,6 +187,21 @@ export function buildEmailHtml(data: {
     const f = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'short' });
     return f.charAt(0).toUpperCase() + f.slice(1);
   };
+
+  const calcCancelDate = (checkin?: string): string => {
+    if (!checkin) return 'Ver política de cancelación';
+    const d = new Date(checkin + 'T00:00:00');
+    d.setDate(d.getDate() - 3);
+    const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return `${d.getDate()} de ${months[d.getMonth()]} ${d.getFullYear()} a las 11:59 PM`;
+  };
+
+  const INTERNO_SEP = '||INTERNO||';
+  const notasCliente = (() => {
+    const n = data.notas || '';
+    const idx = n.indexOf(INTERNO_SEP);
+    return idx === -1 ? n.trim() : n.slice(0, idx).trim();
+  })();
 
   const adults = Number(data.adults ?? data.guests ?? 0) || 0;
   const minors = Number(data.minors ?? 0) || 0;
@@ -314,8 +331,8 @@ export function buildEmailHtml(data: {
           <p style="margin:32px 0 20px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:#9a8a74;">Habitaciones Reservadas</p>
           ${roomsRows}
 
-          <!-- TOTAL -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#2a2218;margin:32px 0;">
+          <!-- TOTAL + ANTICIPO -->
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#2a2218;margin:32px 0 0 0;">
             <tr><td class="mobile-padding" style="padding:24px 48px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
@@ -326,22 +343,28 @@ export function buildEmailHtml(data: {
                     </p>
                   </td>
                 </tr>
-                ${data.isDeposit && data.amountPaid != null ? `
+                ${(data.anticipo || 0) > 0 ? `
                 <tr><td colspan="2" style="padding-top:16px;border-top:1px solid rgba(201,185,154,0.3);">
                   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                     <tr>
-                      <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#c9b99a;">✓ Cobrado ahora (50%)</p></td>
-                      <td style="text-align:right;"><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;font-weight:500;color:#e8dcc8;">$${Number(data.amountPaid).toLocaleString('es-MX')} MXN</p></td>
+                      <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#7ecf86;">— Anticipo recibido</p></td>
+                      <td style="text-align:right;"><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;font-weight:500;color:#7ecf86;">$${Number(data.anticipo).toLocaleString('es-MX')} MXN</p></td>
                     </tr>
                     <tr>
-                      <td><p style="margin:4px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#a09080;">Pendiente al check-in (50%)</p></td>
-                      <td style="text-align:right;"><p style="margin:4px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;color:#a09080;">$${Number(data.amountPending ?? 0).toLocaleString('es-MX')} MXN</p></td>
+                      <td><p style="margin:8px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#f0b97a;">Saldo pendiente al check-in</p></td>
+                      <td style="text-align:right;"><p style="margin:8px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:14px;color:#f0b97a;">$${Number((data.total||0) - (data.anticipo||0)).toLocaleString('es-MX')} MXN</p></td>
                     </tr>
                   </table>
                 </td></tr>` : ''}
               </table>
             </td></tr>
           </table>
+          ${(data.anticipo || 0) > 0 && ((data.total||0) - (data.anticipo||0)) > 0 ? `
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 32px 0;">
+            <tr><td style="background:#fff8ee;border-left:3px solid #c9a96e;padding:12px 20px;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#7a6a40;line-height:1.6;">
+              Tendrás que pagar $${Number((data.total||0) - (data.anticipo||0)).toLocaleString('es-MX')} MXN al llegar. Aceptamos efectivo y transferencia.
+            </td></tr>
+          </table>` : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 32px 0;"><tr><td style="height:1px;"></td></tr></table>`}
 
           <!-- QUOTE -->
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-left:2px solid #c9b99a;padding-left:24px;margin:32px 0;">
@@ -352,26 +375,39 @@ export function buildEmailHtml(data: {
             </td></tr>
           </table>
 
+          <!-- CANCELACION -->
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4faf4;border:1px solid #c8dfc9;margin:0 0 24px 0;">
+            <tr><td style="padding:18px 22px;">
+              <p style="margin:0 0 4px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;font-weight:500;color:#1e1e18;">Cancelación gratuita disponible</p>
+              <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#5a7a5c;line-height:1.5;">Puedes cancelar sin costo hasta el <strong style="color:#1e1e18;">${calcCancelDate(data.checkin)}</strong>. Después aplica el cargo total.</p>
+            </td></tr>
+          </table>
+
+          ${notasCliente ? `
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-left:2px solid #c9b99a;padding-left:20px;margin:0 0 24px 0;">
+            <tr><td><p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-style:italic;font-weight:300;color:#5a4e3c;line-height:1.7;">${notasCliente}</p></td></tr>
+          </table>` : ''}
+
           <!-- ARRIVAL INFO -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f0e8;margin:32px 0 0 0;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f0e8;margin:0 0 0 0;">
             <tr>
               <td style="width:50%;padding:20px;vertical-align:top;">
                 <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Cómo Llegar</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A 7 min del centro. Paraíso Encantado, Xilitla, SLP 79910.</p>
+                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">Al llegar a Xilitla, busca Las Pozas. Estamos 400m antes de la entrada.<br><strong>A 5 min caminando del Jardín de Edward James.</strong></p>
               </td>
               <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-left:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">🌿 Cerca de Ti</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A pasos del Jardín Surrealista de Edward James.</p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Contacto Directo</p>
+                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;"><a href="tel:+524891007679" style="color:#2a2218;">489-100-7679</a><br><a href="https://wa.me/524891007679" style="color:#2a2218;">WhatsApp</a></p>
               </td>
             </tr>
             <tr>
               <td style="width:50%;padding:20px;vertical-align:top;border-top:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">📞 Contacto Directo</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;"><a href="tel:+524891007679" style="color:#2a2218;border-bottom:1px solid #c9b99a;">489-100-7679</a></p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Al Llegar</p>
+                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;">Presenta: <strong>${data.confirmationNumber}</strong></p>
               </td>
               <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-top:1px solid #e4ddd3;border-left:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">🆔 Al Llegar</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;">Presenta: <strong>${data.confirmationNumber}</strong></p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Redes Sociales</p>
+                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#4a3f30;line-height:1.8;"><a href="https://www.instagram.com/_paraiso_encantado/" style="color:#2a2218;">IG: @_paraiso_encantado</a><br><a href="https://www.facebook.com/cabanas.encantado/" style="color:#2a2218;">FB: cabanas.encantado</a></p>
               </td>
             </tr>
           </table>

@@ -103,6 +103,7 @@ export interface AdminBooking {
   paymentId: string;
   estado: 'CONFIRMADA' | 'CANCELADA' | 'MANUAL';
   comoNosConocio: string;
+  anticipo: number;
 }
 
 export interface AdminQuote {
@@ -156,7 +157,7 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
   if (!client) return [];
   try {
     const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${RESERVAS_SHEET}!A:N` })
+      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${RESERVAS_SHEET}!A:O` })
     );
     const rows = res.data.values || [];
     if (rows.length < 2) return [];
@@ -177,6 +178,7 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
       notas: row[11] || '',
       paymentId: row[12] || '',
       comoNosConocio: row[13] || '',
+      anticipo: parseTotal(row[14] || '0'),
       estado: row[12] === 'CANCELADA' ? 'CANCELADA'
             : row[12] === 'MANUAL' ? 'MANUAL'
             : 'CONFIRMADA',
@@ -190,7 +192,7 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
 export async function createManualBooking(data: {
   cliente: string; telefono: string; email: string; habitacion: string;
   checkin: string; checkout: string; noches: number; huespedes: number;
-  total: number; notas: string;
+  total: number; notas: string; anticipo?: number;
 }): Promise<string> {
   const client = await getSheetsClient();
   if (!client) throw new Error('No sheets client');
@@ -209,6 +211,7 @@ export async function createManualBooking(data: {
           `$${data.total.toLocaleString('es-MX')} MXN`,
           data.checkin, data.checkout, data.noches, data.huespedes,
           data.habitacion, data.notas, 'MANUAL', '',
+          data.anticipo || 0,
         ]],
       },
     })
@@ -223,7 +226,7 @@ export async function createManualBooking(data: {
 export async function updateBooking(rowIndex: number, changes: Partial<{
   cliente: string; telefono: string; email: string; checkin: string;
   checkout: string; noches: number; huespedes: number; total: number;
-  habitaciones: string; notas: string; estado: string;
+  habitaciones: string; notas: string; estado: string; anticipo: number;
 }>): Promise<void> {
   const client = await getSheetsClient();
   if (!client) return;
@@ -231,7 +234,7 @@ export async function updateBooking(rowIndex: number, changes: Partial<{
   const colMap: Record<string, string> = {
     cliente: 'C', telefono: 'D', email: 'E', total: 'F',
     checkin: 'G', checkout: 'H', noches: 'I', huespedes: 'J',
-    habitaciones: 'K', notas: 'L',
+    habitaciones: 'K', notas: 'L', anticipo: 'O',
   };
 
   for (const [key, col] of Object.entries(colMap)) {
@@ -643,7 +646,8 @@ export type AgentActivityType =
   | 'email_confirmacion'
   | 'email_preestancia'
   | 'email_postestancia'
-  | 'blog_publicado';
+  | 'blog_publicado'
+  | 'cotizacion_auto_enviada';
 
 export async function logAgentActivity(tipo: AgentActivityType, detalle = ''): Promise<void> {
   const client = await getSheetsClient();

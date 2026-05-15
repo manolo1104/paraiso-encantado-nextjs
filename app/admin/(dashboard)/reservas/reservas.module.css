@@ -224,3 +224,54 @@
 .actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .actionBtnPdf { background: #624820; color: #fff; border: none; border-radius: 4px; padding: 5px 7px; cursor: pointer; display: flex; align-items: center; }
 .actionBtnPdf:hover { opacity: 0.85; }
+
+/* ── Vista Hoy ────────────────────────────────────────────────────────────── */
+.todayBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: #fff; border: 1px solid #d4cec7; border-radius: 4px;
+  padding: 8px 12px; font-size: 0.875rem;
+  font-family: var(--font-jost), sans-serif; color: var(--clay);
+  cursor: pointer; transition: all 0.15s;
+}
+.todayBtn:hover { border-color: var(--forest); color: var(--forest); }
+.todayBtnActive {
+  background: #e6f4e8; border-color: var(--forest); color: var(--forest);
+  font-weight: 600;
+}
+.todayCount {
+  background: var(--forest); color: #fff;
+  font-size: 0.7rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+}
+.todaySummary {
+  display: flex; gap: 12px; margin-bottom: 16px;
+}
+.todayCard {
+  flex: 1; background: #fff; border: 1px solid; border-radius: 8px;
+  padding: 16px 20px; display: flex; flex-direction: column; gap: 4px;
+}
+.todayCardNum {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 2rem; font-weight: 400; line-height: 1;
+}
+.todayCardLabel {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sage);
+}
+
+/* ── Operational state badge ─────────────────────────────────────────────── */
+.opsBadge {
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ── Row highlights ──────────────────────────────────────────────────────── */
+.rowHighlight td { background: #f0faf0 !important; }
+.rowCheckout td  { background: #fffbf0 !important; }
+
+/* ── Days chip ───────────────────────────────────────────────────────────── */
+.daysChip {
+  display: inline-block; font-size: 0.72rem; font-weight: 600;
+  padding: 2px 7px; border-radius: 10px; white-space: nowrap;
+  font-family: var(--font-jost), sans-serif;
+}

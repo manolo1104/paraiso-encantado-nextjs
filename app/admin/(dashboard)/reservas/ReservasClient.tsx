@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
 import { printBookingPDF } from '../cotizaciones/CotizacionesClient';
@@ -13,11 +13,63 @@ const SUITES = [
   'Helechos 1','Helechos 2',
 ];
 
-const ESTADO_COLOR: Record<string, string> = {
-  CONFIRMADA: '#2d7a34',
-  MANUAL:     '#2d7a34',
-  CANCELADA:  '#c9484a',
+// ── Operational state ────────────────────────────────────────────────────────
+
+type OpsState = 'CHECK_IN_HOY' | 'CHECK_OUT_HOY' | 'EN_CASA' | 'PROXIMA' | 'COMPLETADA' | 'CANCELADA' | 'NO_SHOW';
+
+function getOpsState(b: AdminBooking, today: string): OpsState {
+  if (b.estado === 'CANCELADA') return 'CANCELADA';
+  const ci = b.checkin;
+  const co = b.checkout;
+  if (!ci) return 'PROXIMA';
+  if (ci === today) return 'CHECK_IN_HOY';
+  if (co === today) return 'CHECK_OUT_HOY';
+  if (ci < today && co > today) return 'EN_CASA';
+  if (co < today) return 'COMPLETADA';
+  // Upcoming — check if it's past the checkin without showing up
+  if (ci < today && co <= today) return 'NO_SHOW';
+  return 'PROXIMA';
+}
+
+const OPS_LABEL: Record<OpsState, string> = {
+  CHECK_IN_HOY:  'Check-in Hoy',
+  CHECK_OUT_HOY: 'Check-out Hoy',
+  EN_CASA:       'En Casa',
+  PROXIMA:       'Próxima',
+  COMPLETADA:    'Completada',
+  CANCELADA:     'Cancelada',
+  NO_SHOW:       'No Show',
 };
+
+const OPS_COLOR: Record<OpsState, { bg: string; color: string }> = {
+  CHECK_IN_HOY:  { bg: '#e6f4e8', color: '#1a6b22' },
+  CHECK_OUT_HOY: { bg: '#fff3d4', color: '#7a5a00' },
+  EN_CASA:       { bg: '#e0f0f8', color: '#0d5070' },
+  PROXIMA:       { bg: '#f4f0e8', color: '#5a4e3c' },
+  COMPLETADA:    { bg: '#f0f0f0', color: '#888' },
+  CANCELADA:     { bg: '#fde8e8', color: '#8a1a1a' },
+  NO_SHOW:       { bg: '#f8e0e8', color: '#7a0030' },
+};
+
+// ── Days to arrival ──────────────────────────────────────────────────────────
+
+function daysToArrival(checkin: string, today: string): number {
+  return Math.round(
+    (new Date(checkin + 'T00:00:00').getTime() - new Date(today + 'T00:00:00').getTime()) / 86400000
+  );
+}
+
+function DaysChip({ days }: { days: number }) {
+  if (days < 0)  return <span className={styles.daysChip} style={{ background: '#f0f0f0', color: '#aaa' }}>Pasada</span>;
+  if (days === 0) return <span className={styles.daysChip} style={{ background: '#e6f4e8', color: '#1a6b22', fontWeight: 700 }}>Hoy</span>;
+  if (days === 1) return <span className={styles.daysChip} style={{ background: '#fff3d4', color: '#7a5a00', fontWeight: 700 }}>Mañana</span>;
+  if (days <= 3)  return <span className={styles.daysChip} style={{ background: '#fff3d4', color: '#7a5a00' }}>{days}d</span>;
+  if (days <= 7)  return <span className={styles.daysChip} style={{ background: '#fdf6e8', color: '#8a6830' }}>{days}d</span>;
+  if (days <= 14) return <span className={styles.daysChip} style={{ background: '#f0f7f0', color: '#3d6e40' }}>{days}d</span>;
+  return <span className={styles.daysChip} style={{ background: '#f4f0e8', color: '#888' }}>{days}d</span>;
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 interface Props { initialBookings: AdminBooking[] }
 
@@ -29,24 +81,51 @@ export default function ReservasClient({ initialBookings }: Props) {
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [vistaHoy, setVistaHoy] = useState(false);
   const [modal, setModal] = useState<{ mode: 'new' | 'edit'; booking?: AdminBooking } | null>(null);
   const [loading, setLoading] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return bookings.filter(b => {
+      if (vistaHoy) {
+        // Solo mostrar check-ins, check-outs y huéspedes en casa HOY
+        const ops = getOpsState(b, today);
+        if (!['CHECK_IN_HOY','CHECK_OUT_HOY','EN_CASA'].includes(ops)) return false;
+      }
       if (q && !b.cliente.toLowerCase().includes(q) &&
           !b.email.toLowerCase().includes(q) &&
           !b.confirmacion.toLowerCase().includes(q) &&
           !b.habitaciones.toLowerCase().includes(q)) return false;
       if (suiteFilter && !b.habitaciones.includes(suiteFilter)) return false;
-      if (estadoFilter && b.estado !== estadoFilter) return false;
+      if (estadoFilter) {
+        const ops = getOpsState(b, today);
+        if (ops !== estadoFilter) return false;
+      }
       if (fechaDesde && b.checkin < fechaDesde) return false;
       if (fechaHasta && b.checkin > fechaHasta) return false;
       return true;
-    }).sort((a, b) => b.checkin.localeCompare(a.checkin));
-  }, [bookings, search, suiteFilter, estadoFilter, fechaDesde, fechaHasta]);
+    }).sort((a, b) => {
+      if (vistaHoy) {
+        // Sort by operational priority: check-in first, then in-house, then check-out
+        const order = { CHECK_IN_HOY: 0, EN_CASA: 1, CHECK_OUT_HOY: 2 };
+        const ao = order[getOpsState(a, today) as keyof typeof order] ?? 9;
+        const bo = order[getOpsState(b, today) as keyof typeof order] ?? 9;
+        return ao - bo;
+      }
+      return b.checkin.localeCompare(a.checkin);
+    });
+  }, [bookings, search, suiteFilter, estadoFilter, fechaDesde, fechaHasta, vistaHoy, today]);
+
+  // Counters for "today" badge
+  const todayCounts = useMemo(() => ({
+    checkIn:  bookings.filter(b => b.estado !== 'CANCELADA' && b.checkin === today).length,
+    checkOut: bookings.filter(b => b.estado !== 'CANCELADA' && b.checkout === today).length,
+    enCasa:   bookings.filter(b => b.estado !== 'CANCELADA' && b.checkin < today && b.checkout > today).length,
+  }), [bookings, today]);
 
   const hasActiveFilters = suiteFilter || estadoFilter || fechaDesde || fechaHasta;
 
@@ -77,7 +156,10 @@ export default function ReservasClient({ initialBookings }: Props) {
     printBookingPDF(b);
   }
 
-  const totalIngresos = filtered.reduce((s, b) => s + (b.estado !== 'CANCELADA' ? b.total : 0), 0);
+  const totalIngresos = filtered.reduce((s, b) => {
+    const ops = getOpsState(b, today);
+    return ops === 'CANCELADA' ? s : s + b.total;
+  }, 0);
 
   return (
     <div>
@@ -90,13 +172,27 @@ export default function ReservasClient({ initialBookings }: Props) {
           </p>
         </div>
         <div className={styles.headerActions}>
+          {/* Vista HOY */}
+          <button
+            className={`${styles.todayBtn} ${vistaHoy ? styles.todayBtnActive : ''}`}
+            onClick={() => { setVistaHoy(v => !v); clearFilters(); }}
+            title="Ver solo actividad de hoy"
+          >
+            <Sun size={14} />
+            Hoy
+            {(todayCounts.checkIn + todayCounts.checkOut + todayCounts.enCasa) > 0 && (
+              <span className={styles.todayCount}>
+                {todayCounts.checkIn + todayCounts.checkOut + todayCounts.enCasa}
+              </span>
+            )}
+          </button>
+
           <button className={styles.iconBtn} onClick={refresh} disabled={loading} title="Actualizar">
             <RefreshCw size={16} className={loading ? styles.spin : ''} />
           </button>
           <button
             className={`${styles.iconBtn} ${showFilters ? styles.iconBtnActive : ''}`}
             onClick={() => setShowFilters(s => !s)}
-            title="Filtros"
           >
             Filtros {showFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
@@ -106,7 +202,25 @@ export default function ReservasClient({ initialBookings }: Props) {
         </div>
       </div>
 
-      {/* Búsqueda rápida */}
+      {/* Vista HOY summary */}
+      {vistaHoy && (
+        <div className={styles.todaySummary}>
+          <div className={styles.todayCard} style={{ borderColor: '#2d7a34' }}>
+            <span className={styles.todayCardNum} style={{ color: '#2d7a34' }}>{todayCounts.checkIn}</span>
+            <span className={styles.todayCardLabel}>Check-in hoy</span>
+          </div>
+          <div className={styles.todayCard} style={{ borderColor: '#0d5070' }}>
+            <span className={styles.todayCardNum} style={{ color: '#0d5070' }}>{todayCounts.enCasa}</span>
+            <span className={styles.todayCardLabel}>En casa</span>
+          </div>
+          <div className={styles.todayCard} style={{ borderColor: '#7a5a00' }}>
+            <span className={styles.todayCardNum} style={{ color: '#7a5a00' }}>{todayCounts.checkOut}</span>
+            <span className={styles.todayCardLabel}>Check-out hoy</span>
+          </div>
+        </div>
+      )}
+
+      {/* Búsqueda */}
       <div className={styles.searchWrap}>
         <Search size={15} className={styles.searchIcon} />
         <input
@@ -117,7 +231,7 @@ export default function ReservasClient({ initialBookings }: Props) {
         />
       </div>
 
-      {/* Panel de filtros avanzados */}
+      {/* Filtros avanzados */}
       {showFilters && (
         <div className={styles.filtersPanel}>
           <div className={styles.filtersGrid}>
@@ -129,12 +243,16 @@ export default function ReservasClient({ initialBookings }: Props) {
               </select>
             </label>
             <label className={styles.filterField}>
-              <span>Estado</span>
+              <span>Estado operativo</span>
               <select value={estadoFilter} onChange={e => setEstadoFilter(e.target.value)}>
                 <option value="">Todos</option>
-                <option value="CONFIRMADA">Confirmada</option>
-                <option value="MANUAL">Manual</option>
+                <option value="CHECK_IN_HOY">Check-in Hoy</option>
+                <option value="CHECK_OUT_HOY">Check-out Hoy</option>
+                <option value="EN_CASA">En Casa</option>
+                <option value="PROXIMA">Próxima</option>
+                <option value="COMPLETADA">Completada</option>
                 <option value="CANCELADA">Cancelada</option>
+                <option value="NO_SHOW">No Show</option>
               </select>
             </label>
             <label className={styles.filterField}>
@@ -156,45 +274,68 @@ export default function ReservasClient({ initialBookings }: Props) {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Confirmación</th><th>Cliente</th><th>Suite</th>
-              <th>Check-in</th><th>Check-out</th><th>Noches</th>
-              <th>Total</th><th>Estado</th><th>Acciones</th>
+              <th>Confirmación</th>
+              <th>Cliente</th>
+              <th>Suite</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Noches</th>
+              <th>Días</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={9} className={styles.empty}>Sin reservas que mostrar</td></tr>
-            ) : filtered.map(b => (
-              <tr key={b.confirmacion + b.rowIndex} className={styles.row}
-                onClick={() => setModal({ mode: 'edit', booking: b })}>
-                <td className={styles.mono}>{b.confirmacion || '—'}</td>
-                <td>
-                  <div className={styles.clienteName}>{b.cliente}</div>
-                  {b.email && b.email !== 'N/A' && <div className={styles.clienteEmail}>{b.email}</div>}
-                </td>
-                <td>{b.habitaciones}</td>
-                <td>{b.checkin}</td>
-                <td>{b.checkout}</td>
-                <td>{b.noches}</td>
-                <td className={styles.total}>${b.total.toLocaleString('es-MX')}</td>
-                <td>
-                  <span className={styles.badge} style={{ color: ESTADO_COLOR[b.estado] || '#888' }}>
-                    {b.estado}
-                  </span>
-                </td>
-                <td onClick={e => e.stopPropagation()}>
-                  <div className={styles.rowActions}>
-                    <button className={styles.actionBtn} onClick={e => sendEmail(e, b)}
-                      disabled={sendingId === b.confirmacion} title="Enviar confirmación por email">
-                      {sendingId === b.confirmacion ? <Loader2 size={13} className={styles.spin} /> : <Send size={13} />}
-                    </button>
-                    <button className={styles.actionBtnPdf} onClick={e => downloadPDF(e, b)} title="Descargar PDF">
-                      <Download size={13} />
-                    </button>
-                  </div>
+              <tr>
+                <td colSpan={10} className={styles.empty}>
+                  {vistaHoy ? 'Sin actividad para hoy' : 'Sin reservas que mostrar'}
                 </td>
               </tr>
-            ))}
+            ) : filtered.map(b => {
+              const ops = getOpsState(b, today);
+              const opsStyle = OPS_COLOR[ops];
+              const days = daysToArrival(b.checkin, today);
+              return (
+                <tr
+                  key={b.confirmacion + b.rowIndex}
+                  className={`${styles.row} ${ops === 'CHECK_IN_HOY' ? styles.rowHighlight : ops === 'CHECK_OUT_HOY' ? styles.rowCheckout : ''}`}
+                  onClick={() => setModal({ mode: 'edit', booking: b })}
+                >
+                  <td className={styles.mono}>{b.confirmacion || '—'}</td>
+                  <td>
+                    <div className={styles.clienteName}>{b.cliente}</div>
+                    {b.email && b.email !== 'N/A' && <div className={styles.clienteEmail}>{b.email}</div>}
+                  </td>
+                  <td>{b.habitaciones}</td>
+                  <td>{b.checkin}</td>
+                  <td>{b.checkout}</td>
+                  <td>{b.noches}</td>
+                  <td><DaysChip days={days} /></td>
+                  <td className={styles.total}>${b.total.toLocaleString('es-MX')}</td>
+                  <td>
+                    <span
+                      className={styles.opsBadge}
+                      style={{ background: opsStyle.bg, color: opsStyle.color }}
+                    >
+                      {OPS_LABEL[ops]}
+                    </span>
+                  </td>
+                  <td onClick={e => e.stopPropagation()}>
+                    <div className={styles.rowActions}>
+                      <button className={styles.actionBtn} onClick={e => sendEmail(e, b)}
+                        disabled={sendingId === b.confirmacion} title="Enviar confirmación">
+                        {sendingId === b.confirmacion ? <Loader2 size={13} className={styles.spin} /> : <Send size={13} />}
+                      </button>
+                      <button className={styles.actionBtnPdf} onClick={e => downloadPDF(e, b)} title="PDF">
+                        <Download size={13} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

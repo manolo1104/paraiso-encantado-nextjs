@@ -11,7 +11,7 @@ const SUITES = [
   'Orquídeas 3','Bromelias','Helechos 1','Helechos 2',
 ];
 
-interface HabItem { suite: string; huespedes: number }
+interface HabItem { suite: string; huespedes: number; precioOverride?: number }
 
 const PRECIO_TIERS: Record<string, Record<number, number>> = {
   'Jungla':              { 2: 1900, 3: 2400, 4: 2400 },
@@ -37,6 +37,10 @@ function getPrecioNoche(suite: string, personas: number): number {
   return precio;
 }
 
+function getHabPrecio(hab: HabItem): number {
+  return hab.precioOverride ?? getPrecioNoche(hab.suite, hab.huespedes);
+}
+
 interface Props {
   booking?: AdminBooking;
   defaultCheckin?: string;
@@ -55,7 +59,17 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     checkout: booking?.checkout || '',
     noches: booking?.noches || 1,
     total: booking?.total || 0,
-    notas: booking?.notas || '',
+  });
+
+  const INTERNO_SEP = '||INTERNO||';
+  const rawNotas = booking?.notas || '';
+  const [notasCliente, setNotasCliente] = useState(() => {
+    const idx = rawNotas.indexOf(INTERNO_SEP);
+    return idx === -1 ? rawNotas.trim() : rawNotas.slice(0, idx).trim();
+  });
+  const [notasInternas, setNotasInternas] = useState(() => {
+    const idx = rawNotas.indexOf(INTERNO_SEP);
+    return idx === -1 ? '' : rawNotas.slice(idx + INTERNO_SEP.length).trim();
   });
 
   const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
@@ -71,6 +85,10 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
   const [totalOverride, setTotalOverride] = useState(false);
   const [loyalty, setLoyalty] = useState<{ tier: string; discountPct: number; totalReservas: number } | null>(null);
 
+  // Anticipo / Restante
+  const [anticipo, setAnticipo] = useState(booking?.anticipo || 0);
+  const [restanteOverride, setRestanteOverride] = useState<number | null>(null);
+
   function set(key: string, value: string | number) {
     setForm(f => ({ ...f, [key]: value }));
     setAvailStatus('idle');
@@ -78,20 +96,32 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
 
   function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); }
   function removeHab(i: number) { setHabitaciones(h => h.filter((_, idx) => idx !== i)); setTotalOverride(false); }
+
   function updateHab(i: number, key: 'suite' | 'huespedes', val: string | number) {
-    setHabitaciones(h => h.map((item, idx) => idx === i ? { ...item, [key]: val } : item));
+    setHabitaciones(h => h.map((item, idx) =>
+      idx === i ? { ...item, [key]: val, precioOverride: undefined } : item
+    ));
     setTotalOverride(false);
     setAvailStatus('idle');
   }
 
+  function updateHabPrecio(i: number, precio: number) {
+    setHabitaciones(h => h.map((item, idx) =>
+      idx === i ? { ...item, precioOverride: precio } : item
+    ));
+    setTotalOverride(false);
+  }
+
   const totalHuespedes = habitaciones.reduce((sum, h) => sum + h.huespedes, 0);
+  const precioCalculado = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * Math.max(form.noches, 1), 0);
+  const restante = restanteOverride ?? (form.total - anticipo);
 
   // Auto-calcular noches y precio
   useEffect(() => {
     const { checkin, checkout } = form;
     if (checkin && checkout) {
       const n = Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000));
-      const precioAuto = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * n, 0);
+      const precioAuto = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * n, 0);
       setForm(f => ({
         ...f,
         noches: n,
@@ -99,6 +129,11 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
       }));
     }
   }, [form.checkin, form.checkout, habitaciones, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset restante override when total changes
+  useEffect(() => {
+    if (!totalOverride) setRestanteOverride(null);
+  }, [form.total, totalOverride]);
 
   // Verificar disponibilidad cuando cambian fechas o suites
   useEffect(() => {
@@ -155,8 +190,6 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
     }
   }
 
-  const precioCalculado = habitaciones.reduce((sum, h) => sum + getPrecioNoche(h.suite, h.huespedes) * Math.max(form.noches, 1), 0);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isEdit && availStatus === 'unavailable') {
@@ -169,10 +202,11 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
       const habitacion = habitaciones.map(h => h.suite).join(', ');
       const url = isEdit ? `/api/admin/reservas/${booking!.confirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
+      const notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, habitacion, huespedes: totalHuespedes }),
+        body: JSON.stringify({ ...form, habitacion, huespedes: totalHuespedes, anticipo, notas }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al guardar');
@@ -249,14 +283,25 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
             </div>
             {habitaciones.map((hab, i) => (
               <div key={i} className={styles.roomRow}>
-                <select className={styles.roomRowSelect} value={hab.suite} onChange={e => updateHab(i, 'suite', e.target.value)}>
+                <select className={styles.roomRowSelect} value={hab.suite}
+                  onChange={e => updateHab(i, 'suite', e.target.value)}>
                   {SUITES.map(s => <option key={s}>{s}</option>)}
                 </select>
-                <select className={styles.roomRowSelect} value={hab.huespedes} onChange={e => updateHab(i, 'huespedes', parseInt(e.target.value))}>
+                <select className={styles.roomRowSelect} value={hab.huespedes}
+                  onChange={e => updateHab(i, 'huespedes', parseInt(e.target.value))}>
                   {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
                 </select>
+                <input
+                  type="number" min={0}
+                  className={styles.roomPriceInput}
+                  value={getHabPrecio(hab)}
+                  onChange={e => updateHabPrecio(i, parseInt(e.target.value) || 0)}
+                  title="Precio por noche"
+                />
                 {habitaciones.length > 1 && (
-                  <button type="button" className={styles.removeRoomBtn} onClick={() => removeHab(i)}><X size={13} /></button>
+                  <button type="button" className={styles.removeRoomBtn} onClick={() => removeHab(i)}>
+                    <X size={13} />
+                  </button>
                 )}
               </div>
             ))}
@@ -266,7 +311,7 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
           {/* Calculador de precio */}
           <div className={styles.priceCalc}>
             {habitaciones.length > 1 && habitaciones.map((hab, i) => {
-              const pn = getPrecioNoche(hab.suite, hab.huespedes);
+              const pn = getHabPrecio(hab);
               return (
                 <div key={i} className={styles.priceCalcRow}>
                   <span>{hab.suite} ({hab.huespedes}p) × {Math.max(form.noches,1)} noches</span>
@@ -276,7 +321,7 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
             })}
             {habitaciones.length === 1 && (
               <div className={styles.priceCalcRow}>
-                <span>${getPrecioNoche(habitaciones[0].suite, habitaciones[0].huespedes).toLocaleString('es-MX')}/noche × {Math.max(form.noches, 1)} noches</span>
+                <span>${getHabPrecio(habitaciones[0]).toLocaleString('es-MX')}/noche × {Math.max(form.noches, 1)} noches</span>
                 <strong>${precioCalculado.toLocaleString('es-MX')} MXN</strong>
               </div>
             )}
@@ -296,6 +341,35 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Anticipo / Restante */}
+          <div className={styles.anticipoSection}>
+            <span className={styles.anticipoTitle}>Anticipo y saldo pendiente</span>
+            <div className={styles.anticipoGrid}>
+              <div className={styles.anticipoFieldWrap}>
+                <span>Anticipo recibido (MXN)</span>
+                <input
+                  type="number" min={0}
+                  value={anticipo}
+                  onChange={e => { setAnticipo(parseInt(e.target.value) || 0); setRestanteOverride(null); }}
+                />
+              </div>
+              <div className={styles.anticipoFieldWrap}>
+                <span>Saldo restante (MXN)</span>
+                <input
+                  type="number" min={0}
+                  value={restante}
+                  onChange={e => setRestanteOverride(parseInt(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+            {restanteOverride !== null && (
+              <button type="button" className={styles.anticipoReset}
+                onClick={() => setRestanteOverride(null)}>
+                ↩ Recalcular restante
+              </button>
+            )}
           </div>
 
           {/* Badge de lealtad */}
@@ -332,10 +406,16 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
             </div>
           )}
 
-          <label className={styles.field}>
-            <span>Notas</span>
-            <textarea rows={3} value={form.notas} onChange={e => set('notas', e.target.value)} />
-          </label>
+          <div className={styles.grid2}>
+            <label className={styles.field}>
+              <span>Notas para el cliente (aparece en PDF)</span>
+              <textarea rows={2} value={notasCliente} onChange={e => setNotasCliente(e.target.value)} />
+            </label>
+            <label className={styles.field}>
+              <span>Notas internas (solo tú las ves)</span>
+              <textarea rows={2} value={notasInternas} onChange={e => setNotasInternas(e.target.value)} />
+            </label>
+          </div>
 
           {error && <p className={styles.error}>{error}</p>}
 

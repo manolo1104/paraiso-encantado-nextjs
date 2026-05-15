@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Plus, CalendarDays, LayoutGrid } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CalendarDays, LayoutGrid, GanttChartSquare } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
 import RoomMap from '@/components/admin/RoomMap';
+import GanttView from './GanttView';
 import styles from './calendario.module.css';
 
 const SUITE_COLORS = [
@@ -31,7 +32,7 @@ interface Props { initialBookings: AdminBooking[] }
 
 export default function CalendarioClient({ initialBookings }: Props) {
   const now = new Date();
-  const [view, setView] = useState<'calendario' | 'mapa'>('calendario');
+  const [view, setView] = useState<'calendario' | 'mapa' | 'gantt'>('calendario');
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [modal, setModal] = useState<{ booking?: AdminBooking; defaultCheckin?: string } | null>(null);
@@ -90,6 +91,12 @@ export default function CalendarioClient({ initialBookings }: Props) {
               <CalendarDays size={14} /> Calendario
             </button>
             <button
+              className={`${styles.viewBtn} ${view === 'gantt' ? styles.viewBtnActive : ''}`}
+              onClick={() => setView('gantt')}
+            >
+              <GanttChartSquare size={14} /> Timeline
+            </button>
+            <button
               className={`${styles.viewBtn} ${view === 'mapa' ? styles.viewBtnActive : ''}`}
               onClick={() => setView('mapa')}
             >
@@ -108,6 +115,10 @@ export default function CalendarioClient({ initialBookings }: Props) {
       </div>
 
       {view === 'mapa' && <RoomMap />}
+
+      {view === 'gantt' && (
+        <GanttView bookings={bookings} onRefresh={refresh} />
+      )}
 
       {view === 'calendario' && <div className={styles.calWrap}>
         {/* Cabecera días */}
@@ -157,7 +168,7 @@ export default function CalendarioClient({ initialBookings }: Props) {
         </div>
       </div>}
 
-      {/* Leyenda — solo en vista calendario */}
+      {/* Leyenda — solo en vistas calendario y mapa */}
       {view === 'calendario' && <div className={styles.legend}>
         {SUITES_LIST.map((s, i) => (
           <span key={s} className={styles.legendItem}>

@@ -25,6 +25,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     total: b.total,
     rooms: [{ name: b.habitaciones, guestCount: b.huespedes, totalPrice: b.total }],
     paymentIntentId: b.paymentId || 'MANUAL',
+    anticipo: b.anticipo || 0,
+    notas: b.notas || '',
   });
 
   try {
