@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       paymentIntentId: paymentIntent.id,
     });
   } catch (e: any) {
+    console.error('❌ create-payment-intent error:', e.message, '| STRIPE_KEY_SET:', !!process.env.STRIPE_SECRET_KEY, '| STRIPE_KEY_PREFIX:', process.env.STRIPE_SECRET_KEY?.slice(0, 7));
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
