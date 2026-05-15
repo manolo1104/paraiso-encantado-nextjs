@@ -102,7 +102,19 @@
 .reqText { font-size: 0.875rem; color: var(--clay); }
 
 /* Plan */
-.planList { display: flex; flex-direction: column; gap: 16px; }
+.planList { display: flex; flex-direction: column; gap: 8px; }
+
+/* Acordeón de fases */
+.faseAccordion { border: 1px solid #e4ddd3; border-radius: 8px; overflow: hidden; background: #fff; }
+.faseAccordionHeader {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; background: var(--parch); border: none; cursor: pointer;
+  text-align: left; transition: background 0.1s;
+}
+.faseAccordionHeader:hover { background: #e8e3d8; }
+.faseChevron { font-size: 1.3rem; color: var(--clay); margin-left: auto; transition: transform 0.2s; line-height: 1; }
+.faseChevronOpen { transform: rotate(90deg); }
+.faseAccordionBody { padding: 16px 18px; border-top: 1px solid #e4ddd3; }
 
 .faseCard {
   background: var(--parch);

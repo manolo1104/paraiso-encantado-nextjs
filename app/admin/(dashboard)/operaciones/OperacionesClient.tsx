@@ -162,6 +162,7 @@ export default function OperacionesClient({ initialCleaning, initialMaintenance,
   const [selectedSuite, setSelectedSuite] = useState<string | null>(null);
   const [showAddTask, setShowAddTask] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
   const refreshCleaning = useCallback(async () => {
     const res = await fetch('/api/admin/operaciones/limpieza');
@@ -273,7 +274,7 @@ export default function OperacionesClient({ initialCleaning, initialMaintenance,
         </div>
       )}
 
-      {/* Contenido: Mantenimiento */}
+      {/* Contenido: Mantenimiento — acordeón por suite */}
       {tab === 'mantenimiento' && (
         <div>
           <div className={styles.mantHeader}>
@@ -282,43 +283,62 @@ export default function OperacionesClient({ initialCleaning, initialMaintenance,
               <Plus size={15} /> Agregar tarea
             </button>
           </div>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Suite / Área</th><th>Tarea</th><th>Frecuencia</th>
-                  <th>Última vez</th><th>Próxima vez</th><th>Estado</th><th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {maintenance.map((t, i) => (
-                  <tr key={i} className={t.overdue ? styles.rowOverdue : ''}>
-                    <td>{t.suite}</td>
-                    <td>{t.tarea}{t.notas && <div className={styles.taskNota}>{t.notas}</div>}</td>
-                    <td>Cada {t.frecuenciaDias}d</td>
-                    <td>{t.ultimaVez || '—'}</td>
-                    <td>{t.proximaVez || '—'}</td>
-                    <td>
-                      {t.overdue
-                        ? <span className={styles.badgeOverdue}>VENCIDA +{t.daysOverdue}d</span>
-                        : (() => {
-                            const days = t.proximaVez ? Math.round((new Date(t.proximaVez + 'T12:00:00').getTime() - Date.now()) / 86400000) : 999;
-                            return days <= 3
-                              ? <span className={styles.badgeSoon}>PRÓXIMA {days}d</span>
-                              : <span className={styles.badgeOk}>OK</span>;
-                          })()
-                      }
-                    </td>
-                    <td>
-                      <button className={styles.doneBtn} onClick={() => markDone(t.suite, t.tarea)} disabled={loading}>
-                        ✓ Hecho
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+          {/* Agrupar por suite */}
+          {(() => {
+            const bySuite: Record<string, typeof maintenance> = {};
+            maintenance.forEach(t => {
+              const key = t.suite || 'HOTEL';
+              if (!bySuite[key]) bySuite[key] = [];
+              bySuite[key].push(t);
+            });
+            return Object.entries(bySuite).map(([suite, tasks]) => {
+              const overdueInSuite = tasks.filter(t => t.overdue).length;
+              const soonInSuite = tasks.filter(t => !t.overdue && t.proximaVez && Math.round((new Date(t.proximaVez + 'T12:00:00').getTime() - Date.now()) / 86400000) <= 3).length;
+              const isOpen = openAccordion === suite;
+              return (
+                <div key={suite} className={styles.accordionItem}>
+                  <button className={styles.accordionHeader} onClick={() => setOpenAccordion(isOpen ? null : suite)}>
+                    <span className={styles.accordionSuiteName}>{suite}</span>
+                    <span className={styles.accordionMeta}>
+                      {overdueInSuite > 0 && <span className={styles.badgeOverdue}>{overdueInSuite} vencida{overdueInSuite !== 1 ? 's' : ''}</span>}
+                      {soonInSuite > 0 && !overdueInSuite && <span className={styles.badgeSoon}>{soonInSuite} próxima</span>}
+                      {!overdueInSuite && !soonInSuite && <span className={styles.badgeOk}>{tasks.length} tarea{tasks.length !== 1 ? 's' : ''}</span>}
+                    </span>
+                    <span className={`${styles.accordionChevron} ${isOpen ? styles.accordionChevronOpen : ''}`}>›</span>
+                  </button>
+                  {isOpen && (
+                    <div className={styles.accordionBody}>
+                      {tasks.map((t, i) => {
+                        const days = t.proximaVez ? Math.round((new Date(t.proximaVez + 'T12:00:00').getTime() - Date.now()) / 86400000) : 999;
+                        return (
+                          <div key={i} className={`${styles.accordionTask} ${t.overdue ? styles.accordionTaskOverdue : ''}`}>
+                            <div className={styles.accordionTaskMain}>
+                              <span className={styles.accordionTaskName}>{t.tarea}</span>
+                              {t.notas && <span className={styles.taskNota}>{t.notas}</span>}
+                            </div>
+                            <div className={styles.accordionTaskMeta}>
+                              <span>Cada {t.frecuenciaDias}d</span>
+                              <span>Última: {t.ultimaVez || '—'}</span>
+                              <span>Próxima: {t.proximaVez || '—'}</span>
+                              {t.overdue
+                                ? <span className={styles.badgeOverdue}>+{t.daysOverdue}d</span>
+                                : days <= 3 ? <span className={styles.badgeSoon}>{days}d</span>
+                                : <span className={styles.badgeOk}>OK</span>
+                              }
+                            </div>
+                            <button className={styles.doneBtn} onClick={() => markDone(t.suite, t.tarea)} disabled={loading}>
+                              ✓ Hecho
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          })()}
         </div>
       )}
 

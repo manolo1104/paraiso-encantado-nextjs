@@ -278,7 +278,7 @@ export default function InsightsClient() {
             <p className={styles.empty}>Sin reservas este mes aún.</p>
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180}>
+              <ResponsiveContainer width="100%" height={160}>
                 <PieChart>
                   <Pie
                     data={origen}
@@ -286,21 +286,16 @@ export default function InsightsClient() {
                     nameKey="label"
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius={44}
+                    outerRadius={72}
                     paddingAngle={3}
+                    label={({ percent }) => (percent ?? 0) > 0.04 ? `${((percent ?? 0) * 100).toFixed(0)}%` : ''}
+                    labelLine={false}
                   >
                     {origen.map((o, i) => (
                       <Cell key={i} fill={o.color} />
                     ))}
                   </Pie>
-                  <Legend
-                    formatter={(value) => (
-                      <span style={{ color: '#7a7060', fontSize: 12, fontFamily: 'var(--font-jost)' }}>
-                        {value}
-                      </span>
-                    )}
-                  />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
@@ -316,6 +311,23 @@ export default function InsightsClient() {
                   />
                 </PieChart>
               </ResponsiveContainer>
+              {/* Leyenda con números — siempre visible, sin depender del hover */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                {(() => {
+                  const total = origen.reduce((s, o) => s + o.count, 0);
+                  return origen.map((o, i) => {
+                    const pct = total > 0 ? Math.round(o.count / total * 100) : 0;
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: o.color, flexShrink: 0 }} />
+                        <span style={{ flex: 1, fontSize: 12, color: '#5a5a4a', fontFamily: 'var(--font-jost)' }}>{o.label}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1a2218', fontFamily: 'var(--font-jost)' }}>{pct}%</span>
+                        <span style={{ fontSize: 11, color: '#9a9a82', fontFamily: 'var(--font-jost)' }}>({o.count})</span>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
               <div className={styles.otaSavings}>
                 <span className={styles.otaLabel}>Ahorro OTAs (año)</span>
                 <span className={styles.otaValue}>{fmt(ahorroOTAs)} MXN</span>

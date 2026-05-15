@@ -22,30 +22,32 @@ export default function CalendarioClient({ initialBookings }: Props) {
 
   return (
     <div>
-      <div className={styles.header}>
+      {/* Row 1: título + botón principal */}
+      <div className={styles.headerRow1}>
         <div>
           <h1 className={styles.title}>Calendario</h1>
           <p className={styles.sub}>
             {bookings.filter(b => b.estado !== 'CANCELADA').length} reservas activas
           </p>
         </div>
-        <div className={styles.headerActions}>
-          <div className={styles.viewToggle}>
-            <button
-              className={`${styles.viewBtn} ${view === 'calendario' ? styles.viewBtnActive : ''}`}
-              onClick={() => setView('calendario')}
-            >
-              <CalendarDays size={14} /> Disponibilidad
-            </button>
-            <button
-              className={`${styles.viewBtn} ${view === 'gantt' ? styles.viewBtnActive : ''}`}
-              onClick={() => setView('gantt')}
-            >
-              <GanttChartSquare size={14} /> Timeline
-            </button>
-          </div>
-          <button className={styles.primaryBtn} onClick={() => setModal({})}>
-            <Plus size={15} /> Nueva reserva
+        <button className={styles.primaryBtn} onClick={() => setModal({})}>
+          <Plus size={15} /> Nueva reserva
+        </button>
+      </div>
+      {/* Row 2: tabs de vista */}
+      <div className={styles.headerRow2}>
+        <div className={styles.viewToggle}>
+          <button
+            className={`${styles.viewBtn} ${view === 'calendario' ? styles.viewBtnActive : ''}`}
+            onClick={() => setView('calendario')}
+          >
+            <CalendarDays size={14} /> Disponibilidad
+          </button>
+          <button
+            className={`${styles.viewBtn} ${view === 'gantt' ? styles.viewBtnActive : ''}`}
+            onClick={() => setView('gantt')}
+          >
+            <GanttChartSquare size={14} /> Timeline
           </button>
         </div>
       </div>

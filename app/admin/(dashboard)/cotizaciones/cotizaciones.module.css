@@ -88,6 +88,57 @@
 .roomPriceInput { padding: 7px 8px; border: 1px solid #d4cec7; border-radius: 4px; font-size: 0.82rem; font-family: var(--font-jost), sans-serif; background: #fff; color: var(--forest); width: 88px; text-align: right; outline: none; }
 .roomPriceInput:focus { border-color: var(--forest); }
 
+/* ── Scroll indicator ─────────────────────────────────────────────────── */
+.tableScrollWrap { position: relative; }
+.tableScrollWrap::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 48px; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.92));
+  pointer-events: none;
+  border-radius: 0 8px 8px 0;
+}
+.scrollHint {
+  display: none;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--sage);
+  padding: 5px 0 2px;
+}
+
+/* ── Mobile: tarjetas apiladas ──────────────────────────────────────────── */
+.mobileCardList { display: none; flex-direction: column; gap: 10px; }
+.mobileCard { background: #fff; border: 1px solid #e4ddd3; border-radius: 8px; padding: 14px 16px; }
+.mobileCardTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.mobileCardRef { font-family: monospace; font-size: 0.72rem; color: var(--clay); background: var(--parch); padding: 2px 6px; border-radius: 3px; }
+.mobileCardName { font-size: 0.9rem; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.mobileCardEmail { font-size: 0.75rem; color: var(--sage); margin-bottom: 6px; }
+.mobileCardSuite { font-size: 0.82rem; color: var(--clay); margin-bottom: 3px; }
+.mobileCardDates { font-size: 0.82rem; color: var(--clay); margin-bottom: 4px; }
+.mobileCardTotal { font-size: 0.875rem; font-weight: 600; color: var(--forest); margin-bottom: 10px; }
+.mobileCardActions { display: flex; gap: 7px; flex-wrap: wrap; }
+.mobileCardBtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 8px 10px; border: none; border-radius: 4px;
+  font-size: 0.78rem; font-family: var(--font-jost), sans-serif; font-weight: 500; cursor: pointer;
+}
+.mobileCardBtnSend { background: var(--forest); color: var(--cream); }
+.mobileCardBtnWa { background: #25D366; color: #fff; }
+.mobileCardBtnPdf { background: #624820; color: #fff; }
+.mobileCardBtnEdit { background: var(--jade, #2e8a7a); color: #fff; }
+.mobileCardBtnDel { background: #c9484a; color: #fff; }
+
+@media (max-width: 640px) {
+  .tableWrap { display: none; }
+  .tableScrollWrap::after { display: none; }
+  .mobileCardList { display: flex; }
+  .scrollHint { display: block; }
+  .pageHeader { flex-direction: column; gap: 8px; }
+  .headerActions { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .primaryBtn { width: 100%; justify-content: center; order: 10; padding: 12px; font-size: 0.95rem; }
+}
+
 /* Anticipo / Restante */
 .anticipoSection { background: #f4f0e8; border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 .anticipoLabel { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); }

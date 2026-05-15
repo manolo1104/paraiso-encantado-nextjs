@@ -146,11 +146,12 @@ function SuccessPanel({ data, onEdit, onClose }: {
 interface Props {
   booking?: AdminBooking;
   defaultCheckin?: string;
+  defaultRoom?: string;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function ReservationModal({ booking, defaultCheckin, onClose, onSaved }: Props) {
+export default function ReservationModal({ booking, defaultCheckin, defaultRoom, onClose, onSaved }: Props) {
   const isEdit = !!booking;
 
   const [form, setForm] = useState({
@@ -183,7 +184,9 @@ export default function ReservationModal({ booking, defaultCheckin, onClose, onS
         : 2;
       return suiteList.map(s => ({ suite: s, huespedes: guestsPerRoom }));
     }
-    return [{ suite: SUITES[3], huespedes: 2 }];
+    // Pre-fill room from calendar click if provided
+    const startSuite = defaultRoom && SUITES.includes(defaultRoom) ? defaultRoom : SUITES[3];
+    return [{ suite: startSuite, huespedes: 2 }];
   });
 
   const [loading, setLoading] = useState(false);

@@ -17,7 +17,7 @@ const ROOM_COLORS = [
   '#8a2e4a','#6b8a2e','#2e4a8a',
 ];
 
-const CELL_W = 34;
+const CELL_W = 40; // wider cells so names fit better on mobile
 const ROW_H  = 46;
 const LABEL_W = 148;
 const HEADER_H = 54;
@@ -36,6 +36,7 @@ export default function GanttView({ bookings, onRefresh }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [offsetDays, setOffsetDays] = useState(-3); // start 3 days before today
   const [modal, setModal] = useState<{ booking?: AdminBooking; defaultCheckin?: string } | null>(null);
+  const [tooltip, setTooltip] = useState<{ booking: AdminBooking; x: number; y: number } | null>(null);
   const todayStr = isoToday();
 
   // Scroll to "today" on mount
@@ -225,7 +226,16 @@ export default function GanttView({ bookings, onRefresh }: Props) {
                     return (
                       <div
                         key={b.confirmacion + room}
-                        onClick={() => setModal({ booking: b })}
+                        onClick={(e) => {
+                          // On touch devices show tooltip; on desktop open modal
+                          const isTouchEvent = e.nativeEvent instanceof PointerEvent && e.nativeEvent.pointerType === 'touch';
+                          if (isTouchEvent) {
+                            e.stopPropagation();
+                            setTooltip(t => t?.booking.confirmacion === b.confirmacion ? null : { booking: b, x: e.clientX, y: e.clientY });
+                          } else {
+                            setModal({ booking: b });
+                          }
+                        }}
                         title={`${b.cliente} · ${b.noches}n · $${b.total.toLocaleString('es-MX')} MXN`}
                         style={{
                           position: 'absolute',
@@ -285,6 +295,43 @@ export default function GanttView({ bookings, onRefresh }: Props) {
           </span>
         ))}
       </div>
+
+      {/* Touch tooltip */}
+      {tooltip && (
+        <div
+          onClick={() => setTooltip(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 999 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              top: Math.min(tooltip.y + 8, window.innerHeight - 180),
+              left: Math.min(tooltip.x + 8, window.innerWidth - 220),
+              background: '#2a2218', color: '#f5f0e8',
+              borderRadius: 8, padding: '12px 16px',
+              fontSize: 12, fontFamily: 'var(--font-jost, sans-serif)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              zIndex: 1000, minWidth: 200, maxWidth: 240,
+            }}
+          >
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{tooltip.booking.cliente}</div>
+            <div style={{ color: '#c9a97a', marginBottom: 4 }}>{tooltip.booking.habitaciones}</div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>
+              {tooltip.booking.checkin} → {tooltip.booking.checkout}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>
+              {tooltip.booking.noches} noche{tooltip.booking.noches !== 1 ? 's' : ''} · ${tooltip.booking.total.toLocaleString('es-MX')} MXN
+            </div>
+            <button
+              onClick={() => { setModal({ booking: tooltip.booking }); setTooltip(null); }}
+              style={{ width: '100%', background: '#c9a97a', color: '#2a2218', border: 'none', borderRadius: 4, padding: '8px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Ver / editar reserva
+            </button>
+          </div>
+        </div>
+      )}
 
       {modal && (
         <ReservationModal

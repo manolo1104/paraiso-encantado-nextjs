@@ -1,3 +1,4 @@
+/* El viejo .header queda como referencia; la nueva estructura usa headerRow1 + headerRow2 */
 .header {
   display: flex;
   align-items: flex-start;
@@ -5,6 +6,22 @@
   margin-bottom: 20px;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.headerRow1 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.headerRow2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .title {

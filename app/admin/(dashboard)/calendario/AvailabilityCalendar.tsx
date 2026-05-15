@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Lock, Unlock, RefreshCw, Loader2, X, CalendarCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, Unlock, RefreshCw, Loader2, X, CalendarCheck, Plus } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
 
@@ -53,6 +53,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [editBooking, setEditBooking] = useState<AdminBooking | null>(null);
+  const [newBookingParams, setNewBookingParams] = useState<{ room: string; date: string } | null>(null);
 
   const loadSheet = useCallback(async () => {
     setLoadingSheet(true);
@@ -345,14 +346,22 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               {/* Actions */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {clicked.state.status === 'available' && (
-                  <button
-                    onClick={handleBlock}
-                    disabled={saving}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#2a2218', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
-                  >
-                    {saving ? <Loader2 size={14} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Lock size={14} />}
-                    Bloquear esta fecha
-                  </button>
+                  <>
+                    <button
+                      onClick={() => { setNewBookingParams({ room: clicked.room, date: clicked.date }); setClicked(null); }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#2d7a34', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', fontWeight: 600 }}
+                    >
+                      <Plus size={14} /> Nueva Reserva
+                    </button>
+                    <button
+                      onClick={handleBlock}
+                      disabled={saving}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#2a2218', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
+                    >
+                      {saving ? <Loader2 size={14} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Lock size={14} />}
+                      Bloquear esta fecha
+                    </button>
+                  </>
                 )}
 
                 {clicked.state.status === 'blocked' && (
@@ -394,6 +403,16 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
           booking={editBooking}
           onClose={() => setEditBooking(null)}
           onSaved={() => { onRefresh(); setEditBooking(null); loadSheet(); }}
+        />
+      )}
+
+      {/* Nueva reserva desde fecha del calendario — pre-carga habitación y fecha */}
+      {newBookingParams && (
+        <ReservationModal
+          defaultCheckin={newBookingParams.date}
+          defaultRoom={newBookingParams.room}
+          onClose={() => setNewBookingParams(null)}
+          onSaved={() => { onRefresh(); setNewBookingParams(null); loadSheet(); }}
         />
       )}
     </div>

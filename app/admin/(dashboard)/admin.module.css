@@ -13,5 +13,6 @@
 
 @media (max-width: 768px) {
   .shell { flex-direction: column; }
-  .content { padding: 20px 16px; }
+  /* padding-top deja espacio al botón hamburguesa fijo (top:12px, height:40px) */
+  .content { padding: 64px 16px 20px; }
 }

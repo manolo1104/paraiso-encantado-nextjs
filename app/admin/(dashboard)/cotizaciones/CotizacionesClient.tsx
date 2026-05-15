@@ -938,6 +938,45 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
         </div>
       )}
 
+      {/* ── Mobile tarjetas (visible solo en <640px via CSS) ── */}
+      <div className={styles.mobileCardList}>
+        {filtered.length === 0 ? (
+          <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--sage)' }}>Sin cotizaciones que mostrar</p>
+        ) : filtered.map(q => (
+          <div key={q.id} className={styles.mobileCard}>
+            <div className={styles.mobileCardTop}>
+              <span className={styles.mobileCardRef}>{q.id}</span>
+              <span className={styles.badge} style={{ color: ESTADO_COLOR[q.estado], fontSize: '0.65rem' }}>{q.estado}</span>
+            </div>
+            <div className={styles.mobileCardName}>{q.cliente}</div>
+            {q.email && <div className={styles.mobileCardEmail}>{q.email}</div>}
+            <div className={styles.mobileCardSuite}>{q.suite}</div>
+            <div className={styles.mobileCardDates}>{fmtDate(q.checkin)} → {fmtDate(q.checkout)} · {q.noches}n</div>
+            <div className={styles.mobileCardTotal}>${q.precioTotal.toLocaleString('es-MX')} MXN</div>
+            <div className={styles.mobileCardActions}>
+              <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnSend}`} onClick={() => sendEmail(q)} disabled={sendingId === q.id}>
+                {sendingId === q.id ? <Loader2 size={12} /> : <Send size={12} />}
+              </button>
+              <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnWa}`} onClick={() => openWhatsApp(q)}>
+                <MessageSquare size={12} />
+              </button>
+              <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnPdf}`} onClick={() => printQuotePDF(q)}>
+                <Download size={12} />
+              </button>
+              <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnEdit}`} onClick={() => setEditQuote(q)}>
+                <Pencil size={12} />
+              </button>
+              <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnDel}`} onClick={() => deleteQuote(q)}>
+                <Trash2 size={12} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className={styles.scrollHint}>← desliza para ver más →</p>
+
+      {/* Desktop tabla */}
+      <div className={styles.tableScrollWrap}>
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -990,6 +1029,7 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
           </tbody>
         </table>
       </div>
+      </div> {/* /tableScrollWrap */}
 
       {showModal && <QuoteModal onClose={() => setShowModal(false)} onSaved={() => { refresh(); setShowModal(false); }} />}
       {editQuote && <EditQuoteModal quote={editQuote} onClose={() => setEditQuote(null)} onSaved={saveEdit} />}

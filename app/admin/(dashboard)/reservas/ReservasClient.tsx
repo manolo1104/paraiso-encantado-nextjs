@@ -280,6 +280,52 @@ export default function ReservasClient({ initialBookings }: Props) {
         </div>
       )}
 
+      {/* ── Mobile: tarjetas apiladas (visible solo en <640px via CSS) ── */}
+      <div className={styles.mobileCardList}>
+        {filtered.length === 0 ? (
+          <p className={styles.empty} style={{ textAlign: 'center', padding: '32px 0' }}>
+            {vistaHoy ? 'Sin actividad para hoy' : 'Sin reservas que mostrar'}
+          </p>
+        ) : filtered.map(b => {
+          const ops = getOpsState(b, today);
+          const opsStyle = OPS_COLOR[ops];
+          return (
+            <div key={b.confirmacion + b.rowIndex} className={styles.mobileCard}>
+              <div className={styles.mobileCardTop}>
+                <span className={styles.mobileCardRef}>{b.confirmacion || '—'}</span>
+                <span className={styles.mobileCardSuite}>{b.habitaciones}</span>
+                <span className={styles.opsBadge} style={{ background: opsStyle.bg, color: opsStyle.color, fontSize: '0.65rem' }}>
+                  {OPS_LABEL[ops]}
+                </span>
+              </div>
+              <div className={styles.mobileCardName}>{b.cliente}</div>
+              {b.email && b.email !== 'N/A' && <div className={styles.mobileCardEmail}>{b.email}</div>}
+              <div className={styles.mobileCardDates}>
+                Check-in: <strong>{b.checkin}</strong> → Check-out: <strong>{b.checkout}</strong> · {b.noches}n
+              </div>
+              <div className={styles.mobileCardTotal}>${b.total.toLocaleString('es-MX')} MXN</div>
+              <div className={styles.mobileCardActions}>
+                <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnPrimary}`}
+                  onClick={() => setModal({ mode: 'edit', booking: b })}>
+                  Ver / Editar
+                </button>
+                <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnSecondary}`}
+                  onClick={e => sendEmail(e, b)} disabled={sendingId === b.confirmacion}>
+                  {sendingId === b.confirmacion ? <Loader2 size={12} className={styles.spin} /> : null} Email
+                </button>
+                <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnPdf}`}
+                  onClick={e => downloadPDF(e, b)}>
+                  PDF
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p className={styles.scrollHint}>← desliza para ver más →</p>
+
+      {/* Desktop tabla */}
+      <div className={styles.tableScrollWrap}>
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -349,6 +395,7 @@ export default function ReservasClient({ initialBookings }: Props) {
           </tbody>
         </table>
       </div>
+      </div> {/* /tableScrollWrap */}
 
       {modal && (
         <ReservationModal

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Receipt, Clock, CheckCircle2, Circle, ChevronRight, AlertTriangle } from 'lucide-react';
 import styles from './facturacion.module.css';
 
@@ -68,6 +69,7 @@ const REQS = [
 ];
 
 export default function FacturacionClient() {
+  const [openFase, setOpenFase] = useState<number | null>(null);
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -104,30 +106,41 @@ export default function FacturacionClient() {
         </div>
       </section>
 
-      {/* Plan de implementación */}
+      {/* Plan de implementación — acordeón colapsable */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Plan de implementación</h2>
         <div className={styles.planList}>
-          {PLAN.map((fase) => (
-            <div key={fase.fase} className={styles.faseCard}>
-              <div className={styles.faseHeader}>
-                <span className={styles.faseNum}>Fase {fase.fase}</span>
-                <h3 className={styles.faseTitulo}>{fase.titulo}</h3>
+          {PLAN.map((fase) => {
+            const isOpen = openFase === fase.fase;
+            return (
+              <div key={fase.fase} className={styles.faseAccordion}>
+                <button
+                  className={styles.faseAccordionHeader}
+                  onClick={() => setOpenFase(isOpen ? null : fase.fase)}
+                >
+                  <span className={styles.faseNum}>Fase {fase.fase}</span>
+                  <span className={styles.faseTitulo}>{fase.titulo}</span>
+                  <span className={`${styles.faseChevron} ${isOpen ? styles.faseChevronOpen : ''}`}>›</span>
+                </button>
+                {isOpen && (
+                  <div className={styles.faseAccordionBody}>
+                    <p className={styles.faseDesc}>{fase.descripcion}</p>
+                    <ul className={styles.faseOpts}>
+                      {fase.opciones.map((o, i) => (
+                        <li key={i} className={styles.faseOpt}>
+                          <ChevronRight size={12} className={styles.faseOptIcon} />
+                          {o}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className={styles.faseRec}>
+                      <strong>Recomendación:</strong> {fase.recomendacion}
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className={styles.faseDesc}>{fase.descripcion}</p>
-              <ul className={styles.faseOpts}>
-                {fase.opciones.map((o, i) => (
-                  <li key={i} className={styles.faseOpt}>
-                    <ChevronRight size={12} className={styles.faseOptIcon} />
-                    {o}
-                  </li>
-                ))}
-              </ul>
-              <div className={styles.faseRec}>
-                <strong>Recomendación:</strong> {fase.recomendacion}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
