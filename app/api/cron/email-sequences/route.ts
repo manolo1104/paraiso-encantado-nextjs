@@ -138,8 +138,12 @@ export async function GET(req: NextRequest) {
 
     const first = b.cliente.trim().split(' ')[0];
 
-    // ── Pre-llegada: -3 días antes del checkin ──────────────────────────
-    if (shiftDate(checkin, -3) === today) {
+    // ── Regla: "en o después del día objetivo, mientras no se haya enviado"
+    // El sentSet dentro de send() impide duplicados. Esta lógica permite
+    // que el cron recupere envíos perdidos si falló un día.
+
+    // Pre-llegada: ventana [-3, -1) días antes del checkin (no enviar después de que ya llegaron)
+    if (shiftDate(checkin, -3) <= today && today < checkin) {
       await send(
         b.confirmacion, b.email, 'pre_day3',
         `${first}, ¿una cena especial en El Papán Huasteco?`,
@@ -150,8 +154,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ── Pre-llegada: día del checkin ────────────────────────────────────
-    if (checkin === today) {
+    // Día del checkin: ventana [0, +1) para recuperar si el cron no corrió exactamente ese día
+    if (checkin <= today && today <= shiftDate(checkin, 1)) {
       const attachments = welcomePdf
         ? [{ filename: 'Guia-de-Bienvenida-Paraiso-Encantado.pdf', content: welcomePdf }]
         : undefined;
@@ -166,8 +170,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ── Post-estancia: +1 día ────────────────────────────────────────────
-    if (shiftDate(checkout, 1) === today) {
+    // Post-estancia: en o después del día objetivo (sentSet evita duplicados)
+    if (shiftDate(checkout, 1) <= today) {
       await send(
         b.confirmacion, b.email, 'post_day1',
         `${first}, ¿cómo fue tu estancia en Paraíso Encantado?`,
@@ -179,7 +183,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Post-estancia: +7 días ───────────────────────────────────────────
-    if (shiftDate(checkout, 7) === today) {
+    if (shiftDate(checkout, 7) <= today) {
       await send(
         b.confirmacion, b.email, 'post_day7',
         `${first}, ¿nos dejas una reseña en Google?`,
@@ -190,7 +194,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Post-estancia: +30 días ──────────────────────────────────────────
-    if (shiftDate(checkout, 30) === today) {
+    if (shiftDate(checkout, 30) <= today) {
       await send(
         b.confirmacion, b.email, 'post_day30',
         `${first}, tu paraíso te espera — 10% de descuento exclusivo`,

@@ -330,7 +330,10 @@ function CheckoutForm({
         <div className={styles.stripeWrap}>
           <PaymentElement
             options={{
-              layout: 'tabs',
+              // 'auto' muestra Apple Pay / Google Pay como botones prominentes
+              // cuando el dispositivo los soporta (Safari en iOS/Mac con Apple Pay activo)
+              layout: { type: 'accordion', defaultCollapsed: false },
+              wallets: { applePay: 'auto', googlePay: 'auto' },
               fields: { billingDetails: { name: 'never', email: 'never', phone: 'never' } },
             }}
           />

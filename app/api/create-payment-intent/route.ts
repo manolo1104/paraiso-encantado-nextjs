@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount),
       currency: currency.toLowerCase(),
+      // automatic_payment_methods enables Apple Pay, Google Pay, etc. on compatible devices
+      automatic_payment_methods: { enabled: true },
       description: `Reserva Hotel Paraíso Encantado - ${customerName || ''}`,
       receipt_email: customerEmail,
       metadata: {
