@@ -9,11 +9,19 @@ import type { Suite } from '@/data/suites';
 import { mxnToUsd, BOOKING_URL } from '@/lib/config';
 import styles from './habitaciones.module.css';
 
+const URGENCY_MESSAGES: Record<string, string> = {
+  HIGH: '¡Muy solicitada!',
+  MEDIUM: 'Pocas fechas libres',
+};
+
 interface Props {
   groups: Record<string, Suite[]>;
+  unavailableNames?: string[];
+  checkin?: string;
+  checkout?: string;
 }
 
-export default function HabitacionesClient({ groups }: Props) {
+export default function HabitacionesClient({ groups, unavailableNames = [], checkin = '', checkout = '' }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
 
@@ -46,9 +54,18 @@ export default function HabitacionesClient({ groups }: Props) {
               {groupSuites.map((suite) => {
                 const isSelected = selected.includes(suite.id);
                 const maxReached = selected.length >= 3 && !isSelected;
+                const isUnavailable = unavailableNames.includes(suite.name);
+                const occupancy = (suite as any).occupancy as string | undefined;
+                const urgencyMsg = occupancy ? URGENCY_MESSAGES[occupancy] : undefined;
+
+                // Build link with dates if available
+                const href = checkin && checkout
+                  ? `/habitaciones/${suite.id}?checkin=${checkin}&checkout=${checkout}`
+                  : `/habitaciones/${suite.id}`;
+
                 return (
-                  <div key={suite.id} className={`${styles.cardWrap} ${isSelected ? styles.cardWrapSelected : ''}`}>
-                    <Link href={`/habitaciones/${suite.id}`} className={styles.card}>
+                  <div key={suite.id} className={`${styles.cardWrap} ${isSelected ? styles.cardWrapSelected : ''} ${isUnavailable ? styles.cardWrapUnavailable : ''}`}>
+                    <Link href={href} className={styles.card}>
                       {/* Imagen */}
                       <div className={styles.imageWrapper}>
                         <Image
@@ -60,8 +77,17 @@ export default function HabitacionesClient({ groups }: Props) {
                           loading="lazy"
                         />
                         <div className={styles.categoryBadge}>{suite.category}</div>
-                        {suite.badge && (
+                        {suite.badge && !isUnavailable && (
                           <div className={styles.spaBadge}>{suite.badge}</div>
+                        )}
+                        {/* Availability overlay */}
+                        {isUnavailable && (
+                          <div className={styles.unavailableOverlay}>
+                            <span>Ocupada</span>
+                          </div>
+                        )}
+                        {!isUnavailable && urgencyMsg && !unavailableNames.length && (
+                          <div className={styles.urgencyChip}>{urgencyMsg}</div>
                         )}
                       </div>
 

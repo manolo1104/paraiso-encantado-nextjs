@@ -3,12 +3,29 @@ import { CheckCircle } from 'lucide-react';
 import { suites } from '@/data/suites';
 import { BOOKING_URL } from '@/lib/config';
 import styles from './habitaciones.module.css';
-import HabitacionesClient from './HabitacionesClient';
+import AvailabilityFilterClient from './AvailabilityFilterClient';
 
 export const metadata = {
   title: 'Suites Boutique | Hotel Paraíso Encantado · Xilitla',
   description:
     '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla. Disfruta de esta experiencia desde $1,200/noche.',
+  alternates: {
+    canonical: 'https://www.paraisoencantado.com/habitaciones',
+  },
+  openGraph: {
+    title: 'Suites Boutique · Hotel Paraíso Encantado | Xilitla',
+    description:
+      '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla, Huasteca Potosina. A 5 min del Jardín de Edward James.',
+    url: 'https://www.paraisoencantado.com/habitaciones',
+    images: [
+      {
+        url: 'https://www.paraisoencantado.com/images/JUNGLA/PORTADA.JPG',
+        width: 1200,
+        height: 800,
+        alt: 'Suite Jungla — Hotel Paraíso Encantado, Xilitla',
+      },
+    ],
+  },
 };
 
 export default function HabitacionesPage() {
@@ -52,7 +69,7 @@ export default function HabitacionesPage() {
         </div>
       </section>
 
-      <HabitacionesClient groups={groups} />
+      <AvailabilityFilterClient groups={groups} allSuites={suites} />
     </main>
   );
 }

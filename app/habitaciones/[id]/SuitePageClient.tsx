@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Bed, Sofa, ShowerHead, Bath, Droplets, Mountain, Wifi,
-  Wind, Trees, Waves, CheckCircle, MessageCircle, X, ChevronLeft, ChevronRight, ZoomIn
+  Wind, Trees, Waves, CheckCircle, MessageCircle, X, ChevronLeft, ChevronRight, ZoomIn,
+  Flame, Clock
 } from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import StickySuiteCTA from '@/components/StickySuiteCTA';
 import SuiteTestimonials from '@/components/SuiteTestimonials';
+import SuiteDatePicker from '@/components/SuiteDatePicker';
 import { mxnToUsd } from '@/lib/config';
 import { suites } from '@/data/suites';
 import styles from './suite.module.css';
@@ -111,11 +113,29 @@ function Lightbox({
   );
 }
 
+// Urgency messaging by occupancy level
+function getUrgencyBadge(suite: Suite): { text: string; icon: 'flame' | 'clock' } | null {
+  if (suite.featured) return { text: 'La más solicitada · Pocas fechas disponibles', icon: 'flame' };
+  if ((suite as any).occupancy === 'HIGH') return { text: 'Alta demanda este mes', icon: 'flame' };
+  if ((suite as any).occupancy === 'MEDIUM') return { text: 'Solo quedan algunos fines de semana libres', icon: 'clock' };
+  return null;
+}
+
+// Pick similar suites: same categoryGroup first, then similar price, exclude self
+function getSimilarSuites(current: Suite, allSuites: Suite[]): Suite[] {
+  const others = allSuites.filter(s => s.id !== current.id);
+  const sameGroup = others.filter(s => s.categoryGroup === current.categoryGroup);
+  const similarPrice = others.filter(s => s.categoryGroup !== current.categoryGroup && Math.abs(s.price - current.price) <= 500);
+  return [...sameGroup, ...similarPrice].slice(0, 4);
+}
+
 export default function SuitePageClient({ suite }: Props) {
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxStart, setLightboxStart] = useState(0);
+  const [selectedCheckin, setSelectedCheckin] = useState('');
+  const [selectedCheckout, setSelectedCheckout] = useState('');
 
   const openLightbox = useCallback((idx: number) => {
     setLightboxStart(idx);
@@ -125,17 +145,29 @@ export default function SuitePageClient({ suite }: Props) {
   const price3 = suite.priceTiers[3];
   const price4 = suite.priceTiers[4];
   const usdBase = mxnToUsd(suite.price);
+  const urgency = getUrgencyBadge(suite);
+  const similarSuites = getSimilarSuites(suite, suites);
+
+  const handleDatesSelected = useCallback((ci: string, co: string) => {
+    setSelectedCheckin(ci);
+    setSelectedCheckout(co);
+  }, []);
 
   const handleReservar = useCallback(() => {
     const today = new Date().toISOString().split('T')[0];
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    let ci = today, co = tomorrow, adults = '2';
-    try {
-      const raw = sessionStorage.getItem('pe_last_dates');
-      if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; adults = d.adults || '2'; }
-    } catch { /* ignore */ }
+    // Prefer dates selected in the date picker
+    let ci = selectedCheckin || today;
+    let co = selectedCheckout || tomorrow;
+    let adults = '2';
+    if (!selectedCheckin) {
+      try {
+        const raw = sessionStorage.getItem('pe_last_dates');
+        if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; adults = d.adults || '2'; }
+      } catch { /* ignore */ }
+    }
     router.push(`/reservar?checkin=${ci}&checkout=${co}&adults=${adults}&suiteId=${suite.id}&autoselect=1`);
-  }, [suite.id, router]);
+  }, [suite.id, router, selectedCheckin, selectedCheckout]);
 
   return (
     <main className={styles.main}>
@@ -216,7 +248,18 @@ export default function SuitePageClient({ suite }: Props) {
           <h1 className={styles.name}>{suite.name}</h1>
           <p className={styles.description}>{suite.description}</p>
 
-          {/* Precio */}
+          {/* Urgencia / escasez */}
+          {urgency && (
+            <div className={styles.urgencyBadge}>
+              {urgency.icon === 'flame'
+                ? <Flame size={13} strokeWidth={1.5} />
+                : <Clock size={13} strokeWidth={1.5} />
+              }
+              {urgency.text}
+            </div>
+          )}
+
+          {/* Precio — fix: no duplicar "3 personas" y "3-4 personas" */}
           <div className={styles.priceCard}>
             <div className={styles.priceRow}>
               <span className={styles.priceLabel}>Desde</span>
@@ -228,14 +271,15 @@ export default function SuitePageClient({ suite }: Props) {
             <p className={styles.priceUsd}>~${usdBase} USD por noche</p>
             <div className={styles.priceTiers}>
               <span>2 personas: <strong>${suite.priceTiers[2].toLocaleString('es-MX')}</strong> <em>(~${mxnToUsd(suite.priceTiers[2])} USD)</em></span>
-              {price3 && (
+              {/* Show "3-4 personas" when price3 === price4; otherwise show them separately */}
+              {price3 && price4 && price3 === price4 && (
+                <span>3–4 personas: <strong>${price3.toLocaleString('es-MX')}</strong> <em>(~${mxnToUsd(price3)} USD)</em></span>
+              )}
+              {price3 && (!price4 || price3 !== price4) && (
                 <span>3 personas: <strong>${price3.toLocaleString('es-MX')}</strong> <em>(~${mxnToUsd(price3)} USD)</em></span>
               )}
-              {price4 && price4 !== price3 && (
+              {price4 && price3 !== price4 && (
                 <span>4 personas: <strong>${price4.toLocaleString('es-MX')}</strong> <em>(~${mxnToUsd(price4)} USD)</em></span>
-              )}
-              {price3 && price4 && price4 === price3 && (
-                <span>3–4 personas: <strong>${price3.toLocaleString('es-MX')}</strong> <em>(~${mxnToUsd(price3)} USD)</em></span>
               )}
               {suite.maxOccupancy > 4 && (
                 <span className={styles.extraPerson}>
@@ -248,16 +292,22 @@ export default function SuitePageClient({ suite }: Props) {
             </p>
           </div>
 
-          {/* CTA */}
+          {/* Date picker de disponibilidad */}
+          <SuiteDatePicker suiteName={suite.name} onDatesSelected={handleDatesSelected} />
+
+          {/* CTA — más prominente si ya hay fechas seleccionadas */}
           <button
             onClick={handleReservar}
-            className={styles.reserveBtn}
+            className={`${styles.reserveBtn} ${selectedCheckin ? styles.reserveBtnActive : ''}`}
             aria-label={`Reservar ${suite.name}`}
           >
-            Asegura Tu Escapada
+            {selectedCheckin ? '✓ Asegurar Mi Escapada' : 'Asegurar Tu Escapada'}
           </button>
           <p className={styles.reserveNote}>
-            Confirmación instantánea · Cancela hasta 48hrs antes
+            {selectedCheckin
+              ? `${selectedCheckin} → ${selectedCheckout} · Confirmación instantánea`
+              : 'Confirmación instantánea · Cancela hasta 48hrs antes'
+            }
           </p>
 
           {/* Features */}
@@ -296,30 +346,31 @@ export default function SuitePageClient({ suite }: Props) {
         </aside>
       </div>
 
-      {/* Otras suites */}
+      {/* Si esta suite no está disponible — suites similares por categoría/precio */}
       <section className={styles.otherSuites}>
-        <h2>Otras <em>Suites</em></h2>
+        <h2>Si <em>{suite.name}</em> no está disponible</h2>
+        <p className={styles.otherSubtitle}>Suites similares en categoría y precio — misma experiencia, distinta vista.</p>
         <div className={styles.otherGrid}>
-          {suites
-            .filter((s) => s.id !== suite.id)
-            .slice(0, 4)
-            .map((s) => (
-              <Link key={s.id} href={`/habitaciones/${s.id}`} className={styles.otherCard}>
-                <div className={styles.otherImage}>
-                  <Image
-                    src={s.images[0]}
-                    alt={s.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 25vw"
-                    className={styles.otherImg}
-                  />
-                </div>
-                <div className={styles.otherContent}>
-                  <h3>{s.name}</h3>
-                  <p>Desde ${s.price.toLocaleString('es-MX')} MXN <span className={styles.otherUsd}>(~${mxnToUsd(s.price)} USD)</span></p>
-                </div>
-              </Link>
-            ))}
+          {similarSuites.map((s) => (
+            <Link key={s.id} href={`/habitaciones/${s.id}`} className={styles.otherCard}>
+              <div className={styles.otherImage}>
+                <Image
+                  src={s.images[0]}
+                  alt={s.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  className={styles.otherImg}
+                />
+                {s.categoryGroup === suite.categoryGroup && (
+                  <span className={styles.otherSimilarBadge}>Misma categoría</span>
+                )}
+              </div>
+              <div className={styles.otherContent}>
+                <h3>{s.name}</h3>
+                <p>Desde ${s.price.toLocaleString('es-MX')} MXN <span className={styles.otherUsd}>(~${mxnToUsd(s.price)} USD)</span></p>
+              </div>
+            </Link>
+          ))}
         </div>
         <div className={styles.allSuitesLink}>
           <Link href="/habitaciones">← Ver todas las suites</Link>

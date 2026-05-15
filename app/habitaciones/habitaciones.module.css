@@ -432,6 +432,44 @@
   box-shadow: 0 0 0 2px rgba(201, 169, 122, 0.5), 0 12px 32px rgba(30, 48, 18, 0.1);
 }
 
+.cardWrapUnavailable { opacity: 0.6; }
+.cardWrapUnavailable .card { pointer-events: none; }
+
+.unavailableOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.unavailableOverlay span {
+  background: #c9484a;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-family: var(--font-jost), sans-serif;
+}
+
+.urgencyChip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(201,169,110,0.92);
+  color: #1a2218;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 3px;
+  font-family: var(--font-jost), sans-serif;
+}
+
 /* Botón comparar sobre la card */
 .compareToggle {
   position: absolute;

@@ -418,6 +418,28 @@
   box-shadow: 0 12px 40px rgba(30, 48, 18, 0.35);
 }
 
+/* CTA con fechas confirmadas — más prominente */
+.reserveBtnActive {
+  background: linear-gradient(135deg, #1a6b22, #2d7a34) !important;
+  box-shadow: 0 4px 20px rgba(26,107,34,0.35);
+}
+
+/* Urgency badge */
+.urgencyBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff8ee;
+  border: 1px solid #c9a96e;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #7a5a00;
+  font-family: var(--font-jost), sans-serif;
+}
+
 .reserveNote {
   font-family: var(--font-jost), sans-serif;
   font-size: 11px;
@@ -522,6 +544,31 @@
 .otherSuites h2 em {
   font-style: italic;
   color: var(--clay);
+}
+
+.otherSubtitle {
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--sage);
+  font-family: var(--font-jost), sans-serif;
+  font-weight: 300;
+  margin-top: -28px;
+  margin-bottom: 32px;
+}
+
+.otherSimilarBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(45,122,52,0.9);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: var(--font-jost), sans-serif;
 }
 
 .otherGrid {
