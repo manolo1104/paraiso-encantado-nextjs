@@ -11,7 +11,7 @@ const RESTAURANT_WA = 'https://wa.me/524891255181?text=Hola%2C%20quisiera%20rese
 export const metadata: Metadata = {
   title: 'El Papán Huasteco — Restaurante en Xilitla · Zacahuil y Cocina Huasteca',
   description:
-    'Zacahuil, tortillas de comal y café de olla con vista a la selva. El mejor restaurante de cocina huasteca auténtica en Xilitla. Abierto al público de 8 AM a 8 PM. ¡Reserva tu mesa!',
+    'Zacahuil, tortillas de comal y café de olla en Xilitla. Restaurante El Papán Huasteco — cocina regional auténtica con vista a la selva. Abierto 8 AM–8 PM.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/restaurante',
   },

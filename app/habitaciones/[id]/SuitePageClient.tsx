@@ -17,6 +17,20 @@ import { mxnToUsd } from '@/lib/config';
 import { suites } from '@/data/suites';
 import styles from './suite.module.css';
 
+const PHOTO_LABELS = [
+  (s: Suite) => `Vista principal de la ${s.name} — Hotel Paraíso Encantado, Xilitla, Huasteca Potosina`,
+  (s: Suite) => `${s.amenities[0] ?? 'Interior'} de la ${s.name} — Suite Boutique, Xilitla`,
+  (s: Suite) => `${s.amenities[1] ?? 'Detalle'} — ${s.name}, Hotel Paraíso Encantado, Xilitla`,
+  (s: Suite) => `Terraza y vista — ${s.name}, Hotel Boutique Xilitla, Huasteca Potosina`,
+  (s: Suite) => `Baño privado de la ${s.name} — Paraíso Encantado, Xilitla`,
+  (s: Suite) => `Detalle de decoración — ${s.name}, Hotel Paraíso Encantado, Xilitla`,
+];
+
+function getPhotoAlt(suite: Suite, index: number): string {
+  const fn = PHOTO_LABELS[Math.min(index, PHOTO_LABELS.length - 1)];
+  return fn(suite);
+}
+
 function getFeatureIcon(feature: string) {
   const f = feature.toLowerCase();
   if (f.includes('cama') || f.includes('king') || f.includes('matrimon'))
@@ -52,12 +66,12 @@ interface Props {
 function Lightbox({
   images,
   initialIndex,
-  suiteName,
+  suite,
   onClose,
 }: {
   images: string[];
   initialIndex: number;
-  suiteName: string;
+  suite: Suite;
   onClose: () => void;
 }) {
   const [idx, setIdx] = useState(initialIndex);
@@ -91,7 +105,7 @@ function Lightbox({
         <div className={styles.lightboxImg}>
           <Image
             src={images[idx]}
-            alt={`${suiteName} foto ${idx + 1}`}
+            alt={getPhotoAlt(suite, idx)}
             fill
             sizes="(max-width: 768px) 100vw, 90vw"
             className={styles.lightboxPhoto}
@@ -179,7 +193,7 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
         <Lightbox
           images={suite.images}
           initialIndex={lightboxStart}
-          suiteName={suite.name}
+          suite={suite}
           onClose={() => setLightboxOpen(false)}
         />
       )}
@@ -203,7 +217,7 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
           >
             <Image
               src={suite.images[activeImg]}
-              alt={`${suite.name} — foto ${activeImg + 1}`}
+              alt={getPhotoAlt(suite, activeImg)}
               fill
               priority={activeImg === 0}
               sizes="(max-width: 768px) 100vw, 60vw"
@@ -235,7 +249,7 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
                 >
                   <Image
                     src={src}
-                    alt={`${suite.name} foto ${i + 1}`}
+                    alt={getPhotoAlt(suite, i)}
                     fill
                     sizes="120px"
                     className={styles.thumbImg}

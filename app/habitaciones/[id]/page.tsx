@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = `https://www.paraisoencantado.com/habitaciones/${id}`;
   return {
     title: `${suite.name} · Suite Boutique Xilitla | Paraíso Encantado — Desde $${suite.price.toLocaleString('es-MX')} MXN`,
-    description: `${suite.description} Desde $${suite.price.toLocaleString('es-MX')} MXN/noche · A 5 min del Jardín de Edward James · Reserva directa sin comisiones · Cancelación gratuita 48h.`,
+    description: `${suite.description.slice(0, 80).trimEnd()}… Xilitla, a 5 min de Las Pozas. Desde $${suite.price.toLocaleString('es-MX')} MXN. Reserva directa.`,
     alternates: { canonical },
     openGraph: {
       title: `${suite.name} — Hotel Paraíso Encantado, Xilitla`,

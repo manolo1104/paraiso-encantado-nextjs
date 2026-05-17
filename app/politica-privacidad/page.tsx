@@ -4,6 +4,8 @@ import styles from '../legal.module.css';
 
 export const metadata: Metadata = {
   title: 'Política de Privacidad | Hotel Paraíso Encantado · Xilitla',
+  alternates: { canonical: 'https://www.paraisoencantado.com/politica-privacidad' },
+  robots: { index: false, follow: true },
 };
 
 export default function PoliticaPrivacidad() {

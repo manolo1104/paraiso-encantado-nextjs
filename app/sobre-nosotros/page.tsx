@@ -8,7 +8,7 @@ import styles from './sobre-nosotros.module.css';
 export const metadata: Metadata = {
   title: 'Hotel Boutique Paraíso Encantado · Xilitla desde 2018 | Nuestra Historia',
   description:
-    'El hotel boutique más cercano a Las Pozas de Edward James. Fundado en 2018, 13 suites únicas con spa privado, restaurante de cocina huasteca auténtica y compromiso real con la comunidad de Xilitla.',
+    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. Fundado en 2018. 13 suites con spa privado y restaurante de cocina huasteca auténtica.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/sobre-nosotros',
   },

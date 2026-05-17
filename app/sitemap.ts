@@ -60,6 +60,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ],
     },
     {
+      url: `${BASE}/hotel-luna-de-miel-xilitla`,
+      lastModified: SITE_UPDATED,
+      changeFrequency: 'monthly',
+      priority: 0.82,
+      images: [`${BASE}/images/LINDAVISTA/PORTADA.jpg`],
+    },
+    {
+      url: `${BASE}/hotel-familias-xilitla`,
+      lastModified: SITE_UPDATED,
+      changeFrequency: 'monthly',
+      priority: 0.82,
+      images: [`${BASE}/images/HELECHOS%201/PORTADA.jpg`],
+    },
+    {
       url: `${BASE}/xilitla`,
       lastModified: SITE_UPDATED,
       changeFrequency: 'monthly',

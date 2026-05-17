@@ -4,6 +4,8 @@ import styles from '../legal.module.css';
 
 export const metadata: Metadata = {
   title: 'Términos y Condiciones | Hotel Paraíso Encantado · Xilitla',
+  alternates: { canonical: 'https://www.paraisoencantado.com/terminos-condiciones' },
+  robots: { index: false, follow: true },
 };
 
 export default function TerminosCondiciones() {

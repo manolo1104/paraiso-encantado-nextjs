@@ -8,7 +8,7 @@ import AvailabilityFilterClient from './AvailabilityFilterClient';
 export const metadata = {
   title: '13 Suites Boutique con Spa Privado · Xilitla | Hotel Paraíso Encantado',
   description:
-    'Elige entre 13 suites únicas con piscina spa privada, terraza y vista a la Huasteca Potosina. Desde $1,500 MXN/noche · Reserva directa sin comisiones · Cancelación gratuita · A 5 min de Las Pozas.',
+    '13 suites boutique con spa privado en Xilitla, a 5 min de Las Pozas de Edward James. Desde $1,500 MXN. Reserva directa sin comisiones. Cancelación gratuita.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/habitaciones',
   },

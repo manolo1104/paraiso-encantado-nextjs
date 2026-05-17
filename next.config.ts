@@ -18,6 +18,18 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   staticPageGenerationTimeout: 60,
 
+  async redirects() {
+    return [
+      // URLs legacy de versión anterior del sitio — consolidan autoridad SEO
+      { source: '/fdl2-1', destination: '/habitaciones/flor-de-lis-2', permanent: true },
+      { source: '/helechos-2', destination: '/habitaciones/helechos-2', permanent: true },
+      // Variante de URL sin guión "de" — misma landing
+      { source: '/hotel-cerca-las-pozas', destination: '/hotel-cerca-de-las-pozas', permanent: true },
+      // URL indexada en Google como 404 → artículo del blog
+      { source: '/ruta-maestra-huasteca-potosina', destination: '/blog/ruta-maestra-huasteca-potosina', permanent: true },
+    ];
+  },
+
   async headers() {
     return [
       {
