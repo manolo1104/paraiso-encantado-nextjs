@@ -6,9 +6,9 @@ import { Bus, Coffee, GraduationCap, ShieldCheck, Leaf, Camera, MessageCircle, C
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
-  title: 'Tours en la Huasteca Potosina | Desde Xilitla · Paraíso Encantado',
+  title: 'Tours Huasteca Potosina 2026 · Tamul, Las Pozas y Cascadas | Desde Xilitla',
   description:
-    'Tours con guía certificado desde Xilitla: Cascada Tamul, Jardín de Edward James (Las Pozas), Cascadas de Micos, Puente de Dios y más. Transporte y desayuno incluidos. Salidas diarias.',
+    'Cascada de Tamul, Las Pozas de Edward James, Puente de Dios y más. Guía certificado + transporte + desayuno incluidos. Salidas diarias desde el hotel. Desde $1,300 MXN/persona.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/experiencias',
   },

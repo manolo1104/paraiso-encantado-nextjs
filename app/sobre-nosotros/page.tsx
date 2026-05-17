@@ -6,9 +6,9 @@ import styles from './sobre-nosotros.module.css';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'Nuestra Historia | Hotel Paraíso Encantado · Xilitla, Huasteca Potosina',
+  title: 'Hotel Boutique Paraíso Encantado · Xilitla desde 2018 | Nuestra Historia',
   description:
-    'Conoce la historia, el equipo y los valores del Hotel Paraíso Encantado en Xilitla. Hotel boutique comprometido con la naturaleza, la comunidad y la autenticidad de la Huasteca Potosina.',
+    'El hotel boutique más cercano a Las Pozas de Edward James. Fundado en 2018, 13 suites únicas con spa privado, restaurante de cocina huasteca auténtica y compromiso real con la comunidad de Xilitla.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/sobre-nosotros',
   },

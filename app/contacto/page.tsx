@@ -7,9 +7,9 @@ import ContactForm from './ContactForm';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'Contacto | Hotel Paraíso Encantado · Xilitla, Huasteca Potosina',
+  title: 'Contacto y Reservas | Paraíso Encantado Xilitla · ☎ 489-100-7679',
   description:
-    'Contáctanos por WhatsApp, teléfono o formulario. Respondemos en menos de 2 horas. Hotel Paraíso Encantado, Xilitla, San Luis Potosí — Huasteca Potosina.',
+    'WhatsApp, teléfono o formulario — respondemos en menos de 2 horas. Reserva directa y consigue el mejor precio. Hotel Paraíso Encantado, Xilitla, Huasteca Potosina.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/contacto',
   },
