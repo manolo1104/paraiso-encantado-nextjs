@@ -81,7 +81,8 @@ export default function Footer() {
             <li><a href="/blog">Blog de Viaje</a></li>
             <li><a href="/xilitla">Qué Hacer en Xilitla</a></li>
             <li><a href="/hotel-cerca-de-las-pozas">Hotel cerca de Las Pozas</a></li>
-            <li><a href="/experiencias">Tours Huasteca Potosina</a></li>
+            <li><a href="/hotel-luna-de-miel-xilitla">Hotel Romántico Xilitla</a></li>
+            <li><a href="/hotel-familias-xilitla">Hotel Familias Xilitla</a></li>
           </ul>
         </div>
 

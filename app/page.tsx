@@ -115,6 +115,21 @@ const homeFaqSchema = {
     },
     {
       '@type': 'Question',
+      name: '¿Es seguro pagar en línea?',
+      acceptedAnswer: { '@type': 'Answer', text: '100% seguro. Usamos Stripe, el mismo sistema que Amazon y Uber. Tu información bancaria está encriptada de extremo a extremo. Nunca almacenamos datos de tarjetas. Recibes confirmación instantánea por email.' },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Con cuánto se confirma la reserva?',
+      acceptedAnswer: { '@type': 'Answer', text: '1 noche: se cobra el 100% al confirmar en línea. 2 noches o más: solo pagas el 50% ahora y el 50% restante lo liquidas en el hotel al check-in. Cancelación gratuita hasta 48 horas antes con reembolso total.' },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Necesito coche para llegar al hotel?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Con auto propio es ideal — hay estacionamiento privado gratuito. Sin auto: toma autobús hasta Xilitla centro y luego taxi ($50 MXN). Te recogemos gratis si reservas 3 o más noches.' },
+    },
+    {
+      '@type': 'Question',
       name: '¿Aceptan mascotas?',
       acceptedAnswer: { '@type': 'Answer', text: 'Actualmente no aceptamos mascotas en las habitaciones para preservar el ecosistema del hotel y el confort de todos los huéspedes.' },
     },
