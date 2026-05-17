@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
 };
 
-// ── Schema AboutPage + Organization ───────────────────────────────────────────
+// ── Schema AboutPage + Organization + Person (fundador) ───────────────────────
 const aboutSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -38,6 +38,7 @@ const aboutSchema = {
       description: 'Historia, misión y valores del Hotel Paraíso Encantado en Xilitla, Huasteca Potosina.',
       url: 'https://www.paraisoencantado.com/sobre-nosotros',
       mainEntity: { '@id': 'https://www.paraisoencantado.com/#organization' },
+      author: { '@id': 'https://www.paraisoencantado.com/#founder' },
     },
     {
       '@type': ['Organization', 'LodgingBusiness'],
@@ -48,6 +49,7 @@ const aboutSchema = {
       telephone: '+524891007679',
       email: 'reservas@paraisoencantado.com',
       foundingDate: '2018',
+      founder: { '@id': 'https://www.paraisoencantado.com/#founder' },
       numberOfEmployees: { '@type': 'QuantitativeValue', value: 15 },
       address: {
         '@type': 'PostalAddress',
@@ -76,6 +78,29 @@ const aboutSchema = {
         '@type': 'OfferCatalog',
         name: '13 suites boutique con spa privado en Xilitla',
       },
+    },
+    {
+      // Person — fundador del hotel. Permite a Google mostrar card de entidad
+      // en búsquedas de marca y vincular al propietario con el negocio.
+      '@type': 'Person',
+      '@id': 'https://www.paraisoencantado.com/#founder',
+      name: 'Manolo Covarrubias',
+      givenName: 'Manolo',
+      familyName: 'Covarrubias',
+      jobTitle: 'Fundador y Director',
+      description: 'Fundador del Hotel Paraíso Encantado en Xilitla. Nació en la Huasteca Potosina y decidió que el turismo debía enriquecer el territorio, no extractarlo. Lleva años construyendo el hotel con su equipo local.',
+      worksFor: { '@id': 'https://www.paraisoencantado.com/#organization' },
+      sameAs: [
+        'https://www.instagram.com/_paraiso_encantado/',
+        'https://www.facebook.com/cabanas.encantado/',
+      ],
+      knowsAbout: [
+        'Huasteca Potosina',
+        'Xilitla',
+        'Las Pozas de Edward James',
+        'Turismo boutique',
+        'Gastronomía huasteca',
+      ],
     },
   ],
 };

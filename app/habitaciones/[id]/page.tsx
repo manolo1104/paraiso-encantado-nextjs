@@ -38,49 +38,85 @@ export default async function SuitePage({ params, searchParams }: Props) {
   const suite = suites.find((s) => s.id === id);
   if (!suite) notFound();
 
-  // HotelRoom JSON-LD
+  // @graph con HotelRoom + Product separado.
+  // REGLA: AggregateRating NO está soportado en HotelRoom por Google.
+  // Solución: nodo Product adicional en el mismo @graph — Google usa éste para rich results.
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'HotelRoom',
-    name: suite.name,
-    description: suite.description,
-    url: `https://www.paraisoencantado.com/habitaciones/${id}`,
-    image: suite.images.map((img) => `https://www.paraisoencantado.com${img}`),
-    occupancy: {
-      '@type': 'QuantitativeValue',
-      minValue: 1,
-      maxValue: suite.maxOccupancy,
-      unitText: 'personas',
-    },
-    amenityFeature: suite.amenities.map((a) => ({
-      '@type': 'LocationFeatureSpecification',
-      name: a,
-      value: true,
-    })),
-    offers: {
-      '@type': 'Offer',
-      price: suite.price,
-      priceCurrency: 'MXN',
-      availability: 'https://schema.org/InStock',
-      url: `https://www.paraisoencantado.com/reservar?suiteId=${id}`,
-    },
-    containedInPlace: {
-      '@type': 'LodgingBusiness',
-      name: 'Hotel Paraíso Encantado',
-      url: 'https://www.paraisoencantado.com',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Xilitla',
-        addressRegion: 'San Luis Potosí',
-        addressCountry: 'MX',
+    '@graph': [
+      {
+        '@type': 'HotelRoom',
+        '@id': `https://www.paraisoencantado.com/habitaciones/${id}#room`,
+        name: suite.name,
+        description: suite.description,
+        url: `https://www.paraisoencantado.com/habitaciones/${id}`,
+        image: suite.images.map((img) => `https://www.paraisoencantado.com${img}`),
+        occupancy: {
+          '@type': 'QuantitativeValue',
+          minValue: 1,
+          maxValue: suite.maxOccupancy,
+          unitText: 'personas',
+        },
+        amenityFeature: suite.amenities.map((a) => ({
+          '@type': 'LocationFeatureSpecification',
+          name: a,
+          value: true,
+        })),
+        offers: {
+          '@type': 'Offer',
+          price: suite.price,
+          priceCurrency: 'MXN',
+          availability: 'https://schema.org/InStock',
+          url: `https://www.paraisoencantado.com/reservar?suiteId=${id}`,
+        },
+        containedInPlace: {
+          '@id': 'https://www.paraisoencantado.com/#hotel',
+        },
       },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: 4.6,
-        reviewCount: 519,
-        bestRating: 5,
+      {
+        // Product — único tipo que Google admite con AggregateRating para rich snippets de precio+rating
+        '@type': 'Product',
+        '@id': `https://www.paraisoencantado.com/habitaciones/${id}#product`,
+        name: `${suite.name} — Hotel Paraíso Encantado`,
+        description: `${suite.description} A 5 minutos caminando del Jardín de Edward James (Las Pozas) en Xilitla.`,
+        image: suite.images[0] ? `https://www.paraisoencantado.com${suite.images[0]}` : undefined,
+        brand: {
+          '@type': 'Brand',
+          name: 'Hotel Paraíso Encantado',
+        },
+        offers: {
+          '@type': 'Offer',
+          price: suite.price,
+          priceCurrency: 'MXN',
+          availability: 'https://schema.org/InStock',
+          url: `https://www.paraisoencantado.com/reservar?suiteId=${id}`,
+          seller: {
+            '@type': 'Organization',
+            name: 'Hotel Paraíso Encantado',
+          },
+        },
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: 4.6,
+          reviewCount: 519,
+          bestRating: 5,
+          worstRating: 1,
+        },
       },
-    },
+      {
+        // LodgingBusiness referenciado
+        '@type': 'LodgingBusiness',
+        '@id': 'https://www.paraisoencantado.com/#hotel',
+        name: 'Hotel Paraíso Encantado',
+        url: 'https://www.paraisoencantado.com',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Xilitla',
+          addressRegion: 'San Luis Potosí',
+          addressCountry: 'MX',
+        },
+      },
+    ],
   };
 
   // FAQPage — preguntas frecuentes de suites (activa rich snippets en Google)
