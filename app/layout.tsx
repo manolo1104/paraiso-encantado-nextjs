@@ -48,6 +48,14 @@ export const metadata: Metadata = {
     alternateLocale: ['en_US', 'en_GB'],
     type: 'website',
     url: 'https://www.paraisoencantado.com',
+    images: [
+      {
+        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Hotel Paraíso Encantado — Xilitla, Huasteca Potosina',
+      },
+    ],
   },
 };
 

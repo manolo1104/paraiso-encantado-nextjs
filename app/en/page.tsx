@@ -20,9 +20,9 @@ const jsonLdEn = {
   geo: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingValue: '4.6',
-    reviewCount: '519',
-    bestRating: '5',
+    ratingValue: 4.6,
+    reviewCount: 519,
+    bestRating: 5,
   },
   priceRange: '$$',
   checkinTime: '15:00',

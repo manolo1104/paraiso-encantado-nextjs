@@ -44,7 +44,52 @@ export default function HabitacionesPage() {
     return acc;
   }, {});
 
+  // Schema: ItemList de suites + BreadcrumbList
+  const habitacionesSchema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        name: '13 Suites Boutique — Hotel Paraíso Encantado, Xilitla',
+        description: '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla, Huasteca Potosina.',
+        url: 'https://www.paraisoencantado.com/habitaciones',
+      },
+      {
+        '@type': 'ItemList',
+        name: 'Suites del Hotel Paraíso Encantado',
+        numberOfItems: suites.length,
+        itemListElement: sorted.map((s, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          item: {
+            '@type': 'HotelRoom',
+            name: s.name,
+            description: s.description,
+            url: `https://www.paraisoencantado.com/habitaciones/${s.id}`,
+            image: s.images[0] ? `https://www.paraisoencantado.com${s.images[0]}` : undefined,
+            occupancy: { '@type': 'QuantitativeValue', maxValue: s.maxOccupancy },
+            offers: {
+              '@type': 'Offer',
+              price: s.price,
+              priceCurrency: 'MXN',
+              availability: 'https://schema.org/InStock',
+            },
+          },
+        })),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+          { '@type': 'ListItem', position: 2, name: 'Habitaciones', item: 'https://www.paraisoencantado.com/habitaciones' },
+        ],
+      },
+    ],
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(habitacionesSchema) }} />
     <main className={styles.main}>
       {/* Header */}
       <section className={styles.header}>
@@ -71,5 +116,6 @@ export default function HabitacionesPage() {
 
       <AvailabilityFilterClient groups={groups} allSuites={suites} />
     </main>
+    </>
   );
 }

@@ -68,9 +68,9 @@ const aboutSchema = {
       ],
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: '4.6',
-        reviewCount: '519',
-        bestRating: '5',
+        ratingValue: 4.6,
+        reviewCount: 519,
+        bestRating: 5,
       },
       hasOfferCatalog: {
         '@type': 'OfferCatalog',

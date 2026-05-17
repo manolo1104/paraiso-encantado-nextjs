@@ -14,6 +14,22 @@ import FAQ from '@/components/FAQ';
 import FinalCTA from '@/components/FinalCTA';
 import StickyBar from '@/components/StickyBar';
 
+// WebSite con SearchAction — habilita Sitelinks Searchbox de Google
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Hotel Paraíso Encantado',
+  url: 'https://www.paraisoencantado.com',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: 'https://www.paraisoencantado.com/habitaciones?q={search_term_string}',
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LodgingBusiness',
@@ -35,13 +51,13 @@ const jsonLd = {
     latitude: 21.383,
     longitude: -99.002,
   },
-  starRating: { '@type': 'Rating', ratingValue: '4' },
+  starRating: { '@type': 'Rating', ratingValue: 4 },
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingValue: '4.6',
-    reviewCount: '519',
-    bestRating: '5',
-    worstRating: '1',
+    ratingValue: 4.6,
+    reviewCount: 519,
+    bestRating: 5,
+    worstRating: 1,
   },
   priceRange: '$$',
   amenityFeature: [
@@ -65,10 +81,8 @@ const jsonLd = {
 export default function HomePage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main>
         <Hero />
         <PromoStrip />

@@ -197,14 +197,14 @@ const toursSchema = {
       },
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: '4.9',
-        reviewCount: String((tourReviews[tour.id] || []).length),
-        bestRating: '5',
+        ratingValue: 4.9,
+        reviewCount: (tourReviews[tour.id] || []).length,
+        bestRating: 5,
       },
       review: (tourReviews[tour.id] || []).map(r => ({
         '@type': 'Review',
         author: { '@type': 'Person', name: r.name },
-        reviewRating: { '@type': 'Rating', ratingValue: String(r.rating), bestRating: '5' },
+        reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5 },
         reviewBody: r.text,
         datePublished: r.date,
       })),
