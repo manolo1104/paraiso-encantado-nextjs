@@ -35,7 +35,7 @@ export default function Navbar() {
         <a href="/" className={styles.navLogo} aria-label="Paraíso Encantado - Inicio">
           <Image
             src="/logo.png"
-            alt="Paraíso Encantado"
+            alt="Hotel Paraíso Encantado Xilitla — logo"
             width={36}
             height={36}
             className={styles.navLogoImg}

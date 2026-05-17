@@ -60,7 +60,7 @@ export default function ToursSection() {
             <div className={styles.imageWrap}>
               <Image
                 src={tour.image}
-                alt={tour.name}
+                alt={`${tour.name} — Tour Huasteca Potosina desde Xilitla`}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className={styles.image}

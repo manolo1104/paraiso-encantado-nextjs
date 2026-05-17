@@ -362,6 +362,40 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
         </aside>
       </div>
 
+      {/* Bloque de contenido SEO — aumenta palabras indexadas por Google */}
+      <section className={styles.seoContent} aria-label={`Información sobre ${suite.name}`}>
+        <div className={styles.seoContentInner}>
+          <h2 className={styles.seoContentTitle}>
+            {suite.name} — Suite Boutique en Xilitla, Huasteca Potosina
+          </h2>
+          <div className={styles.seoContentBody}>
+            <p>
+              La <strong>{suite.name}</strong> es una de las 13 suites boutique únicas del Hotel Paraíso Encantado,
+              ubicado en Xilitla, San Luis Potosí, en el corazón de la <strong>Huasteca Potosina</strong>.
+              Con capacidad para hasta {suite.maxOccupancy} personas y un precio desde{' '}
+              <strong>${suite.price.toLocaleString('es-MX')} MXN por noche</strong>, esta suite ofrece
+              una experiencia de hospedaje auténtica e irrepetible en uno de los destinos más extraordinarios de México.
+            </p>
+            <p>
+              El hotel se encuentra a solo <strong>5 minutos caminando del Jardín Surrealista de Edward James</strong>{' '}
+              (Las Pozas), Patrimonio Cultural de México y la principal atracción de Xilitla. Eres el hotel boutique más
+              cercano a Las Pozas de todo Xilitla — puedes llegar antes que los grupos organizados y disfrutar la magia
+              del jardín casi en soledad por las mañanas.
+            </p>
+            <p>
+              La {suite.name} forma parte de la categoría <em>{suite.categoryGroup}</em> y destaca por:{' '}
+              {suite.amenities.join(', ')}. Cada detalle de esta suite fue diseñado para ofrecer privacidad absoluta
+              y confort en contacto con la naturaleza tropical de la sierra potosina.
+            </p>
+            <p>
+              <strong>¿Por qué reservar directamente?</strong> Al reservar en paraisoencantado.com ahorras hasta
+              un 15% vs. plataformas externas como Booking o Expedia, recibes confirmación instantánea y tienes
+              cancelación gratuita hasta 48 horas antes de tu llegada. Tu suite en Xilitla te espera.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Si esta suite no está disponible — suites similares por categoría/precio */}
       <section className={styles.otherSuites}>
         <h2>Si <em>{suite.name}</em> no está disponible</h2>

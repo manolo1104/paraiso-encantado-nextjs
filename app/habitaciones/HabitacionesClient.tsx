@@ -70,7 +70,7 @@ export default function HabitacionesClient({ groups, unavailableNames = [], chec
                       <div className={styles.imageWrapper}>
                         <Image
                           src={suite.images[0]}
-                          alt={`${suite.name} — Paraíso Encantado`}
+                          alt={`${suite.name} — Suite Boutique Hotel Paraíso Encantado, Xilitla`}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className={styles.image}
@@ -117,7 +117,7 @@ export default function HabitacionesClient({ groups, unavailableNames = [], chec
                             <span className={styles.priceUnit}> MXN</span>
                             <span className={styles.priceUsd}>~${mxnToUsd(suite.price)} USD</span>
                           </div>
-                          <span className={styles.reserveBtn}>Ver Suite →</span>
+                          <span className={styles.reserveBtn}>Ver {suite.name} →</span>
                         </div>
                       </div>
                     </Link>

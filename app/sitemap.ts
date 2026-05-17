@@ -4,7 +4,17 @@ import { suites } from '@/data/suites';
 const BASE = 'https://www.paraisoencantado.com';
 
 // Fecha de última modificación significativa del sitio
-const SITE_UPDATED = '2026-05-16';
+const SITE_UPDATED = '2026-05-17';
+
+// Encodea los espacios en rutas de imagen para el sitemap
+// Requerido por Google para indexar imágenes correctamente
+// Ej: "FLOR DE LIS 1/PORTADA.jpg" → "FLOR%20DE%20LIS%201/PORTADA.jpg"
+function encodeImgPath(path: string): string {
+  return path
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // ── Páginas estáticas ────────────────────────────────────────────────────────
@@ -43,7 +53,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.75,
       images: [
-        `${BASE}/images/Areas comunes/DSC09456-HDR.jpg`,
+        `${BASE}/images/Areas%20comunes/DSC09456-HDR.jpg`,
         `${BASE}/images/JUNGLA/PORTADA.JPG`,
         `${BASE}/images/atracciones/jardin-edward-james-aerial.png`,
       ],
@@ -95,9 +105,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: 'monthly' as const,
     priority: 0.90,
     // Google Images: todas las fotos de la suite para indexación de imágenes
+    // Espacios en rutas encodeados para evitar errores 404 en Image Sitemap
     images: suite.images
       .slice(0, 5) // máx 5 imágenes por URL en sitemap
-      .map((img) => `${BASE}${img}`),
+      .map((img) => `${BASE}${encodeImgPath(img)}`),
   }));
 
   return [...staticPages, ...suitePages];

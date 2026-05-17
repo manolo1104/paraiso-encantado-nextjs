@@ -58,7 +58,7 @@ export default function AmenitiesGrid() {
           <div key={title} className={styles.cell}>
             <Image
               src={image}
-              alt={title}
+              alt={`${title} — Hotel Paraíso Encantado, Xilitla, Huasteca Potosina`}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={styles.cellImage}
