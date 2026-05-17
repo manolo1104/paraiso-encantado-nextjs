@@ -25,7 +25,7 @@ const jost = Jost({
 export const metadata: Metadata = {
   title: 'Hotel Paraíso Encantado · Xilitla | A 5 min del Jardín de Edward James',
   description:
-    'El único hotel boutique a pasos de Las Pozas de Edward James en Xilitla. 13 suites con spa privado desde $1,200 MXN/noche. Reserva directa sin comisiones · Cancelación gratuita 48h.',
+    'Hotel boutique en Xilitla a 5 min del Jardín de Edward James. 13 suites con spa privado desde $1,200 MXN. Reserva directa · Cancelación gratuita 48h.',
   keywords: [
     'hotel xilitla', 'jardín edward james', 'las pozas xilitla',
     'huasteca potosina', 'hotel boutique', 'hotel paraíso encantado',

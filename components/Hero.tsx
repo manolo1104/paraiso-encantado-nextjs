@@ -40,8 +40,8 @@ export default function Hero() {
         </p>
 
         <h1 className={styles.heroTitle}>
-          El Hotel Más Cercano al<br />
-          <em>Jardín Surrealista de Edward James</em>
+          Hotel Boutique en Xilitla<br />
+          <em>a pasos del Jardín de Edward James</em>
         </h1>
 
         <p className={styles.heroSubtitle}>

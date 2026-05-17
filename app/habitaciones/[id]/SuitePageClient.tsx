@@ -249,7 +249,12 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
         {/* ---- DETALLE ---- */}
         <aside className={styles.detail}>
           <p className={styles.eyebrow}>{suite.categoryGroup}</p>
-          <h1 className={styles.name}>{suite.name}</h1>
+          <h1 className={styles.name}>
+            {suite.name}
+            <span style={{ display: 'block', fontSize: '0.55em', fontWeight: 300, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sage)', marginTop: 4, fontFamily: 'var(--font-jost, sans-serif)', fontStyle: 'normal' }}>
+              Suite Boutique · Xilitla, Huasteca Potosina
+            </span>
+          </h1>
           <p className={styles.description}>{suite.description}</p>
 
           {/* Urgencia / escasez */}

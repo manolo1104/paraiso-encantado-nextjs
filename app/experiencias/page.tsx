@@ -6,7 +6,7 @@ import { Bus, Coffee, GraduationCap, ShieldCheck, Leaf, Camera, MessageCircle, C
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
-  title: 'Tours Huasteca Potosina 2026 · Tamul, Las Pozas y Cascadas | Desde Xilitla',
+  title: 'Tours Huasteca Potosina · Tamul, Las Pozas y Cascadas | Desde Xilitla',
   description:
     'Cascada de Tamul, Las Pozas de Edward James, Puente de Dios y más. Guía certificado + transporte + desayuno incluidos. Salidas diarias desde el hotel. Desde $1,300 MXN/persona.',
   alternates: {
