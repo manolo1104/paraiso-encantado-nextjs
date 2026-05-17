@@ -26,6 +26,12 @@ const escalatedChats = new Set();
 const hydratedChats = new Set(); // chatId ya inicializado con historial previo
 const sentPriceImageByChat = new Map(); // chatId -> timestamp
 
+// ── Debounce: espera a que la persona termine de escribir antes de responder ──
+// Si llegan varios mensajes seguidos en menos de MESSAGE_WAIT_MS ms, los agrupa
+// en uno solo para que Claude tenga el contexto completo de lo que quiso decir.
+const pendingByChat = new Map(); // chatId → { texts: [], timer, chat, lastMsg, userName, contextBody }
+const MESSAGE_WAIT_MS = Number(process.env.MESSAGE_DEBOUNCE_MS || 2500); // 2.5 s por defecto
+
 // ── Pausa manual del bot (humano tomó la conversación) ────
 const pausedChats = new Map(); // chatId → { expiresAt, startedAt }
 const HUMAN_TAKEOVER_MS = 60 * 60 * 1000; // 1 hora
@@ -830,10 +836,16 @@ client.on('message', async (msg) => {
   const chat = await msg.getChat();
   if (chat.isGroup) return; // Solo chats individuales por ahora
 
+  // Números que siempre reciben respuesta automática aunque estén guardados en contactos
+  const ALWAYS_RESPOND = new Set([
+    '524891251458@c.us', // Manolo — testing del bot
+  ]);
+
   // Solo atender números desconocidos (nuevos prospectos)
   // No intervenir en chats con contactos ya guardados en la agenda del teléfono
   const contact = await msg.getContact();
-  if (contact.isMyContact) {
+  console.log(`🔍 DEBUG msg.from = "${msg.from}" | isMyContact = ${contact.isMyContact}`);
+  if (contact.isMyContact && !ALWAYS_RESPOND.has(msg.from)) {
     // Registrar el mensaje pero no responder automáticamente
     if (msg.body?.trim()) addToHistory(msg.from, 'user', msg.body.trim());
     console.log(`📋 Contacto conocido ${contact.pushname || msg.from} — sin respuesta automática`);
@@ -908,161 +920,169 @@ client.on('message', async (msg) => {
 
   console.log(`\n📩 [${new Date().toLocaleTimeString('es-MX')}] ${userName || msg.from}: ${msg.body}`);
 
-  // Indicador de "escribiendo..."
-  await chat.sendStateTyping();
-
-  try {
-    const result = await handleMessage(msg.from, contextualBody, userName);
-    const responseText = typeof result === 'string' ? result : result?.text;
-    const requiresHumanIntervention = typeof result === 'object' && result?.requiresHumanIntervention;
-
-    if (responseText) {
-      // Pausa natural de 1 segundo antes de responder
-      await new Promise(r => setTimeout(r, 1000));
-      trackBotReply();
-      markRecentBotOutgoing(msg.from);
-      await safeReply(client, msg, chat, responseText);
-
-      const bodyNorm = normalizeText(msg.body || '');
-      const responseNorm = normalizeText(responseText || '');
-      const looksGroupConversation =
-        bodyNorm.includes('grupo') ||
-        bodyNorm.includes('personas') ||
-        bodyNorm.includes('habitaciones');
-      const looksAvailabilityReply = responseNorm.includes('disponibilidad') || responseNorm.includes('disponible');
-      const lastSentImageAt = sentPriceImageByChat.get(msg.from) || 0;
-
-      if (looksGroupConversation && looksAvailabilityReply && (Date.now() - lastSentImageAt > 6 * 60 * 60 * 1000)) {
-        const priceImage = await loadGroupPriceImageMedia();
-        if (priceImage) {
-          try {
-            markRecentBotOutgoing(msg.from);
-            await client.sendMessage(msg.from, priceImage, { caption: '📎 Catálogo de precios del hotel para grupos.' });
-            sentPriceImageByChat.set(msg.from, Date.now());
-          } catch (imgErr) {
-            console.warn('⚠️ No se pudo enviar imagen de precios para grupos:', String(imgErr?.message || '').split('\n')[0]);
-          }
-        }
-      }
-
-      if (requiresHumanIntervention) {
-        await tagChatForHumanIntervention(client, chat, msg, userName, responseText);
-      }
-
-      // Notificación de desayunos grupales
-      const bodyLower = normalizeText(msg.body || '');
-      const responseLower = normalizeText(responseText || '');
-      const looksBreakfastInterest =
-        (bodyLower.includes('desayuno') || bodyLower.includes('desayunos') || bodyLower.includes('breakfast')) &&
-        (bodyLower.includes('grupo') || bodyLower.includes('somos') || bodyLower.includes('personas') ||
-         responseLower.includes('desayuno') || responseLower.includes('papan'));
-
-      if (looksBreakfastInterest && !breakfastNotifiedChats.has(msg.from)) {
-        breakfastNotifiedChats.add(msg.from);
-        setTimeout(() => breakfastNotifiedChats.delete(msg.from), 4 * 60 * 60 * 1000);
-        const clientPhone = msg.from.split('@')[0];
-        const breakfastAlert =
-          `🍳 *Grupo interesado en desayunos*\n\n` +
-          `👤 *${userName || 'Sin nombre'}*\n` +
-          `📱 wa.me/${clientPhone}\n\n` +
-          `Están preguntando por el servicio de desayunos grupales en el Papán Huasteco. 🌿`;
-        try {
-          markRecentBotOutgoing(`${BREAKFAST_AGENT_NUMBER}@c.us`);
-          await client.sendMessage(`${BREAKFAST_AGENT_NUMBER}@c.us`, breakfastAlert);
-          console.log(`🍳 Notificación de desayunos enviada a ${BREAKFAST_AGENT_NUMBER}`);
-        } catch (brkErr) {
-          console.warn('⚠️ No se pudo notificar al coordinador de desayunos:', String(brkErr?.message || '').split('\n')[0]);
-        }
-      }
-
-      const requiresTourNotification = typeof result === 'object' && result?.requiresTourNotification;
-      if (requiresTourNotification && !tourNotifiedChats.has(msg.from)) {
-        tourNotifiedChats.add(msg.from);
-        // Limpiar después de 2 horas para permitir notificar de nuevo si retoma el tema
-        setTimeout(() => tourNotifiedChats.delete(msg.from), 2 * 60 * 60 * 1000);
-        const clientPhone = msg.from.split('@')[0];
-        const tourAlert =
-          `🌊 *Cliente interesado en tours*\n\n` +
-          `👤 *${userName || 'Sin nombre'}*\n` +
-          `📱 wa.me/${clientPhone}\n\n` +
-          `Está hablando con el agente del hotel. Puedes tomar la conversación para ayudarle a reservar su tour. 🌿`;
-        try {
-          markRecentBotOutgoing(`${TOUR_AGENT_NUMBER}@c.us`);
-          await client.sendMessage(`${TOUR_AGENT_NUMBER}@c.us`, tourAlert);
-          console.log(`🌊 Notificación de tour enviada a ${TOUR_AGENT_NUMBER}`);
-        } catch (tourErr) {
-          console.warn('⚠️ No se pudo notificar al agente de tours:', String(tourErr?.message || '').split('\n')[0]);
-        }
-      }
-    }
-
-    const textNorm = normalizeText(String(responseText || ''));
-    const quoteWasGenerated = /\bWA-[A-Z0-9]{4,}\b/i.test(String(responseText || '')) || hasRecentPendingQuote(msg.from);
-    const noAvailabilityFound =
-      textNorm.includes('no hay disponibilidad') ||
-      textNorm.includes('no tenemos disponibilidad') ||
-      textNorm.includes('sin disponibilidad');
-
-    if (quoteWasGenerated) {
-      scheduleAvailabilityFollowup(client, msg.from, userName, 'cart_abandoned');
-
-      // Notificar a Control Hotel con los detalles de la cotización
-      const folioMatch = String(responseText || '').match(/\bWA-[A-Z0-9]+\b/i);
-      const folio = folioMatch?.[0];
-      if (folio) {
-        const pending = getByUser(msg.from);
-        const clientPhone = msg.from.split('@')[0];
-        const rooms = Array.isArray(pending?.rooms) && pending.rooms.length
-          ? pending.rooms.map(r => `· ${r.name} (${r.guests} personas) — $${Number(r.price).toLocaleString('es-MX')} MXN`).join('\n')
-          : '(ver folio)';
-        const quoteAlert =
-          `📋 *Nueva cotización generada*\n\n` +
-          `👤 *${userName || pending?.userName || 'Sin nombre'}*\n` +
-          `📱 wa.me/${clientPhone}\n` +
-          `🧾 *Folio:* ${folio}\n` +
-          `📅 Check-in: ${pending?.checkin || '—'}\n` +
-          `📅 Check-out: ${pending?.checkout || '—'}\n` +
-          `🌙 Noches: ${pending?.nights || '—'}\n\n` +
-          `🏨 *Habitaciones:*\n${rooms}\n\n` +
-          `💰 *Total: $${Number(pending?.totalPrice || 0).toLocaleString('es-MX')} MXN*\n` +
-          `💳 Anticipo: $${Number(pending?.depositAmount || 0).toLocaleString('es-MX')} MXN`;
-
-        // Enviar al grupo Control Hotel
-        const sendQuoteAlert = async (to) => {
-          try {
-            markRecentBotOutgoing(to);
-            await client.sendMessage(to, quoteAlert);
-          } catch (e) {
-            console.warn(`⚠️ No se pudo enviar alerta de cotización a ${to}:`, String(e?.message || '').split('\n')[0]);
-          }
-        };
-
-        if (CONTROL_HOTEL_GROUP_ID) {
-          const gid = CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`;
-          await sendQuoteAlert(gid);
-        } else {
-          try {
-            const chats = await client.getChats();
-            const controlGroup = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
-            if (controlGroup?.id?._serialized) await sendQuoteAlert(controlGroup.id._serialized);
-          } catch (ge) {
-            console.warn('⚠️ No se pudo encontrar grupo Control Hotel para alerta de cotización.');
-          }
-        }
-        console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
-      }
-    } else if (noAvailabilityFound) {
-      scheduleAvailabilityFollowup(client, msg.from, userName, 'no_availability_found');
-    } else if (looksAvailabilityRequest(msg.body || '')) {
-      scheduleAvailabilityFollowup(client, msg.from, userName, 'inquiry_no_response');
-    }
-  } catch (err) {
-    console.error('❌ Error procesando mensaje:', err.message);
-    trackBotReply();
-    markRecentBotOutgoing(msg.from);
-    await safeReply(client, msg, chat, 'Lo siento, ocurrió un error. Por favor intenta de nuevo o comunícate directamente con el hotel. 🙏');
+  // ── DEBOUNCE: agrupar mensajes seguidos antes de responder ──────────────────
+  // Espera MESSAGE_WAIT_MS ms de silencio para tener el mensaje completo.
+  // Si llegan varios mensajes rápido (ej. "Hola" + "quiero info" + "de la jungla"),
+  // los combina en uno solo antes de enviarlo a Claude.
+  const existing = pendingByChat.get(msg.from);
+  if (existing) {
+    clearTimeout(existing.timer);
+    existing.texts.push(msg.body.trim());
+    existing.lastMsg = msg;
+    existing.contextBody = contextualBody; // preservar nota de contexto del último mensaje
+  } else {
+    pendingByChat.set(msg.from, {
+      texts: [msg.body.trim()],
+      lastMsg: msg,
+      chat,
+      userName,
+      contextBody: contextualBody,
+      timer: null,
+    });
   }
+
+  const pending = pendingByChat.get(msg.from);
+  pending.timer = setTimeout(async () => {
+    pendingByChat.delete(msg.from);
+    const combinedText = pending.texts.join('\n').trim();
+    const finalMsg = pending.lastMsg;
+    const finalChat = pending.chat;
+    const finalContextBody = pending.texts.length > 1
+      ? combinedText  // múltiples mensajes → combinados, sin nota de contexto de pausa
+      : pending.contextBody; // un solo mensaje → preservar contexto original
+
+    if (pending.texts.length > 1) {
+      console.log(`⏱️  Mensajes agrupados (${pending.texts.length}): "${combinedText.slice(0, 80)}..."`);
+    }
+
+    // Indicador de "escribiendo..."
+    await finalChat.sendStateTyping().catch(() => {});
+
+    try {
+      const result = await handleMessage(finalMsg.from, finalContextBody, pending.userName);
+      const responseText = typeof result === 'string' ? result : result?.text;
+      const requiresHumanIntervention = typeof result === 'object' && result?.requiresHumanIntervention;
+
+      if (responseText) {
+        await new Promise(r => setTimeout(r, 1000));
+        trackBotReply();
+        markRecentBotOutgoing(finalMsg.from);
+        await safeReply(client, finalMsg, finalChat, responseText);
+
+        const bodyNorm = normalizeText(combinedText || '');
+        const responseNorm = normalizeText(responseText || '');
+        const looksGroupConversation =
+          bodyNorm.includes('grupo') || bodyNorm.includes('personas') || bodyNorm.includes('habitaciones');
+        const looksAvailabilityReply = responseNorm.includes('disponibilidad') || responseNorm.includes('disponible');
+        const lastSentImageAt = sentPriceImageByChat.get(finalMsg.from) || 0;
+
+        if (looksGroupConversation && looksAvailabilityReply && (Date.now() - lastSentImageAt > 6 * 60 * 60 * 1000)) {
+          const priceImage = await loadGroupPriceImageMedia();
+          if (priceImage) {
+            try {
+              markRecentBotOutgoing(finalMsg.from);
+              await client.sendMessage(finalMsg.from, priceImage);
+              sentPriceImageByChat.set(finalMsg.from, Date.now());
+            } catch (imgErr) {
+              console.warn('⚠️ No se pudo enviar imagen de precios:', String(imgErr?.message || '').split('\n')[0]);
+            }
+          }
+        }
+
+        // Escalación a humano
+        if (requiresHumanIntervention) {
+          await tagChatForHumanIntervention(client, finalChat, finalMsg, pending.userName, responseText);
+        }
+
+        // Notificación de desayunos grupales
+        const bodyLower = normalizeText(combinedText || '');
+        const responseLower = normalizeText(responseText || '');
+        const looksBreakfastInterest =
+          (bodyLower.includes('desayuno') || bodyLower.includes('desayunos') || bodyLower.includes('breakfast')) &&
+          (bodyLower.includes('grupo') || bodyLower.includes('somos') || bodyLower.includes('personas') ||
+           responseLower.includes('desayuno') || responseLower.includes('papan'));
+        if (looksBreakfastInterest && !breakfastNotifiedChats.has(finalMsg.from)) {
+          breakfastNotifiedChats.add(finalMsg.from);
+          setTimeout(() => breakfastNotifiedChats.delete(finalMsg.from), 4 * 60 * 60 * 1000);
+          try {
+            markRecentBotOutgoing(`${BREAKFAST_AGENT_NUMBER}@c.us`);
+            await client.sendMessage(`${BREAKFAST_AGENT_NUMBER}@c.us`,
+              `🍳 *Grupo interesado en desayunos*\n\n👤 *${pending.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n\nEstán preguntando por desayunos grupales en El Papán Huasteco. 🌿`
+            );
+          } catch (brkErr) {
+            console.warn('⚠️ No se pudo notificar al coordinador de desayunos:', String(brkErr?.message || '').split('\n')[0]);
+          }
+        }
+
+        // Notificación de interés en tours
+        const requiresTourNotification = typeof result === 'object' && result?.requiresTourNotification;
+        if (requiresTourNotification && !tourNotifiedChats.has(finalMsg.from)) {
+          tourNotifiedChats.add(finalMsg.from);
+          setTimeout(() => tourNotifiedChats.delete(finalMsg.from), 2 * 60 * 60 * 1000);
+          try {
+            markRecentBotOutgoing(`${TOUR_AGENT_NUMBER}@c.us`);
+            await client.sendMessage(`${TOUR_AGENT_NUMBER}@c.us`,
+              `🌊 *Cliente interesado en tours*\n\n👤 *${pending.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n\nHablando con el agente del hotel. Puedes tomar la conversación. 🌿`
+            );
+          } catch (tourErr) {
+            console.warn('⚠️ No se pudo notificar al agente de tours:', String(tourErr?.message || '').split('\n')[0]);
+          }
+        }
+
+        // Follow-ups de disponibilidad y cotización
+        const textNorm = normalizeText(String(responseText || ''));
+        const quoteWasGenerated = /\bWA-[A-Z0-9]{4,}\b/i.test(String(responseText || '')) || hasRecentPendingQuote(finalMsg.from);
+        const noAvailabilityFound =
+          textNorm.includes('no hay disponibilidad') ||
+          textNorm.includes('no tenemos disponibilidad') ||
+          textNorm.includes('sin disponibilidad');
+
+        if (quoteWasGenerated) {
+          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'cart_abandoned');
+          // Alerta de cotización al grupo Control Hotel
+          const folioMatch = String(responseText || '').match(/\bWA-[A-Z0-9]+\b/i);
+          const folio = folioMatch?.[0];
+          if (folio) {
+            const pr = getByUser(finalMsg.from);
+            const rooms = Array.isArray(pr?.rooms) && pr.rooms.length
+              ? pr.rooms.map(r => `· ${r.name} (${r.guests} personas) — $${Number(r.price).toLocaleString('es-MX')} MXN`).join('\n')
+              : '(ver folio)';
+            const quoteAlert =
+              `📋 *Nueva cotización generada*\n\n👤 *${pending.userName || pr?.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n🧾 *Folio:* ${folio}\n📅 Check-in: ${pr?.checkin || '—'} | Check-out: ${pr?.checkout || '—'}\n🌙 Noches: ${pr?.nights || '—'}\n\n🏨 *Habitaciones:*\n${rooms}\n\n💰 *Total: $${Number(pr?.totalPrice || 0).toLocaleString('es-MX')} MXN*\n💳 Anticipo: $${Number(pr?.depositAmount || 0).toLocaleString('es-MX')} MXN`;
+            const sendToControlHotel = async (to) => {
+              try { markRecentBotOutgoing(to); await client.sendMessage(to, quoteAlert); } catch { /* ignore */ }
+            };
+            if (CONTROL_HOTEL_GROUP_ID) {
+              await sendToControlHotel(CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`);
+            } else {
+              try {
+                const chats = await client.getChats();
+                const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
+                if (cg?.id?._serialized) await sendToControlHotel(cg.id._serialized);
+              } catch { /* ignore */ }
+            }
+            console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
+          }
+        } else if (noAvailabilityFound) {
+          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'no_availability_found');
+        } else if (looksAvailabilityRequest(combinedText || '')) {
+          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'inquiry_no_response');
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error procesando mensaje:', err);
+      try {
+        await safeReply(client, finalMsg, finalChat, 'Tuve un problema técnico. Por favor escríbeme de nuevo o contáctanos al *489 100 7679*. 🙏');
+      } catch { /* ignore */ }
+    }
+  }, MESSAGE_WAIT_MS);
+
+  // El bloque try/catch original ya no aplica (movido al callback del debounce)
+  // — el código continúa al final del handler sin procesar nada más aquí.
+  return; // ← el procesamiento ocurre en el timer de arriba
+
 });
+
 
 // ── Comando de estadísticas cada hora ────────────────────
 

@@ -153,7 +153,7 @@ function getDeterministicResponse(userText = '', session = {}) {
   const isPostConfirmationChange = text.includes('reserva confirmada') || text.includes('agregar 1 huesped') || text.includes('agregar un huesped') || text.includes('cambia el precio');
   const isExternalPriceDispute = text.includes('mas barata') || text.includes('respetas ese precio') || text.includes('otra pagina');
   if (asksPrice && !mentionsSpecificRoom && !isPostConfirmationChange && !isExternalPriceDispute) {
-    return 'Para cotizarte el precio exacto, necesito:\n\n📅 *Fechas* (check-in y check-out)\n🏠 *Tipo de suite* que te interesa:\n\n💎 *Suites Master* ($1,900/noche)\n· Jungla, LindaVista, Flor de Liz\n· Piscina/tina privada\n\n🌿 *Suites Plus* ($1,500/noche)\n· Lirios, Orquídeas, Bromelias\n· Balcón privado\n\n👨‍👩‍👧‍👦 *Suites Familiares* (desde $1,900/noche)\n· Helechos (hasta 6 personas)\n\n¿Cuál te interesa? 🤔';
+    return 'Nuestras tarifas por noche 🌿\n\n🏔️ *Con vista a las montañas + spa privado:*\n$1,900 MXN (2 personas) · $2,400 MXN (3–4 personas)\n· Piscina spa o tina de hidromasaje privada\n· Terrazas con vista panorámica a Xilitla y la selva\n· Suite Jungla · Flor de Liz 1 & 2 · LindaVista · Lajas\n\n🌿 *Con vista a los jardines:*\n$1,500 MXN (2 personas) · $1,900 MXN (3–4 personas)\n· Balcón privado · jardines tropicales · tranquilidad\n· Lirios 1 & 2 · Orquídeas · Bromelias\n\n👨‍👩‍👧‍👦 *Suites Familiares (hasta 6–8 personas):*\n$1,900 MXN (2p) · $2,400 MXN (3–6p)\n· Helechos 1 & 2\n\nTodo incluye WiFi, AC y acceso a la alberca. Estamos a *5 min del Jardín de Edward James* 📍\n\n¿Para qué fechas y cuántos serían? Te reviso disponibilidad ahora 📅';
   }
 
   if (text.includes('perrito') || text.includes('mascota') || text.includes('perro')) {
