@@ -19,8 +19,6 @@ export const metadata: Metadata = {
   },
 };
 
-const CATEGORIES = ['Todos', 'Guías de Viaje', 'Atracciones', 'Consejos de Viaje'];
-
 export default function BlogPage() {
   const posts = getAllPosts();
   const featured = posts.find((p) => p.featured);
