@@ -114,6 +114,14 @@ export default function HabitacionesPage() {
         </div>
       </section>
 
+      {/* Link contextual — captura búsquedas de "hotel cerca de Las Pozas" */}
+      <div style={{ textAlign: 'center', padding: '16px 24px 0', fontSize: 14, color: '#888', fontFamily: 'var(--font-jost, sans-serif)' }}>
+        ¿Buscas el hotel más cercano a Las Pozas de Edward James?{' '}
+        <a href="/hotel-cerca-de-las-pozas" style={{ color: 'var(--forest)', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+          Estás en el lugar correcto →
+        </a>
+      </div>
+
       <AvailabilityFilterClient groups={groups} allSuites={suites} />
     </main>
     </>

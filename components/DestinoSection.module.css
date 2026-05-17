@@ -160,3 +160,19 @@
     height: 300px;
   }
 }
+
+.destinoLink {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  letter-spacing: 0.06em;
+  font-family: var(--font-jost, sans-serif);
+  margin-bottom: 28px;
+  border-bottom: 1px solid rgba(212,175,55,0.4);
+  padding-bottom: 2px;
+  transition: border-color 0.2s;
+}
+
+.destinoLink:hover { border-color: var(--gold); }

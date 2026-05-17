@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import styles from './DestinoSection.module.css';
 import { MapPinIcon, MountainIcon, CompassIcon } from './icons';
 
@@ -43,6 +44,10 @@ export default function DestinoSection() {
             que sobrevuela el jardín y en el silencio de una selva que aún no ha sido
             domesticada.
           </p>
+
+          <Link href="/xilitla" className={styles.destinoLink}>
+            Guía completa de Xilitla →
+          </Link>
 
           <div className={styles.stats}>
             {stats.map(({ Icon, value, label }) => (

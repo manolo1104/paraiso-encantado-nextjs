@@ -74,6 +74,17 @@ export default function Footer() {
           </ul>
         </div>
 
+        {/* Destino */}
+        <div className={styles.section}>
+          <h4>Explorar Xilitla</h4>
+          <ul role="list">
+            <li><a href="/xilitla">Qué Hacer en Xilitla</a></li>
+            <li><a href="/hotel-cerca-de-las-pozas">Hotel cerca de Las Pozas</a></li>
+            <li><a href="/experiencias">Tours Huasteca Potosina</a></li>
+            <li><a href="/galeria">Galería del Hotel</a></li>
+          </ul>
+        </div>
+
         {/* Ubicación */}
         <div className={styles.section}>
           <h4>Ubicación</h4>

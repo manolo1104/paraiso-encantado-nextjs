@@ -509,6 +509,19 @@ export default function ExperienciasPage() {
         </div>
       </section>
 
+      {/* Link a guía de destino */}
+      <section style={{ background: '#fafaf7', padding: '32px 24px', textAlign: 'center', borderTop: '1px solid #eee' }}>
+        <p style={{ fontSize: 15, color: '#666', marginBottom: 10, fontFamily: 'var(--font-jost, sans-serif)' }}>
+          ¿Quieres conocer más sobre el destino antes de tu viaje?
+        </p>
+        <a
+          href="/xilitla"
+          style={{ display: 'inline-block', color: 'var(--forest)', fontWeight: 600, fontSize: 15, textDecoration: 'underline', textUnderlineOffset: 3, fontFamily: 'var(--font-jost, sans-serif)' }}
+        >
+          Guía completa de Xilitla: qué hacer, cómo llegar y cuándo ir →
+        </a>
+      </section>
+
       {/* CTA */}
       <section className={styles.ctaSection}>
         <p className={styles.eyebrow}>¿Listo para Explorar?</p>
