@@ -210,6 +210,12 @@
   font-family: var(--font-jost, sans-serif);
 }
 
+.attractionMeta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .attractionContent p {
   font-size: 15px;
   line-height: 1.75;

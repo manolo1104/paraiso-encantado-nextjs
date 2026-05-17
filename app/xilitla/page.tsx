@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { MapPin, Clock } from 'lucide-react';
 import styles from './xilitla.module.css';
 
 export const metadata: Metadata = {
@@ -249,8 +250,8 @@ export default function XilitlaPage() {
                   <p className={styles.attractionSub}>{a.subtitle}</p>
                   <h3>{a.title}</h3>
                   <div className={styles.attractionMeta}>
-                    <span>📍 {a.distance}</span>
-                    <span>🕐 {a.time}</span>
+                    <span><MapPin size={13} strokeWidth={1.5} /> {a.distance}</span>
+                    <span><Clock size={13} strokeWidth={1.5} /> {a.time}</span>
                   </div>
                   {a.body.split('\n\n').map((para, j) => (
                     <p key={j}>{para}</p>

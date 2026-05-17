@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Evita que webpack intente bundlear módulos de Node.js para el cliente
+  serverExternalPackages: ['gray-matter'],
+
   images: {
     remotePatterns: [
       {
