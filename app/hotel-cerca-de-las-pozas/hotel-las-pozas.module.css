@@ -16,7 +16,7 @@
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 60%, transparent 100%);
+  background: linear-gradient(to right, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.60) 55%, rgba(0,0,0,0.2) 100%);
 }
 
 .heroContent {
@@ -54,6 +54,7 @@
   font-weight: 300;
   line-height: 1.15;
   margin-bottom: 20px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.6);
 }
 
 .heroContent h1 em { font-style: italic; color: var(--gold); }
@@ -215,9 +216,9 @@
 }
 
 .reasonIcon {
-  font-size: 28px;
   display: block;
   margin-bottom: 12px;
+  color: var(--sage);
 }
 
 .reasonCard h3 {

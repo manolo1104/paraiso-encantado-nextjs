@@ -3,13 +3,13 @@
 
 .hero { position: relative; min-height: clamp(500px, 75vh, 700px); display: flex; align-items: center; overflow: hidden; }
 .heroImg { position: absolute; inset: 0; }
-.heroOverlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.3) 60%, transparent 100%); }
+.heroOverlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.2) 100%); }
 .heroContent { position: relative; z-index: 1; padding: 100px 24px 64px; max-width: 700px; margin: 0 auto; width: 100%; color: white; }
 .breadcrumb { font-size: 13px; opacity: 0.65; margin-bottom: 16px; font-family: var(--font-jost, sans-serif); }
 .breadcrumb a { color: white; text-decoration: none; }
 .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-bottom: 14px; font-family: var(--font-jost, sans-serif); }
 .eyebrowCenter { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sage); margin-bottom: 10px; font-family: var(--font-jost, sans-serif); text-align: center; }
-.heroContent h1 { font-family: var(--font-cormorant), serif; font-size: clamp(32px, 5vw, 54px); font-weight: 300; line-height: 1.15; margin-bottom: 18px; }
+.heroContent h1 { font-family: var(--font-cormorant), serif; font-size: clamp(32px, 5vw, 54px); font-weight: 300; line-height: 1.15; margin-bottom: 18px; text-shadow: 0 2px 16px rgba(0,0,0,0.6); }
 .heroContent h1 em { font-style: italic; color: var(--gold); }
 .heroSub { font-size: 17px; line-height: 1.6; opacity: 0.88; margin-bottom: 28px; font-family: var(--font-jost, sans-serif); }
 .heroCtas { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -23,7 +23,7 @@
 @media (max-width: 768px) { .reasonsGrid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 480px) { .reasonsGrid { grid-template-columns: 1fr; } }
 .reasonCard { background: var(--parch); border-radius: 10px; padding: 24px 20px; }
-.reasonIcon { font-size: 26px; display: block; margin-bottom: 10px; }
+.reasonIcon { display: block; margin-bottom: 12px; color: var(--sage); }
 .reasonCard h3 { font-family: var(--font-jost, sans-serif); font-size: 15px; font-weight: 600; color: var(--forest); margin-bottom: 8px; }
 .reasonCard p { font-size: 14px; line-height: 1.7; color: #666; }
 

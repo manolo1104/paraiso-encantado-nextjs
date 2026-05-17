@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { MapPin, Droplets, Sunrise, Utensils, ShieldCheck, Leaf } from 'lucide-react';
 import { suites } from '@/data/suites';
 import styles from './hotel-las-pozas.module.css';
 
@@ -108,32 +109,32 @@ const schema = {
 
 const REASONS = [
   {
-    icon: '📍',
+    icon: <MapPin size={22} strokeWidth={1.5} />,
     title: '5 Minutos Caminando',
     body: 'La distancia más corta de cualquier hotel en Xilitla. Sales de tu suite y en 5 minutos estás en Las Pozas —sin taxi, sin esperar, sin coordinación.',
   },
   {
-    icon: '🏊',
+    icon: <Droplets size={22} strokeWidth={1.5} />,
     title: 'Spa Privado en tu Suite',
     body: 'Cada una de las 13 suites tiene su propia piscina spa. No compartes el agua con nadie. Llega de Las Pozas y sumérgete en tu spa privado con vista a la selva.',
   },
   {
-    icon: '🌅',
+    icon: <Sunrise size={22} strokeWidth={1.5} />,
     title: 'Salida Antes que los Grupos',
     body: 'Los tours desde Ciudad Valles llegan a Las Pozas a las 10-11 AM. Tú puedes estar en el jardín a las 9 AM, cuando abre, y tener las esculturas prácticamente para ti solo.',
   },
   {
-    icon: '🍽️',
+    icon: <Utensils size={22} strokeWidth={1.5} />,
     title: 'Restaurante El Papán',
     body: 'Cocina huasteca auténtica en el hotel. Desayunas zacahuil, bocoles y café de olla antes de ir al jardín. Sin salir de la propiedad.',
   },
   {
-    icon: '✅',
+    icon: <ShieldCheck size={22} strokeWidth={1.5} />,
     title: 'Reserva Directa — Sin Comisiones',
     body: 'Al reservar en paraisoencantado.com ahorras hasta 15% vs. Booking o Expedia. Confirmación instantánea, cancelación gratuita 48 horas antes.',
   },
   {
-    icon: '🌿',
+    icon: <Leaf size={22} strokeWidth={1.5} />,
     title: 'Tours a Toda la Huasteca',
     body: 'El hotel organiza tours diarios a Cascada Tamul, Puente de Dios y más. Guía certificado, transporte y desayuno incluidos. Todas las salidas desde el hotel.',
   },

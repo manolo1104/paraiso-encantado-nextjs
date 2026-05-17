@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Bath, Leaf, MapPin, Utensils, Mountain, Flower2 } from 'lucide-react';
 import { suites } from '@/data/suites';
 import styles from './luna-de-miel.module.css';
 
@@ -60,12 +61,12 @@ const romanticSuites = suites.filter((s) =>
 );
 
 const REASONS = [
-  { icon: '🛁', title: 'Spa Privado en tu Suite', body: 'Cada suite tiene su propio spa o tina de hidromasaje — no compartes el agua con nadie. Completamente privado, a cualquier hora.' },
-  { icon: '🌿', title: 'Selva y Silencio', body: 'Rodeados de vegetación tropical. Por las noches solo se escucha el río y los grillos. Sin ruido de tráfico, sin vecinos ruidosos.' },
-  { icon: '📍', title: 'A 5 Min de Las Pozas', body: 'El jardín surrealista de Edward James a 5 minutos caminando. Un lugar mágico para vivir juntos — único en el mundo.' },
-  { icon: '🍽️', title: 'Cenas en El Papán', body: 'Gastronomía huasteca auténtica a pasos de tu suite. Reserva una mesa privada con anticipación.' },
-  { icon: '🏔️', title: 'Vistas Panorámicas', body: 'Varias suites tienen terraza con vistas a las montañas de la Huasteca y al pueblo de Xilitla.' },
-  { icon: '💐', title: 'Detalles Especiales', body: 'Avísanos que es luna de miel o aniversario y preparamos detalles en la suite sin costo adicional.' },
+  { icon: <Bath size={22} strokeWidth={1.5} />, title: 'Spa Privado en tu Suite', body: 'Cada suite tiene su propio spa o tina de hidromasaje — no compartes el agua con nadie. Completamente privado, a cualquier hora.' },
+  { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Selva y Silencio', body: 'Rodeados de vegetación tropical. Por las noches solo se escucha el río y los grillos. Sin ruido de tráfico, sin vecinos ruidosos.' },
+  { icon: <MapPin size={22} strokeWidth={1.5} />, title: 'A 5 Min de Las Pozas', body: 'El jardín surrealista de Edward James a 5 minutos caminando. Un lugar mágico para vivir juntos — único en el mundo.' },
+  { icon: <Utensils size={22} strokeWidth={1.5} />, title: 'Cenas en El Papán', body: 'Gastronomía huasteca auténtica a pasos de tu suite. Reserva una mesa privada con anticipación.' },
+  { icon: <Mountain size={22} strokeWidth={1.5} />, title: 'Vistas Panorámicas', body: 'Varias suites tienen terraza con vistas a las montañas de la Huasteca y al pueblo de Xilitla.' },
+  { icon: <Flower2 size={22} strokeWidth={1.5} />, title: 'Detalles Especiales', body: 'Avísanos que es luna de miel o aniversario y preparamos detalles en la suite sin costo adicional.' },
 ];
 
 export default function LunaDePageMielPage() {

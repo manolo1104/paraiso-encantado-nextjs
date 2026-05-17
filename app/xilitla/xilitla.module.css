@@ -21,7 +21,7 @@
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.1) 100%);
 }
 
 .heroContent {
@@ -59,6 +59,7 @@
   font-weight: 300;
   line-height: 1.1;
   margin-bottom: 16px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.7);
 }
 
 .heroContent h1 em { font-style: italic; color: var(--gold); }

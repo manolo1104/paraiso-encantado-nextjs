@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Droplets, Bed, Leaf, Compass, Utensils, MapPin } from 'lucide-react';
 import { suites } from '@/data/suites';
 import styles from './familias.module.css';
 
@@ -59,12 +60,12 @@ const familySuites = suites.filter((s) =>
 );
 
 const REASONS = [
-  { icon: '🏊', title: 'Piscina en tu Suite', body: 'Cada suite tiene su propio spa o piscina privada. Los niños pueden disfrutarla con supervisión sin compartir con otros huéspedes.' },
-  { icon: '🛏️', title: 'Suites hasta 8 Personas', body: 'Helechos 1 (hasta 6) y Helechos 2 (hasta 8) tienen 3-4 camas matrimoniales. Toda la familia en el mismo espacio.' },
-  { icon: '🍃', title: 'Naturaleza Segura', body: 'El hotel tiene jardines seguros, áreas comunes amplias y está en el centro de Xilitla — un pueblo tranquilo y familiar.' },
-  { icon: '🎯', title: 'Tours para Niños', body: 'El Puente de Dios, Cascadas de Micos y Las Pozas son ideales para familias con niños. Guía certificado en todos los tours.' },
-  { icon: '🍽️', title: 'Restaurante en el Hotel', body: 'El Papán Huasteco tiene opciones para toda la familia. No necesitas salir del hotel para la primera comida del día.' },
-  { icon: '📍', title: '5 Min de Las Pozas', body: 'Las Pozas de Edward James son fascinantes para los niños: estructuras enormes, pozas de agua y selva tropical. Un mundo de exploración.' },
+  { icon: <Droplets size={22} strokeWidth={1.5} />, title: 'Piscina en tu Suite', body: 'Cada suite tiene su propio spa o piscina privada. Los niños pueden disfrutarla con supervisión sin compartir con otros huéspedes.' },
+  { icon: <Bed size={22} strokeWidth={1.5} />, title: 'Suites hasta 8 Personas', body: 'Helechos 1 (hasta 6) y Helechos 2 (hasta 8) tienen 3-4 camas matrimoniales. Toda la familia en el mismo espacio.' },
+  { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Naturaleza Segura', body: 'El hotel tiene jardines seguros, áreas comunes amplias y está en el centro de Xilitla — un pueblo tranquilo y familiar.' },
+  { icon: <Compass size={22} strokeWidth={1.5} />, title: 'Tours para Niños', body: 'El Puente de Dios, Cascadas de Micos y Las Pozas son ideales para familias con niños. Guía certificado en todos los tours.' },
+  { icon: <Utensils size={22} strokeWidth={1.5} />, title: 'Restaurante en el Hotel', body: 'El Papán Huasteco tiene opciones para toda la familia. No necesitas salir del hotel para la primera comida del día.' },
+  { icon: <MapPin size={22} strokeWidth={1.5} />, title: '5 Min de Las Pozas', body: 'Las Pozas de Edward James son fascinantes para los niños: estructuras enormes, pozas de agua y selva tropical. Un mundo de exploración.' },
 ];
 
 export default function HotelFamiliasPage() {
