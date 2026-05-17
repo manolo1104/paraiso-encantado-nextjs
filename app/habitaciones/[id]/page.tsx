@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: suite.description,
       url: canonical,
       images: suite.images[0]
-        ? [{ url: `https://www.paraisoencantado.com${suite.images[0]}`, width: 1200, height: 800, alt: suite.name }]
+        ? [{ url: `https://www.paraisoencantado.com${suite.images[0]}`, width: 1200, height: 630, alt: suite.name }]
         : undefined,
     },
   };

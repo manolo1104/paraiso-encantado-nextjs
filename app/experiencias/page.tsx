@@ -21,7 +21,7 @@ export const metadata: Metadata = {
       {
         url: 'https://www.paraisoencantado.com/images/atracciones/cascada_de_tamul.jpg',
         width: 1200,
-        height: 800,
+        height: 630,
         alt: 'Cascada de Tamul — Tour desde Hotel Paraíso Encantado, Xilitla, Huasteca Potosina',
       },
     ],

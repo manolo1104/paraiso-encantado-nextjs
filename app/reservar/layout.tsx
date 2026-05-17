@@ -16,10 +16,10 @@ export const metadata: Metadata = {
     url: 'https://www.paraisoencantado.com/reservar',
     images: [
       {
-        url: 'https://www.paraisoencantado.com/images/JUNGLA/PORTADA.JPG',
+        url: 'https://www.paraisoencantado.com/images/LINDAVISTA/PORTADA.jpg',
         width: 1200,
-        height: 800,
-        alt: 'Suite Jungla — Hotel Paraíso Encantado, Xilitla',
+        height: 630,
+        alt: 'Suite LindaVista — Hotel Paraíso Encantado, Xilitla',
       },
     ],
   },

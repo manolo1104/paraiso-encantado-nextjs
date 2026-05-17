@@ -19,10 +19,10 @@ export const metadata: Metadata = {
     url: 'https://www.paraisoencantado.com/sobre-nosotros',
     images: [
       {
-        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg',
+        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09447-HDR.jpg',
         width: 1200,
-        height: 800,
-        alt: 'Hotel Paraíso Encantado — Xilitla, Huasteca Potosina',
+        height: 630,
+        alt: 'Jardín y piscina — Hotel Paraíso Encantado, Xilitla',
       },
     ],
   },

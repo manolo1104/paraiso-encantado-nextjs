@@ -19,10 +19,10 @@ export const metadata: Metadata = {
     url: 'https://www.paraisoencantado.com/galeria',
     images: [
       {
-        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg',
+        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09471-HDR.jpg',
         width: 1200,
-        height: 800,
-        alt: 'Hotel Paraíso Encantado — Xilitla, Huasteca Potosina',
+        height: 630,
+        alt: 'Atardecer en el Hotel Paraíso Encantado — Xilitla, Huasteca Potosina',
       },
     ],
   },
@@ -61,7 +61,7 @@ const gallerySchema = {
     },
     {
       '@type': 'ImageObject',
-      url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg',
+      url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09471-HDR.jpg',
       name: 'Fachada y piscina — Hotel Paraíso Encantado, Xilitla',
       description: 'Vista exterior del Hotel Paraíso Encantado con jardines tropicales en Xilitla, Huasteca Potosina',
     },

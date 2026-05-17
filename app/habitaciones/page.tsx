@@ -21,7 +21,7 @@ export const metadata = {
       {
         url: 'https://www.paraisoencantado.com/images/JUNGLA/PORTADA.JPG',
         width: 1200,
-        height: 800,
+        height: 630,
         alt: 'Suite Jungla — Hotel Paraíso Encantado, Xilitla',
       },
     ],

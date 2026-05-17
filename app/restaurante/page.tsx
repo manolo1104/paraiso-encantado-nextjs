@@ -24,7 +24,7 @@ export const metadata: Metadata = {
       {
         url: 'https://www.paraisoencantado.com/images/RESTAURANTE/sirviendo-zacahuil.webp',
         width: 1200,
-        height: 675,
+        height: 630,
         alt: 'El Papán Huasteco — Zacahuil tradicional de la Huasteca Potosina',
       },
     ],
