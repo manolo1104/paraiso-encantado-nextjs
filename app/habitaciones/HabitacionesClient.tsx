@@ -75,6 +75,7 @@ export default function HabitacionesClient({ groups, unavailableNames = [], chec
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className={styles.image}
                           loading="lazy"
+                          quality={75}
                         />
                         <div className={styles.categoryBadge}>{suite.category}</div>
                         {suite.badge && !isUnavailable && (

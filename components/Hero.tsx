@@ -2,20 +2,14 @@ import Image from 'next/image';
 import styles from './Hero.module.css';
 import HeroDatePicker from './HeroDatePicker';
 import HeroLiveSignals from './HeroLiveSignals';
+import VideoBackground from './VideoBackground';
 import { StarIcon, ShieldCheckIcon, CheckCircleIcon } from './icons';
 
 export default function Hero() {
   return (
     <section className={styles.hero} aria-label="Sección principal">
-      {/* Vídeo de fondo (Vimeo) — se oculta en mobile */}
-      <div className={styles.videoBackground} aria-hidden="true">
-        <iframe
-          src="https://player.vimeo.com/video/998914372?background=1&autoplay=1&loop=1&muted=1&byline=0&title=0&dnt=1"
-          className={styles.videoIframe}
-          allow="autoplay; fullscreen"
-          title="Video de fondo — Hotel Paraíso Encantado"
-        />
-      </div>
+      {/* Vídeo de fondo — carga diferida para no bloquear LCP */}
+      <VideoBackground />
 
       {/* Imagen de fondo fallback (siempre presente; cubierta por video en desktop) */}
       <div className={styles.heroBackground}>
@@ -24,7 +18,7 @@ export default function Hero() {
           alt="Suite Jungla — Paraíso Encantado, Xilitla"
           fill
           priority
-          quality={90}
+          quality={75}
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center' }}
         />
