@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { suites } from '@/data/suites';
+import { getAllPosts } from '@/lib/blog';
 
 const BASE = 'https://www.paraisoencantado.com';
 
@@ -112,6 +113,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  // ── Blog ─────────────────────────────────────────────────────────────────────
+  const blogIndex: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE}/blog`,
+      lastModified: SITE_UPDATED,
+      changeFrequency: 'weekly',
+      priority: 0.75,
+    },
+  ];
+
+  const blogPosts: MetadataRoute.Sitemap = getAllPosts().map((post) => ({
+    url: `${BASE}/blog/${post.slug}`,
+    lastModified: post.date,
+    changeFrequency: 'monthly' as const,
+    priority: 0.70,
+    images: post.image ? [`${BASE}${post.image}`] : undefined,
+  }));
+
   // ── Páginas individuales de suites (dinámicas) ───────────────────────────────
   const suitePages: MetadataRoute.Sitemap = suites.map((suite) => ({
     url: `${BASE}/habitaciones/${suite.id}`,
@@ -125,5 +144,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       .map((img) => `${BASE}${encodeImgPath(img)}`),
   }));
 
-  return [...staticPages, ...suitePages];
+  return [...staticPages, ...blogIndex, ...blogPosts, ...suitePages];
 }
