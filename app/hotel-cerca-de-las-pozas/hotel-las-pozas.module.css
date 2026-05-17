@@ -1,0 +1,550 @@
+/* ===== HOTEL CERCA DE LAS POZAS LANDING ===== */
+
+.main { padding-top: 0; }
+
+/* ---- HERO ---- */
+.hero {
+  position: relative;
+  min-height: clamp(500px, 75vh, 700px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.heroImg { position: absolute; inset: 0; }
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 60%, transparent 100%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  padding: 100px 24px 64px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  color: white;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  opacity: 0.72;
+  margin-bottom: 16px;
+  letter-spacing: 0.04em;
+}
+
+.breadcrumb a { color: white; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.78;
+  margin-bottom: 14px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.heroContent h1 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(34px, 5.5vw, 58px);
+  font-weight: 300;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.heroContent h1 em { font-style: italic; color: var(--gold); }
+
+.heroSub {
+  font-size: clamp(15px, 2vw, 18px);
+  line-height: 1.65;
+  opacity: 0.9;
+  margin-bottom: 28px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.heroCtas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.heroCtaPrimary {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--forest);
+  padding: 14px 28px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  font-family: var(--font-jost, sans-serif);
+  transition: opacity 0.2s;
+}
+
+.heroCtaPrimary:hover { opacity: 0.9; }
+
+.heroCtaSecondary {
+  display: inline-block;
+  border: 1.5px solid rgba(255,255,255,0.7);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 400;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  font-family: var(--font-jost, sans-serif);
+  transition: all 0.2s;
+}
+
+.heroCtaSecondary:hover { background: rgba(255,255,255,0.15); }
+
+/* ---- DISTANCIA ---- */
+.distance {
+  background: var(--forest);
+  padding: 48px 24px;
+}
+
+.distanceInner {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+@media (max-width: 600px) {
+  .distanceInner { flex-direction: column; gap: 24px; }
+  .distanceDivider { display: none; }
+}
+
+.distanceStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: white;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.distanceNum {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(48px, 7vw, 72px);
+  font-weight: 300;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.distanceUnit {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.distanceLabel {
+  font-size: 13px;
+  opacity: 0.65;
+  font-family: var(--font-jost, sans-serif);
+  max-width: 160px;
+}
+
+.distanceDivider {
+  width: 1px;
+  height: 60px;
+  background: rgba(255,255,255,0.2);
+}
+
+/* ---- RAZONES ---- */
+.reasons {
+  background: white;
+  padding: 72px 24px;
+}
+
+.reasonsInner {
+  max-width: 960px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sectionEyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 10px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.reasonsInner h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  color: var(--forest);
+  margin-bottom: 48px;
+}
+
+.reasonsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .reasonsGrid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .reasonsGrid { grid-template-columns: 1fr; }
+}
+
+.reasonCard {
+  padding: 28px 24px;
+  background: var(--parch);
+  border-radius: 10px;
+}
+
+.reasonIcon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.reasonCard h3 {
+  font-family: var(--font-jost, sans-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--forest);
+  margin-bottom: 10px;
+}
+
+.reasonCard p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #666;
+}
+
+/* ---- SOBRE LAS POZAS ---- */
+.about {
+  background: var(--parch);
+  padding: 72px 24px;
+}
+
+.aboutInner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 768px) {
+  .aboutInner { grid-template-columns: 1fr; }
+}
+
+.aboutImg {
+  position: relative;
+  min-height: 340px;
+}
+
+.aboutContent {
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .aboutContent { padding: 32px 24px; }
+}
+
+.aboutEyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sage);
+  font-family: var(--font-jost, sans-serif);
+}
+
+.aboutContent h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(22px, 2.8vw, 30px);
+  font-weight: 400;
+  color: var(--forest);
+  line-height: 1.25;
+}
+
+.aboutContent p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #555;
+}
+
+.aboutLink {
+  display: inline-block;
+  color: var(--forest);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: var(--font-jost, sans-serif);
+  margin-top: 4px;
+}
+
+/* ---- SUITES ---- */
+.suites {
+  background: white;
+  padding: 72px 24px;
+}
+
+.suitesInner {
+  max-width: 960px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.suitesInner h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  color: var(--forest);
+  margin-bottom: 12px;
+}
+
+.suitesSubtitle {
+  font-size: 16px;
+  color: #777;
+  margin-bottom: 40px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.suitesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .suitesGrid { grid-template-columns: 1fr; }
+}
+
+.suiteCard {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+}
+
+.suiteCard:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+
+.suiteImg {
+  position: relative;
+  height: 200px;
+}
+
+.suiteOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 60%);
+}
+
+.suiteInfo {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suiteInfo h3 {
+  font-family: var(--font-cormorant), serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--forest);
+}
+
+.suiteInfo p {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #777;
+  flex: 1;
+}
+
+.suiteFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.suitePrice {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+  font-family: var(--font-jost, sans-serif);
+}
+
+.suiteLink {
+  font-size: 13px;
+  color: var(--sage);
+  font-family: var(--font-jost, sans-serif);
+}
+
+.suitesMore {
+  margin-top: 36px;
+}
+
+.suitesMoreBtn {
+  display: inline-block;
+  border: 1.5px solid var(--forest);
+  color: var(--forest);
+  padding: 12px 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  font-family: var(--font-jost, sans-serif);
+  transition: all 0.2s;
+}
+
+.suitesMoreBtn:hover {
+  background: var(--forest);
+  color: white;
+}
+
+/* ---- FAQ ---- */
+.faq {
+  background: var(--parch);
+  padding: 72px 24px;
+}
+
+.faqInner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.faqInner h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 400;
+  color: var(--forest);
+  margin-bottom: 36px;
+}
+
+.faqList { display: flex; flex-direction: column; }
+
+.faqItem {
+  border-bottom: 1px solid #ddd;
+  padding: 22px 0;
+}
+
+.faqItem:last-child { border-bottom: none; }
+
+.faqItem dt {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--forest);
+  margin-bottom: 8px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.faqItem dd {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #555;
+  margin: 0;
+}
+
+/* ---- CTA FINAL ---- */
+.finalCta {
+  background: var(--forest);
+  color: white;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.finalCtaInner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.finalCta h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(28px, 4.5vw, 46px);
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.finalCta > div > p {
+  font-size: 16px;
+  opacity: 0.8;
+  margin-bottom: 28px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.finalCtaBtns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.finalCtaPrimary {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--forest);
+  padding: 14px 32px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: var(--font-jost, sans-serif);
+  transition: opacity 0.2s;
+}
+
+.finalCtaPrimary:hover { opacity: 0.9; }
+
+.finalCtaWa {
+  display: inline-block;
+  background: #25d366;
+  color: white;
+  padding: 14px 32px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  font-family: var(--font-jost, sans-serif);
+  transition: opacity 0.2s;
+}
+
+.finalCtaWa:hover { opacity: 0.9; }
+
+.finalCtaNote {
+  font-size: 13px;
+  opacity: 0.55;
+  font-family: var(--font-jost, sans-serif);
+}

@@ -59,6 +59,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ],
     },
     {
+      url: `${BASE}/xilitla`,
+      lastModified: SITE_UPDATED,
+      changeFrequency: 'monthly',
+      priority: 0.80,
+      images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`],
+    },
+    {
+      url: `${BASE}/hotel-cerca-de-las-pozas`,
+      lastModified: SITE_UPDATED,
+      changeFrequency: 'monthly',
+      priority: 0.85,
+      images: [`${BASE}/images/atracciones/ruta-surrealista-pozas.png`],
+    },
+    {
       url: `${BASE}/sobre-nosotros`,
       lastModified: SITE_UPDATED,
       changeFrequency: 'monthly',
