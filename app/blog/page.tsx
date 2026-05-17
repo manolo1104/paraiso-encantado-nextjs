@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { getAllPosts } from '@/lib/blog';
 import styles from './blog.module.css';
 
+// Pre-render estático en build time — evita fs.readdirSync en producción Railway
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Blog de Viaje · Xilitla y la Huasteca Potosina | Hotel Paraíso Encantado',
   description:
