@@ -223,16 +223,63 @@ const toursSchema = {
   })),
 };
 
+const experienciasFaqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: '¿Qué tours ofrece el Hotel Paraíso Encantado?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Ofrecemos 5 tours con guía certificado: Expedición Tamul (Cascada Tamul + Sótano de las Huahuastecas), Ruta Surrealista (Las Pozas de Edward James), Cascadas del Meco, Paraíso Escalonado (Minas Viejas + Micos) y Ruta Acuática (Puente de Dios). Todos salen desde el hotel e incluyen transporte, guía y desayuno.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Cuánto cuesta el tour a la Cascada de Tamul?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'La Expedición Tamul tiene un precio de $1,450 MXN por persona e incluye: transporte privado, guía certificado, desayuno huasteco, entrada al Sótano de las Huahuastecas y recorrido en canoa hasta la Cascada de Tamul. La excursión dura entre 10 y 12 horas.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Necesito reservar los tours con anticipación?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, recomendamos reservar con al menos 24-48 horas de anticipación para garantizar disponibilidad. Puedes reservar a través de WhatsApp al +52 489-100-7679 o en nuestra página web.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Los tours a las Pozas de Edward James son diarios?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí, la Ruta Surrealista que incluye Las Pozas de Edward James tiene salidas diarias desde el hotel. El Jardín Surrealista está a solo 5 minutos caminando del hotel. Recuerda que Las Pozas cierra los martes y tiene horario de 9:00 AM a 4:00 PM.',
+      },
+    },
+  ],
+};
+
+const experienciasBreadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+    { '@type': 'ListItem', position: 2, name: 'Tours y Experiencias', item: 'https://www.paraisoencantado.com/experiencias' },
+  ],
+};
+
 export default function ExperienciasPage() {
   const whatsappTour = (tourName: string) =>
     `${WHATSAPP_URL}?text=Hola,%20me%20interesa%20el%20tour%20${encodeURIComponent(tourName)}`;
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(toursSchema) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toursSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(experienciasFaqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(experienciasBreadcrumbSchema) }} />
     <main className={styles.main}>
       {/* Breadcrumb */}
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">

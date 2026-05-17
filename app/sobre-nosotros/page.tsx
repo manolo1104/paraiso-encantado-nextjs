@@ -146,14 +146,43 @@ const identityReviews = [
   },
 ];
 
+const aboutFaqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: '¿Cuándo abrió el Hotel Paraíso Encantado?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'El Hotel Paraíso Encantado abrió sus puertas en 2018 con las primeras suites Jungla y Flor de Lis. Completó sus 13 suites en 2022 y en 2023 recibió una visita presidencial oficial, siendo el único hotel boutique de la región en lograrlo.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Dónde está ubicado exactamente el hotel?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Estamos en Xilitla, San Luis Potosí, Huasteca Potosina, a 400 metros del Jardín Surrealista de Edward James (Las Pozas) — 5 minutos caminando. Somos el hotel boutique más cercano a esta atracción Patrimonio Cultural de México.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '¿El hotel tiene algún compromiso ambiental?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Sí. Distribuimos nuestras 13 suites para causar el menor impacto posible en la flora nativa de Xilitla. La mayoría de los árboles y plantas que existían antes de la construcción siguen en pie. También trabajamos exclusivamente con productores locales en nuestro restaurante El Papán Huasteco.',
+      },
+    },
+  ],
+};
+
 // ── Componente ────────────────────────────────────────────────────────────────
 export default function SobreNosotrosPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutFaqSchema) }} />
 
       <main className={styles.main}>
         {/* Breadcrumb */}
