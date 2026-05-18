@@ -48,6 +48,8 @@ export default function Footer() {
             <li><a href="/restaurante">Restaurante</a></li>
             <li><a href="/galeria">Galería</a></li>
             <li><a href="/experiencias">Experiencias</a></li>
+            <li><a href="/paquetes">Paquetes Todo Incluido</a></li>
+            <li><a href="/grupos-eventos">Grupos y Eventos</a></li>
             <li><a href="/sobre-nosotros">Sobre Nosotros</a></li>
             <li><a href="/contacto">Contacto</a></li>
           </ul>
