@@ -188,6 +188,37 @@ export default function GruposEventosPage() {
           </div>
         </section>
 
+        {/* GALERÍA DEL ESPACIO */}
+        <section className={styles.galeriaSection} aria-labelledby="galeria-heading">
+          <div className={styles.galeriaInner}>
+            <p className={styles.eyebrow}>El espacio que tienes disponible</p>
+            <h2 id="galeria-heading" className={styles.sectionTitle}>
+              El hotel completo, <em>solo para ti</em>
+            </h2>
+            <div className={styles.galeriaGrid}>
+              {[
+                { src: '/images/Areas comunes/DSC09447-HDR.jpg', alt: 'Jardín y piscina spa del hotel — ideal para ceremonias', span: 'wide' },
+                { src: '/images/Areas comunes/DSC09471-HDR.jpg', alt: 'Terraza con vista — Hotel Paraíso Encantado', span: 'normal' },
+                { src: '/images/Areas comunes/DSC09461-HDR.jpg', alt: 'Área común del hotel para eventos', span: 'normal' },
+                { src: '/images/RESTAURANTE/DSC09682.jpg', alt: 'Restaurante El Papán Huasteco — catering para eventos', span: 'normal' },
+                { src: '/images/Areas comunes/DSC09462-HDR.jpg', alt: 'Jardines del hotel — espacio para celebraciones', span: 'normal' },
+                { src: '/images/Areas comunes/terraza.jpg', alt: 'Terraza panorámica del hotel', span: 'normal' },
+              ].map((img) => (
+                <div key={img.src} className={`${styles.galeriaItem} ${img.span === 'wide' ? styles.galeriaWide : ''}`}>
+                  <Image
+                    src={img.src} alt={img.alt}
+                    fill sizes="(max-width: 768px) 100vw, 50vw" quality={78}
+                    style={{ objectFit: 'cover' }}
+                  />
+                </div>
+              ))}
+            </div>
+            <p className={styles.galeriaNote}>
+              ¿Quieres ver el hotel en persona? <a href="https://wa.me/524891007679?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20visita%20para%20conocer%20el%20espacio." target="_blank" rel="noopener noreferrer">Agenda una visita guiada →</a>
+            </p>
+          </div>
+        </section>
+
         {/* FEATURES */}
         <section className={styles.featuresSection} aria-labelledby="features-heading">
           <div className={styles.featuresInner}>

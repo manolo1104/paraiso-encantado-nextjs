@@ -6,6 +6,37 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getAllSlugs, getAllPosts, getPost } from '@/lib/blog';
 import styles from './article.module.css';
 
+function slugify(text: string): string {
+  return text
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+interface Heading { level: number; text: string; id: string; }
+
+function extractHeadings(content: string): Heading[] {
+  const headings: Heading[] = [];
+  const regex = /^(#{2,3})\s+(.+)$/gm;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    const text = match[2].replace(/[*_`]/g, '').trim();
+    headings.push({ level: match[1].length, text, id: slugify(text) });
+  }
+  return headings;
+}
+
+const mdxComponents = {
+  h2: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h2 id={slugify(String(children))} {...props}>{children}</h2>
+  ),
+  h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 id={slugify(String(children))} {...props}>{children}</h3>
+  ),
+};
+
 const AUTHORS: Record<string, { name: string; role: string; bio: string; color: string; initial: string; sameAs: string }> = {
   'Hotel Paraíso Encantado': {
     name: 'Manolo Covarrubias',
@@ -71,6 +102,8 @@ export default async function ArticlePage({ params }: Props) {
   const related = allPosts.filter((p) => p.slug !== slug).slice(0, 3);
 
   const authorProfile = AUTHORS[post.author] ?? AUTHORS['Hotel Paraíso Encantado'];
+  const headings = extractHeadings(post.content);
+  const showToc = headings.length >= 4;
 
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -159,6 +192,20 @@ export default async function ArticlePage({ params }: Props) {
               </div>
             </header>
 
+            {/* TABLA DE CONTENIDOS — solo artículos con 4+ secciones */}
+            {showToc && (
+              <nav className={styles.toc} aria-label="Tabla de contenidos">
+                <p className={styles.tocTitle}>En este artículo</p>
+                <ul className={styles.tocList}>
+                  {headings.map((h) => (
+                    <li key={h.id} className={h.level === 3 ? styles.tocSubItem : styles.tocItem}>
+                      <a href={`#${h.id}`}>{h.text}</a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
+
             {/* CTA SUPERIOR — visible en móvil donde el sidebar no aparece */}
             <div className={styles.inlineCta}>
               <p className={styles.inlineCtaText}>
@@ -168,7 +215,7 @@ export default async function ArticlePage({ params }: Props) {
             </div>
 
             <div className={styles.prose}>
-              <MDXRemote source={post.content} />
+              <MDXRemote source={post.content} components={mdxComponents} />
             </div>
 
             {/* CTA INFERIOR — al terminar de leer */}

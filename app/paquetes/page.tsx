@@ -87,6 +87,9 @@ const PAQUETES = [
     personas: '2 personas',
     image: '/images/FLOR DE LIS 1/PORTADA.jpg',
     imageAlt: 'Suite Flor de Liz con spa privado al amanecer — Paquete Noche de Selva',
+    experienceImg: '/images/atracciones/jardin_de_edward_james.jpg',
+    experienceAlt: 'Las Pozas de Edward James incluidas en el paquete',
+    experienceLabel: 'Visita Las Pozas incluida',
     includes: [
       '2 noches en suite con spa privado al aire libre',
       '2 desayunos huastecos para dos (El Papán)',
@@ -111,6 +114,9 @@ const PAQUETES = [
     personas: '2 personas',
     image: '/images/atracciones/cascada_de_tamul.jpg',
     imageAlt: 'Cascada de Tamul — Tour incluido en el Paquete Ruta de las Pozas',
+    experienceImg: '/images/atracciones/jardin-edward-james-aerial.png',
+    experienceAlt: 'Vista aérea Las Pozas de Edward James',
+    experienceLabel: 'Las Pozas + Tamul incluidos',
     includes: [
       '3 noches en suite (libre elección)',
       '3 desayunos huastecos para dos (El Papán)',
@@ -135,6 +141,9 @@ const PAQUETES = [
     personas: '4–6 personas',
     image: '/images/HELECHOS 1/PORTADA.jpg',
     imageAlt: 'Suite Helechos familiar — hasta 6 personas, acceso a piscina',
+    experienceImg: '/images/atracciones/tamasopo.jpg',
+    experienceAlt: 'Cascadas de Tamasopo — Huasteca Potosina',
+    experienceLabel: 'Tour Las Pozas para la familia',
     includes: [
       '3 noches en suite familiar Helechos (hasta 6 personas)',
       'Desayunos huastecos para toda la familia',
@@ -324,6 +333,19 @@ export default function PaquetesPage() {
                         </li>
                       ))}
                     </ul>
+
+                    {/* Imagen de la experiencia principal incluida */}
+                    <div className={styles.cardExpImg}>
+                      <Image
+                        src={p.experienceImg}
+                        alt={p.experienceAlt}
+                        fill
+                        sizes="(max-width: 768px) 90vw, 300px"
+                        quality={75}
+                        style={{ objectFit: 'cover' }}
+                      />
+                      <span className={styles.cardExpLabel}>{p.experienceLabel}</span>
+                    </div>
 
                     <div className={styles.cardPricing}>
                       <div>
