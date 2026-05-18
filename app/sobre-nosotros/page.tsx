@@ -70,8 +70,8 @@ const aboutSchema = {
       ],
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: 4.6,
-        reviewCount: 519,
+        ratingValue: 4.8,
+        reviewCount: 514,
         bestRating: 5,
       },
       hasOfferCatalog: {
@@ -248,8 +248,8 @@ export default function SobreNosotrosPage() {
           <div className={styles.statsGrid}>
             {[
               { num: '13', label: 'Suites únicas' },
-              { num: '4.6★', label: 'Estrellas en Google' },
-              { num: '519+', label: 'Reseñas verificadas' },
+              { num: '4.8★', label: 'Estrellas en Google' },
+              { num: '514+', label: 'Reseñas verificadas' },
               { num: '5 min', label: 'A pie del Jardín de Edward James' },
               { num: '2018', label: 'Año de fundación' },
             ].map((s) => (

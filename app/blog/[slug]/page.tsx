@@ -6,6 +6,17 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getAllSlugs, getAllPosts, getPost } from '@/lib/blog';
 import styles from './article.module.css';
 
+const AUTHORS: Record<string, { name: string; role: string; bio: string; color: string; initial: string; sameAs: string }> = {
+  'Hotel Paraíso Encantado': {
+    name: 'Manolo Covarrubias',
+    role: 'Fundador · Hotel Paraíso Encantado',
+    bio: 'Nació en la Huasteca Potosina y decidió que el turismo debía enriquecer al territorio. Fundó Paraíso Encantado en 2018 y lleva años explorando cada rincón de Xilitla y la sierra potosina.',
+    color: '#1a2e1a',
+    initial: 'M',
+    sameAs: 'https://www.paraisoencantado.com/sobre-nosotros',
+  },
+};
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -56,18 +67,32 @@ export default async function ArticlePage({ params }: Props) {
   const allPosts = getAllPosts();
   const related = allPosts.filter((p) => p.slug !== slug).slice(0, 3);
 
+  const authorProfile = AUTHORS[post.author] ?? AUTHORS['Hotel Paraíso Encantado'];
+
   const articleSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: post.title,
     description: post.description,
-    image: `https://www.paraisoencantado.com${post.image}`,
+    image: {
+      '@type': 'ImageObject',
+      url: `https://www.paraisoencantado.com${post.image}`,
+      description: post.imageAlt,
+    },
     datePublished: post.date,
     dateModified: post.date,
+    wordCount: post.readTime * 200,
+    inLanguage: 'es-MX',
     author: {
-      '@type': 'Organization',
-      name: post.author,
-      url: 'https://www.paraisoencantado.com',
+      '@type': 'Person',
+      name: authorProfile.name,
+      jobTitle: authorProfile.role,
+      url: authorProfile.sameAs,
+      worksFor: {
+        '@type': 'Hotel',
+        name: 'Hotel Paraíso Encantado',
+        url: 'https://www.paraisoencantado.com',
+      },
     },
     publisher: {
       '@type': 'Organization',
@@ -121,16 +146,34 @@ export default async function ArticlePage({ params }: Props) {
               <p className={styles.category}>{post.category}</p>
               <h1>{post.title}</h1>
               <div className={styles.meta}>
-                <span>{post.author}</span>
-                <span>·</span>
-                <span>{post.date}</span>
-                <span>·</span>
+                <span className={styles.metaAuthor}>{authorProfile.name}</span>
+                <span aria-hidden="true">·</span>
+                <time dateTime={post.date}>
+                  {new Date(post.date + 'T12:00:00').toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </time>
+                <span aria-hidden="true">·</span>
                 <span>{post.readTime} min de lectura</span>
               </div>
             </header>
 
             <div className={styles.prose}>
               <MDXRemote source={post.content} />
+            </div>
+
+            {/* AUTOR BIO */}
+            <div className={styles.authorBio}>
+              <div className={styles.authorAvatar} style={{ background: authorProfile.color }} aria-hidden="true">
+                {authorProfile.initial}
+              </div>
+              <div className={styles.authorInfo}>
+                <p className={styles.authorLabel}>Escrito por</p>
+                <p className={styles.authorName}>{authorProfile.name}</p>
+                <p className={styles.authorRole}>{authorProfile.role}</p>
+                <p className={styles.authorText}>{authorProfile.bio}</p>
+                <Link href={authorProfile.sameAs} className={styles.authorLink}>
+                  Conoce al equipo →
+                </Link>
+              </div>
             </div>
           </article>
 
