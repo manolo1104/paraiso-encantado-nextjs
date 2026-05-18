@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Leaf, BookOpen, Sun, MessageCircle, Star, UtensilsCrossed } from 'lucide-react';
+import RestaurantGallery from '@/components/RestaurantGallery';
 import styles from './restaurante.module.css';
 
 const BOOKING_URL = '/reservar';
@@ -320,21 +321,14 @@ export default function RestaurantePage() {
           </div>
         </section>
 
-        {/* Galería extra */}
+        {/* Galería extra — carrusel en móvil, grid en desktop */}
         <section className={styles.gallerySection}>
-          <div className={styles.galleryGrid}>
-            {restaurantImages.slice(3).map((src, i) => (
-              <div key={i} className={styles.galleryItem}>
-                <Image
-                  src={src}
-                  alt={`El Papán Huasteco — ambiente ${i + 4}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className={styles.galleryImg}
-                />
-              </div>
-            ))}
-          </div>
+          <RestaurantGallery
+            images={restaurantImages.slice(3).map((src, i) => ({
+              src,
+              alt: `El Papán Huasteco — ambiente y gastronomía ${i + 4}`,
+            }))}
+          />
         </section>
 
         {/* Menú */}

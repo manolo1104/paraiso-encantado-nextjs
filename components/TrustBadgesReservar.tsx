@@ -31,15 +31,21 @@ export default function TrustBadgesReservar() {
     <>
       <style>{`
         .trust-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          display: flex;
+          overflow-x: auto;
           gap: 8px;
-          margin: 0 16px 20px;
+          margin: 0 0 20px;
+          padding: 0 16px 4px;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
+        .trust-grid::-webkit-scrollbar { display: none; }
         @media (min-width: 640px) {
           .trust-grid {
+            display: grid;
             grid-template-columns: repeat(4, 1fr);
-            margin: 0 0 20px;
+            overflow-x: visible;
+            padding: 0;
           }
         }
         .trust-badge {
@@ -49,9 +55,15 @@ export default function TrustBadgesReservar() {
           background: rgba(30,48,18,0.03);
           border: 1px solid rgba(30,48,18,0.08);
           border-radius: 6px;
-          padding: 10px 12px;
-          min-height: 56px;
+          padding: 10px 14px;
+          min-height: 52px;
+          min-width: 170px;
+          flex-shrink: 0;
           box-sizing: border-box;
+          white-space: nowrap;
+        }
+        @media (min-width: 640px) {
+          .trust-badge { min-width: 0; white-space: normal; }
         }
         .trust-icon-wrap {
           color: #c9a97a;

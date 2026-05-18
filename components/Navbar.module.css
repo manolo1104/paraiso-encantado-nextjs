@@ -153,27 +153,33 @@
 /* Mobile Menu */
 .mobileMenu {
   display: none;
-  position: absolute;
+  position: fixed;
   top: 80px;
   left: 0;
   right: 0;
+  bottom: 0;
   background: var(--forest);
   padding: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height var(--transition-slow), padding var(--transition-normal);
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  z-index: 999;
 }
 
 .mobileMenuOpen {
-  max-height: 500px;
-  padding: 24px 0 32px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  padding: 20px 0 40px;
 }
 
 .mobileMenu ul {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 0;
 }
 
 .mobileMenu li a {
@@ -184,9 +190,14 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   color: rgba(250, 248, 245, 0.85);
-  padding: 14px 24px;
+  padding: 13px 24px;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: color var(--transition-fast);
   text-align: center;
+  width: 100%;
 }
 
 .mobileMenu li a:hover {
