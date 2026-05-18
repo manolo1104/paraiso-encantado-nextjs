@@ -6,6 +6,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import TrackingSetup from '@/components/TrackingSetup';
+import ExitIntentPopup from '@/components/ExitIntentPopup';
+import CookieBanner from '@/components/CookieBanner';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -78,6 +80,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         {!isAdmin && <Footer />}
         {!isAdmin && <WhatsAppButton />}
+        {!isAdmin && <ExitIntentPopup />}
+        {!isAdmin && <CookieBanner />}
       </body>
     </html>
   );

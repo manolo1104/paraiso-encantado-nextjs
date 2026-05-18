@@ -1,0 +1,237 @@
+/* ===== EXIT INTENT POPUP ===== */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: #faf8f5;
+  border-radius: 14px;
+  overflow: hidden;
+  max-width: 460px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.25);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: background 0.2s;
+}
+
+.close:hover { background: rgba(0,0,0,0.45); }
+
+.imgStrip {
+  height: 120px;
+  background: linear-gradient(135deg, var(--forest, #1a2e1a) 0%, #2d5a3d 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imgStrip::after {
+  content: '🌿';
+  font-size: 48px;
+  filter: grayscale(0.2);
+}
+
+.badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: var(--gold, #c9a96e);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.body {
+  padding: 28px 32px 32px;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sage, #6b8c6b);
+  margin: 0 0 8px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.title {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(24px, 4vw, 30px);
+  font-weight: 400;
+  color: var(--forest, #1a2e1a);
+  line-height: 1.2;
+  margin: 0 0 16px;
+}
+
+.title em { font-style: italic; color: var(--gold, #c9a96e); }
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.list li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #555;
+  padding-left: 18px;
+  position: relative;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--sage, #6b8c6b);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inputRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mailIcon {
+  position: absolute;
+  left: 12px;
+  color: #aaa;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px 12px 36px;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  font-size: 15px;
+  font-family: var(--font-jost, sans-serif);
+  color: #333;
+  background: white;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.input:focus { outline: none; border-color: var(--forest, #1a2e1a); }
+
+.btn {
+  background: var(--forest, #1a2e1a);
+  color: white;
+  border: none;
+  padding: 13px 20px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-jost, sans-serif);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn:hover { background: #1a3a2a; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.legal {
+  font-size: 11px;
+  color: #aaa;
+  font-family: var(--font-jost, sans-serif);
+  margin: 0;
+  text-align: center;
+}
+
+/* Success state */
+.success {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.successCheck {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #e8f5e9;
+  color: #27ae60;
+  font-size: 22px;
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.successTitle {
+  font-family: var(--font-cormorant), serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--forest, #1a2e1a);
+  margin: 0 0 8px;
+}
+
+.successSub {
+  font-size: 14px;
+  color: #777;
+  font-family: var(--font-jost, sans-serif);
+  margin: 0 0 20px;
+}
+
+.successClose {
+  background: none;
+  border: none;
+  color: var(--forest, #1a2e1a);
+  font-size: 14px;
+  font-family: var(--font-jost, sans-serif);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
