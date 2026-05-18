@@ -4,14 +4,32 @@
 
 /* ---- HERO ---- */
 .hero {
-  background: var(--forest);
+  position: relative;
+  min-height: clamp(420px, 60vh, 560px);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
   color: white;
-  padding: 96px 24px 72px;
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 55%, rgba(0,0,0,0.15) 100%);
 }
 
 .heroContent {
+  position: relative;
+  z-index: 1;
   max-width: 720px;
+  width: 100%;
   margin: 0 auto;
+  padding: 0 24px 64px;
 }
 
 .breadcrumb {
@@ -288,6 +306,107 @@
 }
 
 .ctaSecondary:hover { background: var(--forest); color: white; }
+
+/* ---- PAQUETE TEMPORADA ---- */
+.cardTemporada {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--forest);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 768px) { .cardTemporada { grid-template-columns: 1fr; } }
+
+.cardTemporadaImg {
+  position: relative;
+  min-height: 280px;
+}
+
+.cardTemporadaOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+}
+
+.cardTemporadaBody {
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: white;
+}
+
+@media (max-width: 768px) { .cardTemporadaBody { padding: 28px 24px; } }
+
+.badgeTemporada {
+  display: inline-block;
+  background: var(--gold);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-family: var(--font-jost, sans-serif);
+  align-self: flex-start;
+}
+
+.cardTemporadaName {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 400;
+  color: white;
+  margin: 0;
+}
+
+.cardTemporadaTagline {
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+  font-family: var(--font-jost, sans-serif);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.cardTemporadaPricing {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.cardTemporadaPrice {
+  font-family: var(--font-cormorant), serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--gold);
+}
+
+.cardTemporadaPriceNote {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  font-family: var(--font-jost, sans-serif);
+}
+
+.cardTemporadaCta {
+  display: inline-block;
+  background: var(--gold);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: var(--font-jost, sans-serif);
+  align-self: flex-start;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+}
+
+.cardTemporadaCta:hover { opacity: 0.88; }
 
 /* ---- CUSTOM STRIP ---- */
 .customStrip {

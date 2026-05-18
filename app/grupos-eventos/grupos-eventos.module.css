@@ -247,6 +247,22 @@
   top: 2px;
 }
 
+.tipoPrice {
+  font-size: 14px;
+  color: #666;
+  font-family: var(--font-jost, sans-serif);
+  margin: 4px 0 0;
+  background: rgba(201,169,110,0.1);
+  border-left: 2px solid var(--gold);
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+
+.tipoPrice strong {
+  color: var(--forest);
+  font-weight: 600;
+}
+
 .tipoCta {
   display: inline-block;
   background: var(--forest);

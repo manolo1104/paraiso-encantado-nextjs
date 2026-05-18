@@ -21,6 +21,9 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamic = 'force-static';
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   return getAllSlugs().map((slug) => ({ slug }));
 }
@@ -156,8 +159,30 @@ export default async function ArticlePage({ params }: Props) {
               </div>
             </header>
 
+            {/* CTA SUPERIOR — visible en móvil donde el sidebar no aparece */}
+            <div className={styles.inlineCta}>
+              <p className={styles.inlineCtaText}>
+                ¿Planeas visitar Xilitla? Estamos a 5 min caminando de Las Pozas.
+              </p>
+              <a href="/reservar" className={styles.inlineCtaBtn}>Ver disponibilidad →</a>
+            </div>
+
             <div className={styles.prose}>
               <MDXRemote source={post.content} />
+            </div>
+
+            {/* CTA INFERIOR — al terminar de leer */}
+            <div className={styles.inlineCtaBottom}>
+              <div className={styles.inlineCtaBottomInner}>
+                <p className={styles.inlineCtaBottomTitle}>Hotel Paraíso Encantado</p>
+                <p className={styles.inlineCtaBottomSub}>
+                  13 suites con spa privado · A 5 minutos de Las Pozas · Desde $1,200 MXN
+                </p>
+                <div className={styles.inlineCtaBottomActions}>
+                  <a href="/reservar" className={styles.inlineCtaBottomPrimary}>Reservar suite</a>
+                  <a href="/habitaciones" className={styles.inlineCtaBottomSecondary}>Ver las 13 suites</a>
+                </div>
+              </div>
             </div>
 
             {/* AUTOR BIO */}

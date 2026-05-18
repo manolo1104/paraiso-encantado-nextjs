@@ -79,8 +79,8 @@ export default function GruposEventosPage() {
         <section className={styles.hero}>
           <div className={styles.heroImg}>
             <Image
-              src="/images/Areas comunes/DSC09447-HDR.jpg"
-              alt="Jardín y piscina del Hotel Paraíso Encantado — bodas y eventos en Xilitla"
+              src="/images/Areas comunes/DSC09456-HDR.jpg"
+              alt="Jardín tropical del Hotel Paraíso Encantado — bodas y eventos en Xilitla"
               fill priority quality={80}
               sizes="100vw"
               style={{ objectFit: 'cover', objectPosition: 'center 40%' }}
@@ -151,6 +151,7 @@ export default function GruposEventosPage() {
                   <li>Tour a Las Pozas para todos los invitados</li>
                   <li>Coordinación total: floristería, música, fotografía local</li>
                 </ul>
+                <p className={styles.tipoPrice}>Inversión desde <strong>$45,000 MXN</strong> · Hotel completo por noche</p>
                 <a href="#cotizar" className={styles.tipoCta}>Cotizar boda →</a>
               </div>
             </div>
@@ -174,12 +175,13 @@ export default function GruposEventosPage() {
                   y RH para hacer el retiro perfecto.
                 </p>
                 <ul className={styles.tipoList}>
-                  <li>Sala de reuniones al aire libre con equipo A/V</li>
-                  <li>Catering de desayunos, comidas y cenas</li>
+                  <li>Espacio de reunión al aire libre con pantalla y proyector</li>
+                  <li>Catering de desayunos, comidas y cenas del equipo</li>
                   <li>Actividades de team building (tours, senderismo)</li>
                   <li>Facturación a empresa con RFC</li>
                   <li>Traslados desde Tampico o San Luis Potosí</li>
                 </ul>
+                <p className={styles.tipoPrice}>Inversión desde <strong>$38,000 MXN</strong> · Hotel completo por noche</p>
                 <a href="#cotizar" className={styles.tipoCta}>Cotizar retiro →</a>
               </div>
             </div>

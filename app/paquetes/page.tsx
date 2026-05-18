@@ -78,20 +78,20 @@ const paquetesSchema = {
 
 const PAQUETES = [
   {
-    id: 'romantica',
+    id: 'selva',
     badge: 'Más solicitado',
     badgeColor: 'gold' as const,
-    name: 'Escapada Romántica',
-    tagline: 'Para los que necesitan desconectarse — juntos',
+    name: 'Noche de Selva',
+    tagline: 'La selva, el spa y la persona que amas. Nada más.',
     noches: 2,
     personas: '2 personas',
     image: '/images/FLOR DE LIS 1/PORTADA.jpg',
-    imageAlt: 'Suite Flor de Liz con spa privado y vistas al bosque — Escapada Romántica',
+    imageAlt: 'Suite Flor de Liz con spa privado al amanecer — Paquete Noche de Selva',
     includes: [
       '2 noches en suite con spa privado al aire libre',
       '2 desayunos huastecos para dos (El Papán)',
       'Visita a Las Pozas de Edward James coordinada',
-      'Decoración romántica en suite (flores, velas)',
+      'Decoración romántica en suite (flores y velas)',
       'Botella de vino de bienvenida',
       'Check-in anticipado sujeto a disponibilidad',
     ],
@@ -99,18 +99,18 @@ const PAQUETES = [
     priceNote: 'por pareja, 2 noches',
     saving: 'Ahorras ~$800 vs. reservar por separado',
     cta: '/reservar',
-    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Escapada%20Romántica.%20¿Tienen%20disponibilidad%3F',
+    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Noche%20de%20Selva.%20%C2%BFTienen%20disponibilidad%3F',
   },
   {
-    id: 'aventura',
+    id: 'pozas',
     badge: 'La experiencia completa',
     badgeColor: 'forest' as const,
-    name: 'Aventura Huasteca',
-    tagline: 'Para los que quieren vivir la Huasteca de verdad',
+    name: 'Ruta de las Pozas',
+    tagline: 'Tres días. Dos cascadas. Una Huasteca que no olvidarás.',
     noches: 3,
     personas: '2 personas',
     image: '/images/atracciones/cascada_de_tamul.jpg',
-    imageAlt: 'Cascada de Tamul — Tour incluido en el paquete Aventura Huasteca',
+    imageAlt: 'Cascada de Tamul — Tour incluido en el Paquete Ruta de las Pozas',
     includes: [
       '3 noches en suite (libre elección)',
       '3 desayunos huastecos para dos (El Papán)',
@@ -123,18 +123,18 @@ const PAQUETES = [
     priceNote: 'por pareja, 3 noches',
     saving: 'Ahorras ~$1,400 vs. reservar por separado',
     cta: '/reservar',
-    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Aventura%20Huasteca.%20¿Tienen%20disponibilidad%3F',
+    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Ruta%20de%20las%20Pozas.%20%C2%BFTienen%20disponibilidad%3F',
   },
   {
     id: 'familiar',
     badge: 'Ideal para familias',
     badgeColor: 'sage' as const,
-    name: 'Explorer Familiar',
-    tagline: 'Para familias que quieren que sus hijos recuerden este viaje',
+    name: 'Familia Huasteca',
+    tagline: 'El viaje que tus hijos van a contar de adultos.',
     noches: 3,
     personas: '4–6 personas',
     image: '/images/HELECHOS 1/PORTADA.jpg',
-    imageAlt: 'Suite Helechos familiar — hasta 6 personas, terraza privada',
+    imageAlt: 'Suite Helechos familiar — hasta 6 personas, acceso a piscina',
     includes: [
       '3 noches en suite familiar Helechos (hasta 6 personas)',
       'Desayunos huastecos para toda la familia',
@@ -147,9 +147,32 @@ const PAQUETES = [
     priceNote: 'por familia de 4, 3 noches',
     saving: 'Ahorras ~$2,100 vs. reservar por separado',
     cta: '/reservar',
-    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Explorer%20Familiar.%20¿Tienen%20disponibilidad%3F',
+    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Familia%20Huasteca.%20%C2%BFTienen%20disponibilidad%3F',
   },
 ];
+
+const PAQUETE_TEMPORADA = {
+  id: 'temporada',
+  badge: 'EDICIÓN LIMITADA',
+  name: 'Selva en Silencio',
+  tagline: 'Temporada baja: el hotel más vacío, la naturaleza más presente.',
+  noches: 3,
+  personas: '2 personas',
+  image: '/images/Areas comunes/DSC09447-HDR.jpg',
+  imageAlt: 'Jardín y piscina del hotel en temporada baja — Paquete Selva en Silencio',
+  includes: [
+    '3 noches en la suite de tu elección',
+    '3 desayunos huastecos para dos',
+    'Tour a Las Pozas con grupo reducido (máx. 6 personas)',
+    'Sesión fotográfica en Las Pozas al amanecer',
+    'Late check-out hasta las 2 PM incluido',
+    'Precio especial de temporada baja',
+  ],
+  price: 6900,
+  priceNote: 'por pareja, 3 noches · temporada baja',
+  saving: 'Disponible oct–nov y ene–feb · Precio especial',
+  waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Selva%20en%20Silencio.%20%C2%BFEst%C3%A1%20disponible%3F',
+};
 
 const FAQ = [
   {
@@ -159,6 +182,14 @@ const FAQ = [
   {
     q: '¿Los precios incluyen impuestos?',
     a: 'Los precios mostrados son precio final en pesos mexicanos. No hay cargos ocultos ni comisiones de plataformas.',
+  },
+  {
+    q: '¿Puedo cambiar la suite incluida en el paquete?',
+    a: 'Sí. Los paquetes están diseñados con suites base, pero puedes actualizar a cualquier suite disponible. Si la suite que quieres tiene un precio mayor, solo cubres la diferencia. Pregúntanos por WhatsApp.',
+  },
+  {
+    q: '¿Los niños pagan igual que los adultos?',
+    a: 'Niños menores de 5 años son gratuitos. De 6 a 11 años pagan 50% del costo de adulto adicional. Para el paquete Familia Huasteca el precio ya contempla 2 adultos y 2 niños de hasta 12 años.',
   },
   {
     q: '¿Cómo reservo un paquete?',
@@ -178,6 +209,16 @@ export default function PaquetesPage() {
 
         {/* HERO */}
         <section className={styles.hero}>
+          <div className={styles.heroBg}>
+            <Image
+              src="/images/Areas comunes/DSC09447-HDR.jpg"
+              alt="Jardín y piscina spa — Hotel Paraíso Encantado, Xilitla"
+              fill priority quality={80}
+              sizes="100vw"
+              style={{ objectFit: 'cover', objectPosition: 'center 55%' }}
+            />
+            <div className={styles.heroOverlay} />
+          </div>
           <div className={styles.heroContent}>
             <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
               <Link href="/">Inicio</Link>
@@ -209,6 +250,47 @@ export default function PaquetesPage() {
             <p className={styles.sectionSub}>
               Todos incluyen suite con amenidades completas, WiFi y estacionamiento privado.
             </p>
+
+            {/* PAQUETE TEMPORADA */}
+            <div className={styles.cardTemporada}>
+              <div className={styles.cardTemporadaImg}>
+                <Image
+                  src={PAQUETE_TEMPORADA.image}
+                  alt={PAQUETE_TEMPORADA.imageAlt}
+                  fill sizes="(max-width: 768px) 100vw, 40vw" quality={80}
+                  style={{ objectFit: 'cover' }}
+                />
+                <div className={styles.cardTemporadaOverlay} />
+              </div>
+              <div className={styles.cardTemporadaBody}>
+                <span className={styles.badgeTemporada}>{PAQUETE_TEMPORADA.badge}</span>
+                <h3 className={styles.cardTemporadaName}>{PAQUETE_TEMPORADA.name}</h3>
+                <p className={styles.cardTemporadaTagline}>{PAQUETE_TEMPORADA.tagline}</p>
+                <div className={styles.cardMeta} style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <span><Calendar size={13} strokeWidth={1.8} />{PAQUETE_TEMPORADA.noches} noches</span>
+                  <span><Users size={13} strokeWidth={1.8} />{PAQUETE_TEMPORADA.personas}</span>
+                </div>
+                <ul className={styles.includes} style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  {PAQUETE_TEMPORADA.includes.map((item) => (
+                    <li key={item}>
+                      <Check size={13} strokeWidth={2.5} style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className={styles.cardTemporadaPricing}>
+                  <span className={styles.cardTemporadaPrice}>${PAQUETE_TEMPORADA.price.toLocaleString('es-MX')} MXN</span>
+                  <span className={styles.cardTemporadaPriceNote}>{PAQUETE_TEMPORADA.priceNote}</span>
+                </div>
+                <a
+                  href={`https://wa.me/524891007679?text=${PAQUETE_TEMPORADA.waMsg}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className={styles.cardTemporadaCta}
+                >
+                  Consultar disponibilidad
+                </a>
+              </div>
+            </div>
 
             <div className={styles.cards}>
               {PAQUETES.map((p) => (

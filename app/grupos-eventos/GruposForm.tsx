@@ -7,11 +7,12 @@ import styles from './grupos-eventos.module.css';
 type Status = 'idle' | 'sending' | 'success' | 'error';
 
 const TIPOS = ['Boda o celebración', 'Evento corporativo', 'Reunión familiar', 'Retiro o team building', 'Otro'];
+const PRESUPUESTOS = ['Menos de $30,000 MXN', '$30,000 – $80,000 MXN', '$80,000 – $150,000 MXN', 'Más de $150,000 MXN'];
 
 export default function GruposForm() {
   const [form, setForm] = useState({
     nombre: '', email: '', telefono: '',
-    tipo: '', personas: '', fechaTentativa: '', mensaje: '',
+    tipo: '', personas: '', fechaTentativa: '', presupuesto: '', mensaje: '',
     _hp: '',
   });
   const [status, setStatus] = useState<Status>('idle');
@@ -23,7 +24,7 @@ export default function GruposForm() {
     if (form._hp) return;
     setStatus('sending');
     try {
-      const mensajeCompleto = `SOLICITUD DE GRUPOS/EVENTOS\n\nTipo de evento: ${form.tipo || 'No especificado'}\nPersonas: ${form.personas || 'No especificado'}\n\nMensaje:\n${form.mensaje}`;
+      const mensajeCompleto = `SOLICITUD DE GRUPOS/EVENTOS\n\nTipo de evento: ${form.tipo || 'No especificado'}\nPersonas: ${form.personas || 'No especificado'}\nPresupuesto: ${form.presupuesto || 'No especificado'}\n\nMensaje:\n${form.mensaje}`;
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,6 +94,13 @@ export default function GruposForm() {
           <span>Número de personas</span>
           <input type="number" min={2} max={200} value={form.personas} onChange={e => set('personas', e.target.value)}
             placeholder="¿Cuántos asistentes?" />
+        </label>
+        <label className={styles.formField}>
+          <span>Presupuesto aproximado</span>
+          <select value={form.presupuesto} onChange={e => set('presupuesto', e.target.value)}>
+            <option value="">Selecciona un rango...</option>
+            {PRESUPUESTOS.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
         </label>
       </div>
 
