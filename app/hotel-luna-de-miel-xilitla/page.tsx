@@ -36,7 +36,7 @@ const schema = {
       image: 'https://www.paraisoencantado.com/images/LINDAVISTA/PORTADA.jpg',
       telephone: '+524891007679',
       address: { '@type': 'PostalAddress', addressLocality: 'Xilitla', addressRegion: 'San Luis Potosí', addressCountry: 'MX' },
-      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.6, reviewCount: 519, bestRating: 5 },
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.8, reviewCount: 514, bestRating: 5 },
     },
     {
       '@type': 'BreadcrumbList',
@@ -48,9 +48,14 @@ const schema = {
     {
       '@type': 'FAQPage',
       mainEntity: [
-        { '@type': 'Question', name: '¿Es Xilitla un buen destino para luna de miel?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Xilitla combina naturaleza tropical, el jardín surrealista de Edward James, spa privado en cada suite y gastronomía huasteca auténtica. Es uno de los destinos más especiales e íntimos de México para una escapada romántica.' } },
-        { '@type': 'Question', name: '¿Qué suites son las más románticas?', acceptedAnswer: { '@type': 'Answer', text: 'LindaVista (tina de hidromasaje, vistas panorámicas), Jungla (piscina spa privada en la selva), Lajas (vista a Xilitla, balcón privado) y Lirios 2 (balcón privado hacia los jardines).' } },
-        { '@type': 'Question', name: '¿Ofrecen decoración especial para luna de miel?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Si nos avisas que es luna de miel o aniversario al reservar, preparamos detalles especiales en la suite. Escríbenos por WhatsApp.' } },
+        { '@type': 'Question', name: '¿Es Xilitla un buen destino para luna de miel?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Xilitla combina naturaleza tropical única, el jardín surrealista de Edward James — único en el mundo — spa privado en cada suite y gastronomía huasteca auténtica. Pocas regiones de México ofrecen esa combinación de privacidad, belleza natural y experiencia cultural en un solo lugar.' } },
+        { '@type': 'Question', name: '¿Qué suites son las más románticas del hotel?', acceptedAnswer: { '@type': 'Answer', text: 'LindaVista: tina de hidromasaje y vistas panorámicas a la sierra. Jungla: piscina spa privada inmersa en la selva, completa privacidad. Lajas: balcón privado con vista a Xilitla y dos camas matrimoniales. Lirios 2: balcón privado hacia los jardines del hotel. Todas para máximo 4 personas — en pareja tienes el espacio para ustedes solos.' } },
+        { '@type': 'Question', name: '¿Ofrecen decoración especial para luna de miel o aniversario?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Al reservar, indícanos en los comentarios que es luna de miel o aniversario y preparamos detalles especiales en la suite sin costo adicional: flores, velas y un detalle de bienvenida. También puedes avisarnos por WhatsApp.' } },
+        { '@type': 'Question', name: '¿Qué actividades románticas hay cerca del hotel?', acceptedAnswer: { '@type': 'Answer', text: 'Las Pozas de Edward James a 5 min caminando — ideal al amanecer cuando está vacío. Tour privado en canoa a la Cascada de Tamul. Cenas a la luz de velas en El Papán Huasteco. Paseo al atardecer por el pueblo mágico de Xilitla. Y las noches en el spa privado de tu suite con la sierra al fondo.' } },
+        { '@type': 'Question', name: '¿En qué época del año es más romántico visitar Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'Octubre a abril es la temporada ideal: clima fresco (18-24°C), sin lluvia, cascadas en buen caudal y Las Pozas con su mejor luz. Diciembre y enero son especialmente mágicos por el ambiente del pueblo. Semana Santa y verano son temporada alta — más visitantes en Las Pozas.' } },
+        { '@type': 'Question', name: '¿Cuántas noches recomienda para una luna de miel en Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'Mínimo 3 noches para disfrutar el hotel, Las Pozas con calma y un tour a Tamul o a las cascadas. Con 4 noches puedes hacer el tour completo de la Huasteca y aún tener un día de descanso absoluto en el spa privado.' } },
+        { '@type': 'Question', name: '¿El hotel Paraíso Encantado está en el pueblo o alejado?', acceptedAnswer: { '@type': 'Answer', text: 'En el corazón de Xilitla, a 400 metros de Las Pozas y a 5 minutos a pie del centro del pueblo. Tienen estacionamiento privado gratuito y se puede llegar caminando a restaurantes, mercado y el mirador. Lo mejor de ambos mundos: naturaleza rodeándote y el pueblo a pasos.' } },
+        { '@type': 'Question', name: '¿Cuánto cuesta una noche en pareja en el Hotel Paraíso Encantado?', acceptedAnswer: { '@type': 'Answer', text: 'Las suites para parejas comienzan desde $1,500 MXN por noche (Lirios 1 y 2) hasta $1,900 MXN para las suites master con spa privado (Jungla, LindaVista, Flor de Liz). Persona adicional: $300 MXN. Las reservas de 2 noches o más solo requieren 50% de anticipo.' } },
       ],
     },
   ],
@@ -140,6 +145,49 @@ export default function LunaDePageMielPage() {
             </div>
             <div style={{ textAlign: 'center', marginTop: 32 }}>
               <Link href="/habitaciones" className={styles.moreSuites}>Ver las 13 Suites →</Link>
+            </div>
+          </div>
+        </section>
+
+        {/* MEJOR ÉPOCA */}
+        <section className={styles.reasons} style={{ background: 'var(--forest)', color: 'white' }}>
+          <div className={styles.reasonsInner}>
+            <p className={styles.eyebrowCenter} style={{ color: 'var(--gold)' }}>¿Cuándo ir?</p>
+            <h2 style={{ color: 'white' }}>La Mejor Época para tu Escapada</h2>
+            <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              {[
+                { mes: 'Oct – Dic', tipo: '✦ Temporada ideal', desc: 'Clima fresco (18-22°C), cascadas llenas, sin turistas masivos. Diciembre es mágico en el pueblo.' },
+                { mes: 'Ene – Mar', tipo: '✦ Temporada ideal', desc: 'Los meses más tranquilos del año. Las Pozas casi vacías en la mañana. Perfectas para fotos.' },
+                { mes: 'Abr – May', tipo: '★ Buena época', desc: 'Clima cálido, Semana Santa concurrida. Reserva con anticipación. Las cascadas aún tienen agua.' },
+                { mes: 'Jun – Sep', tipo: '— Temporada lluviosa', desc: 'Lluvia frecuente pero la selva está en su máximo esplendor. Pozas con agua cristalina.' },
+              ].map(e => (
+                <div key={e.mes} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 8, padding: '16px 20px', border: '1px solid rgba(255,255,255,0.12)' }}>
+                  <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 4px', fontFamily: 'var(--font-jost)' }}>{e.mes}</p>
+                  <p style={{ fontWeight: 600, fontSize: 13, margin: '0 0 8px', color: 'white' }}>{e.tipo}</p>
+                  <p style={{ fontSize: 13, opacity: 0.75, margin: 0, lineHeight: 1.6 }}>{e.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* TESTIMONIOS PAREJAS */}
+        <section className={styles.reasons}>
+          <div className={styles.reasonsInner}>
+            <p className={styles.eyebrowCenter}>Parejas que lo vivieron</p>
+            <h2>Lo que Dicen quienes Vinieron</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginTop: 32 }}>
+              {[
+                { text: 'Vinimos para nuestra luna de miel y fue el mejor regalo que nos pudimos dar. El spa privado, las vistas desde la terraza y Las Pozas a 5 minutos. El equipo del hotel preparó flores en la suite sin que pidiéramos nada. Regresamos el año que viene para el aniversario.', name: 'Valentina & Jorge M.', detail: 'Ciudad de México · Luna de miel · Nov 2024 · ★★★★★' },
+                { text: 'La tina de hidromasaje de LindaVista con vista a la sierra al amanecer — no existe nada igual en México. Fuimos a Las Pozas al día siguiente y éramos los únicos. Esa soledad compartida es algo que no se puede comprar en ninguna plataforma.', name: 'Fernanda O. & Ramón V.', detail: 'Guadalajara · Aniversario · Ene 2025 · ★★★★★' },
+                { text: 'Tres días que se sintieron como una semana. El hotel es pequeño pero precisamente por eso te tratan como si fuera tu casa. El restaurante, el spa privado, y el pueblo de Xilitla — todo perfecto para una pareja que quiere desconectarse.', name: 'Daniela M. & Carlos A.', detail: 'Monterrey · Escapada en pareja · Feb 2025 · ★★★★★' },
+              ].map(t => (
+                <div key={t.name} style={{ background: 'var(--parch)', borderRadius: 10, padding: '24px', borderLeft: '3px solid var(--gold)' }}>
+                  <p style={{ fontSize: 14, lineHeight: 1.8, color: '#444', fontStyle: 'italic', margin: '0 0 16px' }}>"{t.text}"</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--forest)', margin: 0 }}>{t.name}</p>
+                  <p style={{ fontSize: 12, color: '#999', margin: '3px 0 0' }}>{t.detail}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>

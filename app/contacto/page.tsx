@@ -67,18 +67,42 @@ const contactSchema = {
           closes: '21:00',
         },
       ],
+      areaServed: {
+        '@type': 'GeoCircle',
+        geoMidpoint: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
+        geoRadius: '500000',
+      },
       contactPoint: [
         {
           '@type': 'ContactPoint',
           contactType: 'reservations',
           telephone: '+524891007679',
           availableLanguage: ['Spanish', 'English'],
+          hoursAvailable: {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+            opens: '08:00',
+            closes: '21:00',
+          },
         },
         {
           '@type': 'ContactPoint',
           contactType: 'customer service',
           telephone: '+524891007601',
           availableLanguage: 'Spanish',
+          hoursAvailable: {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+            opens: '08:00',
+            closes: '21:00',
+          },
+        },
+        {
+          '@type': 'ContactPoint',
+          contactType: 'reservations',
+          contactOption: 'https://schema.org/TollFree',
+          url: 'https://wa.me/524891007679',
+          availableLanguage: ['Spanish', 'English'],
         },
       ],
       sameAs: [

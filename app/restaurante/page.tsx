@@ -80,6 +80,48 @@ const restaurantSchema = {
   },
 };
 
+// ── Menu Schema — activa rich results de menú con precios en Google ───────────
+const menuSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Menu',
+  name: 'Menú El Papán Huasteco',
+  description: 'Cocina huasteca tradicional con ingredientes locales. Especialidad en zacahuil, tortillas de comal y café de olla.',
+  url: 'https://www.paraisoencantado.com/restaurante',
+  hasMenuSection: [
+    {
+      '@type': 'MenuSection',
+      name: 'Desayunos Huastecos',
+      description: 'Servidos todos los días de 8:00 a 12:00. Todos incluyen café de olla.',
+      hasMenuItem: [
+        { '@type': 'MenuItem', name: 'Zacahuil', description: 'Tamal gigante de masa gruesa relleno de cerdo en adobo rojo, envuelto en hoja de plátano. Especialidad de la casa.', offers: { '@type': 'Offer', price: '120', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Desayuno Completo', description: 'Huevos al gusto, frijoles negros de olla, tortillas hechas a mano en comal, café de olla y jugo natural.', offers: { '@type': 'Offer', price: '130', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Enchiladas Huastecas', description: 'Tortillas enchiladas con salsa de jitomate, frijoles y queso fresco. Con huevo al gusto.', offers: { '@type': 'Offer', price: '90', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Tamales de Elote', description: 'Tamales dulces de elote fresco con crema y queso. Receta de temporada.', offers: { '@type': 'Offer', price: '80', priceCurrency: 'MXN' } },
+      ],
+    },
+    {
+      '@type': 'MenuSection',
+      name: 'Platillos Principales',
+      description: 'Cocina huasteca de temporada, de 12:00 a 20:00.',
+      hasMenuItem: [
+        { '@type': 'MenuItem', name: 'Pozole Rojo Huasteco', description: 'Caldo rojo con maíz cacahuazintle, cerdo y hierbas del monte. Con tostadas, cebolla y orégano.', offers: { '@type': 'Offer', price: '165', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Bocoles Rellenos', description: 'Tortillas gruesas de masa rellenas de frijoles y queso, cocinadas en comal de barro.', offers: { '@type': 'Offer', price: '110', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Caldo de Res Huasteco', description: 'Caldo de res con elote, chayote, papa y verduras del huerto. Nutritivo y reconfortante.', offers: { '@type': 'Offer', price: '145', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Garnachas Huastecas', description: 'Tortillas fritas con frijoles, carne deshebrada y salsa verde. El antojito más solicitado.', offers: { '@type': 'Offer', price: '85', priceCurrency: 'MXN' } },
+      ],
+    },
+    {
+      '@type': 'MenuSection',
+      name: 'Bebidas',
+      hasMenuItem: [
+        { '@type': 'MenuItem', name: 'Café de Olla', description: 'Café de la sierra potosina preparado en olla de barro con canela y piloncillo.', offers: { '@type': 'Offer', price: '35', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Agua de Jamaica', description: 'Agua fresca de flor de jamaica natural, sin conservadores.', offers: { '@type': 'Offer', price: '30', priceCurrency: 'MXN' } },
+        { '@type': 'MenuItem', name: 'Jugo Natural de Temporada', description: 'Jugos recién exprimidos según la fruta de temporada local.', offers: { '@type': 'Offer', price: '45', priceCurrency: 'MXN' } },
+      ],
+    },
+  ],
+};
+
 // ── Contenido ─────────────────────────────────────────────────────────────────
 
 const menuHighlights = [
@@ -210,6 +252,7 @@ export default function RestaurantePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(menuSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantFaqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantBreadcrumbSchema) }} />
 

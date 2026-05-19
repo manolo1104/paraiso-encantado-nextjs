@@ -105,6 +105,17 @@ export default async function ArticlePage({ params }: Props) {
   const headings = extractHeadings(post.content);
   const showToc = headings.length >= 4;
 
+  const articleBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+      { '@type': 'ListItem', position: 2, name: 'Blog de Viaje', item: 'https://www.paraisoencantado.com/blog' },
+      { '@type': 'ListItem', position: 3, name: post.category, item: 'https://www.paraisoencantado.com/blog' },
+      { '@type': 'ListItem', position: 4, name: post.title, item: `https://www.paraisoencantado.com/blog/${slug}` },
+    ],
+  };
+
   const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -147,6 +158,7 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleBreadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <main className={styles.main}>
 

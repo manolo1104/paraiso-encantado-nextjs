@@ -178,12 +178,23 @@ const toursSchema = {
     '@type': 'ListItem',
     position: i + 1,
     item: {
-      '@type': ['TouristAttraction', 'Product'],
+      '@type': ['TouristTrip', 'TouristAttraction', 'Product'],
       name: `${tour.name} — Tour Huasteca Potosina`,
       description: tour.description,
       url: `https://www.paraisoencantado.com/experiencias#${tour.id}`,
       image: `https://www.paraisoencantado.com${tour.image}`,
-      touristType: 'Adventure traveler',
+      touristType: ['Adventure traveler', 'Nature enthusiast'],
+      duration: tour.id === 'ruta-surrealista' ? 'PT8H' : tour.id === 'cascadas-meco' || tour.id === 'paraiso-escalonado' ? 'PT9H' : 'PT10H',
+      itinerary: {
+        '@type': 'ItemList',
+        itemListElement: tour.highlights.map((h, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: h,
+        })),
+      },
+      departureTime: '08:00',
+      arrivalTime: tour.id === 'ruta-surrealista' ? '16:00' : '18:00',
       offers: {
         '@type': 'Offer',
         price: tour.price.replace('$', '').replace(',', ''),

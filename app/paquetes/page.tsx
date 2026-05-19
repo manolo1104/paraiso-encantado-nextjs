@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   },
 };
 
+const SELLER = { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' };
+
 const paquetesSchema = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
@@ -30,14 +32,17 @@ const paquetesSchema = {
       position: 1,
       item: {
         '@type': 'Product',
-        name: 'Escapada Romántica',
-        description: '2 noches en suite con spa privado + 2 desayunos huastecos para dos + visita a Las Pozas de Edward James.',
+        name: 'Noche de Selva',
+        description: '2 noches en suite con spa privado + 2 desayunos huastecos para dos + visita coordinada a Las Pozas de Edward James + decoración romántica.',
+        image: 'https://www.paraisoencantado.com/images/FLOR DE LIS 1/PORTADA.jpg',
+        brand: SELLER,
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.9, reviewCount: 32, bestRating: 5 },
         offers: {
-          '@type': 'Offer',
-          priceCurrency: 'MXN',
-          price: 5200,
+          '@type': 'Offer', priceCurrency: 'MXN', price: 5200,
+          priceValidUntil: '2026-12-31',
           availability: 'https://schema.org/InStock',
-          seller: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado' },
+          url: 'https://www.paraisoencantado.com/paquetes',
+          seller: SELLER,
         },
       },
     },
@@ -46,14 +51,17 @@ const paquetesSchema = {
       position: 2,
       item: {
         '@type': 'Product',
-        name: 'Aventura Huasteca',
-        description: '3 noches + 3 desayunos para dos + tour a Las Pozas + tour a la Cascada de Tamul con guía local certificado.',
+        name: 'Ruta de las Pozas',
+        description: '3 noches + 3 desayunos para dos + tour Las Pozas + tour Cascada de Tamul con guía local certificado + traslados.',
+        image: 'https://www.paraisoencantado.com/images/atracciones/cascada_de_tamul.jpg',
+        brand: SELLER,
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.9, reviewCount: 41, bestRating: 5 },
         offers: {
-          '@type': 'Offer',
-          priceCurrency: 'MXN',
-          price: 8900,
+          '@type': 'Offer', priceCurrency: 'MXN', price: 8900,
+          priceValidUntil: '2026-12-31',
           availability: 'https://schema.org/InStock',
-          seller: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado' },
+          url: 'https://www.paraisoencantado.com/paquetes',
+          seller: SELLER,
         },
       },
     },
@@ -62,17 +70,29 @@ const paquetesSchema = {
       position: 3,
       item: {
         '@type': 'Product',
-        name: 'Explorer Familiar',
-        description: '3 noches en suite familiar Helechos (hasta 6 personas) + desayunos para toda la familia + tour a Las Pozas.',
+        name: 'Familia Huasteca',
+        description: '3 noches en suite familiar Helechos (hasta 6 personas) + desayunos + tour Las Pozas + kit bienvenida para niños.',
+        image: 'https://www.paraisoencantado.com/images/HELECHOS 1/PORTADA.jpg',
+        brand: SELLER,
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.8, reviewCount: 27, bestRating: 5 },
         offers: {
-          '@type': 'Offer',
-          priceCurrency: 'MXN',
-          price: 13500,
+          '@type': 'Offer', priceCurrency: 'MXN', price: 13500,
+          priceValidUntil: '2026-12-31',
           availability: 'https://schema.org/InStock',
-          seller: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado' },
+          url: 'https://www.paraisoencantado.com/paquetes',
+          seller: SELLER,
         },
       },
     },
+  ],
+};
+
+const paquetesBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+    { '@type': 'ListItem', position: 2, name: 'Paquetes Todo Incluido', item: 'https://www.paraisoencantado.com/paquetes' },
   ],
 };
 
@@ -214,6 +234,7 @@ export default function PaquetesPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(paquetesSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(paquetesBreadcrumb) }} />
       <main className={styles.main}>
 
         {/* HERO */}

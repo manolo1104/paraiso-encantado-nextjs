@@ -73,6 +73,29 @@ export default function GruposEventosPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(gruposSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Service',
+            name: 'Venue para Bodas — Hotel Paraíso Encantado',
+            serviceType: 'Wedding venue',
+            description: 'Alquiler exclusivo del hotel para bodas y celebraciones privadas en Xilitla, Huasteca Potosina. Jardín tropical, 13 suites boutique y restaurante de cocina huasteca.',
+            provider: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' },
+            areaServed: { '@type': 'Place', name: 'Xilitla, San Luis Potosí, México' },
+            offers: { '@type': 'Offer', priceCurrency: 'MXN', priceSpecification: { '@type': 'UnitPriceSpecification', price: 45000, priceCurrency: 'MXN', unitText: 'per night' } },
+          },
+          {
+            '@type': 'Service',
+            name: 'Retiro Corporativo — Hotel Paraíso Encantado',
+            serviceType: 'Corporate retreat',
+            description: 'Hotel completo para retiros corporativos, team building y reuniones de trabajo en la naturaleza de Xilitla. Hasta 78 personas hospedadas.',
+            provider: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' },
+            areaServed: { '@type': 'Place', name: 'Xilitla, San Luis Potosí, México' },
+            offers: { '@type': 'Offer', priceCurrency: 'MXN', priceSpecification: { '@type': 'UnitPriceSpecification', price: 38000, priceCurrency: 'MXN', unitText: 'per night' } },
+          },
+        ],
+      }) }} />
       <main className={styles.main}>
 
         {/* HERO */}

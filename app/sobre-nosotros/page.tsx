@@ -89,10 +89,17 @@ const aboutSchema = {
       familyName: 'Covarrubias',
       jobTitle: 'Fundador y Director',
       description: 'Fundador del Hotel Paraíso Encantado en Xilitla. Nació en la Huasteca Potosina y decidió que el turismo debía enriquecer el territorio, no extractarlo. Lleva años construyendo el hotel con su equipo local.',
+      image: {
+        '@type': 'ImageObject',
+        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg',
+        description: 'Manolo Covarrubias — Fundador Hotel Paraíso Encantado, Xilitla',
+      },
       worksFor: { '@id': 'https://www.paraisoencantado.com/#organization' },
       sameAs: [
         'https://www.instagram.com/_paraiso_encantado/',
         'https://www.facebook.com/cabanas.encantado/',
+        'https://www.youtube.com/@hotelparaisoencantadoxilit8111',
+        'https://www.linkedin.com/company/hotel-paraiso-encantado-xilitla/',
       ],
       knowsAbout: [
         'Huasteca Potosina',
