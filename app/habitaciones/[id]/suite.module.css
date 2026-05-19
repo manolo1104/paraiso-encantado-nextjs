@@ -2,6 +2,7 @@
   min-height: 100vh;
   background: var(--cream);
   padding-top: 80px; /* navbar height */
+  overflow-x: hidden; /* evita scroll horizontal por desbordamientos */
 }
 
 /* ---- BREADCRUMB ---- */
@@ -49,6 +50,8 @@
 .gallerySection {
   position: sticky;
   top: 96px;
+  min-width: 0; /* grid: permite que la columna se estreche por debajo de su contenido */
+  overflow: hidden;
 }
 
 .mainImage {
@@ -275,6 +278,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0; /* grid: permite que el aside se estreche, evita desbordamiento */
+  overflow: hidden;
 }
 
 .eyebrow {
@@ -314,6 +319,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow: hidden; /* no se sale de su columna */
+  min-width: 0;
 }
 
 .priceRow {
@@ -368,6 +375,8 @@
   color: var(--bark);
   border-top: 1px solid rgba(201, 169, 122, 0.2);
   padding-top: 10px;
+  overflow-wrap: break-word; /* texto largo no desborda */
+  word-break: break-word;
 }
 
 .priceTiers strong {
@@ -691,8 +700,15 @@
   border-bottom-color: var(--moss);
 }
 
-/* ---- MOBILE ---- */
-@media (max-width: 1024px) {
+/* ---- TABLET (entre 768-1024px): aside demasiado ancho para la pantalla ---- */
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr 360px;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
     gap: 32px;

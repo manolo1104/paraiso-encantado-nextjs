@@ -100,6 +100,9 @@ export default function SuiteDatePicker({
       overflow: 'hidden',
       marginBottom: 16,
       background: '#faf8f5',
+      minWidth: 0,
+      boxSizing: 'border-box',
+      width: '100%',
     }}>
       {/* Header */}
       <div style={{
@@ -119,14 +122,14 @@ export default function SuiteDatePicker({
 
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Date inputs */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, overflow: 'hidden' }}>
             <span style={labelSx}>Check-in</span>
             <input type="date" value={checkin} min={today}
               onChange={e => handleCheckin(e.target.value)}
               style={inputSx} />
           </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, overflow: 'hidden' }}>
             <span style={labelSx}>Check-out</span>
             <input type="date" value={checkout} min={checkin || today}
               onChange={e => handleCheckout(e.target.value)}
@@ -197,7 +200,8 @@ const labelSx: React.CSSProperties = {
 const inputSx: React.CSSProperties = {
   padding: '8px 10px', border: '1px solid #d4cec7', borderRadius: 4,
   fontSize: '0.875rem', fontFamily: 'var(--font-jost, sans-serif)',
-  background: '#fff', color: '#1a2218', outline: 'none', cursor: 'pointer', width: '100%',
+  background: '#fff', color: '#1a2218', outline: 'none', cursor: 'pointer',
+  width: '100%', boxSizing: 'border-box', minWidth: 0, display: 'block',
 };
 const statusBase: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 7,
