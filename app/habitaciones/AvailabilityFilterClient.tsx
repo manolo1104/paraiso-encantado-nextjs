@@ -101,6 +101,8 @@ export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
         top: 0,
         zIndex: 10,
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        overflow: 'hidden',
+        maxWidth: '100vw',
       }}>
         {/* Mobile toggle row */}
         <div style={{
@@ -155,22 +157,22 @@ export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
             paddingTop: 14,
           }}>
             {/* Fechas */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-end' }}>
-              <label style={labelStyle}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-end', minWidth: 0, overflow: 'hidden' }}>
+              <label style={{ ...labelStyle, minWidth: 0 }}>
                 <span style={labelTextStyle}>Check-in</span>
                 <input type="date" value={checkin} min={today}
                   onChange={e => { setCheckin(e.target.value); setChecked(false); setUnavailable([]); if (checkout && e.target.value >= checkout) setCheckout(''); }}
-                  style={inputStyle} />
+                  style={{ ...inputStyle, width: 140 }} />
               </label>
-              <label style={labelStyle}>
+              <label style={{ ...labelStyle, minWidth: 0 }}>
                 <span style={labelTextStyle}>Check-out</span>
                 <input type="date" value={checkout} min={checkin || today}
                   onChange={e => { setCheckout(e.target.value); setChecked(false); setUnavailable([]); }}
-                  style={inputStyle} />
+                  style={{ ...inputStyle, width: 140 }} />
               </label>
-              <label style={labelStyle}>
+              <label style={{ ...labelStyle, minWidth: 0 }}>
                 <span style={labelTextStyle}>Personas</span>
-                <select value={guestCount} onChange={e => setGuestCount(Number(e.target.value))} style={{ ...inputStyle, minWidth: 60 }}>
+                <select value={guestCount} onChange={e => setGuestCount(Number(e.target.value))} style={{ ...inputStyle, minWidth: 60, width: 70 }}>
                   {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
               </label>
@@ -279,6 +281,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'var(--font-jost, sans-serif)',
   fontSize: '0.875rem', color: '#1a2218',
   background: '#fff', outline: 'none', cursor: 'pointer',
+  boxSizing: 'border-box', minWidth: 0,
 };
 const chipStyle = (active: boolean): React.CSSProperties => ({
   padding: '5px 11px', borderRadius: 4, border: '1px solid',
