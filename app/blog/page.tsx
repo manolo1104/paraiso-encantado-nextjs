@@ -27,7 +27,62 @@ export default function BlogPage() {
   const featured = posts.find((p) => p.featured);
   const rest = posts.filter((p) => !p.featured || p !== featured);
 
+  const blogSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Blog de Viaje — Hotel Paraíso Encantado · Xilitla y Huasteca Potosina',
+    description: 'Guías de viaje, consejos y todo lo que necesitas saber para visitar Xilitla, Las Pozas de Edward James y la Huasteca Potosina.',
+    url: 'https://www.paraisoencantado.com/blog',
+    publisher: {
+      '@type': 'Organization',
+      name: 'Hotel Paraíso Encantado',
+      url: 'https://www.paraisoencantado.com',
+      logo: { '@type': 'ImageObject', url: 'https://www.paraisoencantado.com/logo.png' },
+    },
+    blogPost: posts.map((p) => ({
+      '@type': 'BlogPosting',
+      headline: p.title,
+      description: p.description,
+      url: `https://www.paraisoencantado.com/blog/${p.slug}`,
+      datePublished: p.date,
+      dateModified: p.date,
+      image: {
+        '@type': 'ImageObject',
+        url: `https://www.paraisoencantado.com${p.image}`,
+        description: p.imageAlt,
+      },
+      author: {
+        '@type': 'Person',
+        name: 'Manolo Covarrubias',
+        jobTitle: 'Fundador · Hotel Paraíso Encantado',
+        url: 'https://www.paraisoencantado.com/sobre-nosotros',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Hotel Paraíso Encantado',
+        url: 'https://www.paraisoencantado.com',
+      },
+    })),
+  };
+
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Artículos del Blog de Viaje — Xilitla y Huasteca Potosina',
+    url: 'https://www.paraisoencantado.com/blog',
+    numberOfItems: posts.length,
+    itemListElement: posts.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://www.paraisoencantado.com/blog/${p.slug}`,
+      name: p.title,
+    })),
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
     <main className={styles.main}>
       {/* HEADER */}
       <section className={styles.header}>
@@ -120,5 +175,6 @@ export default function BlogPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }
