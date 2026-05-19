@@ -12,6 +12,14 @@ const ROOM_NAMES = [
 
 const ROOM_NAME_ALIASES: Record<string, string> = {
   'Suite Jungla': 'Jungla',
+  // Variantes "Lis" vs "Liz" — data/suites.ts usa "Lis", sheets usa "Liz"
+  'Suite Flor de Lis 1': 'Suite Flor de Liz 1',
+  'Suite Flor de Lis 2': 'Suite Flor de Liz 2',
+  'Flor de Lis 1': 'Suite Flor de Liz 1',
+  'Flor de Lis 2': 'Suite Flor de Liz 2',
+  'Flor de Liz 1': 'Suite Flor de Liz 1',
+  'Flor de Liz 2': 'Suite Flor de Liz 2',
+  // Orquídeas sin acento
   'Orquideas 2': 'Orquídeas 2',
   'Orquideas 3': 'Orquídeas 3',
   'Orquideas Doble': 'Orquídeas Doble',
@@ -245,10 +253,84 @@ export async function checkAvailability(
       if (!unavailableRooms.includes(r)) unavailableRooms.push(r);
     }
 
+    // Cross-check contra hoja Reservas (fuente de verdad real)
+    // Captura reservas del admin y reservas web aunque Disponibilidad esté desincronizado
+    const reservasConflicts = await checkReservasForConflicts(checkin, checkout, normalizedRooms);
+    for (const r of reservasConflicts) {
+      if (!unavailableRooms.includes(r)) unavailableRooms.push(r);
+    }
+
     return { available: unavailableRooms.length === 0, unavailableRooms };
   } catch (e: any) {
     console.error('❌ checkAvailability error:', e.message);
     return { available: true, unavailableRooms: [] };
+  }
+}
+
+/**
+ * Cross-check directo contra la hoja Reservas.
+ * Detecta conflictos aunque la hoja Disponibilidad no esté sincronizada.
+ * Columnas: A=timestamp, B=confirmacion, C=cliente, D=tel, E=email,
+ *           F=total, G=checkin, H=checkout, I=noches, J=huespedes, K=habitaciones
+ */
+async function checkReservasForConflicts(
+  checkin: string,
+  checkout: string,
+  rooms: { name: string }[],
+): Promise<string[]> {
+  const client = await getSheetsClient();
+  if (!client || !process.env.GOOGLE_SHEET_ID) return [];
+  const sid = process.env.GOOGLE_SHEET_ID;
+
+  try {
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({
+        spreadsheetId: sid,
+        range: `${SHEET_NAME}!A:N`,
+      })
+    );
+    const data = res.data.values || [];
+    if (data.length < 2) return [];
+
+    const conflicting: string[] = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (!row || row.length < 11) continue;
+
+      const bCheckin  = String(row[6]  ?? '').trim();
+      const bCheckout = String(row[7]  ?? '').trim();
+      const bRooms    = String(row[10] ?? '').trim().toLowerCase();
+      // Saltar filas sin fechas o canceladas
+      if (!bCheckin || !bCheckout || bCheckin === 'n/a' || bCheckout === 'n/a') continue;
+      const bState = String(row[12] ?? '').toUpperCase();
+      if (bState === 'CANCELADA' || bState === 'CANCELADO') continue;
+
+      // Solape: [bCheckin, bCheckout) ∩ [checkin, checkout) ≠ ∅
+      if (bCheckin >= checkout || bCheckout <= checkin) continue;
+
+      // Comprobar si alguna suite solicitada está en esta reserva
+      // "Jungla (2 personas)" → "jungla" | "Suite Flor de Liz 1 (2 personas)" → "suite flor de liz 1"
+      const roomsInBooking = bRooms
+        .split(',')
+        .map((r) => r.replace(/\s*\([^)]*\)/g, '').trim());
+
+      for (const room of rooms) {
+        const normalizedReq = room.name.toLowerCase();
+        // Coincidencia exacta o contenida (p.ej. "jungla" ⊂ "suite jungla")
+        const match = roomsInBooking.some(
+          (r) => r === normalizedReq || r.includes(normalizedReq) || normalizedReq.includes(r)
+        );
+        if (match && !conflicting.includes(room.name)) {
+          conflicting.push(room.name);
+        }
+      }
+    }
+
+    return conflicting;
+  } catch (e: any) {
+    console.error('❌ checkReservasForConflicts error:', e.message);
+    return [];
   }
 }
 
