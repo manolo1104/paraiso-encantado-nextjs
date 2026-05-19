@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Plus, Send, MessageSquare, RefreshCw, Loader2, X, Download, Pencil, Trash2, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { buildBookingHtml } from '@/lib/booking-html';
+import type { TourItem } from '@/lib/booking-html';
 import type { AdminQuote } from '@/lib/admin/sheets-admin';
 import styles from './cotizaciones.module.css';
 
@@ -37,6 +38,30 @@ function getPrecioNoche(suite: string, personas: number): number {
     if (personas >= k) precio = tiers[k];
   }
   return precio;
+}
+
+// ── Tours / Experiencias ──────────────────────────────────────────────────────
+export const TOURS_CATALOG: { nombre: string; precio: number }[] = [
+  { nombre: 'Expedición Tamul (Sótano + Cascada + Cenote)', precio: 1450 },
+  { nombre: 'Ruta Surrealista (Las Pozas + Huichihuayán)', precio: 1300 },
+  { nombre: 'Cascadas del Meco (El Meco + El Salto)', precio: 1600 },
+  { nombre: 'Paraíso Escalonado (Minas Viejas + Micos)', precio: 1500 },
+  { nombre: 'Ruta Acuática (Puente de Dios + Siete Cascadas)', precio: 1500 },
+  { nombre: 'Sótano de las Golondrinas', precio: 800 },
+  { nombre: 'Tour personalizado', precio: 0 },
+];
+
+const TOURS_SEP = '||TOURS||';
+function parseTours(notas: string): TourItem[] {
+  const idx = notas.indexOf(TOURS_SEP);
+  if (idx === -1) return [];
+  try { return JSON.parse(notas.slice(idx + TOURS_SEP.length)); } catch { return []; }
+}
+function getHabsTotalQ(habs: HabItem[], noches: number): number {
+  return habs.reduce((s, h) => s + getHabPrecioQ(h) * Math.max(noches, 1), 0);
+}
+function getToursTotalQ(tours: TourItem[]): number {
+  return tours.reduce((s, t) => s + t.precio * t.personas, 0);
 }
 
 const ESTADO_COLOR: Record<string, string> = {
@@ -90,8 +115,10 @@ function parseNotasCliente(notas: string): string {
   const idx = notas.indexOf(INTERNO_SEP);
   return idx === -1 ? notas.trim() : notas.slice(0, idx).trim();
 }
-function joinNotas(cliente: string, interno: string): string {
-  return interno.trim() ? `${cliente}${INTERNO_SEP}${interno}` : cliente;
+function joinNotas(cliente: string, interno: string, tours: TourItem[] = []): string {
+  let base = interno.trim() ? `${cliente}${INTERNO_SEP}${interno}` : cliente;
+  if (tours.length > 0) base += `${TOURS_SEP}${JSON.stringify(tours)}`;
+  return base;
 }
 
 const SUITE_IMAGES: Record<string, string> = {
@@ -199,6 +226,8 @@ function printQuotePDF(q: AdminQuote) {
   const firstSuite = q.suite.split(', ')[0].trim();
   const suiteImg = SUITE_IMAGES[firstSuite] ? `${baseUrl}${SUITE_IMAGES[firstSuite]}` : '';
   const notasCliente = parseNotasCliente(q.notas || '');
+  const tourItems = parseTours(q.notas || '');
+  const toursTotal = getToursTotalQ(tourItems);
   const confirmUrl = `https://www.paraisoencantado.com/reservar?checkin=${q.checkin}&checkout=${q.checkout}`;
 
   const win = window.open('', '_blank');
@@ -221,8 +250,8 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
 .h-logo em { font-style:italic; color:#c9a96e; }
 .h-sub { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8a9e8c; margin-bottom:28px; position:relative; }
 .h-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(201,169,110,0.15); border:1px solid rgba(201,169,110,0.4); color:#c9a96e; padding:8px 20px; font-size:11px; letter-spacing:3px; text-transform:uppercase; position:relative; }
-.suite-photo { height:180px; overflow:hidden; border-bottom:2px solid #c9a96e; background:linear-gradient(160deg,#2d4a2f 0%,#1c3320 50%,#152a1a 100%); }
-.suite-photo img { width:100%; height:180px; object-fit:cover; display:block; }
+.suite-photo { height:130px; overflow:hidden; border-bottom:2px solid #c9a96e; background:linear-gradient(160deg,#2d4a2f 0%,#1c3320 50%,#152a1a 100%); }
+.suite-photo img { width:100%; height:130px; object-fit:cover; display:block; }
 .cn-block { background:#1c2b1e; padding:18px 40px; display:flex; align-items:center; justify-content:space-between; }
 .cn-lbl { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#6a8a6e; margin-bottom:4px; }
 .cn-num { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#c9a96e; letter-spacing:2px; }
@@ -259,7 +288,7 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
 .f-logo { font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; color:#7a7a6a; margin-bottom:8px; }
 .f-addr { font-size:11px; color:#9a9a8a; line-height:1.8; }
 .f-div { width:36px; height:1px; background:#c9a96e; margin:14px auto; }
-@page { size:letter; margin:0.5in; }
+@page { size:letter; margin:0.45in; }
 @media print { body { background:#fff; padding:0; } .wrap { border:none; max-width:100%; } }
 </style>
 </head>
@@ -319,11 +348,35 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
       </div>`).join('')}
     </div>
 
+    ${tourItems.length > 0 ? `
+    <div class="suites-sec">
+      <p class="sec-title">Tours incluidos</p>
+      ${tourItems.map(t => `
+      <div class="s-row">
+        <p class="s-name" style="font-size:14px">${t.nombre}</p>
+        <div style="text-align:right">
+          <span style="font-size:11px;color:#5a4e3c;display:block">${t.personas} persona${t.personas!==1?'s':''}</span>
+          <span style="font-size:12px;color:#1c2b1e;font-family:'Cormorant Garamond',serif">$${(t.precio*t.personas).toLocaleString('es-MX')} MXN</span>
+        </div>
+      </div>`).join('')}
+    </div>` : ''}
+
     <div class="total-block">
+      ${toursTotal > 0 ? `
+      <div>
+        <p class="d-lbl" style="margin-bottom:2px">Hospedaje</p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1c2b1e;margin-bottom:6px">$${(q.precioTotal-toursTotal).toLocaleString('es-MX')} MXN</p>
+        <p class="d-lbl" style="margin-bottom:2px">Tours</p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1c2b1e">$${toursTotal.toLocaleString('es-MX')} MXN</p>
+      </div>
       <div>
         <p class="d-lbl">Total cotización</p>
         <p class="total-amt">$${q.precioTotal.toLocaleString('es-MX')}</p>
-      </div>
+      </div>` : `
+      <div>
+        <p class="d-lbl">Total cotización</p>
+        <p class="total-amt">$${q.precioTotal.toLocaleString('es-MX')}</p>
+      </div>`}
       <span style="font-size:13px;color:#9a9a8a">MXN</span>
     </div>
 
@@ -363,6 +416,8 @@ export function printBookingPDF(b: {
   habitaciones: string; checkin: string; checkout: string; noches: number;
   huespedes: number; total: number; notas: string; fecha: string;
   anticipo?: number; restante?: number; fechaLimitePago?: string;
+  tourItems?: TourItem[];
+  compact?: boolean;
 }) {
   const suites = b.habitaciones.split(', ').filter(Boolean).map(s => s.trim());
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
@@ -392,10 +447,12 @@ export function printBookingPDF(b: {
     cancelDateStr: calcCancelDate(b.checkin),
     fechaLimiteStr: fmtDateFull(b.fechaLimitePago || b.checkin),
     notasClienteText: parseNotasCliente(b.notas || ''),
-    suiteImgSrc,
-    suiteImgSrc2,
-    suiteImgSrc3,
+    suiteImgSrc: b.compact ? undefined : suiteImgSrc,
+    suiteImgSrc2: b.compact ? undefined : suiteImgSrc2,
+    suiteImgSrc3: b.compact ? undefined : suiteImgSrc3,
     forPrint: true,
+    tourItems: b.tourItems ?? parseTours(b.notas || ''),
+    compact: b.compact ?? false,
   }));
   win.document.close();
 }
@@ -405,6 +462,7 @@ interface Props { initialQuotes: AdminQuote[] }
 function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({ cliente: '', telefono: '', email: '', checkin: '', checkout: '' });
   const [habitaciones, setHabitaciones] = useState<HabItem[]>([{ suite: SUITES[3], huespedes: 2 }]);
+  const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [precioManual, setPrecioManual] = useState<number | null>(null);
   const [promoActiva, setPromoActiva] = useState(false);
   const [anticipo, setAnticipo] = useState(0);
@@ -413,6 +471,20 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   const [notasInternas, setNotasInternas] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  function addTour() { setTourItems(t => [...t, { nombre: TOURS_CATALOG[0].nombre, personas: 2, precio: TOURS_CATALOG[0].precio }]); setPrecioManual(null); }
+  function removeTour(i: number) { setTourItems(t => t.filter((_, idx) => idx !== i)); setPrecioManual(null); }
+  function updateTour(i: number, key: keyof TourItem, val: string | number) {
+    setTourItems(t => t.map((item, idx) => {
+      if (idx !== i) return item;
+      if (key === 'nombre') {
+        const cat = TOURS_CATALOG.find(c => c.nombre === val);
+        return { ...item, nombre: String(val), precio: cat ? cat.precio : item.precio };
+      }
+      return { ...item, [key]: typeof val === 'string' ? parseInt(val) || 0 : val };
+    }));
+    setPrecioManual(null);
+  }
 
   function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
   function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); }
@@ -427,8 +499,10 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   }
 
   const noches = calcNights(form.checkin, form.checkout);
-  const precioAuto = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * Math.max(noches, 1), 0);
-  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0);
+  const habsAuto = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * Math.max(noches, 1), 0);
+  const toursAuto = getToursTotalQ(tourItems);
+  const precioAuto = habsAuto + toursAuto;
+  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAuto;
   const precioTotal = precioManual ?? precioAuto;
   const restante = restanteOverride ?? (precioTotal - anticipo);
 
@@ -445,7 +519,7 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
       const res = await fetch('/api/admin/cotizaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, suite, huespedes, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas) }),
+        body: JSON.stringify({ ...form, suite, huespedes, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al crear');
@@ -501,6 +575,37 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
             ))}
           </div>
 
+          {/* Tours */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>Tours / Experiencias</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addTour}>
+                <Plus size={13} /> Agregar tour
+              </button>
+            </div>
+            {tourItems.length === 0 && (
+              <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin tours agregados</p>
+            )}
+            {tourItems.map((t, i) => (
+              <div key={i} className={styles.roomRow}>
+                <select className={styles.roomRowSelect} style={{ flex: 2 }} value={t.nombre}
+                  onChange={e => updateTour(i, 'nombre', e.target.value)}>
+                  {TOURS_CATALOG.map(c => <option key={c.nombre}>{c.nombre}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={t.personas}
+                  onChange={e => updateTour(i, 'personas', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                <input type="number" min={0} className={styles.roomPriceInput}
+                  value={t.precio} title="Precio por persona"
+                  onChange={e => updateTour(i, 'precio', parseInt(e.target.value) || 0)} />
+                <button type="button" className={styles.removeRoomBtn} onClick={() => removeTour(i)}>
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+
           {/* Precio */}
           <div className={styles.priceBreakdown}>
             {habitaciones.map((hab, i) => {
@@ -512,6 +617,12 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
                 </div>
               );
             })}
+            {tourItems.map((t, i) => (
+              <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#7a6a52' }}>
+                <span>🗺 {t.nombre.length > 30 ? t.nombre.slice(0,30)+'…' : t.nombre} ({t.personas}p)</span>
+                <span>${t.precio.toLocaleString('es-MX')}/p × {t.personas} = ${(t.precio*t.personas).toLocaleString('es-MX')}</span>
+              </div>
+            ))}
 
             {/* Botón promo 3x2 */}
             <div className={styles.promoRow}>
@@ -611,6 +722,7 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
   const [habitaciones, setHabitaciones] = useState<HabItem[]>(() =>
     quote.suite.split(', ').filter(Boolean).map(s => ({ suite: s.trim(), huespedes: 2 }))
   );
+  const [tourItems, setTourItems] = useState<TourItem[]>(() => parseTours(quote.notas || ''));
   const [precioManual, setPrecioManual] = useState<number | null>(quote.precioTotal || null);
   const [promoActiva, setPromoActiva] = useState(false);
   const [anticipo, setAnticipo] = useState(0);
@@ -618,7 +730,10 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
   const [notasCliente, setNotasCliente] = useState(() => parseNotasCliente(quote.notas || ''));
   const [notasInternas, setNotasInternas] = useState(() => {
     const idx = (quote.notas || '').indexOf(INTERNO_SEP);
-    return idx === -1 ? '' : quote.notas.slice(idx + INTERNO_SEP.length).trim();
+    if (idx === -1) return '';
+    const after = quote.notas.slice(idx + INTERNO_SEP.length);
+    const toursIdx = after.indexOf(TOURS_SEP);
+    return toursIdx === -1 ? after.trim() : after.slice(0, toursIdx).trim();
   });
   const [loading, setLoading] = useState(false);
 
@@ -633,10 +748,25 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
     setHabitaciones(h => h.map((item, idx) => idx === i ? { ...item, precioOverride: precio } : item));
     setPrecioManual(null); setPromoActiva(false);
   }
+  function addTourE() { setTourItems(t => [...t, { nombre: TOURS_CATALOG[0].nombre, personas: 2, precio: TOURS_CATALOG[0].precio }]); setPrecioManual(null); }
+  function removeTourE(i: number) { setTourItems(t => t.filter((_, idx) => idx !== i)); setPrecioManual(null); }
+  function updateTourE(i: number, key: keyof TourItem, val: string | number) {
+    setTourItems(t => t.map((item, idx) => {
+      if (idx !== i) return item;
+      if (key === 'nombre') {
+        const cat = TOURS_CATALOG.find(c => c.nombre === val);
+        return { ...item, nombre: String(val), precio: cat ? cat.precio : item.precio };
+      }
+      return { ...item, [key]: typeof val === 'string' ? parseInt(val) || 0 : val };
+    }));
+    setPrecioManual(null);
+  }
 
   const noches = calcNights(form.checkin, form.checkout);
-  const precioAuto = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * Math.max(noches, 1), 0);
-  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0);
+  const habsAuto = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * Math.max(noches, 1), 0);
+  const toursAutoE = getToursTotalQ(tourItems);
+  const precioAuto = habsAuto + toursAutoE;
+  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAutoE;
   const precioTotal = precioManual ?? precioAuto;
   const restante = restanteOverride ?? (precioTotal - anticipo);
 
@@ -647,7 +777,7 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
     e.preventDefault();
     setLoading(true);
     const suite = habitaciones.map(h => h.suite).join(', ');
-    await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas) });
+    await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems) });
     setLoading(false);
   }
 
@@ -697,6 +827,37 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
             ))}
           </div>
 
+          {/* Tours */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>Tours / Experiencias</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addTourE}>
+                <Plus size={13} /> Agregar tour
+              </button>
+            </div>
+            {tourItems.length === 0 && (
+              <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin tours agregados</p>
+            )}
+            {tourItems.map((t, i) => (
+              <div key={i} className={styles.roomRow}>
+                <select className={styles.roomRowSelect} style={{ flex: 2 }} value={t.nombre}
+                  onChange={e => updateTourE(i, 'nombre', e.target.value)}>
+                  {TOURS_CATALOG.map(c => <option key={c.nombre}>{c.nombre}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={t.personas}
+                  onChange={e => updateTourE(i, 'personas', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                <input type="number" min={0} className={styles.roomPriceInput}
+                  value={t.precio} title="Precio por persona"
+                  onChange={e => updateTourE(i, 'precio', parseInt(e.target.value) || 0)} />
+                <button type="button" className={styles.removeRoomBtn} onClick={() => removeTourE(i)}>
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+
           {/* Precio */}
           <div className={styles.priceBreakdown}>
             {habitaciones.map((hab, i) => {
@@ -708,6 +869,12 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
                 </div>
               );
             })}
+            {tourItems.map((t, i) => (
+              <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#7a6a52' }}>
+                <span>🗺 {t.nombre.length > 30 ? t.nombre.slice(0,30)+'…' : t.nombre} ({t.personas}p)</span>
+                <span>${(t.precio*t.personas).toLocaleString('es-MX')}</span>
+              </div>
+            ))}
 
             <div className={styles.promoRow}>
               <button
@@ -721,7 +888,7 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
               </button>
               {promoActiva && (
                 <span className={styles.promoSaving}>
-                  Ahorro: ${(precioAuto - precio2Noches).toLocaleString('es-MX')} MXN
+                  Ahorro: ${(habsAuto - precio2Noches + toursAutoE).toLocaleString('es-MX')} MXN
                 </span>
               )}
             </div>

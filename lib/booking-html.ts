@@ -27,6 +27,12 @@ export function calcCancelDate72h(checkin: string): string {
   return `${d.getDate()} de ${months[d.getMonth()]} ${d.getFullYear()} a las 11:59 PM`;
 }
 
+export interface TourItem {
+  nombre: string;
+  personas: number;
+  precio: number; // precio por persona
+}
+
 export interface BookingHtmlParams {
   confirmacion: string;
   cliente: string;
@@ -45,6 +51,8 @@ export interface BookingHtmlParams {
   suiteImgSrc2?: string;  // secondary image URL
   suiteImgSrc3?: string;  // tertiary image URL
   forPrint?: boolean;     // true = add window.print() script
+  tourItems?: TourItem[]; // tours incluidos (aparecen en PDF)
+  compact?: boolean;      // elimina hero+imágenes → una sola página al imprimir
 }
 
 export function buildBookingHtml(p: BookingHtmlParams): string {
@@ -179,6 +187,29 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
 `;
 
   const suites = p.suites;
+  const tourItems = p.tourItems ?? [];
+  const toursTotal = tourItems.reduce((s, t) => s + t.precio * t.personas, 0);
+
+  // Compact-mode CSS — se añade sólo cuando compact:true
+  const COMPACT_CSS = p.compact ? `
+.compact-hdr { background: #1c2b1e; padding: 22px 40px; display:flex; align-items:center; justify-content:space-between; }
+.compact-hdr-left p { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:#4a6a4c; margin-bottom:4px; }
+.compact-hdr-title { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:300; color:#f5f0e8; }
+.compact-hdr-title em { font-style:italic; color:#c9a96e; }
+.compact-hdr-right { text-align:right; }
+.compact-hdr-cn-lbl { font-size:8px; letter-spacing:3px; text-transform:uppercase; color:#4a6a4c; margin-bottom:3px; }
+.compact-hdr-cn-val { font-family:'Cormorant Garamond',serif; font-size:20px; color:#c9a96e; letter-spacing:2px; }
+@media print { @page { size:letter; margin:0.45in; } }
+` : '';
+
+  const TOURS_CSS = tourItems.length > 0 ? `
+.tours-list { margin-bottom:28px; }
+.tour-row { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid #eae5d8; }
+.tour-row:last-child { border-bottom:none; }
+.tour-dot { width:7px; height:7px; border-radius:50%; background:#c9a96e; flex-shrink:0; }
+.tour-name { font-family:'Cormorant Garamond',serif; font-size:16px; color:#1e1e18; flex:1; }
+.tour-detail { font-size:11px; color:#9a9a82; text-align:right; line-height:1.5; }
+` : '';
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -187,11 +218,23 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Confirmación ${p.confirmacion} · Paraíso Encantado</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
-<style>${TEMPLATE_CSS}</style>
+<style>${TEMPLATE_CSS}${COMPACT_CSS}${TOURS_CSS}</style>
 </head>
 <body>
 <div class="wrap">
 
+  ${p.compact ? `
+  <div class="compact-hdr">
+    <div class="compact-hdr-left">
+      <p>Confirmación de reserva</p>
+      <p class="compact-hdr-title">Paraíso <em>Encantado</em></p>
+    </div>
+    <div class="compact-hdr-right">
+      <p class="compact-hdr-cn-lbl">Folio</p>
+      <p class="compact-hdr-cn-val">${p.confirmacion}</p>
+    </div>
+  </div>
+  ` : `
   <div class="hero">
     <div class="hero-img">
       <div class="leaf" style="width:160px;height:70px;background:#5a9e52;top:25px;left:-25px;transform:rotate(-25deg)"></div>
@@ -205,7 +248,6 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
       <div class="hero-badge">Tu escapada te espera</div>
     </div>
   </div>
-
   <div class="cn-strip">
     <div class="cn-left">
       <p class="cn-lbl">Número de confirmación</p>
@@ -216,7 +258,6 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
       <p class="cn-present-val">Este número en recepción<br>o muéstralo en tu celular</p>
     </div>
   </div>
-
   <div class="suite-strip">
     <div class="suite-main">
       ${p.suiteImgSrc ? `<img src="${p.suiteImgSrc}" alt="${suites[0]}" onerror="this.style.display='none'">` : '<div class="suite-main-bg"></div>'}
@@ -245,6 +286,7 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
       </div>
     </div>
   </div>
+  `}
 
   <div class="body">
 
@@ -281,13 +323,44 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
       ${suites.map(s => `<div class="suite-row"><div class="suite-dot"></div><p class="suite-name">${s}</p></div>`).join('')}
     </div>
 
+    ${tourItems.length > 0 ? `
+    <div class="tours-list">
+      <div class="section-hd">
+        <p class="section-hd-title">Tours incluidos · ${tourItems.length} servicio${tourItems.length !== 1 ? 's' : ''}</p>
+        <div class="section-hd-line"></div>
+      </div>
+      ${tourItems.map(t => `
+      <div class="tour-row">
+        <div class="tour-dot"></div>
+        <p class="tour-name">${t.nombre}</p>
+        <div class="tour-detail">
+          <span>${t.personas} persona${t.personas !== 1 ? 's' : ''}</span><br>
+          <span>$${(t.precio * t.personas).toLocaleString('es-MX')} MXN</span>
+        </div>
+      </div>`).join('')}
+    </div>` : ''}
+
     <div class="payment">
       <div class="payment-hd">Resumen de pago</div>
       <div class="payment-body">
+        ${toursTotal > 0 ? `
+        <div class="prow">
+          <span class="plabel">Hospedaje (${suites.length} suite${suites.length !== 1 ? 's' : ''} · ${p.noches} noche${p.noches !== 1 ? 's' : ''})</span>
+          <span class="pamount">$${(p.total - toursTotal).toLocaleString('es-MX')} MXN</span>
+        </div>
+        <div class="prow">
+          <span class="plabel">Tours (${tourItems.length})</span>
+          <span class="pamount">$${toursTotal.toLocaleString('es-MX')} MXN</span>
+        </div>
+        <div class="prow divider">
+          <span class="plabel">Total</span>
+          <span class="pamount">$${p.total.toLocaleString('es-MX')} MXN</span>
+        </div>
+        ` : `
         <div class="prow">
           <span class="plabel">Total estadía (${suites.length} suite${suites.length !== 1 ? 's' : ''} · ${p.noches} noche${p.noches !== 1 ? 's' : ''})</span>
           <span class="pamount">$${p.total.toLocaleString('es-MX')} MXN</span>
-        </div>
+        </div>`}
         <div class="prow">
           <span class="plabel"><span class="paid-tag">Anticipo recibido</span></span>
           <span class="pamount deduct">− $${anticipo.toLocaleString('es-MX')} MXN</span>

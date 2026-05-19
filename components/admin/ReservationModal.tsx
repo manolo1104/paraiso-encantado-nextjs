@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Loader2, AlertTriangle, CheckCircle, Plus, MessageSquare, Mail, Download, Pencil } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
-import { printBookingPDF } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
+import { printBookingPDF, TOURS_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
+import type { TourItem } from '@/lib/booking-html';
 import styles from './Modal.module.css';
 
 const SUITES = [
@@ -91,7 +92,8 @@ function SuccessPanel({ data, onEdit, onClose }: {
   }
 
   function downloadPDF() {
-    printBookingPDF({ ...data });
+    const tours = (() => { try { const idx = data.notas?.indexOf('||TOURS||'); if (!idx || idx < 0) return []; return JSON.parse(data.notas.slice(idx + 9)); } catch { return []; } })();
+    printBookingPDF({ ...data, tourItems: tours, compact: true });
   }
 
   return (
@@ -165,15 +167,37 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   });
 
   const INTERNO_SEP = '||INTERNO||';
+  const TOURS_SEP_LOCAL = '||TOURS||';
   const rawNotas = booking?.notas || '';
   const [notasCliente, setNotasCliente] = useState(() => {
     const idx = rawNotas.indexOf(INTERNO_SEP);
-    return idx === -1 ? rawNotas.trim() : rawNotas.slice(0, idx).trim();
+    return idx === -1 ? rawNotas.replace(/\|\|TOURS\|\|.*$/, '').trim() : rawNotas.slice(0, idx).trim();
   });
   const [notasInternas, setNotasInternas] = useState(() => {
     const idx = rawNotas.indexOf(INTERNO_SEP);
-    return idx === -1 ? '' : rawNotas.slice(idx + INTERNO_SEP.length).trim();
+    if (idx === -1) return '';
+    const after = rawNotas.slice(idx + INTERNO_SEP.length);
+    const toursIdx = after.indexOf(TOURS_SEP_LOCAL);
+    return toursIdx === -1 ? after.trim() : after.slice(0, toursIdx).trim();
   });
+  const [tourItems, setTourItems] = useState<TourItem[]>(() => {
+    const idx = rawNotas.indexOf(TOURS_SEP_LOCAL);
+    if (idx === -1) return [];
+    try { return JSON.parse(rawNotas.slice(idx + TOURS_SEP_LOCAL.length)); } catch { return []; }
+  });
+
+  function addTourM() { setTourItems(t => [...t, { nombre: TOURS_CATALOG[0].nombre, personas: 2, precio: TOURS_CATALOG[0].precio }]); }
+  function removeTourM(i: number) { setTourItems(t => t.filter((_, idx) => idx !== i)); }
+  function updateTourM(i: number, key: keyof TourItem, val: string | number) {
+    setTourItems(t => t.map((item, idx) => {
+      if (idx !== i) return item;
+      if (key === 'nombre') {
+        const cat = TOURS_CATALOG.find(c => c.nombre === val);
+        return { ...item, nombre: String(val), precio: cat ? cat.precio : item.precio };
+      }
+      return { ...item, [key]: typeof val === 'string' ? parseInt(val) || 0 : val };
+    }));
+  }
 
   const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
     if (booking?.habitaciones) {
@@ -271,7 +295,9 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   }
 
   const totalHuespedes = habitaciones.reduce((sum, h) => sum + h.huespedes, 0);
-  const precioCalculado = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * Math.max(form.noches, 1), 0);
+  const habsCalculado = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * Math.max(form.noches, 1), 0);
+  const toursCalculado = tourItems.reduce((s, t) => s + t.precio * t.personas, 0);
+  const precioCalculado = habsCalculado + toursCalculado;
   const restante = restanteOverride ?? (form.total - anticipo);
 
   // Auto-calcular noches y precio (only when NOT editing)
@@ -351,7 +377,8 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     setError('');
     try {
       const habitacion = habitaciones.map(h => h.suite).join(', ');
-      const notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
+      let notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
+      if (tourItems.length > 0) notas += `${TOURS_SEP_LOCAL}${JSON.stringify(tourItems)}`;
       const url = isEdit ? `/api/admin/reservas/${booking!.confirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
       const res = await fetch(url, {
@@ -535,6 +562,40 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
               </div>
             ))}
             <p className={styles.roomsTotal}>{totalHuespedes} huésped{totalHuespedes !== 1 ? 'es' : ''} en total</p>
+          </div>
+
+          {/* Tours / Experiencias */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>Tours / Experiencias</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addTourM}>
+                <Plus size={13} /> Agregar tour
+              </button>
+            </div>
+            {tourItems.length === 0 && (
+              <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin tours (opcional)</p>
+            )}
+            {tourItems.map((t, i) => (
+              <div key={i} className={styles.roomRow}>
+                <select className={styles.roomRowSelect} style={{ flex: 2 }} value={t.nombre}
+                  onChange={e => updateTourM(i, 'nombre', e.target.value)}>
+                  {TOURS_CATALOG.map(c => <option key={c.nombre}>{c.nombre}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={t.personas}
+                  onChange={e => updateTourM(i, 'personas', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                <input type="number" min={0} className={styles.roomPriceInput}
+                  value={t.precio} title="Precio por persona"
+                  onChange={e => updateTourM(i, 'precio', parseInt(e.target.value) || 0)} />
+                <button type="button" className={styles.removeRoomBtn} onClick={() => removeTourM(i)}>
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+            {tourItems.length > 0 && (
+              <p className={styles.roomsTotal}>Tours: ${toursCalculado.toLocaleString('es-MX')} MXN</p>
+            )}
           </div>
 
           {/* Calculador de precio */}
