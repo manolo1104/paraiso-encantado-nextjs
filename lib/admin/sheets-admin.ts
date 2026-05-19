@@ -274,7 +274,13 @@ export async function cancelBooking(rowIndex: number, habitaciones: string, chec
 
 // ── DISPONIBILIDAD ────────────────────────────────────────────────────────────
 
-async function blockDatesForRoom(roomName: string, checkin: string, checkout: string) {
+/**
+ * Actualiza el sheet Disponibilidad para una habitación individual.
+ * Lee el sheet una vez y aplica todos los updates de forma secuencial.
+ */
+async function updateSingleRoomAvailability(
+  roomName: string, checkin: string, checkout: string, value: 'RESERVADO' | ''
+) {
   const client = await getSheetsClient();
   if (!client) return;
   try {
@@ -284,66 +290,62 @@ async function blockDatesForRoom(roomName: string, checkin: string, checkout: st
     const data = res.data.values || [];
     if (!data.length) return;
     const headers = data[0];
-    const colIdx = headers.findIndex((h: string) => h === roomName);
-    if (colIdx === -1) return;
-
+    const colIdx = headers.findIndex((h: string) => h === roomName.trim());
+    if (colIdx === -1) {
+      console.warn(`updateAvailability: columna "${roomName}" no encontrada en Disponibilidad`);
+      return;
+    }
+    const col = String.fromCharCode(65 + colIdx);
     const start = new Date(checkin + 'T00:00:00');
-    const end = new Date(checkout + 'T00:00:00');
+    const end   = new Date(checkout + 'T00:00:00');
 
     for (let i = 1; i < data.length; i++) {
       if (!data[i][0]) continue;
       const rowDate = new Date(data[i][0].trim() + 'T00:00:00');
       if (rowDate >= start && rowDate < end) {
-        const col = String.fromCharCode(65 + colIdx);
         await sheetsCall(() =>
           client.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
             range: `${AVAILABILITY_SHEET}!${col}${i + 1}`,
             valueInputOption: 'USER_ENTERED',
-            requestBody: { values: [['RESERVADO']] },
+            requestBody: { values: [[value]] },
           })
         );
       }
     }
   } catch (e: any) {
-    console.error('blockDatesForRoom error:', e.message);
+    console.error(`updateSingleRoomAvailability error (${roomName}):`, e.message);
   }
 }
 
-async function unblockDatesForRoom(roomName: string, checkin: string, checkout: string) {
-  const client = await getSheetsClient();
-  if (!client) return;
-  try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${AVAILABILITY_SHEET}!A:Z` })
-    );
-    const data = res.data.values || [];
-    if (!data.length) return;
-    const headers = data[0];
-    const colIdx = headers.findIndex((h: string) => h === roomName);
-    if (colIdx === -1) return;
-
-    const start = new Date(checkin + 'T00:00:00');
-    const end = new Date(checkout + 'T00:00:00');
-
-    for (let i = 1; i < data.length; i++) {
-      if (!data[i][0]) continue;
-      const rowDate = new Date(data[i][0].trim() + 'T00:00:00');
-      if (rowDate >= start && rowDate < end) {
-        const col = String.fromCharCode(65 + colIdx);
-        await sheetsCall(() =>
-          client.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: `${AVAILABILITY_SHEET}!${col}${i + 1}`,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: { values: [['']] },
-          })
-        );
-      }
-    }
-  } catch (e: any) {
-    console.error('unblockDatesForRoom error:', e.message);
+/**
+ * Bloquea habitaciones en Disponibilidad (acepta string CSV de nombres).
+ * Exported para uso en el PATCH handler de reservas.
+ */
+export async function blockRooms(habitacionesStr: string, checkin: string, checkout: string) {
+  const rooms = habitacionesStr.split(',').map(r => r.replace(/\s*\([^)]*\)/g, '').trim()).filter(Boolean);
+  for (const room of rooms) {
+    await updateSingleRoomAvailability(room, checkin, checkout, 'RESERVADO');
   }
+}
+
+/**
+ * Desbloquea habitaciones en Disponibilidad (acepta string CSV de nombres).
+ * Exported para uso en cancelaciones y cambios.
+ */
+export async function unblockRooms(habitacionesStr: string, checkin: string, checkout: string) {
+  const rooms = habitacionesStr.split(',').map(r => r.replace(/\s*\([^)]*\)/g, '').trim()).filter(Boolean);
+  for (const room of rooms) {
+    await updateSingleRoomAvailability(room, checkin, checkout, '');
+  }
+}
+
+// Compat aliases usados internamente
+async function blockDatesForRoom(roomName: string, checkin: string, checkout: string) {
+  await blockRooms(roomName, checkin, checkout);
+}
+async function unblockDatesForRoom(roomName: string, checkin: string, checkout: string) {
+  await unblockRooms(roomName, checkin, checkout);
 }
 
 // ── COTIZACIONES ──────────────────────────────────────────────────────────────
