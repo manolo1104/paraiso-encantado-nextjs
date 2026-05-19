@@ -351,6 +351,62 @@
 
 .prose tr:nth-child(even) td { background: var(--parch); }
 
+/* ---- INTERNAL LINKS ---- */
+.internalLinks {
+  margin-top: 32px;
+  padding: 22px 24px;
+  background: white;
+  border: 1.5px solid #e8e4da;
+  border-radius: 10px;
+}
+
+.internalLinksTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+  font-family: var(--font-jost, sans-serif);
+  margin: 0 0 14px;
+  letter-spacing: 0.04em;
+}
+
+.internalLinksGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .internalLinksGrid { grid-template-columns: 1fr; }
+}
+
+.internalLinkCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--parch);
+  border-radius: 7px;
+  text-decoration: none;
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+
+.internalLinkCard:hover { background: #eae6db; border-color: var(--gold); }
+
+.internalLinkLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+  font-family: var(--font-jost, sans-serif);
+}
+
+.internalLinkDesc {
+  font-size: 11px;
+  color: #888;
+  font-family: var(--font-jost, sans-serif);
+  line-height: 1.4;
+}
+
 /* ---- AUTHOR BIO ---- */
 .authorBio {
   display: flex;

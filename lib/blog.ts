@@ -8,12 +8,13 @@ export interface PostMeta {
   slug: string;
   title: string;
   description: string;
-  date: string;         // YYYY-MM-DD
+  date: string;           // YYYY-MM-DD — datePublished
+  dateModified?: string;  // YYYY-MM-DD — refresca frescura en Google; si no se define, usa date
   author: string;
   category: string;
-  image: string;        // ruta relativa a /public
+  image: string;          // ruta relativa a /public
   imageAlt: string;
-  readTime: number;     // minutos
+  readTime: number;       // minutos
   featured?: boolean;
 }
 

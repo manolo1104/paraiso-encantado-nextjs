@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: 'Paquetes Todo Incluido en Xilitla | Paraíso Encantado',
     description: 'Suite + desayunos huastecos + tours coordinados. Precio total desde $5,200 MXN por pareja. Reserva directo y ahorra hasta 15%.',
     url: 'https://www.paraisoencantado.com/paquetes',
-    images: [{ url: 'https://www.paraisoencantado.com/images/FLOR DE LIS 1/PORTADA.jpg', alt: 'Suite Flor de Liz con spa privado — Paraíso Encantado' }],
+    images: [{ url: 'https://www.paraisoencantado.com/images/FLOR DE LIS 1/PORTADA.jpg', alt: 'Suite Flor de Liz con spa privado — Paraíso Encantado', width: 1200, height: 630 }],
   },
 };
 

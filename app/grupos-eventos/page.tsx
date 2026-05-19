@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: 'Bodas y Eventos en Xilitla · Paraíso Encantado',
     description: 'Reserva el hotel completo para tu boda o evento. 13 suites boutique, jardín tropical y restaurante de cocina huasteca auténtica. Xilitla, SLP.',
     url: 'https://www.paraisoencantado.com/grupos-eventos',
-    images: [{ url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09447-HDR.jpg', alt: 'Jardín y piscina Hotel Paraíso Encantado para eventos' }],
+    images: [{ url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg', alt: 'Jardín tropical del Hotel Paraíso Encantado — bodas y eventos en Xilitla', width: 1200, height: 630 }],
   },
 };
 

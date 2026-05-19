@@ -75,10 +75,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         url: `https://www.paraisoencantado.com/blog/${slug}`,
         type: 'article',
         publishedTime: post.date,
+        modifiedTime: post.dateModified ?? post.date,
         images: [
           {
             url: `https://www.paraisoencantado.com${post.image}`,
             alt: post.imageAlt,
+            width: 1200,
+            height: 630,
           },
         ],
       },
@@ -127,9 +130,13 @@ export default async function ArticlePage({ params }: Props) {
       description: post.imageAlt,
     },
     datePublished: post.date,
-    dateModified: post.date,
+    dateModified: post.dateModified ?? post.date,
     wordCount: post.readTime * 200,
     inLanguage: 'es-MX',
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.article-description', '.article-intro'],
+    },
     author: {
       '@type': 'Person',
       name: authorProfile.name,
@@ -156,10 +163,81 @@ export default async function ArticlePage({ params }: Props) {
     },
   };
 
+  const howToSchema = slug === 'como-llegar-a-xilitla' ? {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'Cómo Llegar a Xilitla desde Ciudad de México en Carro',
+    description: 'Ruta en carro desde CDMX a Xilitla, San Luis Potosí — 5.5 horas por autopista de cuota.',
+    totalTime: 'PT5H30M',
+    estimatedCost: { '@type': 'MonetaryAmount', currency: 'MXN', value: '500' },
+    tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
+    step: [
+      { '@type': 'HowToStep', position: 1, name: 'Salir por la autopista México-Tampico (MEX-85D)', text: 'Toma la autopista México-Tampico hacia el noreste desde CDMX.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#en-carro-la-opcion-mas-flexible' },
+      { '@type': 'HowToStep', position: 2, name: 'Pasar por Pachuca y Tamazunchale', text: 'Pachuca en ~1 hora, Tamazunchale en ~3.5 horas. En este tramo la carretera sube la sierra con curvas — ve despacio.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
+      { '@type': 'HowToStep', position: 3, name: 'Llegar a Ciudad Valles (4 horas)', text: 'Ciudad Valles es el punto de conexión principal. Puedes parar a cargar gasolina y comer.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
+      { '@type': 'HowToStep', position: 4, name: 'Tomar la carretera federal 120 hacia Xilitla', text: 'Desde Ciudad Valles toma la carretera 120. Son ~1.5 horas más con curvas de sierra.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#ultimos-kilometros-ciudad-valles-xilitla' },
+      { '@type': 'HowToStep', position: 5, name: 'Llegar al Hotel Paraíso Encantado en Xilitla', text: 'El hotel está en el centro de Xilitla, a 400 metros de Las Pozas de Edward James. Estacionamiento privado incluido.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#al-llegar-donde-esta-el-hotel' },
+    ],
+  } : null;
+
+  const INTERNAL_LINKS: Record<string, { text: string; links: { href: string; label: string; desc: string }[] }> = {
+    'como-llegar-a-xilitla': {
+      text: 'Ya sabes cómo llegar — ahora elige dónde quedarte:',
+      links: [
+        { href: '/habitaciones', label: 'Ver las 13 suites', desc: 'Desde $1,500 MXN/noche · Spa privado' },
+        { href: '/paquetes', label: 'Paquetes todo incluido', desc: 'Suite + desayuno + tours desde $5,200 MXN' },
+        { href: '/reservar', label: 'Reservar ahora', desc: 'Confirmación instantánea · Sin comisiones' },
+      ],
+    },
+    'las-pozas-edward-james-guia': {
+      text: '¿Planeas visitar Las Pozas? Estamos a 5 min caminando:',
+      links: [
+        { href: '/habitaciones/jungla', label: 'Suite Jungla', desc: 'Spa privado · La más cercana a Las Pozas' },
+        { href: '/paquetes', label: 'Paquete Ruta de las Pozas', desc: '3 noches + tour coordinado + desayunos' },
+        { href: '/reservar', label: 'Reservar suite', desc: 'Check-in a 5 min de Las Pozas' },
+      ],
+    },
+    'que-hacer-en-xilitla': {
+      text: 'Haz de Xilitla tu base de operaciones:',
+      links: [
+        { href: '/experiencias', label: 'Tours desde el hotel', desc: 'Tamul, Micos, Pozas con guía certificado' },
+        { href: '/paquetes', label: 'Paquetes de aventura', desc: 'Ruta de las Pozas · 3 noches todo incluido' },
+        { href: '/habitaciones', label: 'Ver habitaciones', desc: '13 suites · Spa privado · WiFi' },
+      ],
+    },
+    'cascada-tamul-guia-completa': {
+      text: '¿Quieres hacer el tour a Tamul desde nuestro hotel?',
+      links: [
+        { href: '/experiencias', label: 'Tour Expedición Tamul', desc: 'Sótano + Cascada + Cenote · Guía certificado' },
+        { href: '/paquetes', label: 'Paquete Ruta de las Pozas', desc: 'Tour Tamul incluido + 3 noches' },
+        { href: '/reservar', label: 'Reservar y coordinar tour', desc: 'Salidas diarias desde el hotel' },
+      ],
+    },
+    'ruta-maestra-huasteca-potosina': {
+      text: 'Empieza tu ruta maestra desde Xilitla:',
+      links: [
+        { href: '/experiencias', label: 'Todos los tours disponibles', desc: '5 rutas · Guías locales certificados' },
+        { href: '/paquetes', label: 'Paquetes todo incluido', desc: 'Varios días con tours y desayunos' },
+        { href: '/habitaciones', label: 'Suites en Xilitla', desc: 'Tu base en la Huasteca desde $1,500 MXN' },
+      ],
+    },
+    'temporada-lluvias-vs-seca-xilitla': {
+      text: 'Ya sabes cuándo ir — ahora asegura tu lugar:',
+      links: [
+        { href: '/reservar', label: 'Verificar disponibilidad', desc: 'Temporada alta · Reserva con anticipación' },
+        { href: '/paquetes', label: 'Paquete Selva en Silencio', desc: 'Temporada baja · Precio especial' },
+        { href: '/habitaciones', label: 'Ver suites disponibles', desc: '13 opciones · Desde $1,500 MXN/noche' },
+      ],
+    },
+  };
+
+  const internalLinks = INTERNAL_LINKS[slug];
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleBreadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+      {howToSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />}
       <main className={styles.main}>
 
         {/* HERO */}
@@ -243,6 +321,21 @@ export default async function ArticlePage({ params }: Props) {
                 </div>
               </div>
             </div>
+
+            {/* INTERNAL LINKS — contextual por artículo */}
+            {internalLinks && (
+              <div className={styles.internalLinks}>
+                <p className={styles.internalLinksTitle}>{internalLinks.text}</p>
+                <div className={styles.internalLinksGrid}>
+                  {internalLinks.links.map((l) => (
+                    <Link key={l.href} href={l.href} className={styles.internalLinkCard}>
+                      <span className={styles.internalLinkLabel}>{l.label} →</span>
+                      <span className={styles.internalLinkDesc}>{l.desc}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* AUTOR BIO */}
             <div className={styles.authorBio}>

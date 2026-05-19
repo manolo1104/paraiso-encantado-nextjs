@@ -215,6 +215,25 @@ export default function SobreNosotrosPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutFaqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'VideoObject',
+        name: 'Hotel Paraíso Encantado — Tour Virtual por Xilitla y las Suites',
+        description: 'Recorre el Hotel Paraíso Encantado en Xilitla, Huasteca Potosina: las 13 suites boutique con spa privado, el jardín tropical, el restaurante El Papán Huasteco y Las Pozas de Edward James a 5 minutos.',
+        thumbnailUrl: 'https://img.youtube.com/vi/hD7LbX9Xoqw/maxresdefault.jpg',
+        uploadDate: '2024-06-01',
+        duration: 'PT3M',
+        contentUrl: 'https://www.youtube.com/watch?v=hD7LbX9Xoqw',
+        embedUrl: 'https://www.youtube.com/embed/hD7LbX9Xoqw',
+        publisher: {
+          '@type': 'Organization',
+          name: 'Hotel Paraíso Encantado',
+          url: 'https://www.paraisoencantado.com',
+          logo: { '@type': 'ImageObject', url: 'https://www.paraisoencantado.com/logo.png' },
+        },
+        inLanguage: 'es-MX',
+        isFamilyFriendly: true,
+      }) }} />
 
       <main className={styles.main}>
         {/* Breadcrumb */}
