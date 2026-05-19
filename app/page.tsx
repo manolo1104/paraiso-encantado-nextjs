@@ -37,7 +37,7 @@ const homeSchema = {
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'Hotel',
+  '@type': ['Hotel', 'LocalBusiness'],
   '@id': 'https://www.paraisoencantado.com/#hotel',
   name: 'Hotel Paraíso Encantado',
   description:
@@ -123,6 +123,18 @@ const BASE_AMENITIES = [
 ];
 const HOTEL_REF = { '@id': 'https://www.paraisoencantado.com/#hotel' };
 
+const RETURN_POLICY = {
+  '@type': 'MerchantReturnPolicy',
+  applicableCountry: 'MX',
+  returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+  merchantReturnDays: 2,
+  refundType: 'https://schema.org/FullRefund',
+  returnFees: 'https://schema.org/FreeReturn',
+  customerRemorseReturnFees: 'https://schema.org/FreeReturn',
+  customerRemorseReturnLabelSource: 'https://schema.org/ReturnLabelCustomerResponsibility',
+  description: 'Cancelación gratuita hasta 48 horas antes del check-in. Reembolso del 100%.',
+};
+
 function roomOffer(price: number, slug: string) {
   return {
     '@type': 'Offer',
@@ -131,6 +143,20 @@ function roomOffer(price: number, slug: string) {
     priceValidUntil: PRICE_VALID_UNTIL,
     availability: 'https://schema.org/InStock',
     url: `https://www.paraisoencantado.com/reservar?room=${slug}`,
+    hasMerchantReturnPolicy: RETURN_POLICY,
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price,
+      priceCurrency: 'MXN',
+      valueAddedTaxIncluded: true,
+      unitCode: 'DAY',
+      unitText: 'por noche',
+      eligibleQuantity: {
+        '@type': 'QuantitativeValue',
+        minValue: 1,
+        unitCode: 'C62',
+      },
+    },
   };
 }
 function beds(type: string, count: number) {

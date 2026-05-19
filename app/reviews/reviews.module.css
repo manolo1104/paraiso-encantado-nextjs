@@ -1,0 +1,60 @@
+/* ===== REVIEWS PAGE ===== */
+.main { padding-top: 0; }
+
+.header { background: var(--forest); color: white; padding: 88px 24px 64px; }
+.headerInner { max-width: 720px; margin: 0 auto; }
+.breadcrumb { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 20px; font-family: var(--font-jost,sans-serif); }
+.breadcrumb a { color: rgba(255,255,255,0.55); text-decoration: none; }
+.eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; font-family: var(--font-jost,sans-serif); }
+.header h1 { font-family: var(--font-cormorant),serif; font-size: clamp(36px,5vw,52px); font-weight: 300; line-height: 1.15; margin-bottom: 16px; }
+.header h1 em { font-style: italic; color: var(--gold); }
+.headerSub { font-size: 16px; opacity: 0.82; font-family: var(--font-jost,sans-serif); line-height: 1.65; max-width: 520px; }
+
+/* SUMMARY */
+.summary { background: white; border-bottom: 1px solid #eee; padding: 40px 24px; }
+.summaryInner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: auto 1fr auto; gap: 48px; align-items: center; }
+@media (max-width: 768px) { .summaryInner { grid-template-columns: 1fr; gap: 24px; } }
+.summaryScore { display: flex; align-items: center; gap: 16px; }
+.scoreNum { font-family: var(--font-cormorant),serif; font-size: 56px; font-weight: 400; color: var(--forest); line-height: 1; }
+.stars { color: var(--gold); font-size: 18px; letter-spacing: 2px; display: block; margin-bottom: 4px; }
+.scoreTotal { font-size: 12px; color: #999; font-family: var(--font-jost,sans-serif); margin: 0; }
+.summaryBars { display: flex; flex-direction: column; gap: 8px; }
+.barRow { display: flex; align-items: center; gap: 10px; }
+.barLabel { font-size: 12px; color: #888; font-family: var(--font-jost,sans-serif); width: 20px; text-align: right; }
+.barTrack { flex: 1; height: 6px; background: #f0ece3; border-radius: 3px; overflow: hidden; }
+.barFill { height: 100%; background: var(--gold); border-radius: 3px; }
+.barCount { font-size: 12px; color: #aaa; font-family: var(--font-jost,sans-serif); width: 20px; }
+.summaryCtas { display: flex; flex-direction: column; gap: 10px; }
+.summaryCtaPrimary { display: block; background: var(--forest); color: white; text-align: center; padding: 11px 24px; border-radius: 7px; font-size: 13px; font-weight: 500; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: background 0.2s; }
+.summaryCtaPrimary:hover { background: #1a3a2a; }
+.summaryCtaWa { display: block; background: #25D366; color: white; text-align: center; padding: 11px 24px; border-radius: 7px; font-size: 13px; font-weight: 500; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: opacity 0.2s; }
+.summaryCtaWa:hover { opacity: 0.9; }
+
+/* REVIEWS GRID */
+.reviewsSection { background: var(--parch); padding: 64px 24px 80px; }
+.reviewsInner { max-width: 1100px; margin: 0 auto; }
+.reviewsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 900px) { .reviewsGrid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .reviewsGrid { grid-template-columns: 1fr; } }
+
+.reviewCard { background: white; border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+.reviewHeader { display: flex; align-items: center; gap: 12px; }
+.reviewAvatar { width: 40px; height: 40px; border-radius: 50%; background: var(--forest); color: white; display: flex; align-items: center; justify-content: center; font-family: var(--font-cormorant),serif; font-size: 18px; flex-shrink: 0; }
+.reviewName { font-size: 14px; font-weight: 600; color: var(--forest); font-family: var(--font-jost,sans-serif); margin: 0; }
+.reviewMeta { font-size: 11px; color: #aaa; font-family: var(--font-jost,sans-serif); margin: 2px 0 0; }
+.stars { color: var(--gold); font-size: 14px; letter-spacing: 1px; }
+.reviewSuite { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage,#6b8c6b); font-family: var(--font-jost,sans-serif); margin: 0; }
+.reviewText { font-size: 13px; line-height: 1.75; color: #555; font-family: var(--font-jost,sans-serif); margin: 0; flex: 1; }
+
+.moreReviews { text-align: center; margin-top: 48px; }
+.moreReviews p { font-size: 14px; color: #777; font-family: var(--font-jost,sans-serif); margin-bottom: 12px; }
+.moreReviewsBtn { display: inline-block; border: 1.5px solid var(--forest); color: var(--forest); padding: 11px 24px; border-radius: 7px; font-size: 13px; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: all 0.2s; }
+.moreReviewsBtn:hover { background: var(--forest); color: white; }
+
+/* CTA */
+.cta { background: var(--forest); color: white; padding: 72px 24px; text-align: center; }
+.ctaInner { max-width: 480px; margin: 0 auto; }
+.cta h2 { font-family: var(--font-cormorant),serif; font-size: clamp(28px,4vw,38px); font-weight: 300; margin-bottom: 12px; }
+.cta p { font-size: 14px; opacity: 0.75; margin-bottom: 28px; font-family: var(--font-jost,sans-serif); }
+.ctaBtn { display: inline-block; background: var(--gold); color: white; padding: 13px 30px; border-radius: 7px; font-size: 14px; font-weight: 600; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: opacity 0.2s; }
+.ctaBtn:hover { opacity: 0.88; }
