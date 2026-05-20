@@ -313,10 +313,12 @@ export default function ReservasClient({ initialBookings }: Props) {
                   onClick={e => sendEmail(e, b)} disabled={sendingId === b.confirmacion}>
                   {sendingId === b.confirmacion ? <Loader2 size={12} className={styles.spin} /> : null} Email
                 </button>
-                <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnPdf}`}
-                  onClick={e => downloadPDF(e, b)}>
+                <a href={`/api/admin/reservas/${b.confirmacion}/render`} target="_blank" rel="noopener"
+                  className={`${styles.mobileCardBtn} ${styles.mobileCardBtnPdf}`}
+                  style={{ display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                  onClick={e => e.stopPropagation()}>
                   PDF
-                </button>
+                </a>
               </div>
             </div>
           );
@@ -385,14 +387,11 @@ export default function ReservasClient({ initialBookings }: Props) {
                         {sendingId === b.confirmacion ? <Loader2 size={13} className={styles.spin} /> : <Send size={13} />}
                       </button>
                       <a href={`/api/admin/reservas/${b.confirmacion}/render`} target="_blank" rel="noopener"
-                        className={styles.actionBtnPdf} title="Nueva plantilla (A4)"
+                        className={styles.actionBtnPdf} title="Descargar confirmación"
                         style={{ display:'inline-flex', alignItems:'center', justifyContent:'center' }}
                         onClick={e => e.stopPropagation()}>
                         <Download size={13} />
                       </a>
-                      <button className={styles.actionBtnPdf} onClick={e => downloadPDF(e, b)} title="PDF legacy" style={{ opacity:0.5 }}>
-                        <Download size={13} />
-                      </button>
                     </div>
                   </td>
                 </tr>

@@ -92,8 +92,7 @@ function SuccessPanel({ data, onEdit, onClose }: {
   }
 
   function downloadPDF() {
-    const tours = (() => { try { const idx = data.notas?.indexOf('||TOURS||'); if (!idx || idx < 0) return []; return JSON.parse(data.notas.slice(idx + 9)); } catch { return []; } })();
-    printBookingPDF({ ...data, tourItems: tours, compact: true });
+    window.open(`/api/admin/reservas/${data.confirmacion}/render`, '_blank');
   }
 
   return (
