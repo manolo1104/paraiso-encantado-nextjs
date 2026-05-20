@@ -8,6 +8,7 @@ import DestinoSection from '@/components/DestinoSection';
 import ToursSection from '@/components/ToursSection';
 import VIPQuote from '@/components/VIPQuote';
 import Testimonials from '@/components/Testimonials';
+import TripAdvisorReviews from '@/components/TripAdvisorReviews';
 import NewsletterSection from '@/components/NewsletterSection';
 import LocationSection from '@/components/LocationSection';
 import FAQ from '@/components/FAQ';
@@ -546,6 +547,7 @@ export default function HomePage() {
         <ToursSection />
         <VIPQuote />
         <Testimonials />
+        <TripAdvisorReviews />
         <NewsletterSection />
         <LocationSection />
         <FAQ />
