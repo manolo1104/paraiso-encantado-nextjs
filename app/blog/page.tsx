@@ -15,10 +15,18 @@ export const metadata: Metadata = {
     canonical: 'https://www.paraisoencantado.com/blog',
   },
   openGraph: {
+    siteName: 'Hotel Paraíso Encantado',
+    type: 'website',
     title: 'Blog · Xilitla y Huasteca Potosina | Hotel Paraíso Encantado',
     description:
       'Guías de viaje para visitar Xilitla, Las Pozas de Edward James, Cascada Tamul y la Huasteca Potosina.',
     url: 'https://www.paraisoencantado.com/blog',
+    images: [{
+      url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg',
+      width: 1200,
+      height: 630,
+      alt: 'Blog de Viaje — Hotel Paraíso Encantado, Xilitla, Huasteca Potosina',
+    }],
   },
 };
 

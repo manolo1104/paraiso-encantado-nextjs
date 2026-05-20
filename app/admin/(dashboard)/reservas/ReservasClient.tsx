@@ -384,7 +384,13 @@ export default function ReservasClient({ initialBookings }: Props) {
                         disabled={sendingId === b.confirmacion} title="Enviar confirmación">
                         {sendingId === b.confirmacion ? <Loader2 size={13} className={styles.spin} /> : <Send size={13} />}
                       </button>
-                      <button className={styles.actionBtnPdf} onClick={e => downloadPDF(e, b)} title="PDF">
+                      <a href={`/api/admin/reservas/${b.confirmacion}/render`} target="_blank" rel="noopener"
+                        className={styles.actionBtnPdf} title="Nueva plantilla (A4)"
+                        style={{ display:'inline-flex', alignItems:'center', justifyContent:'center' }}
+                        onClick={e => e.stopPropagation()}>
+                        <Download size={13} />
+                      </a>
+                      <button className={styles.actionBtnPdf} onClick={e => downloadPDF(e, b)} title="PDF legacy" style={{ opacity:0.5 }}>
                         <Download size={13} />
                       </button>
                     </div>

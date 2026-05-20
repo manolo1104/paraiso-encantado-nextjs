@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Paraíso Encantado — Confirmación de Reserva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<!-- ============================================================
+     DATOS DE LA RESERVA — reemplaza este bloque desde tu admin
+     ============================================================ -->
+<script type="application/json" id="booking-data">
+{
+  "folio": "PE-2026-0142",
+  "fechaEmision": "08 May 2026",
+  "guest": {
+    "name": "Sr. & Sra. Hernández",
+    "email": "guest@email.com",
+    "phone": "+52 55 1234 5678"
+  },
+  "stay": {
+    "checkIn":  "Vie 12 Jun 2026",
+    "checkOut": "Dom 14 Jun 2026",
+    "nights": 2,
+    "guests": 4
+  },
+  "rooms": [
+    { "name": "Suite Jungla",       "category": "Suite Master · Spa privado", "guests": 2, "nights": 2, "rate": 1900, "subtotal": 3800 },
+    { "name": "Suite Flor de Lis",  "category": "Suite Plus · Spa privado",   "guests": 2, "nights": 2, "rate": 1900, "subtotal": 3800 }
+  ],
+  "pricing": {
+    "subtotal": 7600,
+    "discount": 0,
+    "discountLabel": "",
+    "total": 7600,
+    "deposit": 3800,
+    "balance": 3800,
+    "currency": "MXN"
+  }
+}
+</script>
+
+<style>
+  :root{
+    --forest:#1e3012; --moss:#2d4a1a; --jade:#4a6e2e;
+    --sand:#c9a97a;  --gold:#a8842a;
+    --parch:#f0ebe3; --cream:#faf8f5;
+    --ink:#2a2218;   --bark:#3d2b14; --clay:#624820;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#2a2218;font-family:'Jost',sans-serif;font-weight:300;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+
+  /* Page = single A4 portrait (210x297mm @96dpi) */
+  .page{
+    width:794px;height:1123px;
+    background:var(--cream);
+    position:relative;overflow:hidden;
+    box-shadow:0 30px 80px rgba(30,48,18,.2),0 4px 16px rgba(30,48,18,.08);
+  }
+
+  h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:300;color:var(--forest);line-height:1.05}
+  em{font-style:italic}
+
+  /* ============ HEADER STRIPE ============ */
+  .stripe{
+    background:var(--forest);color:var(--cream);
+    padding:20px 48px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .brand{font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.5px}
+  .brand em{color:var(--sand)}
+  .stripe-meta{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(250,248,245,.7);text-align:right;line-height:1.7}
+
+  /* ============ HERO HEADER ============ */
+  .hero{padding:36px 48px 0;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:flex-end}
+  .eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+  .eyebrow::before{content:"";display:inline-block;width:24px;height:1px;background:var(--gold)}
+  .title{font-size:46px;line-height:.98;letter-spacing:-.5px}
+  .title em{color:var(--clay)}
+  .folio{padding-left:22px;border-left:1px solid rgba(168,132,42,.4);text-align:right}
+  .folio .lbl{font-size:9px;letter-spacing:2.5px;color:var(--clay);text-transform:uppercase;margin-bottom:6px}
+  .folio .num{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;color:var(--forest);line-height:1;white-space:nowrap}
+  .folio .em{font-size:10px;color:rgba(61,43,20,.6);margin-top:8px;letter-spacing:1px}
+
+  /* ============ GREETING ============ */
+  .greet{padding:18px 48px 0;font-size:13px;line-height:1.7;color:var(--bark)}
+  .greet strong{font-weight:400;color:var(--forest)}
+
+  /* ============ STAY BAND ============ */
+  .stay{
+    margin:24px 48px 0;
+    background:var(--forest);color:var(--cream);
+    padding:22px 28px;
+    display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px;
+    align-items:center;
+  }
+  .stay-cell{position:relative}
+  .stay-cell + .stay-cell::before{content:"";position:absolute;left:-9px;top:8px;bottom:8px;width:1px;background:rgba(201,169,122,.3)}
+  .stay-cell .lbl{font-size:9px;letter-spacing:2.5px;color:rgba(201,169,122,.9);text-transform:uppercase;margin-bottom:6px}
+  .stay-cell .big{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--cream);line-height:1.05;white-space:nowrap}
+  .stay-cell .sub{font-size:10.5px;color:rgba(250,248,245,.7);margin-top:4px;letter-spacing:.5px}
+
+  /* ============ ROOMS TABLE ============ */
+  .rooms{margin:26px 48px 0}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+  .section-eyebrow{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .section-meta{font-size:10px;color:rgba(61,43,20,.6);letter-spacing:1px;text-transform:uppercase}
+
+  .rooms-table{width:100%;border-collapse:collapse;font-size:12px}
+  .rooms-table thead th{
+    text-align:left;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--clay);font-weight:500;
+    padding:8px 8px;border-bottom:1px solid rgba(168,132,42,.35);
+  }
+  .rooms-table thead th.num{text-align:right}
+  .rooms-table tbody td{padding:12px 8px;border-bottom:1px dotted rgba(168,132,42,.3);vertical-align:top}
+  .rooms-table tbody td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--forest)}
+  .rooms-table .room-name{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;color:var(--forest);line-height:1.1}
+  .rooms-table .room-cat{font-size:10px;color:rgba(61,43,20,.65);letter-spacing:.3px;margin-top:3px}
+
+  /* ============ TOTAL ============ */
+  .totals{
+    margin:18px 48px 0;
+    display:grid;grid-template-columns:1fr auto;gap:24px;align-items:flex-end;
+  }
+  .totals-left{font-size:12px;color:var(--bark);line-height:1.8}
+  .totals-left .row{display:flex;justify-content:space-between;gap:24px}
+  .totals-left .row[hidden]{display:none}
+  .totals-left .row .v{font-variant-numeric:tabular-nums;color:var(--forest)}
+  .totals-left .row.discount .v,.totals-left .row.discount .k{color:var(--gold);font-style:italic}
+  .totals-right{text-align:right;padding-left:24px;border-left:2px solid var(--gold)}
+  .totals-right .lbl{font-size:9px;letter-spacing:2.5px;color:var(--clay);text-transform:uppercase;margin-bottom:6px}
+  .totals-right .amt{font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--forest);line-height:1;font-variant-numeric:tabular-nums}
+  .totals-right .ccy{font-size:12px;color:rgba(61,43,20,.55);letter-spacing:1px;margin-left:4px}
+  .totals-right .pay{margin-top:10px;font-size:10.5px;color:var(--bark);line-height:1.7;text-align:right}
+  .totals-right .pay b{color:var(--forest);font-weight:400}
+  .totals-right .pay .bal{color:var(--gold);font-weight:500}
+
+  /* ============ INFO GRID (Restaurante + Ubicación) ============ */
+  .info-grid{
+    margin:22px 48px 0;
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;
+  }
+  .info-card{
+    padding:14px 18px;background:var(--parch);
+    border-left:2px solid var(--gold);
+    display:flex;flex-direction:column;
+  }
+  .info-card .h{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:6px}
+  .info-card .sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--forest);line-height:1.1;margin-bottom:10px}
+  .info-card .schedule{display:grid;gap:4px;font-size:11px;color:var(--bark)}
+  .info-card .schedule .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .info-card .schedule .row .v{font-variant-numeric:tabular-nums;color:var(--forest)}
+  .info-card .schedule .row .dots{flex:1;border-bottom:1px dotted rgba(168,132,42,.4);height:8px}
+  .info-card .addr{font-size:11.5px;color:var(--bark);line-height:1.55}
+  .info-card .addr strong{color:var(--forest);font-weight:400}
+  .info-card .map-link{
+    display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:10px;
+    font-size:10px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;text-decoration:none;align-self:flex-start;
+  }
+  .info-card .map-link span.line{border-bottom:1px solid var(--gold);padding-bottom:2px}
+  .info-card .map-link:hover span.line{color:var(--forest);border-color:var(--forest)}
+
+  /* ============ GUEST FOOTER NOTE ============ */
+  .note{
+    margin:14px 48px 0;
+    font-size:10.5px;color:rgba(61,43,20,.7);line-height:1.65;font-style:italic;
+  }
+  .note em{color:var(--forest);font-style:italic}
+
+  /* ============ FOOTER STRIPE ============ */
+  .foot{
+    position:absolute;left:0;right:0;bottom:0;
+    background:var(--forest);color:rgba(250,248,245,.85);
+    padding:12px 48px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;
+  }
+  .foot .mid{color:var(--sand)}
+
+  /* ============ PRINT ============ */
+  @page{size:A4 portrait;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0}
+    .page{box-shadow:none;margin:0}
+  }
+</style>
+</head>
+<body>
+
+<div class="page" id="page">
+  <!-- Top stripe -->
+  <div class="stripe">
+    <div class="brand">Paraíso <em>Encantado</em></div>
+    <div class="stripe-meta">Xilitla · S.L.P. · México<br />paraisoencantado.com</div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Confirmación de Reservación</div>
+      <h1 class="title">Tu refugio<br /><em>está reservado.</em></h1>
+    </div>
+    <div class="folio">
+      <div class="lbl">Folio</div>
+      <div class="num" data-bind="folio">—</div>
+      <div class="em">Emitido <span data-bind="fechaEmision">—</span></div>
+    </div>
+  </div>
+
+  <!-- Greeting -->
+  <div class="greet">
+    <strong data-bind="guest.name">—</strong>, gracias por elegirnos. Tu reservación está <em>confirmada</em>.
+    Encuentra abajo el resumen de tu estancia. Si necesitas modificar algo, escríbenos por WhatsApp.
+  </div>
+
+  <!-- Stay band -->
+  <div class="stay">
+    <div class="stay-cell">
+      <div class="lbl">Check-in</div>
+      <div class="big" data-bind="stay.checkIn">—</div>
+      <div class="sub">desde 15:00 hrs</div>
+    </div>
+    <div class="stay-cell">
+      <div class="lbl">Check-out</div>
+      <div class="big" data-bind="stay.checkOut">—</div>
+      <div class="sub">hasta 12:00 hrs</div>
+    </div>
+    <div class="stay-cell">
+      <div class="lbl">Noches</div>
+      <div class="big" data-bind="stay.nights">—</div>
+      <div class="sub">estancia total</div>
+    </div>
+    <div class="stay-cell">
+      <div class="lbl">Huéspedes</div>
+      <div class="big" data-bind="stay.guests">—</div>
+      <div class="sub">total en grupo</div>
+    </div>
+  </div>
+
+  <!-- Rooms -->
+  <div class="rooms">
+    <div class="section-head">
+      <div class="section-eyebrow">Habitaciones reservadas</div>
+      <div class="section-meta"><span data-bind="rooms.length">—</span> suite(s)</div>
+    </div>
+    <table class="rooms-table">
+      <thead>
+        <tr>
+          <th style="width:48%">Suite</th>
+          <th class="num">Huésp.</th>
+          <th class="num">Noches</th>
+          <th class="num">Tarifa</th>
+          <th class="num">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody id="rooms-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Totals -->
+  <div class="totals">
+    <div class="totals-left">
+      <div class="row"><span class="k">Subtotal</span><span class="v" data-bind="pricing.subtotal" data-fmt="money">—</span></div>
+      <div class="row discount" id="discount-row" hidden>
+        <span class="k" data-bind="pricing.discountLabel">Descuento</span>
+        <span class="v">−<span data-bind="pricing.discount" data-fmt="money">—</span></span>
+      </div>
+    </div>
+    <div class="totals-right">
+      <div class="lbl">Total</div>
+      <div><span class="amt" data-bind="pricing.total" data-fmt="money">—</span><span class="ccy" data-bind="pricing.currency">MXN</span></div>
+      <div class="pay">
+        <b>Anticipo pagado:</b> <span data-bind="pricing.deposit" data-fmt="money">—</span> MXN<br />
+        <b>Saldo al llegar:</b> <span class="bal" data-bind="pricing.balance" data-fmt="money">—</span> MXN
+      </div>
+    </div>
+  </div>
+
+  <!-- Restaurante + Ubicación -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="h">✦  Restaurante El Papán Huasteco</div>
+      <div class="sub">Junto al lobby · cocina huasteca</div>
+      <div class="schedule">
+        <div class="row"><span>Desayuno</span><span class="dots"></span><span class="v">08:00 — 12:00</span></div>
+        <div class="row"><span>Comida</span><span class="dots"></span><span class="v">12:00 — 18:00</span></div>
+        <div class="row"><span>Cena</span><span class="dots"></span><span class="v">18:00 — 20:00</span></div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="h">⌖  Ubicación</div>
+      <div class="sub">A 400 m caminando de Las Pozas</div>
+      <div class="addr">
+        <strong>Carretera Federal 120</strong><br />
+        Xilitla, San Luis Potosí · México<br />
+        Jardín Surrealista de Edward James a 5 min a pie
+      </div>
+      <a class="map-link" href="https://maps.google.com/maps?q=Hotel+Paraiso+Encantado+Xilitla+San+Luis+Potosi" target="_blank" rel="noopener">
+        <span class="line">Abrir en Google Maps</span> &nbsp;→
+      </a>
+    </div>
+  </div>
+
+  <div class="note">
+    Recepción 24/7 · <em>+52 489 100 7679</em> · Cancelación gratuita hasta 48 h antes · Mascotas no aceptadas · WiFi y estacionamiento incluidos. Desayuno no incluido en tarifa.
+  </div>
+
+  <!-- Footer stripe -->
+  <div class="foot">
+    <span>+52 489 100 7679</span>
+    <span class="mid">Te esperamos en la selva</span>
+    <span>paraisoencantado.com</span>
+  </div>
+</div>
+
+<script>
+  // ---------- Renderer ----------
+  const DATA = JSON.parse(document.getElementById('booking-data').textContent);
+
+  const money = (n) => '$' + Number(n || 0).toLocaleString('es-MX');
+
+  const get = (obj, path) =>
+    path.split('.').reduce((o, k) => (o == null ? undefined : (k === 'length' ? (o.length ?? o) : o[k])), obj);
+
+  // Fill bound spans
+  document.querySelectorAll('[data-bind]').forEach((el) => {
+    const path = el.getAttribute('data-bind');
+    const fmt  = el.getAttribute('data-fmt');
+    let v = get(DATA, path);
+    if (v == null) return;
+    if (fmt === 'money') v = money(v);
+    el.textContent = v;
+  });
+
+  // Render rooms
+  const rooms = DATA.rooms || [];
+  const tbody = document.getElementById('rooms-body');
+  tbody.innerHTML = rooms.map(r => `
+    <tr>
+      <td>
+        <div class="room-name">${escapeHtml(r.name)}</div>
+        ${r.category ? `<div class="room-cat">${escapeHtml(r.category)}</div>` : ''}
+      </td>
+      <td class="num">${r.guests ?? '—'}</td>
+      <td class="num">${r.nights ?? '—'}</td>
+      <td class="num">${money(r.rate)}</td>
+      <td class="num"><strong style="color:var(--forest);font-weight:400">${money(r.subtotal)}</strong></td>
+    </tr>
+  `).join('');
+
+  // Show discount row only if > 0
+  if ((DATA.pricing?.discount ?? 0) > 0) {
+    document.getElementById('discount-row').hidden = false;
+  }
+
+  function escapeHtml(s){return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+</script>
+
+</body>
+</html>

@@ -43,6 +43,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
+    siteName: 'Hotel Paraíso Encantado',
     title: 'Hotel Paraíso Encantado | Xilitla, Huasteca Potosina',
     description:
       '13 suites con spa privado a 5 minutos caminando del Jardín de Edward James. Reserva directa sin comisiones.',
@@ -58,6 +59,11 @@ export const metadata: Metadata = {
         alt: 'Hotel Paraíso Encantado — Xilitla, Huasteca Potosina',
       },
     ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@paraisoencantado',
+    creator: '@paraisoencantado',
   },
 };
 

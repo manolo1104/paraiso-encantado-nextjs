@@ -1180,7 +1180,10 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
                     <button className={styles.waBtn} onClick={() => openWhatsApp(q)} title={q.estado === 'ENVIADA' ? 'Seguimiento WhatsApp' : 'WhatsApp'}>
                       <MessageSquare size={14} />
                     </button>
-                    <button className={styles.pdfBtn} onClick={() => printQuotePDF(q)} title="Descargar PDF">
+                    <a href={`/api/admin/cotizaciones/${q.id}/render`} target="_blank" rel="noopener" className={styles.pdfBtn} title="Nueva plantilla PDF (A4)" style={{ display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
+                      <Download size={14} />
+                    </a>
+                    <button className={styles.pdfBtn} onClick={() => printQuotePDF(q)} title="PDF legacy" style={{ opacity: 0.5 }}>
                       <Download size={14} />
                     </button>
                     <button className={styles.editBtn} onClick={() => setEditQuote(q)} title="Editar">

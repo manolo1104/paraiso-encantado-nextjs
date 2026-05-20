@@ -1,10 +1,13 @@
+import type { Metadata } from 'next';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import styles from './admin.module.css';
 
-export const metadata = { title: 'Dashboard · Paraíso Encantado' };
+export const metadata: Metadata = {
+  title: 'Dashboard · Paraíso Encantado',
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
 
 // La protección de rutas la maneja el middleware (middleware.ts)
-// No redirigir aquí para evitar loop infinito en /admin/login
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={styles.shell}>

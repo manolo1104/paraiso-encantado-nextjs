@@ -4,6 +4,8 @@ import { getAllPosts } from '@/lib/blog';
 
 const BASE = 'https://www.paraisoencantado.com';
 const SITE_UPDATED = '2026-05-19';
+// Nuevas páginas añadidas en esta sesión
+const NEW_PAGES = ['2026-05-19'];
 
 function encodeImgPath(path: string): string {
   return path.split('/').map((s) => encodeURIComponent(s)).join('/');
@@ -31,6 +33,7 @@ export default function sitemap({ id }: { id: number }): MetadataRoute.Sitemap {
       { url: `${BASE}/hotel-cerca-de-las-pozas`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.85, images: [`${BASE}/images/atracciones/ruta-surrealista-pozas.png`] },
       { url: `${BASE}/xilitla`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.80, images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`] },
       { url: `${BASE}/sobre-nosotros`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.65 },
+      { url: `${BASE}/reviews`, lastModified: SITE_UPDATED, changeFrequency: 'weekly', priority: 0.75 },
       { url: `${BASE}/contacto`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.60 },
       // Versión en inglés con hreflang ya declarado en HTML <head> vía metadata.alternates
       { url: `${BASE}/en`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.75, images: [`${BASE}/images/JUNGLA/PORTADA.JPG`] },
