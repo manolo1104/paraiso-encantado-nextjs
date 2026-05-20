@@ -113,6 +113,24 @@ export default function Footer() {
 
       </div>
 
+      {/* BoutiqueHotel.me badge — requerido para aparecer en el directorio */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '18px 24px', textAlign: 'center' }}>
+        <a
+          href="https://boutiquehotel.me/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Featured on Boutiquehotel.me"
+        >
+          <img
+            src="https://static.boutiquehotel.me/logo/boutique-featured-light.png"
+            alt="Featured on Boutiquehotel.me"
+            width={180}
+            height={40}
+            style={{ width: '180px', maxWidth: '100%', height: 'auto', display: 'inline-block' }}
+          />
+        </a>
+      </div>
+
       {/* Footer bottom */}
       <div className={styles.bottom}>
         <p>© {currentYear} Paraíso Encantado. Todos los derechos reservados.</p>
