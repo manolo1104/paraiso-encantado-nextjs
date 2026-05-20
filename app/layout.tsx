@@ -25,7 +25,7 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
-  title: 'Hotel Paraíso Encantado · Xilitla | A 5 min del Jardín de Edward James',
+  title: 'Hotel Boutique en la Huasteca Potosina · Xilitla | Paraíso Encantado',
   description:
     'Hotel boutique en Xilitla a 5 min del Jardín de Edward James. 13 suites con spa privado desde $1,200 MXN. Reserva directa · Cancelación gratuita 48h.',
   keywords: [
