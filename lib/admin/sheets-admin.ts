@@ -411,27 +411,55 @@ async function ensureSheet(sheetName: string, headers: string[]) {
 
 export async function createQuote(data: Omit<AdminQuote, 'rowIndex' | 'id' | 'fecha' | 'estado'>): Promise<string> {
   const client = await getSheetsClient();
-  if (!client) throw new Error('Sin conexión a Google Sheets');
-
-  await ensureSheet(COTIZACIONES_SHEET, ['ID','Fecha','Cliente','Teléfono','Email','Suite','CheckIn','CheckOut','Noches','PrecioTotal','Estado','Notas']);
+  if (!client) throw new Error('Sin conexión a Google Sheets. Verifica que GOOGLE_SHEETS_CREDENTIALS y GOOGLE_SHEET_ID estén configurados.');
 
   const id = 'COT-' + Date.now().toString(36).toUpperCase();
   const fecha = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+  const row = [
+    id, fecha, data.cliente, data.telefono, data.email,
+    data.suite, data.checkin, data.checkout, data.noches,
+    data.precioTotal, 'BORRADOR', data.notas,
+  ];
 
-  await sheetsCall(() =>
+  const appendRow = () => sheetsCall(() =>
     client.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: `${COTIZACIONES_SHEET}!A:L`,
       valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: [[
-          id, fecha, data.cliente, data.telefono, data.email,
-          data.suite, data.checkin, data.checkout, data.noches,
-          data.precioTotal, 'BORRADOR', data.notas,
-        ]],
-      },
+      requestBody: { values: [row] },
     })
   );
+
+  try {
+    await appendRow();
+  } catch (firstErr: any) {
+    const msg = String(firstErr?.message ?? '');
+    // Si la pestaña no existe, crearla y reintentar
+    if (msg.includes('parse range') || msg.includes('Unable to') || msg.includes('notFound') || msg.includes('404')) {
+      // Crear la pestaña
+      await sheetsCall(() =>
+        client.spreadsheets.batchUpdate({
+          spreadsheetId: SHEET_ID,
+          requestBody: { requests: [{ addSheet: { properties: { title: COTIZACIONES_SHEET } } }] },
+        })
+      ).catch(() => {}); // Ignorar si ya existe (race condition)
+
+      // Agregar encabezados
+      await sheetsCall(() =>
+        client.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `${COTIZACIONES_SHEET}!A1`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: [['ID','Fecha','Cliente','Teléfono','Email','Suite','CheckIn','CheckOut','Noches','PrecioTotal','Estado','Notas']] },
+        })
+      ).catch(() => {});
+
+      // Reintentar
+      await appendRow();
+    } else {
+      throw firstErr;
+    }
+  }
 
   return id;
 }

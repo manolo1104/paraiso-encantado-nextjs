@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { getAllQuotes } from '@/lib/admin/sheets-admin';
+import { BOOKING_ROOMS } from '@/lib/booking';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,14 +57,10 @@ const SUITE_CATEGORY: Record<string, string> = {
   'Helechos 2':          'Suite Familiar Plus · 4 camas · hasta 6 personas',
 };
 
-// Base price per room per 2 guests
-const PRECIO_BASE: Record<string, number> = {
-  'Suite Flor de Liz 1': 1900, 'Suite Flor de Liz 2': 1900,
-  'Suite LindaVista': 1900, 'Jungla': 1900, 'Suite Lajas': 1900,
-  'Helechos 1': 1900, 'Helechos 2': 1900,
-  'Lirios 1': 1500, 'Lirios 2': 1500, 'Orquídeas 2': 1500,
-  'Orquídeas Doble': 1500, 'Orquídeas 3': 1500, 'Bromelias': 1500,
-};
+// Precio base por habitación (fuente: lib/booking.ts)
+const PRECIO_BASE: Record<string, number> = Object.fromEntries(
+  BOOKING_ROOMS.map(r => [r.name, r.price])
+);
 
 export async function GET(
   _req: NextRequest,

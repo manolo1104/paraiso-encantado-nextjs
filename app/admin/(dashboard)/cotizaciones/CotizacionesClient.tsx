@@ -5,35 +5,17 @@ import { Plus, Send, MessageSquare, RefreshCw, Loader2, X, Download, Pencil, Tra
 import { buildBookingHtml } from '@/lib/booking-html';
 import type { TourItem } from '@/lib/booking-html';
 import type { AdminQuote } from '@/lib/admin/sheets-admin';
+import { BOOKING_ROOMS } from '@/lib/booking';
 import styles from './cotizaciones.module.css';
 
-const SUITES = [
-  'Suite Flor de Liz 1','Suite Flor de Liz 2','Suite LindaVista','Jungla','Suite Lajas',
-  'Lirios 1','Lirios 2','Orquídeas 2','Orquídeas Doble','Orquídeas 3','Bromelias',
-  'Helechos 1','Helechos 2',
-];
-
-// Precio por suite según personas (igual que data/suites.ts)
-const PRECIO_TIERS: Record<string, Record<number, number>> = {
-  'Jungla':            { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite LindaVista':  { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite Flor de Liz 1': { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite Flor de Liz 2': { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite Lajas':       { 2: 1900, 3: 2400, 4: 2400 },
-  'Helechos 1':        { 2: 1900, 3: 2400, 4: 2400, 5: 2700, 6: 3000 },
-  'Helechos 2':        { 2: 1900, 3: 2400, 4: 2400, 5: 2700, 6: 3000 },
-  'Lirios 1':          { 2: 1500, 3: 1900, 4: 1900 },
-  'Lirios 2':          { 2: 1500, 3: 1900, 4: 1900 },
-  'Orquídeas 2':       { 2: 1500 },
-  'Orquídeas Doble':   { 2: 1500, 3: 1900, 4: 1900 },
-  'Orquídeas 3':       { 2: 1500 },
-  'Bromelias':         { 2: 1500, 3: 1900, 4: 1900 },
-};
+// Fuente única de verdad: lib/booking.ts
+const SUITES = BOOKING_ROOMS.map(r => r.name);
 
 function getPrecioNoche(suite: string, personas: number): number {
-  const tiers = PRECIO_TIERS[suite] || { 2: 1900 };
+  const room = BOOKING_ROOMS.find(r => r.name === suite);
+  const tiers = room?.priceTiers ?? { 2: 1900 };
   const keys = Object.keys(tiers).map(Number).sort((a, b) => a - b);
-  let precio = tiers[keys[0]];
+  let precio = tiers[keys[0]] ?? 1900;
   for (const k of keys) {
     if (personas >= k) precio = tiers[k];
   }
@@ -504,7 +486,7 @@ export function printBookingPDF(b: {
 
 interface Props { initialQuotes: AdminQuote[] }
 
-function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => Promise<void> }) {
   const [form, setForm] = useState({ cliente: '', telefono: '', email: '', checkin: '', checkout: '' });
   const [habitaciones, setHabitaciones] = useState<HabItem[]>([{ suite: SUITES[3], huespedes: 2 }]);
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
@@ -587,9 +569,13 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al crear');
-      onSaved();
+      await onSaved();
       onClose();
-    } catch (e: any) { setError(e.message); }
+    } catch (e: any) {
+      const msg = e.message || 'Error al guardar';
+      setError(msg);
+      alert(`❌ Error al crear cotización:\n${msg}`);
+    }
     finally { setLoading(false); }
   }
 
@@ -674,11 +660,36 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
           <div className={styles.roomsSection}>
             <div className={styles.roomsSectionHeader}>
               <span className={styles.roomsSectionLabel}>🎁 Paquetes Todo Incluido</span>
-              <button type="button" className={styles.addRoomBtn} onClick={addPaquete}>
-                <Plus size={13} /> Agregar paquete
-              </button>
             </div>
-            {paqueteItems.length === 0 && <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin paquetes (opcional)</p>}
+            {/* Catálogo de paquetes — clic para agregar */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+              {PAQUETES_CATALOG.filter(c => c.precio > 0).map(cat => {
+                const yaAgregado = paqueteItems.some(p => p.nombre === cat.nombre);
+                return (
+                  <button
+                    key={cat.nombre}
+                    type="button"
+                    onClick={() => {
+                      if (!yaAgregado) {
+                        setPaqueteItems(p => [...p, { nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio }]);
+                        setPrecioManual(null);
+                      }
+                    }}
+                    title={cat.descripcion}
+                    style={{
+                      padding: '5px 10px', fontSize: '0.75rem', borderRadius: 6, cursor: yaAgregado ? 'default' : 'pointer',
+                      border: '1px solid', borderColor: yaAgregado ? '#4a7a2e' : '#c9b99a',
+                      background: yaAgregado ? '#e8f4e8' : '#fdf9f4',
+                      color: yaAgregado ? '#2d5016' : '#5a4e3c',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {yaAgregado ? '✓ ' : '+ '}{cat.nombre} · {cat.noches}n · ${cat.precio.toLocaleString('es-MX')}
+                  </button>
+                );
+              })}
+            </div>
+            {paqueteItems.length === 0 && <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '4px 0' }}>Sin paquetes agregados</p>}
             {paqueteItems.map((p, i) => (
               <div key={i} className={styles.roomRow} style={{ flexWrap: 'wrap', gap: 6 }}>
                 <select className={styles.roomRowSelect} style={{ flex: '2 1 140px' }} value={p.nombre}
@@ -986,11 +997,36 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
           <div className={styles.roomsSection}>
             <div className={styles.roomsSectionHeader}>
               <span className={styles.roomsSectionLabel}>🎁 Paquetes Todo Incluido</span>
-              <button type="button" className={styles.addRoomBtn} onClick={addPaqueteE}>
-                <Plus size={13} /> Agregar paquete
-              </button>
             </div>
-            {paqueteItems.length === 0 && <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin paquetes (opcional)</p>}
+            {/* Catálogo de paquetes — clic para agregar */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+              {PAQUETES_CATALOG.filter(c => c.precio > 0).map(cat => {
+                const yaAgregado = paqueteItems.some(p => p.nombre === cat.nombre);
+                return (
+                  <button
+                    key={cat.nombre}
+                    type="button"
+                    onClick={() => {
+                      if (!yaAgregado) {
+                        setPaqueteItems(p => [...p, { nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio }]);
+                        setPrecioManual(null);
+                      }
+                    }}
+                    title={cat.descripcion}
+                    style={{
+                      padding: '5px 10px', fontSize: '0.75rem', borderRadius: 6, cursor: yaAgregado ? 'default' : 'pointer',
+                      border: '1px solid', borderColor: yaAgregado ? '#4a7a2e' : '#c9b99a',
+                      background: yaAgregado ? '#e8f4e8' : '#fdf9f4',
+                      color: yaAgregado ? '#2d5016' : '#5a4e3c',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {yaAgregado ? '✓ ' : '+ '}{cat.nombre} · {cat.noches}n · ${cat.precio.toLocaleString('es-MX')}
+                  </button>
+                );
+              })}
+            </div>
+            {paqueteItems.length === 0 && <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '4px 0' }}>Sin paquetes agregados</p>}
             {paqueteItems.map((p, i) => (
               <div key={i} className={styles.roomRow} style={{ flexWrap: 'wrap', gap: 6 }}>
                 <select className={styles.roomRowSelect} style={{ flex: '2 1 140px' }} value={p.nombre}
@@ -1182,7 +1218,7 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
       body: JSON.stringify(changes),
     });
     setEditQuote(null);
-    refresh();
+    await refresh();
   }
 
   function openWhatsApp(q: AdminQuote) {
@@ -1368,7 +1404,7 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
       </div>
       </div> {/* /tableScrollWrap */}
 
-      {showModal && <QuoteModal onClose={() => setShowModal(false)} onSaved={() => { refresh(); setShowModal(false); }} />}
+      {showModal && <QuoteModal onClose={() => setShowModal(false)} onSaved={refresh} />}
       {editQuote && <EditQuoteModal quote={editQuote} onClose={() => setEditQuote(null)} onSaved={saveEdit} />}
     </div>
   );
