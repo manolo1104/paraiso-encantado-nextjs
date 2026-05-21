@@ -23,7 +23,12 @@ function fmtToday(): string {
 function parseTours(notas: string): { nombre: string; personas: number; precio: number }[] {
   const idx = notas.indexOf('||TOURS||');
   if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + 9)); } catch { return []; }
+  try { return JSON.parse(notas.slice(idx + 9).split('||PAQUETES||')[0]); } catch { return []; }
+}
+function parsePaquetes(notas: string): { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[] {
+  const idx = notas.indexOf('||PAQUETES||');
+  if (idx === -1) return [];
+  try { return JSON.parse(notas.slice(idx + 12)); } catch { return []; }
 }
 
 const SUITE_CATEGORY: Record<string, string> = {
@@ -64,8 +69,10 @@ export async function GET(
   const anticipo = b.anticipo || 0;
   const balance  = b.total - anticipo;
   const tours = parseTours(b.notas || '');
+  const paquetes = parsePaquetes(b.notas || '');
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
-  const habsTotal = b.total - toursTotal;
+  const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
+  const habsTotal = b.total - toursTotal - paquetesTotal;
 
   // Parse room names: "Jungla (2 personas)" → { name, guests }
   const rawRooms = b.habitaciones
@@ -93,10 +100,15 @@ export async function GET(
     rooms.push({
       name: `🗺 ${t.nombre}`,
       category: `Tour · ${t.personas} persona${t.personas !== 1 ? 's' : ''}`,
-      guests: t.personas,
-      nights: 1,
-      rate: t.precio,
-      subtotal: t.precio * t.personas,
+      guests: t.personas, nights: 1, rate: t.precio, subtotal: t.precio * t.personas,
+    });
+  }
+  // Add packages
+  for (const p of paquetes) {
+    rooms.push({
+      name: `🎁 ${p.nombre}`,
+      category: `Paquete · ${p.habitacion} · ${p.noches} noches · ${p.personas} persona${p.personas !== 1 ? 's' : ''}`,
+      guests: p.personas, nights: p.noches, rate: Math.round(p.precio / p.noches), subtotal: p.precio,
     });
   }
 

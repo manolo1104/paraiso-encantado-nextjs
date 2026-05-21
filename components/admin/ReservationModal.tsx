@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Loader2, AlertTriangle, CheckCircle, Plus, MessageSquare, Mail, Download, Pencil } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
-import { printBookingPDF, TOURS_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
+import { TOURS_CATALOG, PAQUETES_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import type { TourItem } from '@/lib/booking-html';
+import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import styles from './Modal.module.css';
 
 const SUITES = [
@@ -179,10 +180,16 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     const toursIdx = after.indexOf(TOURS_SEP_LOCAL);
     return toursIdx === -1 ? after.trim() : after.slice(0, toursIdx).trim();
   });
+  const PAQUETES_SEP_LOCAL = '||PAQUETES||';
   const [tourItems, setTourItems] = useState<TourItem[]>(() => {
     const idx = rawNotas.indexOf(TOURS_SEP_LOCAL);
     if (idx === -1) return [];
-    try { return JSON.parse(rawNotas.slice(idx + TOURS_SEP_LOCAL.length)); } catch { return []; }
+    try { return JSON.parse(rawNotas.slice(idx + TOURS_SEP_LOCAL.length).split(PAQUETES_SEP_LOCAL)[0]); } catch { return []; }
+  });
+  const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(() => {
+    const idx = rawNotas.indexOf(PAQUETES_SEP_LOCAL);
+    if (idx === -1) return [];
+    try { return JSON.parse(rawNotas.slice(idx + PAQUETES_SEP_LOCAL.length)); } catch { return []; }
   });
 
   function addTourM() { setTourItems(t => [...t, { nombre: TOURS_CATALOG[0].nombre, personas: 2, precio: TOURS_CATALOG[0].precio }]); }
@@ -195,6 +202,21 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
         return { ...item, nombre: String(val), precio: cat ? cat.precio : item.precio };
       }
       return { ...item, [key]: typeof val === 'string' ? parseInt(val) || 0 : val };
+    }));
+  }
+  function addPaqueteM() {
+    const cat = PAQUETES_CATALOG[0];
+    setPaqueteItems(p => [...p, { nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio }]);
+  }
+  function removePaqueteM(i: number) { setPaqueteItems(p => p.filter((_, idx) => idx !== i)); }
+  function updatePaqueteM(i: number, key: keyof PaqueteItem, val: string | number) {
+    setPaqueteItems(p => p.map((item, idx) => {
+      if (idx !== i) return item;
+      if (key === 'nombre') {
+        const cat = PAQUETES_CATALOG.find(c => c.nombre === val);
+        return cat ? { ...item, nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio } : { ...item, nombre: String(val) };
+      }
+      return { ...item, [key]: typeof val === 'string' ? (isNaN(Number(val)) ? val : Number(val)) : val };
     }));
   }
 
@@ -296,7 +318,8 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const totalHuespedes = habitaciones.reduce((sum, h) => sum + h.huespedes, 0);
   const habsCalculado = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * Math.max(form.noches, 1), 0);
   const toursCalculado = tourItems.reduce((s, t) => s + t.precio * t.personas, 0);
-  const precioCalculado = habsCalculado + toursCalculado;
+  const paquetesCalculado = paqueteItems.reduce((s, p) => s + p.precio, 0);
+  const precioCalculado = habsCalculado + toursCalculado + paquetesCalculado;
   const restante = restanteOverride ?? (form.total - anticipo);
 
   // Auto-calcular noches y precio (only when NOT editing)
@@ -378,6 +401,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       const habitacion = habitaciones.map(h => h.suite).join(', ');
       let notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
       if (tourItems.length > 0) notas += `${TOURS_SEP_LOCAL}${JSON.stringify(tourItems)}`;
+      if (paqueteItems.length > 0) notas += `${PAQUETES_SEP_LOCAL}${JSON.stringify(paqueteItems)}`;
       const url = isEdit ? `/api/admin/reservas/${booking!.confirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
       const res = await fetch(url, {
@@ -594,6 +618,44 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
             ))}
             {tourItems.length > 0 && (
               <p className={styles.roomsTotal}>Tours: ${toursCalculado.toLocaleString('es-MX')} MXN</p>
+            )}
+          </div>
+
+          {/* Paquetes */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>🎁 Paquetes Todo Incluido</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addPaqueteM}>
+                <Plus size={13} /> Agregar paquete
+              </button>
+            </div>
+            {paqueteItems.length === 0 && <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin paquetes (opcional)</p>}
+            {paqueteItems.map((p, i) => (
+              <div key={i} className={styles.roomRow} style={{ flexWrap: 'wrap', gap: 6 }}>
+                <select className={styles.roomRowSelect} style={{ flex: '2 1 140px' }} value={p.nombre}
+                  onChange={e => updatePaqueteM(i, 'nombre', e.target.value)}>
+                  {PAQUETES_CATALOG.map(c => <option key={c.nombre}>{c.nombre}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} style={{ flex: '2 1 120px' }} value={p.habitacion}
+                  onChange={e => updatePaqueteM(i, 'habitacion', e.target.value)}>
+                  {SUITES.map(s => <option key={s}>{s}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={p.noches}
+                  onChange={e => updatePaqueteM(i, 'noches', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7].map(n => <option key={n} value={n}>{n}n</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={p.personas}
+                  onChange={e => updatePaqueteM(i, 'personas', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                <input type="number" min={0} className={styles.roomPriceInput}
+                  value={p.precio} title="Precio total del paquete"
+                  onChange={e => updatePaqueteM(i, 'precio', parseInt(e.target.value) || 0)} />
+                <button type="button" className={styles.removeRoomBtn} onClick={() => removePaqueteM(i)}><X size={13} /></button>
+              </div>
+            ))}
+            {paqueteItems.length > 0 && (
+              <p className={styles.roomsTotal}>Paquetes: ${paquetesCalculado.toLocaleString('es-MX')} MXN</p>
             )}
           </div>
 

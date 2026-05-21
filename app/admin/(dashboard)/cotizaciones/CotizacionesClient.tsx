@@ -40,6 +40,33 @@ function getPrecioNoche(suite: string, personas: number): number {
   return precio;
 }
 
+// ── Paquetes Todo Incluido ────────────────────────────────────────────────────
+export interface PaqueteItem {
+  nombre: string;
+  habitacion: string; // suite seleccionada para este paquete
+  noches: number;
+  personas: number;
+  precio: number;     // precio total del paquete (editable)
+}
+
+export const PAQUETES_CATALOG: { nombre: string; habitacionDefault: string; noches: number; personas: number; precio: number; descripcion: string }[] = [
+  { nombre: 'Noche de Selva',      habitacionDefault: 'Suite Flor de Liz 1', noches: 2, personas: 2, precio: 5200,  descripcion: '2 noches · spa privado · 2 desayunos · Las Pozas' },
+  { nombre: 'Ruta de las Pozas',   habitacionDefault: 'Jungla',              noches: 3, personas: 2, precio: 8900,  descripcion: '3 noches · desayunos · tour Las Pozas · tour Tamul' },
+  { nombre: 'Familia Huasteca',    habitacionDefault: 'Helechos 1',          noches: 3, personas: 4, precio: 13500, descripcion: '3 noches · suite familiar · desayunos · tour Las Pozas' },
+  { nombre: 'Selva en Silencio',   habitacionDefault: 'Suite LindaVista',    noches: 3, personas: 2, precio: 6900,  descripcion: '3 noches · tour Las Pozas (grupo reducido) · late check-out' },
+  { nombre: 'Paquete personalizado', habitacionDefault: 'Jungla',            noches: 2, personas: 2, precio: 0,     descripcion: '' },
+];
+
+const PAQUETES_SEP = '||PAQUETES||';
+function parsePaquetes(notas: string): PaqueteItem[] {
+  const idx = notas.indexOf(PAQUETES_SEP);
+  if (idx === -1) return [];
+  try { return JSON.parse(notas.slice(idx + PAQUETES_SEP.length)); } catch { return []; }
+}
+function getPaquetesTotal(paquetes: PaqueteItem[]): number {
+  return paquetes.reduce((s, p) => s + p.precio, 0);
+}
+
 // ── Tours / Experiencias ──────────────────────────────────────────────────────
 export const TOURS_CATALOG: { nombre: string; precio: number }[] = [
   { nombre: 'Expedición Tamul (Sótano + Cascada + Cenote)', precio: 1450 },
@@ -115,9 +142,10 @@ function parseNotasCliente(notas: string): string {
   const idx = notas.indexOf(INTERNO_SEP);
   return idx === -1 ? notas.trim() : notas.slice(0, idx).trim();
 }
-function joinNotas(cliente: string, interno: string, tours: TourItem[] = []): string {
+function joinNotas(cliente: string, interno: string, tours: TourItem[] = [], paquetes: PaqueteItem[] = []): string {
   let base = interno.trim() ? `${cliente}${INTERNO_SEP}${interno}` : cliente;
   if (tours.length > 0) base += `${TOURS_SEP}${JSON.stringify(tours)}`;
+  if (paquetes.length > 0) base += `${PAQUETES_SEP}${JSON.stringify(paquetes)}`;
   return base;
 }
 
@@ -228,6 +256,8 @@ function printQuotePDF(q: AdminQuote) {
   const notasCliente = parseNotasCliente(q.notas || '');
   const tourItems = parseTours(q.notas || '');
   const toursTotal = getToursTotalQ(tourItems);
+  const paqueteItems = parsePaquetes(q.notas || '');
+  const paquetesTotal = getPaquetesTotal(paqueteItems);
   const confirmUrl = `https://www.paraisoencantado.com/reservar?checkin=${q.checkin}&checkout=${q.checkout}`;
 
   const win = window.open('', '_blank');
@@ -361,13 +391,28 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
       </div>`).join('')}
     </div>` : ''}
 
+    ${paqueteItems.length > 0 ? `
+    <div class="suites-sec">
+      <p class="sec-title">Paquetes incluidos</p>
+      ${paqueteItems.map(p => `
+      <div class="s-row">
+        <div>
+          <p class="s-name" style="font-size:15px">🎁 ${p.nombre}</p>
+          <p style="font-size:10px;color:#9a9a8a;margin-top:2px">${p.habitacion} · ${p.noches} noches · ${p.personas} persona${p.personas!==1?'s':''}</p>
+        </div>
+        <p class="total-amt" style="font-size:20px">$${p.precio.toLocaleString('es-MX')}</p>
+      </div>`).join('')}
+    </div>` : ''}
+
     <div class="total-block">
-      ${toursTotal > 0 ? `
+      ${(toursTotal > 0 || paquetesTotal > 0) ? `
       <div>
-        <p class="d-lbl" style="margin-bottom:2px">Hospedaje</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1c2b1e;margin-bottom:6px">$${(q.precioTotal-toursTotal).toLocaleString('es-MX')} MXN</p>
-        <p class="d-lbl" style="margin-bottom:2px">Tours</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1c2b1e">$${toursTotal.toLocaleString('es-MX')} MXN</p>
+        ${q.suite && q.suite !== '—' ? `<p class="d-lbl" style="margin-bottom:2px">Hospedaje</p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1c2b1e;margin-bottom:4px">$${(q.precioTotal-toursTotal-paquetesTotal).toLocaleString('es-MX')} MXN</p>` : ''}
+        ${toursTotal > 0 ? `<p class="d-lbl" style="margin-bottom:2px">Tours</p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1c2b1e;margin-bottom:4px">$${toursTotal.toLocaleString('es-MX')} MXN</p>` : ''}
+        ${paquetesTotal > 0 ? `<p class="d-lbl" style="margin-bottom:2px">Paquetes</p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1c2b1e">$${paquetesTotal.toLocaleString('es-MX')} MXN</p>` : ''}
       </div>
       <div>
         <p class="d-lbl">Total cotización</p>
@@ -463,6 +508,7 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   const [form, setForm] = useState({ cliente: '', telefono: '', email: '', checkin: '', checkout: '' });
   const [habitaciones, setHabitaciones] = useState<HabItem[]>([{ suite: SUITES[3], huespedes: 2 }]);
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
+  const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>([]);
   const [precioManual, setPrecioManual] = useState<number | null>(null);
   const [promoActiva, setPromoActiva] = useState(false);
   const [anticipo, setAnticipo] = useState(0);
@@ -485,6 +531,23 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
     }));
     setPrecioManual(null);
   }
+  function addPaquete() {
+    const cat = PAQUETES_CATALOG[0];
+    setPaqueteItems(p => [...p, { nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio }]);
+    setPrecioManual(null);
+  }
+  function removePaquete(i: number) { setPaqueteItems(p => p.filter((_, idx) => idx !== i)); setPrecioManual(null); }
+  function updatePaquete(i: number, key: keyof PaqueteItem, val: string | number) {
+    setPaqueteItems(p => p.map((item, idx) => {
+      if (idx !== i) return item;
+      if (key === 'nombre') {
+        const cat = PAQUETES_CATALOG.find(c => c.nombre === val);
+        return cat ? { ...item, nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio } : { ...item, nombre: String(val) };
+      }
+      return { ...item, [key]: typeof val === 'string' ? (isNaN(Number(val)) ? val : Number(val)) : val };
+    }));
+    if (key !== 'nombre') setPrecioManual(null);
+  }
 
   function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
   function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); }
@@ -501,8 +564,9 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   const noches = calcNights(form.checkin, form.checkout);
   const habsAuto = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * Math.max(noches, 1), 0);
   const toursAuto = getToursTotalQ(tourItems);
-  const precioAuto = habsAuto + toursAuto;
-  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAuto;
+  const paquetesAuto = getPaquetesTotal(paqueteItems);
+  const precioAuto = habsAuto + toursAuto + paquetesAuto;
+  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAuto + paquetesAuto;
   const precioTotal = precioManual ?? precioAuto;
   const restante = restanteOverride ?? (precioTotal - anticipo);
 
@@ -519,7 +583,7 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
       const res = await fetch('/api/admin/cotizaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, suite, huespedes, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems) }),
+        body: JSON.stringify({ ...form, suite, huespedes, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al crear');
@@ -606,6 +670,41 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
             ))}
           </div>
 
+          {/* Paquetes */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>🎁 Paquetes Todo Incluido</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addPaquete}>
+                <Plus size={13} /> Agregar paquete
+              </button>
+            </div>
+            {paqueteItems.length === 0 && <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin paquetes (opcional)</p>}
+            {paqueteItems.map((p, i) => (
+              <div key={i} className={styles.roomRow} style={{ flexWrap: 'wrap', gap: 6 }}>
+                <select className={styles.roomRowSelect} style={{ flex: '2 1 140px' }} value={p.nombre}
+                  onChange={e => updatePaquete(i, 'nombre', e.target.value)}>
+                  {PAQUETES_CATALOG.map(c => <option key={c.nombre}>{c.nombre}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} style={{ flex: '2 1 120px' }} value={p.habitacion}
+                  onChange={e => updatePaquete(i, 'habitacion', e.target.value)}>
+                  {SUITES.map(s => <option key={s}>{s}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={p.noches}
+                  onChange={e => updatePaquete(i, 'noches', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7].map(n => <option key={n} value={n}>{n}n</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={p.personas}
+                  onChange={e => updatePaquete(i, 'personas', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                <input type="number" min={0} className={styles.roomPriceInput}
+                  value={p.precio} title="Precio total del paquete"
+                  onChange={e => updatePaquete(i, 'precio', parseInt(e.target.value) || 0)} />
+                <button type="button" className={styles.removeRoomBtn} onClick={() => removePaquete(i)}><X size={13} /></button>
+              </div>
+            ))}
+          </div>
+
           {/* Precio */}
           <div className={styles.priceBreakdown}>
             {habitaciones.map((hab, i) => {
@@ -621,6 +720,12 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
               <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#7a6a52' }}>
                 <span>🗺 {t.nombre.length > 30 ? t.nombre.slice(0,30)+'…' : t.nombre} ({t.personas}p)</span>
                 <span>${t.precio.toLocaleString('es-MX')}/p × {t.personas} = ${(t.precio*t.personas).toLocaleString('es-MX')}</span>
+              </div>
+            ))}
+            {paqueteItems.map((p, i) => (
+              <div key={`pq${i}`} className={styles.priceBreakdownRow} style={{ color: '#1a2e1a', fontWeight: 500 }}>
+                <span>🎁 {p.nombre} ({p.habitacion}, {p.personas}p, {p.noches}n)</span>
+                <span>${p.precio.toLocaleString('es-MX')} MXN</span>
               </div>
             ))}
 
@@ -723,6 +828,7 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
     quote.suite.split(', ').filter(Boolean).map(s => ({ suite: s.trim(), huespedes: 2 }))
   );
   const [tourItems, setTourItems] = useState<TourItem[]>(() => parseTours(quote.notas || ''));
+  const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(() => parsePaquetes(quote.notas || ''));
   const [precioManual, setPrecioManual] = useState<number | null>(quote.precioTotal || null);
   const [promoActiva, setPromoActiva] = useState(false);
   const [anticipo, setAnticipo] = useState(0);
@@ -761,12 +867,30 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
     }));
     setPrecioManual(null);
   }
+  function addPaqueteE() {
+    const cat = PAQUETES_CATALOG[0];
+    setPaqueteItems(p => [...p, { nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio }]);
+    setPrecioManual(null);
+  }
+  function removePaqueteE(i: number) { setPaqueteItems(p => p.filter((_, idx) => idx !== i)); setPrecioManual(null); }
+  function updatePaqueteE(i: number, key: keyof PaqueteItem, val: string | number) {
+    setPaqueteItems(p => p.map((item, idx) => {
+      if (idx !== i) return item;
+      if (key === 'nombre') {
+        const cat = PAQUETES_CATALOG.find(c => c.nombre === val);
+        return cat ? { ...item, nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio } : { ...item, nombre: String(val) };
+      }
+      return { ...item, [key]: typeof val === 'string' ? (isNaN(Number(val)) ? val : Number(val)) : val };
+    }));
+    if (key !== 'nombre') setPrecioManual(null);
+  }
 
   const noches = calcNights(form.checkin, form.checkout);
   const habsAuto = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * Math.max(noches, 1), 0);
   const toursAutoE = getToursTotalQ(tourItems);
-  const precioAuto = habsAuto + toursAutoE;
-  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAutoE;
+  const paquetesAutoE = getPaquetesTotal(paqueteItems);
+  const precioAuto = habsAuto + toursAutoE + paquetesAutoE;
+  const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAutoE + paquetesAutoE;
   const precioTotal = precioManual ?? precioAuto;
   const restante = restanteOverride ?? (precioTotal - anticipo);
 
@@ -777,7 +901,7 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
     e.preventDefault();
     setLoading(true);
     const suite = habitaciones.map(h => h.suite).join(', ');
-    await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems) });
+    await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems) });
     setLoading(false);
   }
 
@@ -858,6 +982,41 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
             ))}
           </div>
 
+          {/* Paquetes — EditQuoteModal */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>🎁 Paquetes Todo Incluido</span>
+              <button type="button" className={styles.addRoomBtn} onClick={addPaqueteE}>
+                <Plus size={13} /> Agregar paquete
+              </button>
+            </div>
+            {paqueteItems.length === 0 && <p style={{ fontSize: '0.75rem', color: '#aaa', padding: '6px 0' }}>Sin paquetes (opcional)</p>}
+            {paqueteItems.map((p, i) => (
+              <div key={i} className={styles.roomRow} style={{ flexWrap: 'wrap', gap: 6 }}>
+                <select className={styles.roomRowSelect} style={{ flex: '2 1 140px' }} value={p.nombre}
+                  onChange={e => updatePaqueteE(i, 'nombre', e.target.value)}>
+                  {PAQUETES_CATALOG.map(c => <option key={c.nombre}>{c.nombre}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} style={{ flex: '2 1 120px' }} value={p.habitacion}
+                  onChange={e => updatePaqueteE(i, 'habitacion', e.target.value)}>
+                  {SUITES.map(s => <option key={s}>{s}</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={p.noches}
+                  onChange={e => updatePaqueteE(i, 'noches', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7].map(n => <option key={n} value={n}>{n}n</option>)}
+                </select>
+                <select className={styles.roomRowSelect} value={p.personas}
+                  onChange={e => updatePaqueteE(i, 'personas', parseInt(e.target.value))}>
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}p</option>)}
+                </select>
+                <input type="number" min={0} className={styles.roomPriceInput}
+                  value={p.precio} title="Precio total del paquete"
+                  onChange={e => updatePaqueteE(i, 'precio', parseInt(e.target.value) || 0)} />
+                <button type="button" className={styles.removeRoomBtn} onClick={() => removePaqueteE(i)}><X size={13} /></button>
+              </div>
+            ))}
+          </div>
+
           {/* Precio */}
           <div className={styles.priceBreakdown}>
             {habitaciones.map((hab, i) => {
@@ -873,6 +1032,12 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
               <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#7a6a52' }}>
                 <span>🗺 {t.nombre.length > 30 ? t.nombre.slice(0,30)+'…' : t.nombre} ({t.personas}p)</span>
                 <span>${(t.precio*t.personas).toLocaleString('es-MX')}</span>
+              </div>
+            ))}
+            {paqueteItems.map((p, i) => (
+              <div key={`pqe${i}`} className={styles.priceBreakdownRow} style={{ color: '#1a2e1a', fontWeight: 500 }}>
+                <span>🎁 {p.nombre} ({p.habitacion}, {p.personas}p, {p.noches}n)</span>
+                <span>${p.precio.toLocaleString('es-MX')} MXN</span>
               </div>
             ))}
 

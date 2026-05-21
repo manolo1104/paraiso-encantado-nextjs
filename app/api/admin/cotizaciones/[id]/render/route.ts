@@ -31,7 +31,12 @@ function addDays(dateStr: string, days: number): string {
 function parseTours(notas: string): { nombre: string; personas: number; precio: number }[] {
   const idx = notas.indexOf('||TOURS||');
   if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + 9)); } catch { return []; }
+  try { return JSON.parse(notas.slice(idx + 9).split('||PAQUETES||')[0]); } catch { return []; }
+}
+function parsePaquetes(notas: string): { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[] {
+  const idx = notas.indexOf('||PAQUETES||');
+  if (idx === -1) return [];
+  try { return JSON.parse(notas.slice(idx + 12)); } catch { return []; }
 }
 
 // Category description per suite
@@ -74,8 +79,10 @@ export async function GET(
   const roomNames = q.suite.split(',').map(r => r.replace(/\s*\([^)]*\)/g, '').trim()).filter(Boolean);
   const noches = q.noches || 1;
   const tours = parseTours(q.notas || '');
+  const paquetes = parsePaquetes(q.notas || '');
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
-  const habsTotal = q.precioTotal - toursTotal;
+  const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
+  const habsTotal = q.precioTotal - toursTotal - paquetesTotal;
   const habsPerRoom = roomNames.length > 0 ? Math.round(habsTotal / roomNames.length / noches) : 1500;
 
   const rooms = roomNames.map(name => ({
@@ -92,10 +99,15 @@ export async function GET(
     rooms.push({
       name: `🗺 ${t.nombre}`,
       category: `Tour · ${t.personas} persona${t.personas !== 1 ? 's' : ''}`,
-      guests: t.personas,
-      nights: 1,
-      rate: t.precio,
-      subtotal: t.precio * t.personas,
+      guests: t.personas, nights: 1, rate: t.precio, subtotal: t.precio * t.personas,
+    });
+  }
+  // Add packages as line items
+  for (const p of paquetes) {
+    rooms.push({
+      name: `🎁 ${p.nombre}`,
+      category: `Paquete · ${p.habitacion} · ${p.noches} noches · ${p.personas} persona${p.personas !== 1 ? 's' : ''}`,
+      guests: p.personas, nights: p.noches, rate: Math.round(p.precio / p.noches), subtotal: p.precio,
     });
   }
 
