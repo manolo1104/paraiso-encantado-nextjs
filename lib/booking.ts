@@ -138,9 +138,9 @@ export interface PromoValidation {
 export function validatePromo(code: string, nights: number, cartLength: number): PromoValidation {
   const upper = code.toUpperCase() as PromoCode;
   if (!VALID_PROMO_CODES.includes(upper)) return { valid: false, error: '❌ Código inválido. Verifica e intenta de nuevo.' };
+  if (cartLength === 0) return { valid: false, error: '❌ Agrega al menos una habitación primero.' };
   if (upper === 'XILITLA50' && nights < 3) return { valid: false, error: '❌ XILITLA50 aplica solo para reservas de 3 noches o más.' };
   if (upper === 'XILITLA3MX' && nights !== 3) return { valid: false, error: '❌ XILITLA3MX aplica únicamente para reservas de exactamente 3 noches.' };
-  if (cartLength === 0) return { valid: false, error: '❌ Agrega al menos una habitación primero.' };
   return { valid: true };
 }
 

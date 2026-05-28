@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { addBookingToSheet, blockDates, removeTemporaryBlock } from '@/lib/sheets';
+import Stripe from 'stripe';
+import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationByPaymentIntent } from '@/lib/sheets';
 import { buildEmailHtml } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
@@ -13,10 +14,41 @@ export async function POST(req: NextRequest) {
             bookingDetails, rooms, howDidYouHear, sessionId,
             amountPaid, amountPending, isDeposit } = body;
 
-    const checkin  = bookingDetails?.checkin  || bookingDetails?.checkin_date  || null;
-    const checkout = bookingDetails?.checkout || bookingDetails?.checkout_date || null;
-    const adults   = Number(bookingDetails?.adults ?? bookingDetails?.guests ?? 1) || 1;
-    const minors   = Number(bookingDetails?.minors ?? bookingDetails?.children ?? 0) || 0;
+    // ── 0. VERIFICAR EL PAGO CON STRIPE (no confiar en el cliente) ──────────────
+    // Sin un PaymentIntent realmente pagado NO se crea reserva ni se bloquean fechas.
+    if (!paymentIntentId) {
+      return NextResponse.json({ error: 'paymentIntentId requerido' }, { status: 400 });
+    }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+    let pi: Stripe.PaymentIntent;
+    try {
+      pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+    } catch {
+      return NextResponse.json({ error: 'Pago no encontrado' }, { status: 402 });
+    }
+    if (pi.status !== 'succeeded') {
+      return NextResponse.json({ error: `Pago no completado (estado: ${pi.status})` }, { status: 402 });
+    }
+
+    // ── 1. IDEMPOTENCIA: si ya existe la reserva para este pago, no duplicar ─────
+    const existing = await findConfirmationByPaymentIntent(pi.id);
+    if (existing) {
+      console.log(`↩️  Reserva ya existe para ${pi.id} → ${existing} (no se duplica)`);
+      return NextResponse.json({ status: 'ok', confirmationNumber: existing, duplicate: true });
+    }
+
+    // ── 2. Montos AUTORITATIVOS desde la metadata del PI (los puso el servidor) ──
+    const md = pi.metadata || {};
+    const paidReal = (pi.amount_received ?? pi.amount) / 100; // lo realmente cobrado
+    const stayTotal = Number(md.stayTotal) || Number(total) || paidReal;
+    const depositPaid = Number(md.depositPaid) || (Number(amountPaid) || paidReal);
+    const pending = Number(md.pending) ?? (Number(amountPending) || 0);
+    const isDepositFinal = md.isDeposit ? md.isDeposit === 'true' : Boolean(isDeposit);
+
+    const checkin  = bookingDetails?.checkin  || bookingDetails?.checkin_date  || md.checkin  || null;
+    const checkout = bookingDetails?.checkout || bookingDetails?.checkout_date || md.checkout || null;
+    const adults   = Number(bookingDetails?.adults ?? bookingDetails?.guests ?? md.adults ?? 1) || 1;
+    const minors   = Number(bookingDetails?.minors ?? bookingDetails?.children ?? md.children ?? 0) || 0;
     const guests   = adults + minors;
     const normalizedRooms = Array.isArray(rooms) ? rooms : [];
 
@@ -28,17 +60,18 @@ export async function POST(req: NextRequest) {
       } else { nights = 1; }
     }
 
-    // 1. Número de confirmación
+    // 3. Número de confirmación
     const confirmationNumber = 'PE' + Date.now().toString(36).toUpperCase();
 
-    // 2. Datos de la reserva
+    // 4. Datos de la reserva
     const bookingData = {
       confirmation_number: confirmationNumber,
       customer_name: customerName,
       customer_phone: customerPhone || 'N/A',
       email,
-      total: Math.round(total || 0),
-      payment_intent_id: paymentIntentId || null,
+      total: Math.round(stayTotal),
+      anticipo: Math.round(depositPaid),
+      payment_intent_id: pi.id,
       booking_details: {
         ...bookingDetails, checkin, checkout,
         checkin_date: checkin, checkout_date: checkout,
@@ -49,24 +82,24 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     };
 
-    // 3. Google Sheets — SIEMPRE (base de datos principal)
+    // 5. Google Sheets — SIEMPRE (base de datos principal)
     try { await addBookingToSheet(bookingData); } catch (e: any) {
       console.error('❌ addBookingToSheet:', e.message);
     }
 
-    // 4. Bloquear fechas
+    // 6. Bloquear fechas
     try {
       if (checkin && checkout && normalizedRooms.length > 0) {
         await blockDates(checkin, checkout, normalizedRooms);
       }
     } catch (e: any) { console.error('❌ blockDates:', e.message); }
 
-    // 5. Remover bloqueo temporal
+    // 7. Remover bloqueo temporal
     try {
       if (sessionId) await removeTemporaryBlock(sessionId);
     } catch (e: any) { console.error('❌ removeTemporaryBlock:', e.message); }
 
-    // 6. Email (opcional)
+    // 8. Email (opcional)
     if (!resend) {
       console.warn('⚠️ RESEND_API_KEY no configurada — email omitido');
     } else {
@@ -74,13 +107,13 @@ export async function POST(req: NextRequest) {
         if (!email || !email.includes('@')) throw new Error('Email del cliente inválido');
 
         const html = buildEmailHtml({
-          customerName, confirmationNumber, paymentIntentId,
+          customerName, confirmationNumber, paymentIntentId: pi.id,
           checkin: checkin ?? undefined, checkout: checkout ?? undefined,
           nights, guests, adults, minors,
-          rooms: normalizedRooms, total: total || 0,
-          amountPaid: amountPaid ?? undefined,
-          amountPending: amountPending ?? undefined,
-          isDeposit: isDeposit ?? false,
+          rooms: normalizedRooms, total: stayTotal,
+          amountPaid: depositPaid,
+          amountPending: pending,
+          isDeposit: isDepositFinal,
         });
 
         const from    = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';

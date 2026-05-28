@@ -237,10 +237,14 @@ function CheckoutForm({
             rooms,
           }),
         });
-        const data = await res.json();
+        // El pago YA tuvo éxito. Si la confirmación se guardó usamos su folio real;
+        // si la API falla, el webhook de Stripe registra la reserva como red de
+        // seguridad. Seguimos mostrando éxito a propósito: cobrar y luego decir
+        // "error" haría que el cliente intente pagar otra vez (doble cargo).
+        const data = res.ok ? await res.json().catch(() => ({})) : {};
         onSuccess(data.confirmationNumber || 'PE-OK');
       } catch {
-        // Even if confirmation API fails, payment succeeded — still show success
+        // Pago exitoso pero sin respuesta (pestaña cerrada/sin red): el webhook lo recupera.
         onSuccess('PE-OK');
       }
     } else {
@@ -445,7 +449,6 @@ export default function CheckoutPage() {
       isDeposit,
     };
     setBooking(stateWithDeposit);
-    const amountCents = Math.round(deposit * 100);
 
     // Create temporary block
     const roomNames = state.cart.map(item => BOOKING_ROOMS.find(r => r.id === item.roomId)!.name);
@@ -455,18 +458,23 @@ export default function CheckoutPage() {
       body: JSON.stringify({ checkin: state.checkin, checkout: state.checkout, rooms: roomNames, sessionId }),
     }).catch(() => {});
 
-    // Create payment intent
+    // Create payment intent — el SERVIDOR recalcula el precio desde el carrito.
+    // No enviamos el monto: solo el carrito y la promo, para que no se pueda manipular.
     fetch(`${API}/api/create-payment-intent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount: amountCents,
-        currency: 'mxn',
+        cart: state.cart,
+        checkin: state.checkin,
+        checkout: state.checkout,
+        promoCode: state.promoCode,
         bookingDetails: {
           checkin: state.checkin,
           checkout: state.checkout,
           nights: state.nights,
-          guests: state.adults,
+          adults: state.adults,
+          children: state.children,
+          guests: state.adults + state.children,
         },
       }),
     })

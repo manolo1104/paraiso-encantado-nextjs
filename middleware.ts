@@ -1,14 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose/jwt/verify';
 
-const ADMIN_SECRET = new TextEncoder().encode(
-  process.env.ADMIN_JWT_SECRET || 'paraiso-encantado-admin-secret-change-in-prod'
-);
+function resolveAdminSecret(): Uint8Array {
+  const s = process.env.ADMIN_JWT_SECRET;
+  if (s) return new TextEncoder().encode(s);
+  // En producción NO usar un secreto público conocido (sería falsificable).
+  // Usamos uno aleatorio por proceso → fail-closed: el admin queda inutilizable
+  // hasta configurar ADMIN_JWT_SECRET, pero el sitio público sigue funcionando.
+  if (process.env.NODE_ENV === 'production') {
+    console.error('⚠️ ADMIN_JWT_SECRET no configurado en producción — admin deshabilitado (fail-closed)');
+    return new TextEncoder().encode('disabled-' + crypto.randomUUID());
+  }
+  return new TextEncoder().encode('paraiso-encantado-admin-secret-dev-only');
+}
+
+const ADMIN_SECRET = resolveAdminSecret();
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // ── Protección del admin ──────────────────────────────────
+  // ── Protección de las APIs admin (/api/admin/*) ───────────
+  // Antes NO estaban protegidas: cualquiera podía leer clientes/reservas.
+  // Login y logout deben ser accesibles sin token.
+  const isAdminApi = pathname.startsWith('/api/admin') &&
+    pathname !== '/api/admin/login' && pathname !== '/api/admin/logout';
+
+  if (isAdminApi) {
+    const token = req.cookies.get('admin_session')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    try {
+      await jwtVerify(token, ADMIN_SECRET);
+    } catch {
+      return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 });
+    }
+  }
+
+  // ── Protección de las páginas admin ───────────────────────
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     const token = req.cookies.get('admin_session')?.value;
     if (!token) {

@@ -112,6 +112,19 @@ function getDateRange(checkin: string, checkout: string): string[] {
   return dates;
 }
 
+/** Fecha de hoy en hora de México como 'YYYY-MM-DD' (evita corrimientos por el UTC del servidor). */
+function mexicoTodayStr(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+}
+
+/** Formatea un Date como 'YYYY-MM-DD' usando sus componentes locales. */
+function ymd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 // ── Reservas ──────────────────────────────────────────────────
 
 export async function addBookingToSheet(bookingData: any) {
@@ -120,24 +133,26 @@ export async function addBookingToSheet(bookingData: any) {
   const sid = process.env.GOOGLE_SHEET_ID;
   try {
     const { confirmation_number, customer_name, customer_phone, email, total,
-            payment_intent_id, booking_details, rooms, how_did_you_hear, created_at } = bookingData;
+            payment_intent_id, booking_details, rooms, how_did_you_hear, created_at,
+            anticipo } = bookingData;
 
     const roomsStr = (rooms || []).map((r: any) => `${r.name} (${r.guestCount} personas)`).join(', ') || 'Estándar';
     const ts = new Date(created_at || new Date()).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
 
+    // Columna O = anticipo (lo realmente cobrado ahora). 0 si no se especifica.
     const row = [
       ts, confirmation_number, customer_name, customer_phone || 'N/A', email,
       `$${Number(total).toLocaleString('es-MX')} MXN`,
       booking_details?.checkin || 'N/A', booking_details?.checkout || 'N/A',
       booking_details?.nights || 'N/A', booking_details?.guests || 'N/A',
       roomsStr, booking_details?.notes || '', payment_intent_id || 'N/A',
-      how_did_you_hear || '',
+      how_did_you_hear || '', Number(anticipo) || 0,
     ];
 
     await sheetsCall(() =>
       client.spreadsheets.values.append({
         spreadsheetId: sid,
-        range: `${SHEET_NAME}!A:N`,
+        range: `${SHEET_NAME}!A:O`,
         valueInputOption: 'USER_ENTERED',
         requestBody: { values: [row] },
       })
@@ -145,6 +160,33 @@ export async function addBookingToSheet(bookingData: any) {
     console.log('✅ Reserva guardada en Google Sheets');
   } catch (e: any) {
     console.error('❌ addBookingToSheet error:', e.message);
+  }
+}
+
+/**
+ * Idempotencia: devuelve el folio existente si ya hay una reserva con este
+ * payment_intent_id (o null si no existe). Evita reservas duplicadas cuando el
+ * webhook y la confirmación del cliente corren ambos. Columna B=folio, M=PI.
+ */
+export async function findConfirmationByPaymentIntent(paymentIntentId: string): Promise<string | null> {
+  if (!paymentIntentId) return null;
+  const client = await getSheetsClient();
+  if (!client || !process.env.GOOGLE_SHEET_ID) return null;
+  const sid = process.env.GOOGLE_SHEET_ID;
+  try {
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({ spreadsheetId: sid, range: `${SHEET_NAME}!A:O` })
+    );
+    const data = res.data.values || [];
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i]?.[12] ?? '').trim() === paymentIntentId) {
+        return String(data[i]?.[1] ?? '') || 'PE-EXIST';
+      }
+    }
+    return null;
+  } catch (e: any) {
+    console.error('❌ findConfirmationByPaymentIntent error:', e.message);
+    return null;
   }
 }
 
@@ -169,24 +211,28 @@ export async function getFullyBookedDates(monthsAhead = 6): Promise<string[]> {
     const roomCols = activeRooms.map(n => headers.findIndex((h: string) => h === n)).filter(i => i !== -1);
     if (roomCols.length === 0) return [];
 
-    const todayMs = new Date().setHours(0, 0, 0, 0);
-    const cutoff  = new Date(todayMs);
-    cutoff.setMonth(cutoff.getMonth() + monthsAhead);
+    const today = mexicoTodayStr();                    // 'YYYY-MM-DD' en hora de México
+    const cutoffDate = new Date(today + 'T00:00:00');
+    cutoffDate.setMonth(cutoffDate.getMonth() + monthsAhead);
+    const cutoff = ymd(cutoffDate);
     const fullyBooked: string[] = [];
 
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (!row?.[0]) continue;
-      let dateStr: string;
-      try {
-        const d = new Date(String(row[0]).trim() + 'T00:00:00');
-        if (isNaN(d.getTime()) || d.getTime() < todayMs || d > cutoff) continue;
-        dateStr = d.toISOString().split('T')[0];
-      } catch { continue; }
+      // Las fechas se guardan como 'YYYY-MM-DD'; comparamos como texto (sin convertir a UTC).
+      const raw = String(row[0]).trim();
+      let dateStr = raw.slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const d = new Date(raw);
+        if (isNaN(d.getTime())) continue;
+        dateStr = ymd(d);
+      }
+      if (dateStr < today || dateStr > cutoff) continue;
 
       const allUnavailable = roomCols.every(col => {
         const val = (row[col] || '').toUpperCase().trim();
-        return val === 'RESERVADO' || val === 'BLOQUEADO' || val === 'MANTENIMIENTO';
+        return val === 'RESERVADO' || val === 'BLOQUEADO' || val === 'MANTENIMIENTO' || val === 'OTA';
       });
       if (allUnavailable) fullyBooked.push(dateStr);
     }
@@ -240,7 +286,7 @@ export async function checkAvailability(
         });
         if (rowIdx > 0) {
           const status = (data[rowIdx][colIdx] || '').toUpperCase().trim();
-          if (status === 'RESERVADO' || status === 'BLOQUEADO' || status === 'MANTENIMIENTO') {
+          if (status === 'RESERVADO' || status === 'BLOQUEADO' || status === 'MANTENIMIENTO' || status === 'OTA') {
             if (!unavailableRooms.includes(room.name)) unavailableRooms.push(room.name);
             break;
           }
@@ -263,7 +309,11 @@ export async function checkAvailability(
     return { available: unavailableRooms.length === 0, unavailableRooms };
   } catch (e: any) {
     console.error('❌ checkAvailability error:', e.message);
-    return { available: true, unavailableRooms: [] };
+    // FAIL-CLOSED: ante error/timeout de Sheets NO afirmamos disponibilidad.
+    // Sobrevender (doble reserva) es peor que pedir reintentar. Marcamos todas
+    // las habitaciones solicitadas como no disponibles.
+    const requested = rooms.map(r => typeof r === 'string' ? r : r.name);
+    return { available: false, unavailableRooms: requested };
   }
 }
 
@@ -486,7 +536,11 @@ export async function blockDates(
       }
       for (const room of normalizedRooms) {
         const colIdx = headers.findIndex((h: string) => h === room.name);
-        if (colIdx > 0) data[rowIdx][colIdx] = 'RESERVADO';
+        if (colIdx > 0) {
+          // No pisar estados especiales (mantenimiento) puestos manualmente.
+          const current = String(data[rowIdx][colIdx] || '').toUpperCase().trim();
+          if (current !== 'MANTENIMIENTO') data[rowIdx][colIdx] = 'RESERVADO';
+        }
       }
     }
 
@@ -511,5 +565,82 @@ export async function blockDates(
     console.log(`✅ Fechas bloqueadas: ${dateRange.length} noches`);
   } catch (e: any) {
     console.error('❌ blockDates error:', e.message);
+  }
+}
+
+/**
+ * Replaces all OTA blocks for a room with the new set of date ranges.
+ * Clears previous OTA values for that room, then writes new ones.
+ * This way, OTA cancellations are automatically removed on the next sync.
+ */
+export async function updateOTABlocks(
+  roomName: string,
+  dateRanges: Array<{ checkin: string; checkout: string }>,
+): Promise<number> {
+  const client = await getSheetsClient();
+  if (!client || !process.env.GOOGLE_SHEET_ID) return 0;
+  const sid = process.env.GOOGLE_SHEET_ID;
+  const normalizedRoom = normalizeRoomName(roomName);
+  if (!ROOM_NAMES.includes(normalizedRoom)) return 0;
+
+  try {
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })
+    );
+    let data: string[][] = res.data.values || [];
+    const headers: string[] = data[0] || ['Fecha', ...ROOM_NAMES];
+    if (data.length === 0) data = [headers];
+
+    const colIdx = headers.findIndex(h => h === normalizedRoom);
+    if (colIdx === -1) return 0;
+
+    // Clear existing OTA blocks for this room
+    for (let i = 1; i < data.length; i++) {
+      if ((data[i][colIdx] || '').toUpperCase() === 'OTA') {
+        data[i][colIdx] = '';
+      }
+    }
+
+    // Compute all dates to block
+    const newDates = new Set<string>();
+    for (const { checkin, checkout } of dateRanges) {
+      for (const d of getDateRange(checkin, checkout)) newDates.add(d);
+    }
+
+    // Write new OTA blocks
+    let blocked = 0;
+    for (const date of newDates) {
+      let rowIdx = data.findIndex(row => row[0] === date);
+      if (rowIdx === -1) {
+        data.push([date, ...Array(ROOM_NAMES.length).fill('')]);
+        rowIdx = data.length - 1;
+      }
+      // Only mark OTA if not already a real reservation
+      const current = (data[rowIdx][colIdx] || '').toUpperCase();
+      if (!current || current === 'OTA') {
+        data[rowIdx][colIdx] = 'OTA';
+        blocked++;
+      }
+    }
+
+    const sorted = [headers, ...data.slice(1).sort((a, b) =>
+      new Date(a[0] || '1970-01-01').getTime() - new Date(b[0] || '1970-01-01').getTime()
+    )];
+
+    await sheetsCall(() =>
+      client.spreadsheets.values.clear({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })
+    );
+    await sheetsCall(() =>
+      client.spreadsheets.values.update({
+        spreadsheetId: sid,
+        range: `${AVAILABILITY_SHEET}!A1`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: sorted },
+      })
+    );
+    return blocked;
+  } catch (e: any) {
+    console.error('❌ updateOTABlocks error:', e.message);
+    return 0;
   }
 }
