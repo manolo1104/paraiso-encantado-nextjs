@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Calendar, Users, Coffee, MapPin } from 'lucide-react';
+import TiltCard from '@/components/TiltCard';
 import styles from './paquetes.module.css';
 
 export const metadata: Metadata = {
@@ -99,6 +100,7 @@ const paquetesBreadcrumb = {
 const PAQUETES = [
   {
     id: 'selva',
+    featured: true,
     badge: 'Más solicitado',
     badgeColor: 'gold' as const,
     name: 'Noche de Selva',
@@ -126,6 +128,7 @@ const PAQUETES = [
   },
   {
     id: 'pozas',
+    featured: false,
     badge: 'La experiencia completa',
     badgeColor: 'forest' as const,
     name: 'Ruta de las Pozas',
@@ -153,6 +156,7 @@ const PAQUETES = [
   },
   {
     id: 'familiar',
+    featured: false,
     badge: 'Ideal para familias',
     badgeColor: 'sage' as const,
     name: 'Familia Huasteca',
@@ -239,16 +243,6 @@ export default function PaquetesPage() {
 
         {/* HERO */}
         <section className={styles.hero}>
-          <div className={styles.heroBg}>
-            <Image
-              src="/images/Areas comunes/DSC09447-HDR.jpg"
-              alt="Jardín y piscina spa — Hotel Paraíso Encantado, Xilitla"
-              fill priority quality={80}
-              sizes="100vw"
-              style={{ objectFit: 'cover', objectPosition: 'center 55%' }}
-            />
-            <div className={styles.heroOverlay} />
-          </div>
           <div className={styles.heroContent}>
             <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
               <Link href="/">Inicio</Link>
@@ -256,33 +250,105 @@ export default function PaquetesPage() {
               <span>Paquetes</span>
             </nav>
             <p className={styles.eyebrow}>Xilitla, Huasteca Potosina · Todo incluido</p>
-            <h1>Paquetes <em>Vacaciones</em><br />sin sorpresas</h1>
+            <h1>Vacaciones<br /><em>sin sorpresas</em></h1>
             <p className={styles.heroSub}>
               Suite + desayunos huastecos + tours coordinados. Un solo precio, todo resuelto.
               Reserva directo y ahorra hasta 15% vs. plataformas externas.
             </p>
-            <div className={styles.heroTrust}>
-              <span>★★★★★ 4.8 · 514 reseñas Google</span>
-              <span className={styles.dot} aria-hidden="true">·</span>
-              <span>Cancelación gratis 48 hrs</span>
-              <span className={styles.dot} aria-hidden="true">·</span>
-              <span>Precio final en MXN</span>
-            </div>
           </div>
         </section>
+
+        {/* BANNER DE CONFIANZA — separa el hero de la info */}
+        <div className={styles.trustBanner} role="list" aria-label="Garantías de reserva directa" data-reveal>
+          <span role="listitem" className={styles.trustItem}>
+            <span className={styles.stars} aria-hidden="true">★★★★★</span> 4.8 · 514 reseñas Google
+          </span>
+          <span className={styles.trustSep} aria-hidden="true" />
+          <span role="listitem" className={styles.trustItem}>Cancelación gratis 48 hrs</span>
+          <span className={styles.trustSep} aria-hidden="true" />
+          <span role="listitem" className={styles.trustItem}>Precio final en MXN</span>
+        </div>
 
         {/* PAQUETES */}
         <section className={styles.paquetesSection} aria-labelledby="paquetes-heading">
           <div className={styles.paquetesInner}>
-            <h2 id="paquetes-heading" className={styles.sectionTitle}>
+            <h2 id="paquetes-heading" className={styles.sectionTitle} data-reveal>
               Elige tu <em>paquete ideal</em>
             </h2>
-            <p className={styles.sectionSub}>
+            <p className={styles.sectionSub} data-reveal>
               Todos incluyen suite con amenidades completas, WiFi y estacionamiento privado.
             </p>
 
-            {/* PAQUETE TEMPORADA */}
-            <div className={styles.cardTemporada}>
+            <div className={styles.cards}>
+              {PAQUETES.map((p, i) => (
+                <div
+                  key={p.id}
+                  data-reveal
+                  style={{ '--reveal-delay': `${i * 90}ms` } as React.CSSProperties}
+                  className={styles.cardReveal}
+                >
+                  <TiltCard className={`${styles.card} ${p.featured ? styles.cardFeatured : ''}`}>
+                    <div className={styles.cardImg}>
+                      <Image
+                        src={p.image}
+                        alt={p.imageAlt}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        quality={80}
+                        style={{ objectFit: 'cover' }}
+                      />
+                      <span className={`${styles.badge} ${styles[`badge_${p.badgeColor}`]}`}>{p.badge}</span>
+                    </div>
+
+                    <div className={styles.cardBody}>
+                      <h3 className={styles.cardName}>{p.name}</h3>
+                      <p className={styles.cardTagline}>{p.tagline}</p>
+
+                      <div className={styles.cardMeta}>
+                        <span><Calendar size={13} strokeWidth={1.8} />{p.noches} noches</span>
+                        <span><Users size={13} strokeWidth={1.8} />{p.personas}</span>
+                      </div>
+
+                      <ul className={styles.includes} aria-label="Qué incluye">
+                        {p.includes.map((item) => (
+                          <li key={item}>
+                            <Check size={13} strokeWidth={2.5} className={styles.checkIcon} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className={styles.cardPricing}>
+                        <div>
+                          <span className={styles.priceFrom}>desde</span>
+                          <span className={styles.price}>${p.price.toLocaleString('es-MX')}</span>
+                          <span className={styles.priceCurrency}>MXN</span>
+                        </div>
+                        <p className={styles.priceNote}>{p.priceNote}</p>
+                        <p className={styles.priceSaving}>{p.saving}</p>
+                      </div>
+
+                      <div className={styles.cardActions}>
+                        <a
+                          href={`https://wa.me/524891007679?text=${p.waMsg}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.ctaPrimary}
+                        >
+                          Consultar disponibilidad
+                        </a>
+                        <Link href={p.cta} className={styles.ctaSecondary}>
+                          Ver suites disponibles <span className="pe-arrow">→</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </TiltCard>
+                </div>
+              ))}
+            </div>
+
+            {/* PAQUETE TEMPORADA — cierre destacado */}
+            <div className={styles.cardTemporada} data-reveal>
               <div className={styles.cardTemporadaImg}>
                 <Image
                   src={PAQUETE_TEMPORADA.image}
@@ -321,86 +387,12 @@ export default function PaquetesPage() {
                 </a>
               </div>
             </div>
-
-            <div className={styles.cards}>
-              {PAQUETES.map((p) => (
-                <article key={p.id} className={`${styles.card} ${styles[`card_${p.badgeColor}`]}`}>
-                  <div className={styles.cardImg}>
-                    <Image
-                      src={p.image}
-                      alt={p.imageAlt}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      quality={80}
-                      style={{ objectFit: 'cover' }}
-                    />
-                    <span className={`${styles.badge} ${styles[`badge_${p.badgeColor}`]}`}>{p.badge}</span>
-                  </div>
-
-                  <div className={styles.cardBody}>
-                    <h3 className={styles.cardName}>{p.name}</h3>
-                    <p className={styles.cardTagline}>{p.tagline}</p>
-
-                    <div className={styles.cardMeta}>
-                      <span><Calendar size={13} strokeWidth={1.8} />{p.noches} noches</span>
-                      <span><Users size={13} strokeWidth={1.8} />{p.personas}</span>
-                    </div>
-
-                    <ul className={styles.includes} aria-label="Qué incluye">
-                      {p.includes.map((item) => (
-                        <li key={item}>
-                          <Check size={13} strokeWidth={2.5} className={styles.checkIcon} />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-
-                    {/* Imagen de la experiencia principal incluida */}
-                    <div className={styles.cardExpImg}>
-                      <Image
-                        src={p.experienceImg}
-                        alt={p.experienceAlt}
-                        fill
-                        sizes="(max-width: 768px) 90vw, 300px"
-                        quality={75}
-                        style={{ objectFit: 'cover' }}
-                      />
-                      <span className={styles.cardExpLabel}>{p.experienceLabel}</span>
-                    </div>
-
-                    <div className={styles.cardPricing}>
-                      <div>
-                        <span className={styles.priceFrom}>desde</span>
-                        <span className={styles.price}>${p.price.toLocaleString('es-MX')}</span>
-                        <span className={styles.priceCurrency}>MXN</span>
-                      </div>
-                      <p className={styles.priceNote}>{p.priceNote}</p>
-                      <p className={styles.priceSaving}>{p.saving}</p>
-                    </div>
-
-                    <div className={styles.cardActions}>
-                      <a
-                        href={`https://wa.me/524891007679?text=${p.waMsg}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.ctaPrimary}
-                      >
-                        Consultar disponibilidad
-                      </a>
-                      <Link href={p.cta} className={styles.ctaSecondary}>
-                        Ver suites disponibles
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
           </div>
         </section>
 
         {/* STRIP PERSONALIZACIÓN */}
         <section className={styles.customStrip}>
-          <div className={styles.customInner}>
+          <div className={styles.customInner} data-reveal>
             <MapPin size={24} strokeWidth={1.5} className={styles.customIcon} />
             <div>
               <p className={styles.customTitle}>¿No encuentras exactamente lo que buscas?</p>
@@ -415,7 +407,7 @@ export default function PaquetesPage() {
               rel="noopener noreferrer"
               className={styles.customCta}
             >
-              Paquete a la medida →
+              Paquete a la medida <span className="pe-arrow">→</span>
             </a>
           </div>
         </section>
@@ -423,15 +415,20 @@ export default function PaquetesPage() {
         {/* LO QUE INCLUYE SIEMPRE */}
         <section className={styles.baseSection}>
           <div className={styles.baseInner}>
-            <h2 className={styles.sectionTitle}>Siempre incluido <em>en todos los paquetes</em></h2>
+            <h2 className={styles.sectionTitle} data-reveal>Siempre incluido <em>en todos los paquetes</em></h2>
             <div className={styles.baseGrid}>
               {[
                 { icon: <Coffee size={22} strokeWidth={1.5} />, title: 'WiFi de alta velocidad', desc: 'En todas las suites y áreas comunes sin límite.' },
                 { icon: <MapPin size={22} strokeWidth={1.5} />, title: 'Estacionamiento privado', desc: 'Gratuito dentro del hotel. Sin preocupaciones.' },
                 { icon: <Check size={22} strokeWidth={1.5} />, title: 'Check-in flexible', desc: 'Coordinamos tu llegada según el vuelo o carretera.' },
-                { icon: <Users size={22} strokeWidth={1.5} />, title: 'Atención personalizada', desc: 'No eres un número de reserva — somos un hotel boutique.' },
-              ].map((b) => (
-                <div key={b.title} className={styles.baseItem}>
+                { icon: <Users size={22} strokeWidth={1.5} />, title: 'Atención personalizada', desc: 'No eres un número de reserva, somos un hotel boutique.' },
+              ].map((b, i) => (
+                <div
+                  key={b.title}
+                  className={styles.baseItem}
+                  data-reveal
+                  style={{ '--reveal-delay': `${i * 80}ms` } as React.CSSProperties}
+                >
                   <div className={styles.baseItemIcon}>{b.icon}</div>
                   <h3>{b.title}</h3>
                   <p>{b.desc}</p>
@@ -444,10 +441,15 @@ export default function PaquetesPage() {
         {/* FAQ */}
         <section className={styles.faqSection}>
           <div className={styles.faqInner}>
-            <h2 className={styles.sectionTitle}>Preguntas <em>frecuentes</em></h2>
+            <h2 className={styles.sectionTitle} data-reveal>Preguntas <em>frecuentes</em></h2>
             <dl className={styles.faqList}>
-              {FAQ.map((f) => (
-                <div key={f.q} className={styles.faqItem}>
+              {FAQ.map((f, i) => (
+                <div
+                  key={f.q}
+                  className={styles.faqItem}
+                  data-reveal
+                  style={{ '--reveal-delay': `${i * 50}ms` } as React.CSSProperties}
+                >
                   <dt>{f.q}</dt>
                   <dd>{f.a}</dd>
                 </div>
@@ -458,7 +460,7 @@ export default function PaquetesPage() {
 
         {/* CTA FINAL */}
         <section className={styles.ctaSection}>
-          <div className={styles.ctaInner}>
+          <div className={styles.ctaInner} data-reveal>
             <p className={styles.eyebrow}>¿Listo para reservar?</p>
             <h2>El Jardín de Edward James<br /><em>te espera</em></h2>
             <p className={styles.ctaDesc}>

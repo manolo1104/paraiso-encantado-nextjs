@@ -5,22 +5,34 @@
 /* ---- HERO ---- */
 .hero {
   position: relative;
-  min-height: clamp(420px, 60vh, 560px);
+  min-height: clamp(300px, 40vh, 420px);
   display: flex;
   align-items: flex-end;
   overflow: hidden;
-  color: white;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--cream) 0%, var(--parch) 100%);
 }
 
-.heroBg {
+/* Brillo dorado tenue para dar profundidad sin foto */
+.hero::before {
+  content: '';
   position: absolute;
   inset: 0;
+  background: radial-gradient(circle at 80% 14%, rgba(168, 132, 42, 0.12), transparent 58%);
+  pointer-events: none;
 }
 
-.heroOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.42) 75%, rgba(0,0,0,0.25) 100%);
+/* Entrada escalonada del contenido del hero al cargar */
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .heroContent > * { animation: heroIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .heroContent > *:nth-child(1) { animation-delay: 0.05s; }
+  .heroContent > *:nth-child(2) { animation-delay: 0.13s; }
+  .heroContent > *:nth-child(3) { animation-delay: 0.21s; }
+  .heroContent > *:nth-child(4) { animation-delay: 0.29s; }
 }
 
 .heroContent {
@@ -29,18 +41,18 @@
   max-width: 720px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 24px 64px;
+  padding: 96px 24px 56px;
 }
 
 .breadcrumb {
   font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(42,34,24,0.55);
   letter-spacing: 0.04em;
   margin-bottom: 20px;
   font-family: var(--font-jost, sans-serif);
 }
-.breadcrumb a { color: rgba(255,255,255,0.55); text-decoration: none; }
-.breadcrumb a:hover { color: white; }
+.breadcrumb a { color: rgba(42,34,24,0.55); text-decoration: none; }
+.breadcrumb a:hover { color: var(--forest); }
 
 .eyebrow {
   font-size: 11px;
@@ -57,14 +69,20 @@
   font-weight: 300;
   line-height: 1.1;
   margin-bottom: 20px;
+  color: var(--forest);
 }
 
-.hero h1 em { font-style: italic; color: var(--gold); }
+.hero h1 em {
+  font-style: italic;
+  color: var(--gold);
+  display: inline-block;
+  padding-bottom: 0.08em; /* clearance para el descendente de "sorpresas" */
+}
 
 .heroSub {
   font-size: clamp(15px, 1.8vw, 17px);
   line-height: 1.7;
-  opacity: 0.85;
+  color: #5b5347;
   margin-bottom: 28px;
   font-family: var(--font-jost, sans-serif);
   max-width: 560px;
@@ -75,12 +93,50 @@
   gap: 14px;
   flex-wrap: wrap;
   font-size: 13px;
-  opacity: 0.7;
+  color: #6b6357;
   font-family: var(--font-jost, sans-serif);
   align-items: center;
 }
 
-.dot { opacity: 0.4; }
+.dot { color: var(--gold); opacity: 0.6; }
+
+/* ---- BANNER DE CONFIANZA (debajo del hero) ---- */
+.trustBanner {
+  background: var(--forest);
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  padding: 15px 24px;
+  font-size: 13.5px;
+  font-family: var(--font-jost, sans-serif);
+  letter-spacing: 0.01em;
+}
+
+.trustItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.stars {
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+.trustSep {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+@media (max-width: 600px) {
+  .trustBanner { gap: 8px 16px; font-size: 12.5px; }
+  .trustSep { display: none; }
+}
 
 /* ---- PAQUETES ---- */
 .paquetesSection {
@@ -117,29 +173,65 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 28px;
   align-items: stretch;
+  margin-bottom: 48px;
 }
 
 @media (max-width: 960px) { .cards { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 620px) { .cards { grid-template-columns: 1fr; } }
 
+/* Envoltura que recibe la animación de entrada; el tilt 3D vive en la tarjeta interna. */
+.cardReveal {
+  display: flex;
+}
+
 .card {
+  position: relative;
   background: white;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 2px 16px rgba(0,0,0,0.07);
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.25s, transform 0.25s;
+  flex: 1;
+  /* La transición de transform la maneja TiltCard inline; aquí solo la sombra. */
+  transition: box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .card:hover {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-  transform: translateY(-3px);
+  box-shadow: 0 18px 44px rgba(30, 48, 18, 0.18);
+}
+
+/* Tarjeta destacada (Más solicitado): anillo dorado y elevación base. */
+.cardFeatured {
+  box-shadow: 0 10px 36px rgba(168, 132, 42, 0.22);
+  outline: 2px solid var(--gold);
+  outline-offset: 0;
+}
+
+.cardFeatured:hover {
+  box-shadow: 0 22px 52px rgba(168, 132, 42, 0.3);
+}
+
+.cardFeatured .cardName::after {
+  content: '★';
+  color: var(--gold);
+  font-size: 16px;
+  margin-left: 8px;
+  vertical-align: 2px;
 }
 
 .cardImg {
   position: relative;
   height: 220px;
+  overflow: hidden;
+}
+
+.cardImg :global(img) {
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card:hover .cardImg :global(img) {
+  transform: scale(1.06);
 }
 
 .badge {
@@ -309,10 +401,15 @@
   font-weight: 500;
   text-decoration: none;
   font-family: var(--font-jost, sans-serif);
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s;
 }
 
-.ctaPrimary:hover { background: #1a3a2a; }
+.ctaPrimary:hover {
+  background: var(--moss);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(30, 48, 18, 0.22);
+}
+.ctaPrimary:active { transform: translateY(0); }
 
 .ctaSecondary {
   display: block;

@@ -3,12 +3,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Users, CalendarCheck, Home, Leaf, Star, Shield } from 'lucide-react';
 import GruposForm from './GruposForm';
+import GaleriaGrupos, { type GaleriaImg } from './GaleriaGrupos';
+import StatCounter from '@/components/StatCounter';
 import styles from './grupos-eventos.module.css';
 
 export const metadata: Metadata = {
   title: 'Grupos, Bodas y Eventos en Xilitla | Paraíso Encantado',
   description:
-    'Renta exclusiva del hotel para bodas, eventos corporativos y celebraciones familiares en Xilitla, Huasteca Potosina. 13 suites, hasta 78 personas, jardín tropical. Cotización sin costo.',
+    'Renta exclusiva del hotel para bodas, eventos corporativos y celebraciones familiares en Xilitla, Huasteca Potosina. 13 suites, hasta 60 personas, jardín tropical. Cotización sin costo.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/grupos-eventos',
   },
@@ -28,7 +30,7 @@ const gruposSchema = {
   url: 'https://www.paraisoencantado.com/grupos-eventos',
   telephone: '+524891007679',
   email: 'reservas@paraisoencantado.com',
-  maximumAttendeeCapacity: 78,
+  maximumAttendeeCapacity: 60,
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Xilitla',
@@ -49,7 +51,7 @@ const gruposSchema = {
 
 const FEATURES = [
   { icon: <Home size={24} strokeWidth={1.5} />, title: 'Renta exclusiva del hotel', desc: '13 suites completamente para tu grupo. Sin extraños — solo tu celebración.' },
-  { icon: <Users size={24} strokeWidth={1.5} />, title: 'Hasta 78 personas', desc: 'Capacidad de hospedaje para grupos grandes con suites de 2 a 6 personas cada una.' },
+  { icon: <Users size={24} strokeWidth={1.5} />, title: 'Hasta 60 personas', desc: 'Capacidad de hospedaje para grupos grandes con suites de 2 a 6 personas cada una.' },
   { icon: <Leaf size={24} strokeWidth={1.5} />, title: 'Jardín tropical privado', desc: 'Jardín y piscina spa en medio de la selva de Xilitla para ceremonias al aire libre.' },
   { icon: <CalendarCheck size={24} strokeWidth={1.5} />, title: 'Coordinación completa', desc: 'Te ayudamos con catering, tours, traslados y lo que necesites para el evento perfecto.' },
   { icon: <Star size={24} strokeWidth={1.5} />, title: 'Restaurante El Papán', desc: 'Cocina huasteca auténtica. Menús especiales para eventos con ingredientes locales y tortillas de comal.' },
@@ -67,6 +69,15 @@ const TESTIMONIALS = [
     name: 'Sofía Méndez',
     detail: 'Directora RH · Retiro corporativo 25 personas · Febrero 2025',
   },
+];
+
+const GALERIA: GaleriaImg[] = [
+  { src: '/images/Areas comunes/DSC09447-HDR.jpg', alt: 'Jardín y piscina spa del hotel, ideal para ceremonias al aire libre', span: 'wide' },
+  { src: '/images/Areas comunes/DSC09471-HDR.jpg', alt: 'Terraza con vista a la sierra potosina — Hotel Paraíso Encantado' },
+  { src: '/images/Areas comunes/DSC09461-HDR.jpg', alt: 'Área común del hotel preparada para eventos' },
+  { src: '/images/RESTAURANTE/DSC09682.jpg', alt: 'Restaurante El Papán Huasteco, catering para eventos' },
+  { src: '/images/Areas comunes/DSC09462-HDR.jpg', alt: 'Jardines tropicales del hotel para celebraciones' },
+  { src: '/images/Areas comunes/terraza.jpg', alt: 'Terraza panorámica del hotel al atardecer', span: 'wide' },
 ];
 
 export default function GruposEventosPage() {
@@ -89,7 +100,7 @@ export default function GruposEventosPage() {
             '@type': 'Service',
             name: 'Retiro Corporativo — Hotel Paraíso Encantado',
             serviceType: 'Corporate retreat',
-            description: 'Hotel completo para retiros corporativos, team building y reuniones de trabajo en la naturaleza de Xilitla. Hasta 78 personas hospedadas.',
+            description: 'Hotel completo para retiros corporativos, team building y reuniones de trabajo en la naturaleza de Xilitla. Hasta 60 personas hospedadas.',
             provider: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' },
             areaServed: { '@type': 'Place', name: 'Xilitla, San Luis Potosí, México' },
             offers: { '@type': 'Offer', priceCurrency: 'MXN', priceSpecification: { '@type': 'UnitPriceSpecification', price: 38000, priceCurrency: 'MXN', unitText: 'per night' } },
@@ -100,16 +111,6 @@ export default function GruposEventosPage() {
 
         {/* HERO */}
         <section className={styles.hero}>
-          <div className={styles.heroImg}>
-            <Image
-              src="/images/Areas comunes/DSC09456-HDR.jpg"
-              alt="Jardín tropical del Hotel Paraíso Encantado — bodas y eventos en Xilitla"
-              fill priority quality={80}
-              sizes="100vw"
-              style={{ objectFit: 'cover', objectPosition: 'center 40%' }}
-            />
-            <div className={styles.heroOverlay} />
-          </div>
           <div className={styles.heroContent}>
             <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
               <Link href="/">Inicio</Link>
@@ -135,12 +136,18 @@ export default function GruposEventosPage() {
         <div className={styles.statsBar} role="list" aria-label="Capacidades del hotel para eventos">
           {[
             { num: '13', label: 'Suites disponibles' },
-            { num: '78', label: 'Personas de hospedaje' },
+            { num: '60', label: 'Personas de hospedaje' },
             { num: '4.8★', label: 'Google · 514 reseñas' },
             { num: '5 min', label: 'A Las Pozas' },
-          ].map((s) => (
-            <div key={s.label} role="listitem" className={styles.statItem}>
-              <span className={styles.statNum}>{s.num}</span>
+          ].map((s, i) => (
+            <div
+              key={s.label}
+              role="listitem"
+              className={styles.statItem}
+              data-reveal
+              style={{ '--reveal-delay': `${i * 80}ms` } as React.CSSProperties}
+            >
+              <StatCounter value={s.num} className={styles.statNum} />
               <span className={styles.statLabel}>{s.label}</span>
             </div>
           ))}
@@ -149,7 +156,7 @@ export default function GruposEventosPage() {
         {/* TIPOS DE EVENTO */}
         <section className={styles.tiposSection}>
           <div className={styles.tiposInner}>
-            <div className={styles.tipo}>
+            <div className={styles.tipo} data-reveal>
               <div className={styles.tipoImg}>
                 <Image
                   src="/images/Areas comunes/DSC09471-HDR.jpg"
@@ -175,11 +182,11 @@ export default function GruposEventosPage() {
                   <li>Coordinación total: floristería, música, fotografía local</li>
                 </ul>
                 <p className={styles.tipoPrice}>Inversión desde <strong>$45,000 MXN</strong> · Hotel completo por noche</p>
-                <a href="#cotizar" className={styles.tipoCta}>Cotizar boda →</a>
+                <a href="#cotizar" className={styles.tipoCta}>Cotizar boda <span className="pe-arrow">→</span></a>
               </div>
             </div>
 
-            <div className={`${styles.tipo} ${styles.tipoReverse}`}>
+            <div className={`${styles.tipo} ${styles.tipoReverse}`} data-reveal>
               <div className={styles.tipoImg}>
                 <Image
                   src="/images/Areas comunes/DSC09456-HDR.jpg"
@@ -205,7 +212,7 @@ export default function GruposEventosPage() {
                   <li>Traslados desde Tampico o San Luis Potosí</li>
                 </ul>
                 <p className={styles.tipoPrice}>Inversión desde <strong>$38,000 MXN</strong> · Hotel completo por noche</p>
-                <a href="#cotizar" className={styles.tipoCta}>Cotizar retiro →</a>
+                <a href="#cotizar" className={styles.tipoCta}>Cotizar retiro <span className="pe-arrow">→</span></a>
               </div>
             </div>
           </div>
@@ -214,30 +221,13 @@ export default function GruposEventosPage() {
         {/* GALERÍA DEL ESPACIO */}
         <section className={styles.galeriaSection} aria-labelledby="galeria-heading">
           <div className={styles.galeriaInner}>
-            <p className={styles.eyebrow}>El espacio que tienes disponible</p>
-            <h2 id="galeria-heading" className={styles.sectionTitle}>
+            <p className={styles.eyebrow} data-reveal>El espacio que tienes disponible</p>
+            <h2 id="galeria-heading" className={styles.sectionTitle} data-reveal>
               El hotel completo, <em>solo para ti</em>
             </h2>
-            <div className={styles.galeriaGrid}>
-              {[
-                { src: '/images/Areas comunes/DSC09447-HDR.jpg', alt: 'Jardín y piscina spa del hotel — ideal para ceremonias', span: 'wide' },
-                { src: '/images/Areas comunes/DSC09471-HDR.jpg', alt: 'Terraza con vista — Hotel Paraíso Encantado', span: 'normal' },
-                { src: '/images/Areas comunes/DSC09461-HDR.jpg', alt: 'Área común del hotel para eventos', span: 'normal' },
-                { src: '/images/RESTAURANTE/DSC09682.jpg', alt: 'Restaurante El Papán Huasteco — catering para eventos', span: 'normal' },
-                { src: '/images/Areas comunes/DSC09462-HDR.jpg', alt: 'Jardines del hotel — espacio para celebraciones', span: 'normal' },
-                { src: '/images/Areas comunes/terraza.jpg', alt: 'Terraza panorámica del hotel', span: 'normal' },
-              ].map((img) => (
-                <div key={img.src} className={`${styles.galeriaItem} ${img.span === 'wide' ? styles.galeriaWide : ''}`}>
-                  <Image
-                    src={img.src} alt={img.alt}
-                    fill sizes="(max-width: 768px) 100vw, 50vw" quality={78}
-                    style={{ objectFit: 'cover' }}
-                  />
-                </div>
-              ))}
-            </div>
-            <p className={styles.galeriaNote}>
-              ¿Quieres ver el hotel en persona? <a href="https://wa.me/524891007679?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20visita%20para%20conocer%20el%20espacio." target="_blank" rel="noopener noreferrer">Agenda una visita guiada →</a>
+            <GaleriaGrupos images={GALERIA} />
+            <p className={styles.galeriaNote} data-reveal>
+              ¿Quieres ver el hotel en persona? <a href="https://wa.me/524891007679?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20visita%20para%20conocer%20el%20espacio." target="_blank" rel="noopener noreferrer">Agenda una visita guiada <span className="pe-arrow">→</span></a>
             </p>
           </div>
         </section>
@@ -245,17 +235,33 @@ export default function GruposEventosPage() {
         {/* FEATURES */}
         <section className={styles.featuresSection} aria-labelledby="features-heading">
           <div className={styles.featuresInner}>
-            <h2 id="features-heading" className={styles.sectionTitle}>
-              Por qué elegir <em>Paraíso Encantado</em>
-            </h2>
-            <div className={styles.featuresGrid}>
-              {FEATURES.map((f) => (
-                <div key={f.title} className={styles.featureCard}>
-                  <div className={styles.featureIcon}>{f.icon}</div>
-                  <h3>{f.title}</h3>
-                  <p>{f.desc}</p>
-                </div>
-              ))}
+            <div className={styles.featuresLayout}>
+              <div className={styles.featuresIntro} data-reveal>
+                <p className={styles.featuresEyebrow}>Por qué aquí</p>
+                <h2 id="features-heading" className={styles.featuresTitle}>
+                  Todo lo que tu evento necesita, <em>en un solo lugar</em>
+                </h2>
+                <p className={styles.featuresLead}>
+                  Un hotel boutique completo en la selva de Xilitla, listo para recibir a tu grupo
+                  con naturaleza, cocina huasteca y atención de principio a fin.
+                </p>
+              </div>
+              <div className={styles.featuresList}>
+                {FEATURES.map((f, i) => (
+                  <div
+                    key={f.title}
+                    className={styles.featureRow}
+                    data-reveal
+                    style={{ '--reveal-delay': `${i * 70}ms` } as React.CSSProperties}
+                  >
+                    <div className={styles.featureIcon}>{f.icon}</div>
+                    <div className={styles.featureText}>
+                      <h3>{f.title}</h3>
+                      <p>{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -263,10 +269,15 @@ export default function GruposEventosPage() {
         {/* TESTIMONIALES */}
         <section className={styles.testimonialsSection}>
           <div className={styles.testimonialsInner}>
-            <h2 className={styles.sectionTitle}>Lo que dicen <em>nuestros grupos</em></h2>
+            <h2 className={styles.sectionTitle} data-reveal>Lo que dicen <em>nuestros grupos</em></h2>
             <div className={styles.testimonialsGrid}>
-              {TESTIMONIALS.map((t) => (
-                <blockquote key={t.name} className={styles.testimonialCard}>
+              {TESTIMONIALS.map((t, i) => (
+                <blockquote
+                  key={t.name}
+                  className={styles.testimonialCard}
+                  data-reveal
+                  style={{ '--reveal-delay': `${i * 90}ms` } as React.CSSProperties}
+                >
                   <p className={styles.testimonialText}>{t.text}</p>
                   <footer>
                     <span className={styles.testimonialName}>{t.name}</span>
@@ -281,7 +292,7 @@ export default function GruposEventosPage() {
         {/* FORMULARIO DE COTIZACIÓN */}
         <section id="cotizar" className={styles.formSection} aria-labelledby="form-heading">
           <div className={styles.formInner}>
-            <div className={styles.formHeader}>
+            <div className={styles.formHeader} data-reveal>
               <p className={styles.eyebrow}>Sin compromiso · Respuesta en 2 horas</p>
               <h2 id="form-heading">Solicita tu <em>cotización</em></h2>
               <p className={styles.formSubtitle}>
@@ -298,7 +309,7 @@ export default function GruposEventosPage() {
 
         {/* CTA FINAL */}
         <section className={styles.ctaSection}>
-          <div className={styles.ctaInner}>
+          <div className={styles.ctaInner} data-reveal>
             <h2>¿Prefieres hablar <em>directamente</em>?</h2>
             <p>Llámanos o escríbenos y en minutos te damos disponibilidad.</p>
             <div className={styles.ctaButtons}>

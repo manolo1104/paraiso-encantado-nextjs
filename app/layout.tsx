@@ -8,6 +8,7 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import TrackingSetup from '@/components/TrackingSetup';
 import ExitIntentPopup from '@/components/ExitIntentPopup';
 import CookieBanner from '@/components/CookieBanner';
+import ScrollReveal from '@/components/ScrollReveal';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -78,11 +79,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* Google Tag Manager */}
         <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N98DFD9V');` }} />
+        {/* Sin JS: el contenido con animación de entrada se muestra igual */}
+        <noscript dangerouslySetInnerHTML={{ __html: `<style>[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}</style>` }} />
       </head>
       <body>
         {/* Google Tag Manager (noscript) */}
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N98DFD9V" height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe></noscript>
         <TrackingSetup />
+        {!isAdmin && <ScrollReveal />}
         {!isAdmin && <Navbar />}
         {children}
         {!isAdmin && <Footer />}
