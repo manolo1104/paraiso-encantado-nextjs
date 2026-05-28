@@ -19,7 +19,7 @@ export default function Navbar() {
   // Cierra el menú al redimensionar a desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth > 768) setMenuOpen(false);
+      if (window.innerWidth > 1024) setMenuOpen(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);

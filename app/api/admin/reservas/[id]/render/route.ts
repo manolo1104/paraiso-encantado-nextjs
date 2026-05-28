@@ -47,13 +47,6 @@ const SUITE_CATEGORY: Record<string, string> = {
   'Helechos 2':          'Suite Familiar Plus · 4 camas · hasta 6 personas',
 };
 
-const PRECIO_BASE: Record<string, number> = {
-  'Suite Flor de Liz 1': 1900, 'Suite Flor de Liz 2': 1900,
-  'Suite LindaVista': 1900, 'Jungla': 1900, 'Suite Lajas': 1900,
-  'Helechos 1': 1900, 'Helechos 2': 1900,
-  'Lirios 1': 1500, 'Lirios 2': 1500, 'Orquídeas 2': 1500,
-  'Orquídeas Doble': 1500, 'Orquídeas 3': 1500, 'Bromelias': 1500,
-};
 
 export async function GET(
   _req: NextRequest,
@@ -80,18 +73,19 @@ export async function GET(
     .map(r => r.trim())
     .filter(Boolean);
 
+  const habsPerRoom = rawRooms.length > 0 ? Math.round(habsTotal / rawRooms.length / noches) : 1500;
+
   const rooms = rawRooms.map(raw => {
     const guestsMatch = raw.match(/\((\d+)\s*persona/i);
     const guests = guestsMatch ? parseInt(guestsMatch[1]) : 2;
     const name = raw.replace(/\s*\([^)]*\)/g, '').trim();
-    const baseRate = PRECIO_BASE[name] ?? Math.round(habsTotal / rawRooms.length / noches);
     return {
       name,
       category: SUITE_CATEGORY[name] ?? 'Suite Boutique · Paraíso Encantado',
       guests,
       nights: noches,
-      rate: baseRate,
-      subtotal: baseRate * noches,
+      rate: habsPerRoom,
+      subtotal: habsPerRoom * noches,
     };
   });
 

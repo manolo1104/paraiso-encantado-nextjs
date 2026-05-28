@@ -146,12 +146,14 @@
   text-decoration: none;
   border-bottom: 1px solid rgba(201, 169, 122, 0.3);
   padding-bottom: 2px;
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
-.whatsappLink:hover {
-  color: var(--sand);
-  border-bottom-color: var(--sand);
+@media (hover: hover) and (pointer: fine) {
+  .whatsappLink:hover {
+    color: var(--sand);
+    border-bottom-color: var(--sand);
+  }
 }
 
 /* Footer bottom */

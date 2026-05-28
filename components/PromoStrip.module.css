@@ -1,8 +1,42 @@
 .strip {
-  background: linear-gradient(90deg, #2d5a27 0%, #3d7a34 50%, #2d5a27 100%);
-  color: #fff;
+  background: linear-gradient(90deg, var(--moss) 0%, var(--jade) 50%, var(--moss) 100%);
+  color: var(--cream);
   padding: 10px 24px;
   text-align: center;
+  overflow: hidden;
+}
+
+/* Copia duplicada para marquee — oculta en desktop */
+.marqueTrack {
+  display: contents;
+}
+
+.marqueTrack .inner + .inner {
+  display: none;
+}
+
+@media (max-width: 540px) {
+  .marqueTrack {
+    display: flex;
+    width: max-content;
+    animation: marqueeScroll 20s linear infinite;
+  }
+
+  .marqueTrack .inner {
+    display: flex;
+    flex-shrink: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0 32px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    justify-content: flex-start;
+  }
+
+  @keyframes marqueeScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
 }
 
 .inner {
@@ -26,6 +60,12 @@
   text-transform: uppercase;
   font-weight: 500;
   white-space: nowrap;
+  animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.04); opacity: 0.9; }
 }
 
 .text {
@@ -64,7 +104,7 @@
 }
 
 .savings {
-  color: #b8e0b0;
+  color: rgba(250, 248, 245, 0.75);
   font-weight: 500;
 }
 
@@ -80,10 +120,6 @@
 }
 
 @media (max-width: 600px) {
-  .inner {
-    flex-direction: column;
-    gap: 6px;
-  }
   .checks {
     gap: 10px;
   }

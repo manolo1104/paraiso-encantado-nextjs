@@ -100,11 +100,14 @@
 
 .image {
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transition: transform 0.6s ease-in-out;
+  will-change: transform;
 }
 
-.imageFrame:hover .image {
-  transform: scale(1.03);
+@media (hover: hover) and (pointer: fine) {
+  .imageFrame:hover .image {
+    transform: scale(1.03);
+  }
 }
 
 .imageBadge {
@@ -134,6 +137,27 @@
   text-transform: uppercase;
   letter-spacing: 1.5px;
   color: var(--sand);
+}
+
+/* Scroll-driven stats cascade */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .stat:nth-child(1) {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 22%;
+    }
+    .stat:nth-child(2) {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 4% entry 26%;
+    }
+    .stat:nth-child(3) {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 30%;
+    }
+  }
 }
 
 @media (max-width: 1024px) {
@@ -172,7 +196,9 @@
   margin-bottom: 28px;
   border-bottom: 1px solid rgba(212,175,55,0.4);
   padding-bottom: 2px;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition-fast);
 }
 
-.destinoLink:hover { border-color: var(--gold); }
+@media (hover: hover) and (pointer: fine) {
+  .destinoLink:hover { border-color: var(--gold); }
+}

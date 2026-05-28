@@ -236,10 +236,15 @@ export function buildEmailHtml(data: {
     return f.charAt(0).toUpperCase() + f.slice(1);
   };
 
+  const hasAdultsSplit = data.adults !== undefined;
   const adults = Number(data.adults ?? data.guests ?? 0) || 0;
   const minors = Number(data.minors ?? 0) || 0;
-  const guestsBreakdown = `${adults} adulto${adults === 1 ? '' : 's'} · ${minors} menor${minors === 1 ? '' : 'es'}`;
+  const totalGuests = adults + minors;
+  const guestsBreakdown = hasAdultsSplit
+    ? `${adults} adulto${adults === 1 ? '' : 's'} · ${minors} menor${minors === 1 ? '' : 'es'}`
+    : `${totalGuests} huésped${totalGuests === 1 ? '' : 'es'}`;
   const nights = data.nights || 0;
+  const notasCliente = (data.notas || '').trim();
 
   const roomsRows = (data.rooms || []).map(room => `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;">
@@ -363,6 +368,15 @@ export function buildEmailHtml(data: {
           <!-- ROOMS -->
           <p style="margin:32px 0 20px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:#9a8a74;">Habitaciones Reservadas</p>
           ${roomsRows}
+
+          ${notasCliente ? `
+          <!-- NOTAS CLIENTE -->
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0;border:1px solid #e4ddd3;background-color:#fdf9f4;">
+            <tr><td style="padding:18px 24px;">
+              <p style="margin:0 0 8px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;">Notas de tu reserva</p>
+              <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#4a3f30;line-height:1.7;">${notasCliente.replace(/\n/g, '<br>')}</p>
+            </td></tr>
+          </table>` : ''}
 
           <!-- TOTAL -->
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#2a2218;margin:32px 0;">

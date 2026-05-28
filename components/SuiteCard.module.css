@@ -1,6 +1,6 @@
 .card {
   position: relative;
-  background: #ffffff;
+  background: var(--cream);
   border: 1px solid rgba(201, 169, 122, 0.2);
   border-radius: 2px;
   overflow: hidden;
@@ -13,10 +13,12 @@
   cursor: pointer;
 }
 
-.card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 24px 64px rgba(30, 48, 18, 0.14);
-  border-color: rgba(201, 169, 122, 0.6);
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 24px 64px rgba(30, 48, 18, 0.14);
+    border-color: rgba(201, 169, 122, 0.6);
+  }
 }
 
 /* Badge "Más Popular" */
@@ -34,6 +36,21 @@
   letter-spacing: 1.5px;
   padding: 6px 14px;
   border-radius: 1px;
+  overflow: hidden;
+}
+
+.badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+  animation: shimmerBadge 2.5s ease-in-out infinite;
+  transform: translateX(-100%);
+}
+
+@keyframes shimmerBadge {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
 /* Imagen */
@@ -48,6 +65,7 @@
   object-fit: cover;
   object-position: center;
   transition: transform var(--transition-slow);
+  will-change: transform;
 }
 
 .card:hover .image {
@@ -165,7 +183,9 @@
 }
 
 .viewBtn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   color: var(--forest);
   font-family: var(--font-jost);
@@ -173,16 +193,25 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  padding: 10px 20px;
+  padding: 13px 20px;
   border: 1px solid rgba(30, 48, 18, 0.3);
   border-radius: 2px;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
   white-space: nowrap;
   text-decoration: none;
 }
 
-.viewBtn:hover {
-  background: var(--forest);
+@media (hover: hover) and (pointer: fine) {
+  .viewBtn:hover {
+    background: var(--forest);
+    color: var(--cream);
+    border-color: var(--forest);
+  }
+}
+
+.viewBtn:active {
+  background: var(--moss);
+  border-color: var(--moss);
   color: var(--cream);
-  border-color: var(--forest);
+  transform: scale(0.97);
 }

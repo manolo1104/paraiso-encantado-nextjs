@@ -80,10 +80,12 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 0;
+  width: 100%;
   height: 1px;
   background: var(--sand);
-  transition: width var(--transition-normal);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--transition-normal);
 }
 
 .navLinks li a:hover {
@@ -91,7 +93,7 @@
 }
 
 .navLinks li a:hover::after {
-  width: 100%;
+  transform: scaleX(1);
 }
 
 /* CTA Reservar */
@@ -107,13 +109,19 @@
   border-radius: 2px;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
-.navCta:hover {
-  background: var(--gold);
-  color: var(--cream);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .navCta:hover {
+    background: var(--gold);
+    color: var(--cream);
+    transform: translateY(-1px);
+  }
+}
+
+.navCta:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* Hamburger */
@@ -124,7 +132,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 10px;
   margin-left: auto;
 }
 
@@ -133,7 +141,7 @@
   width: 24px;
   height: 1.5px;
   background: var(--cream);
-  transition: all var(--transition-normal);
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
   transform-origin: center;
 }
 
@@ -219,7 +227,24 @@
   color: var(--cream) !important;
 }
 
-@media (max-width: 768px) {
+/* En escritorio intermedio (1025-1280px): gap comprimido */
+@media (max-width: 1280px) and (min-width: 1025px) {
+  .navLinks {
+    gap: 20px;
+  }
+
+  .navLinks li a {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+  }
+
+  .navContainer {
+    gap: 24px;
+  }
+}
+
+/* Tablet y móvil: hamburger */
+@media (max-width: 1024px) {
   .navLinks,
   .navCta {
     display: none;

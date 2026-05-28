@@ -1,9 +1,7 @@
 import styles from './WhyUs.module.css';
-import { MapPinIcon, AwardIcon, LeafIcon } from './icons';
 
 const benefits = [
   {
-    Icon: MapPinIcon,
     title: 'Ubicación Privilegiada',
     highlight: '5 minutos caminando a Las Pozas',
     description:
@@ -11,7 +9,6 @@ const benefits = [
     proof: '"La ubicación es perfecta" — 94% de nuestras reseñas',
   },
   {
-    Icon: AwardIcon,
     title: 'Reserva Directa',
     highlight: 'Sin intermediarios, sin comisiones',
     description:
@@ -19,7 +16,6 @@ const benefits = [
     proof: 'Confirmación instantánea · Cancela hasta 48hrs antes.',
   },
   {
-    Icon: LeafIcon,
     title: 'Autenticidad Huasteca',
     highlight: '13 suites únicas, no clonadas',
     description:
@@ -41,16 +37,18 @@ export default function WhyUs() {
         </p>
       </div>
 
-      <div className={styles.grid}>
-        {benefits.map(({ Icon, title, highlight, description, proof }) => (
-          <article key={title} className={styles.card}>
-            <div className={styles.icon} aria-hidden="true">
-              <Icon size={32} />
+      <div className={styles.list}>
+        {benefits.map(({ title, highlight, description, proof }, index) => (
+          <article key={title} className={styles.item}>
+            <div className={styles.itemNumber} aria-hidden="true">
+              0{index + 1}
             </div>
-            <h3 className={styles.cardTitle}>{title}</h3>
-            <p className={styles.highlight}>{highlight}</p>
-            <p className={styles.description}>{description}</p>
-            <p className={styles.proof}>{proof}</p>
+            <div className={styles.itemContent}>
+              <h3 className={styles.itemTitle}>{title}</h3>
+              <p className={styles.highlight}>{highlight}</p>
+              <p className={styles.description}>{description}</p>
+              <p className={styles.proof}>{proof}</p>
+            </div>
           </article>
         ))}
       </div>

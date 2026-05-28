@@ -83,7 +83,7 @@
 .stars {
   display: flex;
   gap: 2px;
-  color: #c9a96e;
+  color: var(--sand);
 }
 
 .date {
@@ -100,7 +100,7 @@
   font-family: var(--font-jost), sans-serif;
   font-size: 10px;
   font-weight: 400;
-  color: #2d7a27;
+  color: var(--jade);
   letter-spacing: 0.3px;
 }
 

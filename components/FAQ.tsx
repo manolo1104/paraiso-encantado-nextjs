@@ -92,10 +92,12 @@ export default function FAQ() {
               <div
                 id={`faq-answer-${index}`}
                 className={styles.answer}
-                hidden={!isOpen}
+                inert={!isOpen}
                 role="region"
               >
-                <p>{faq.answer}</p>
+                <div className={styles.answerInner}>
+                  <p>{faq.answer}</p>
+                </div>
               </div>
             </div>
           );

@@ -42,3 +42,9 @@ next-env.d.ts
 
 # large media (serve from CDN)
 /public/videos/
+
+# local tooling (Claude Code skills / agents) — no forman parte del sitio
+/.agents/
+/.claude/
+/.impeccable/
+/skills-lock.json

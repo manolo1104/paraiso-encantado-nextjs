@@ -60,6 +60,11 @@
   appearance: none;
 }
 
+.picker:focus-within {
+  border-color: rgba(201, 169, 122, 0.7);
+  box-shadow: 0 0 0 2px rgba(201, 169, 122, 0.18);
+}
+
 .input::-webkit-calendar-picker-indicator {
   filter: invert(1) opacity(0.6);
   cursor: pointer;

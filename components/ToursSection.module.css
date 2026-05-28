@@ -1,6 +1,6 @@
 .section {
   padding: 80px 24px;
-  background: #f8f6f1;
+  background: var(--parch);
 }
 
 .header {
@@ -15,7 +15,7 @@
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #3d7a34;
+  color: var(--jade);
   margin: 0 0 12px;
 }
 
@@ -23,20 +23,20 @@
   font-family: var(--font-cormorant), serif;
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 400;
-  color: #1a2e1a;
+  color: var(--forest);
   margin: 0 0 16px;
   line-height: 1.15;
 }
 
 .header h2 em {
   font-style: italic;
-  color: #3d7a34;
+  color: var(--jade);
 }
 
 .subtitle {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.95rem;
-  color: #5a6b5a;
+  color: var(--sage);
   line-height: 1.6;
   margin: 0;
 }
@@ -50,13 +50,13 @@
 }
 
 .card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--cream);
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .card:hover {
@@ -73,6 +73,7 @@
 .image {
   object-fit: cover;
   transition: transform 0.5s ease;
+  will-change: transform;
 }
 
 .card:hover .image {
@@ -99,7 +100,7 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #3d7a34;
+  color: var(--jade);
   margin: 0;
 }
 
@@ -107,7 +108,7 @@
   font-family: var(--font-cormorant), serif;
   font-size: 1.5rem;
   font-weight: 400;
-  color: #1a2e1a;
+  color: var(--forest);
   margin: 0;
   line-height: 1.2;
 }
@@ -115,7 +116,7 @@
 .desc {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.85rem;
-  color: #5a6b5a;
+  color: var(--sage);
   line-height: 1.6;
   margin: 0;
   flex: 1;
@@ -127,7 +128,7 @@
   justify-content: space-between;
   margin-top: 4px;
   padding-top: 12px;
-  border-top: 1px solid #e8e2d6;
+  border-top: 1px solid rgba(201, 169, 122, 0.2);
 }
 
 .duration {
@@ -136,14 +137,15 @@
   gap: 5px;
   font-family: var(--font-jost), sans-serif;
   font-size: 0.78rem;
-  color: #7a8a7a;
+  color: var(--sage);
+  opacity: 0.75;
 }
 
 .price {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #1a2e1a;
+  color: var(--forest);
 }
 
 .btn {
@@ -156,13 +158,16 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #3d7a34;
+  color: var(--jade);
   text-decoration: none;
-  transition: gap 0.2s ease;
 }
 
-.btn:hover {
-  gap: 10px;
+.btn svg {
+  transition: transform var(--transition-fast);
+}
+
+.btn:hover svg {
+  transform: translateX(4px);
 }
 
 /* CTA */
@@ -176,8 +181,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #1a2e1a;
-  color: #e8dcc8;
+  background: var(--forest);
+  color: var(--cream);
   font-family: var(--font-jost), sans-serif;
   font-size: 0.85rem;
   font-weight: 500;
@@ -186,12 +191,24 @@
   text-decoration: none;
   padding: 14px 32px;
   border-radius: 4px;
-  transition: background 0.2s ease, gap 0.2s ease;
+  transition: background var(--transition-fast);
+}
+
+.ctaBtn svg {
+  transition: transform var(--transition-fast);
 }
 
 .ctaBtn:hover {
-  background: #2d5a27;
-  gap: 12px;
+  background: var(--jade);
+}
+
+.ctaBtn:hover svg {
+  transform: translateX(4px);
+}
+
+.ctaBtn:active {
+  transform: scale(0.97);
+  background: var(--moss);
 }
 
 .ctaNote {
@@ -201,8 +218,24 @@
   gap: 5px;
   font-family: var(--font-jost), sans-serif;
   font-size: 0.78rem;
-  color: #8a9a8a;
+  color: var(--sage);
   margin: 14px 0 0;
+}
+
+/* Scroll-driven entrance */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .header {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 18%;
+    }
+    .card {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 25%;
+    }
+  }
 }
 
 @media (max-width: 900px) {

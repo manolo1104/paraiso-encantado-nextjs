@@ -71,8 +71,10 @@
   transition: box-shadow var(--transition-normal);
 }
 
-.card:hover {
-  box-shadow: 0 8px 32px rgba(30, 48, 18, 0.09);
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    box-shadow: 0 8px 32px rgba(30, 48, 18, 0.09);
+  }
 }
 
 /* Card header */
@@ -188,13 +190,28 @@
   color: var(--forest);
   border-bottom: 1px solid rgba(30, 48, 18, 0.3);
   padding-bottom: 4px;
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
   text-decoration: none;
 }
 
-.reviewsLink:hover {
-  color: var(--moss);
-  border-bottom-color: var(--moss);
+@media (hover: hover) and (pointer: fine) {
+  .reviewsLink:hover {
+    color: var(--moss);
+    border-bottom-color: var(--moss);
+  }
+}
+
+/* Scroll-driven stagger por nth-child */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .card { animation: revealUp linear both; animation-timeline: view(); }
+    .card:nth-child(1) { animation-range: entry 0% entry 22%; }
+    .card:nth-child(2) { animation-range: entry 4% entry 26%; }
+    .card:nth-child(3) { animation-range: entry 8% entry 30%; }
+    .card:nth-child(4) { animation-range: entry 12% entry 34%; }
+    .card:nth-child(5) { animation-range: entry 16% entry 38%; }
+    .card:nth-child(6) { animation-range: entry 20% entry 42%; }
+  }
 }
 
 /* Mobile */

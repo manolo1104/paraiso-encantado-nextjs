@@ -1,5 +1,5 @@
 .section {
-  background: #1a2e1a;
+  background: var(--forest);
   padding: 80px 24px;
 }
 
@@ -11,7 +11,7 @@
 
 .iconWrap {
   font-size: 1.4rem;
-  color: #c9a97a;
+  color: var(--sand);
   margin-bottom: 16px;
   display: block;
   letter-spacing: 6px;
@@ -31,13 +31,13 @@
   font-family: var(--font-cormorant), Georgia, serif;
   font-size: clamp(1.75rem, 4vw, 2.4rem);
   font-weight: 300;
-  color: #f5f0e8;
+  color: var(--cream);
   line-height: 1.15;
   margin-bottom: 16px;
 }
 .title em {
   font-style: italic;
-  color: #c9a97a;
+  color: var(--sand);
 }
 
 .sub {
@@ -71,16 +71,21 @@
   border: none;
   font-family: var(--font-jost), sans-serif;
   font-size: 0.9rem;
-  color: #f5f0e8;
+  color: var(--cream);
   outline: none;
   min-width: 0;
 }
 .input::placeholder { color: rgba(245, 240, 232, 0.35); }
 
+.inputWrap:focus-within {
+  border-color: rgba(201, 169, 122, 0.75);
+  box-shadow: 0 0 0 2px rgba(201, 169, 122, 0.22);
+}
+
 .btn {
   padding: 14px 22px;
-  background: #c9a97a;
-  color: #1a2e1a;
+  background: var(--sand);
+  color: var(--forest);
   border: none;
   font-family: var(--font-jost), sans-serif;
   font-size: 0.8rem;
@@ -91,7 +96,7 @@
   transition: background 0.2s;
   flex-shrink: 0;
 }
-.btn:hover:not(:disabled) { background: #d9ba8e; }
+.btn:hover:not(:disabled) { background: var(--gold); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .errorMsg {
@@ -122,7 +127,7 @@
 
 .checkmark {
   font-size: 1.4rem;
-  color: #c9a97a;
+  color: var(--sand);
   flex-shrink: 0;
 }
 
@@ -133,7 +138,7 @@
   line-height: 1.6;
   margin: 0;
 }
-.thanks strong { color: #f5f0e8; }
+.thanks strong { color: var(--cream); }
 
 @media (max-width: 480px) {
   .section { padding: 60px 20px; }

@@ -535,12 +535,12 @@ export default function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeFaqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(roomsSchema) }} />
-      <main>
+      <main data-sticky-bar>
         <Hero />
-        <PromoStrip />
         <SocialProofBar />
         <WhyUs />
         <SuitesGrid />
+        <PromoStrip />
         <AmenitiesGrid />
         {/* DestinoSection moved after suites — user already knows where Xilitla is */}
         <DestinoSection />

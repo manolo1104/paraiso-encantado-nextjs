@@ -316,7 +316,7 @@ Logística de llegada para grupos:
 
 ═══ HABITACIONES ═══
 ${ROOMS.map(r =>
-  `*${r.name}* (${r.category})\n"${r.description}"\n· Camas: ${r.beds} · máx ${r.max_occupancy} personas\n· 2 personas: $${r.price_2.toLocaleString('es-MX')} MXN/noche${r.price_3_4 ? ` · 3–4 personas: $${r.price_3_4.toLocaleString('es-MX')} MXN/noche` : ''}\n✦ ${r.highlights.join(' · ')}\n🏠 ${r.features.join(' · ')}\n🔗 ${r.url}`
+  `*${r.name}* (${r.category})\n"${r.description}"\n· Camas: ${r.beds} · máx ${r.max_occupancy} personas\n· 2 personas: $${r.price_2.toLocaleString('es-MX')} MXN/noche${r.price_3_4 ? ` · 3–4 personas: $${r.price_3_4.toLocaleString('es-MX')} MXN/noche` : ''}${r.price_5 ? ` · 5 personas: $${r.price_5.toLocaleString('es-MX')} MXN/noche` : ''}${r.price_6 ? ` · 6 personas: $${r.price_6.toLocaleString('es-MX')} MXN/noche` : ''}\n✦ ${r.highlights.join(' · ')}\n🏠 ${r.features.join(' · ')}\n🔗 ${r.url}`
 ).join('\n\n')}
 
 

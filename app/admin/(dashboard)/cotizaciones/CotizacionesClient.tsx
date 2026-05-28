@@ -43,7 +43,24 @@ const PAQUETES_SEP = '||PAQUETES||';
 function parsePaquetes(notas: string): PaqueteItem[] {
   const idx = notas.indexOf(PAQUETES_SEP);
   if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + PAQUETES_SEP.length)); } catch { return []; }
+  try { return JSON.parse(notas.slice(idx + PAQUETES_SEP.length).split('||HABS||')[0]); } catch { return []; }
+}
+
+const HABS_SEP = '||HABS||';
+function parseHabs(notas: string): HabItem[] | null {
+  const idx = notas.indexOf(HABS_SEP);
+  if (idx === -1) return null;
+  try { return JSON.parse(notas.slice(idx + HABS_SEP.length)); } catch { return null; }
+}
+function inferGuests(suite: string, ratePerNight: number): number {
+  const room = BOOKING_ROOMS.find(r => r.name === suite);
+  if (!room) return 2;
+  const keys = Object.keys(room.priceTiers).map(Number).sort((a, b) => a - b);
+  let guests = keys[0] ?? 2;
+  for (const k of keys) {
+    if (room.priceTiers[k] <= ratePerNight + 50) guests = k;
+  }
+  return guests;
 }
 function getPaquetesTotal(paquetes: PaqueteItem[]): number {
   return paquetes.reduce((s, p) => s + p.precio, 0);
@@ -124,10 +141,11 @@ function parseNotasCliente(notas: string): string {
   const idx = notas.indexOf(INTERNO_SEP);
   return idx === -1 ? notas.trim() : notas.slice(0, idx).trim();
 }
-function joinNotas(cliente: string, interno: string, tours: TourItem[] = [], paquetes: PaqueteItem[] = []): string {
+function joinNotas(cliente: string, interno: string, tours: TourItem[] = [], paquetes: PaqueteItem[] = [], habs: HabItem[] = []): string {
   let base = interno.trim() ? `${cliente}${INTERNO_SEP}${interno}` : cliente;
   if (tours.length > 0) base += `${TOURS_SEP}${JSON.stringify(tours)}`;
   if (paquetes.length > 0) base += `${PAQUETES_SEP}${JSON.stringify(paquetes)}`;
+  if (habs.length > 0) base += `${HABS_SEP}${JSON.stringify(habs)}`;
   return base;
 }
 
@@ -565,7 +583,7 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
       const res = await fetch('/api/admin/cotizaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, suite, huespedes, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems) }),
+        body: JSON.stringify({ ...form, suite, huespedes, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems, habitaciones) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al crear');
@@ -835,9 +853,18 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
     cliente: quote.cliente, telefono: quote.telefono, email: quote.email,
     checkin: quote.checkin, checkout: quote.checkout,
   });
-  const [habitaciones, setHabitaciones] = useState<HabItem[]>(() =>
-    quote.suite.split(', ').filter(Boolean).map(s => ({ suite: s.trim(), huespedes: 2 }))
-  );
+  const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
+    const stored = parseHabs(quote.notas || '');
+    if (stored && stored.length > 0) return stored;
+    // Fallback: infer guests from precioTotal
+    const rNames = quote.suite.split(', ').filter(Boolean).map(s => s.trim());
+    const tTotal = getToursTotalQ(parseTours(quote.notas || ''));
+    const pTotal = getPaquetesTotal(parsePaquetes(quote.notas || ''));
+    const habsPerRoom = rNames.length > 0 && quote.noches > 0
+      ? Math.round(((quote.precioTotal || 0) - tTotal - pTotal) / rNames.length / quote.noches)
+      : 1900;
+    return rNames.map(suite => ({ suite, huespedes: inferGuests(suite, habsPerRoom) }));
+  });
   const [tourItems, setTourItems] = useState<TourItem[]>(() => parseTours(quote.notas || ''));
   const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(() => parsePaquetes(quote.notas || ''));
   const [precioManual, setPrecioManual] = useState<number | null>(quote.precioTotal || null);
@@ -912,7 +939,7 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
     e.preventDefault();
     setLoading(true);
     const suite = habitaciones.map(h => h.suite).join(', ');
-    await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems) });
+    await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems, habitaciones) });
     setLoading(false);
   }
 

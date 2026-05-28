@@ -126,18 +126,21 @@ function getDeterministicResponse(userText = '', session = {}) {
     return 'Los *menores de 6 años* no cuentan como huéspedes y su hospedaje es *gratis*. 🌿 En tu caso, el niño de 5 años no suma al precio, así que *cuentan solo 2 adultos*. ¿Qué fechas de *check-in y check-out* tienes en mente? 📅✨';
   }
 
-  if ((text.includes('desayuno') || text.includes('buffet')) && (text.includes('somos') || text.includes('personas'))) {
+  const asksAboutFood = text.includes('desayuno') || text.includes('buffet') || text.includes('comida') || text.includes('cena') || text.includes('cenas') || text.includes('restaurante') || text.includes('menu') || text.includes('platillo') || text.includes('desayunar') || text.includes('almuerzo');
+
+  if (asksAboutFood && (text.includes('somos') || text.includes('personas'))) {
     const peopleCount = parseFirstInteger(text);
-    if (peopleCount && peopleCount < 30) {
+    if ((text.includes('desayuno') || text.includes('buffet')) && peopleCount && peopleCount < 30) {
       return 'El servicio grupal de desayunos está pensado para *30 personas o más*. 🍽️ Si son menos, nuestro equipo puede revisar opciones especiales para ustedes. 🤝';
+    }
+    if ((text.includes('cena') || text.includes('cenas')) && peopleCount && peopleCount >= 30) {
+      return 'Para grupos de *30 personas o más* tenemos cenas como *Antojitos Mexicanos*, *Tacos de Cecina*, *Enchiladas Suizas*, *Enchiladas Huastecas* y *Ensalada Verde con Pollo*. 🍽️ Incluye aguas frescas, café y pan dulce, y se requiere *50% de anticipo* para asegurar el servicio. 📌';
     }
   }
 
-  if ((text.includes('cena') || text.includes('cenas')) && (text.includes('somos') || text.includes('personas'))) {
-    const peopleCount = parseFirstInteger(text);
-    if (peopleCount && peopleCount >= 30) {
-      return 'Para grupos de *30 personas o más* tenemos cenas como *Antojitos Mexicanos*, *Tacos de Cecina*, *Enchiladas Suizas*, *Enchiladas Huastecas* y *Ensalada Verde con Pollo*. 🍽️ Incluye aguas frescas, café y pan dulce, y se requiere *50% de anticipo* para asegurar el servicio. 📌';
-    }
+  // Preguntas sobre precios del restaurante (individuales o sin cantidad específica)
+  if (asksAboutFood && (text.includes('precio') || text.includes('cuanto') || text.includes('costo') || text.includes('tarifa') || text.includes('aproximado') || text.includes('cuestan'))) {
+    return 'Nuestro restaurante *El Papán Huasteco* (8:00 AM – 8:00 PM) 🍽️\n\n*Desayunos:*\n· Americano (huevos, frijoles, café) — *$160 MXN* por persona\n· Bufete (chilaquiles, guisos, tortillas del comal) — *$220 MXN* por persona\n· Huasteco (enchiladas, bocoles, tamales) — *$250 MXN* por persona\n\n*Comidas y cenas:* aprox. *$100–$250 MXN* por persona según el platillo. 🌿\n\n¿Te ayudo también con tu reserva de hospedaje?';
   }
 
   if (text.includes('otra pagina vi la habitacion mas barata') || text.includes('me respetas ese precio') || text.includes('mas barata')) {
@@ -152,8 +155,8 @@ function getDeterministicResponse(userText = '', session = {}) {
   const mentionsSpecificRoom = /(jungla|lindavista|lajas|flor de liz|lirios|orquideas|bromelias|helechos|suite)/.test(text);
   const isPostConfirmationChange = text.includes('reserva confirmada') || text.includes('agregar 1 huesped') || text.includes('agregar un huesped') || text.includes('cambia el precio');
   const isExternalPriceDispute = text.includes('mas barata') || text.includes('respetas ese precio') || text.includes('otra pagina');
-  if (asksPrice && !mentionsSpecificRoom && !isPostConfirmationChange && !isExternalPriceDispute) {
-    return 'Nuestras tarifas por noche 🌿\n\n🏔️ *Con vista a las montañas + spa privado:*\n$1,900 MXN (2 personas) · $2,400 MXN (3–4 personas)\n· Piscina spa o tina de hidromasaje privada\n· Terrazas con vista panorámica a Xilitla y la selva\n· Suite Jungla · Flor de Liz 1 & 2 · LindaVista · Lajas\n\n🌿 *Con vista a los jardines:*\n$1,500 MXN (2 personas) · $1,900 MXN (3–4 personas)\n· Balcón privado · jardines tropicales · tranquilidad\n· Lirios 1 & 2 · Orquídeas · Bromelias\n\n👨‍👩‍👧‍👦 *Suites Familiares (hasta 6–8 personas):*\n$1,900 MXN (2p) · $2,400 MXN (3–6p)\n· Helechos 1 & 2\n\nTodo incluye WiFi, AC y acceso a la alberca. Estamos a *5 min del Jardín de Edward James* 📍\n\n¿Para qué fechas y cuántos serían? Te reviso disponibilidad ahora 📅';
+  if (asksPrice && !mentionsSpecificRoom && !isPostConfirmationChange && !isExternalPriceDispute && !asksAboutFood) {
+    return 'Nuestras tarifas por noche 🌿\n\n🏔️ *Con vista a las montañas + spa privado:*\n$1,900 MXN (2 personas) · $2,400 MXN (3–4 personas)\n· Piscina spa o tina de hidromasaje privada\n· Terrazas con vista panorámica a Xilitla y la selva\n· Suite Jungla · Flor de Liz 1 & 2 · LindaVista · Lajas\n\n🌿 *Con vista a los jardines:*\n$1,500 MXN (2 personas) · $1,900 MXN (3–4 personas)\n· Balcón privado · jardines tropicales · tranquilidad\n· Lirios 1 & 2 · Orquídeas · Bromelias\n\n👨‍👩‍👧‍👦 *Suites Familiares (hasta 6–8 personas):*\n$1,900 MXN (2p) · $2,400 MXN (3–4p) · $2,700 MXN (5p) · $3,000 MXN (6p)\n· Helechos 1 & 2\n\nTodo incluye WiFi, AC y acceso a la alberca. Estamos a *5 min del Jardín de Edward James* 📍\n\n¿Para qué fechas y cuántos serían? Te reviso disponibilidad ahora 📅';
   }
 
   if (text.includes('perrito') || text.includes('mascota') || text.includes('perro')) {

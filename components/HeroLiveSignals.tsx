@@ -87,7 +87,7 @@ export default function HeroLiveSignals() {
           0%,100% { opacity:1; transform:scale(1); }
           50%      { opacity:0.4; transform:scale(0.7); }
         }
-        .hs-booking { transition: opacity 0.4s ease; }
+        .hs-booking { transition: opacity 0.28s ease-out, transform 0.28s ease-out; }
       `}</style>
       <div className="hero-signals" role="status" aria-live="polite">
         <div className="hs-item">
@@ -98,7 +98,7 @@ export default function HeroLiveSignals() {
           <Zap size={12} strokeWidth={2} color="#c9a97a" aria-hidden="true" />
           <span>Solo <strong>{scarcity} suites</strong> para {currentMonth}</span>
         </div>
-        <div className="hs-item hs-booking" style={{ opacity: bookFade ? 1 : 0 }}>
+        <div className="hs-item hs-booking" style={{ opacity: bookFade ? 1 : 0, transform: bookFade ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.95)' }}>
           <Check size={12} strokeWidth={2.5} color="#22c55e" aria-hidden="true" />
           <span><strong>{booking.name}</strong> de {booking.city} reservó {booking.suite} hace {booking.hours}h</span>
         </div>

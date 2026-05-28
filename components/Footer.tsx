@@ -20,9 +20,9 @@ export default function Footer() {
               height={48}
               className={styles.logoImg}
             />
-            <h3 className={styles.logo}>
+            <span className={styles.logo}>
               <em>Paraíso Encantado</em>
-            </h3>
+            </span>
           </div>
           <p className={styles.tagline}>Tu casa en la Huasteca Potosina</p>
           <div className={styles.contact}>

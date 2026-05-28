@@ -18,7 +18,7 @@
 }
 
 .modal {
-  background: #faf8f5;
+  background: var(--cream);
   border-radius: 14px;
   overflow: hidden;
   max-width: 460px;
@@ -118,7 +118,7 @@
 .list li {
   font-size: 13px;
   line-height: 1.5;
-  color: #555;
+  color: var(--bark);
   padding-left: 18px;
   position: relative;
   font-family: var(--font-jost, sans-serif);
@@ -148,24 +148,24 @@
 .mailIcon {
   position: absolute;
   left: 12px;
-  color: #aaa;
+  color: var(--clay);
   pointer-events: none;
 }
 
 .input {
   width: 100%;
   padding: 12px 14px 12px 36px;
-  border: 1.5px solid #ddd;
+  border: 1.5px solid rgba(201, 169, 122, 0.3);
   border-radius: 7px;
   font-size: 15px;
   font-family: var(--font-jost, sans-serif);
-  color: #333;
-  background: white;
+  color: var(--ink);
+  background: var(--parch);
   box-sizing: border-box;
   transition: border-color 0.2s;
 }
 
-.input:focus { outline: none; border-color: var(--forest, #1a2e1a); }
+.input:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 2px rgba(30, 48, 18, 0.1); }
 
 .btn {
   background: var(--forest, #1a2e1a);
@@ -180,12 +180,12 @@
   transition: background 0.2s;
 }
 
-.btn:hover { background: #1a3a2a; }
+.btn:hover { background: var(--moss); }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .legal {
   font-size: 11px;
-  color: #aaa;
+  color: var(--clay);
   font-family: var(--font-jost, sans-serif);
   margin: 0;
   text-align: center;
@@ -203,8 +203,8 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  background: #e8f5e9;
-  color: #27ae60;
+  background: rgba(45, 74, 26, 0.12);
+  color: var(--moss);
   font-size: 22px;
   border-radius: 50%;
   margin-bottom: 16px;
@@ -220,7 +220,7 @@
 
 .successSub {
   font-size: 14px;
-  color: #777;
+  color: var(--clay);
   font-family: var(--font-jost, sans-serif);
   margin: 0 0 20px;
 }

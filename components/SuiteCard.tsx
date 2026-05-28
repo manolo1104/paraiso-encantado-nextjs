@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import { mxnToUsd } from '@/lib/config';
 import styles from './SuiteCard.module.css';
@@ -57,7 +58,7 @@ export default function SuiteCard({ suite, showBadge = false }: SuiteCardProps) 
           </div>
 
           <span className={styles.viewBtn}>
-            Ver Suite →
+            Ver Suite <ArrowRight size={12} aria-hidden="true" />
           </span>
         </div>
       </div>

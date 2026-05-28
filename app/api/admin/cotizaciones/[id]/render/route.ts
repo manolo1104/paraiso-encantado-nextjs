@@ -37,7 +37,12 @@ function parseTours(notas: string): { nombre: string; personas: number; precio: 
 function parsePaquetes(notas: string): { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[] {
   const idx = notas.indexOf('||PAQUETES||');
   if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + 12)); } catch { return []; }
+  try { return JSON.parse(notas.slice(idx + 12).split('||HABS||')[0]); } catch { return []; }
+}
+function parseHabs(notas: string): { suite: string; huespedes: number }[] | null {
+  const idx = notas.indexOf('||HABS||');
+  if (idx === -1) return null;
+  try { return JSON.parse(notas.slice(idx + 8)); } catch { return null; }
 }
 
 // Category description per suite
@@ -57,10 +62,16 @@ const SUITE_CATEGORY: Record<string, string> = {
   'Helechos 2':          'Suite Familiar Plus · 4 camas · hasta 6 personas',
 };
 
-// Precio base por habitación (fuente: lib/booking.ts)
-const PRECIO_BASE: Record<string, number> = Object.fromEntries(
-  BOOKING_ROOMS.map(r => [r.name, r.price])
-);
+function inferGuests(roomName: string, ratePerNight: number): number {
+  const room = BOOKING_ROOMS.find(r => r.name === roomName);
+  if (!room) return 2;
+  const keys = Object.keys(room.priceTiers).map(Number).sort((a, b) => a - b);
+  let guests = keys[0] ?? 2;
+  for (const k of keys) {
+    if (room.priceTiers[k] <= ratePerNight + 50) guests = k;
+  }
+  return guests;
+}
 
 export async function GET(
   _req: NextRequest,
@@ -82,14 +93,23 @@ export async function GET(
   const habsTotal = q.precioTotal - toursTotal - paquetesTotal;
   const habsPerRoom = roomNames.length > 0 ? Math.round(habsTotal / roomNames.length / noches) : 1500;
 
-  const rooms = roomNames.map(name => ({
-    name,
-    category: SUITE_CATEGORY[name] ?? 'Suite Boutique',
-    guests: 2,
-    nights: noches,
-    rate: PRECIO_BASE[name] ?? habsPerRoom,
-    subtotal: (PRECIO_BASE[name] ?? habsPerRoom) * noches,
-  }));
+  const habsData = parseHabs(q.notas || '');
+  const rooms = roomNames.map(name => {
+    const guestsForRoom = habsData
+      ? (habsData.find(h => h.suite === name)?.huespedes ?? 2)
+      : inferGuests(name, habsPerRoom);
+    return {
+      name,
+      category: SUITE_CATEGORY[name] ?? 'Suite Boutique',
+      guests: guestsForRoom,
+      nights: noches,
+      rate: habsPerRoom,
+      subtotal: habsPerRoom * noches,
+    };
+  });
+  const totalGuests = habsData
+    ? habsData.reduce((s, h) => s + h.huespedes, 0)
+    : rooms.reduce((s, r) => s + r.guests, 0);
 
   // Add tours as extra line items
   for (const t of tours) {
@@ -121,7 +141,7 @@ export async function GET(
       checkIn:  fmtDate(q.checkin),
       checkOut: fmtDate(q.checkout),
       nights:   noches,
-      guests:   q.suite.split(',').length * 2,
+      guests: totalGuests,
     },
     rooms,
     pricing: {

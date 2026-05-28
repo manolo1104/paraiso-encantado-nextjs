@@ -7,11 +7,11 @@
   display: flex;
   z-index: 9999;
   transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.4s var(--ease-drawer);
 }
 
 /* Solo visible en mobile */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .bar {
     display: none;
   }
@@ -44,7 +44,7 @@
 
 .whatsapp {
   background: #25d366;
-  color: #fff;
+  color: var(--cream);
 }
 
 .reservar {

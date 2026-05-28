@@ -770,3 +770,143 @@ export async function saveRedMetrica(data: Omit<RedMetrica, 'fecha'>): Promise<v
     })
   );
 }
+
+// ── OTA CALENDARS ─────────────────────────────────────────────────────────────
+
+const OTA_CALENDARS_SHEET = 'OTA_Calendars';
+const OTA_HEADERS = ['id', 'roomName', 'platform', 'icalUrl', 'active', 'lastSync', 'status', 'blocksFound'];
+
+export interface OTACalendar {
+  id: string;
+  roomName: string;
+  platform: 'booking_com' | 'expedia';
+  icalUrl: string;
+  active: boolean;
+  lastSync: string;
+  status: 'ok' | 'error' | 'pending';
+  blocksFound: number;
+}
+
+export async function getAllOTACalendars(): Promise<OTACalendar[]> {
+  const client = await getSheetsClient();
+  if (!client) return [];
+  try {
+    await ensureSheet(OTA_CALENDARS_SHEET, OTA_HEADERS);
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:H` })
+    );
+    const rows = res.data.values || [];
+    return rows.slice(1).map(r => ({
+      id: r[0] || '',
+      roomName: r[1] || '',
+      platform: (r[2] || 'booking_com') as OTACalendar['platform'],
+      icalUrl: r[3] || '',
+      active: r[4] !== 'false',
+      lastSync: r[5] || '',
+      status: (r[6] || 'pending') as OTACalendar['status'],
+      blocksFound: parseInt(r[7]) || 0,
+    })).filter(r => r.id);
+  } catch (e: any) {
+    console.error('getAllOTACalendars error:', e.message);
+    return [];
+  }
+}
+
+export async function saveOTACalendar(cal: Omit<OTACalendar, 'lastSync' | 'status' | 'blocksFound'>): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  await ensureSheet(OTA_CALENDARS_SHEET, OTA_HEADERS);
+
+  const res = await sheetsCall(() =>
+    client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:A` })
+  );
+  const rows = res.data.values || [];
+  const rowIdx = rows.findIndex(r => r[0] === cal.id);
+
+  const row = [cal.id, cal.roomName, cal.platform, cal.icalUrl, String(cal.active), '', 'pending', '0'];
+
+  if (rowIdx > 0) {
+    await sheetsCall(() =>
+      client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${OTA_CALENDARS_SHEET}!A${rowIdx + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [row] },
+      })
+    );
+  } else {
+    await sheetsCall(() =>
+      client.spreadsheets.values.append({
+        spreadsheetId: SHEET_ID,
+        range: `${OTA_CALENDARS_SHEET}!A:H`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [row] },
+      })
+    );
+  }
+}
+
+export async function deleteOTACalendar(id: string): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:A` })
+    );
+    const rows = res.data.values || [];
+    const rowIdx = rows.findIndex(r => r[0] === id);
+    if (rowIdx <= 0) return;
+
+    const meta = await sheetsCall(() => client.spreadsheets.get({ spreadsheetId: SHEET_ID }));
+    const sheet = meta.data.sheets?.find(s => s.properties?.title === OTA_CALENDARS_SHEET);
+    if (!sheet?.properties?.sheetId) return;
+
+    await sheetsCall(() =>
+      client.spreadsheets.batchUpdate({
+        spreadsheetId: SHEET_ID,
+        requestBody: {
+          requests: [{
+            deleteDimension: {
+              range: {
+                sheetId: sheet.properties!.sheetId,
+                dimension: 'ROWS',
+                startIndex: rowIdx,
+                endIndex: rowIdx + 1,
+              },
+            },
+          }],
+        },
+      })
+    );
+  } catch (e: any) {
+    console.error('deleteOTACalendar error:', e.message);
+  }
+}
+
+export async function updateOTASyncResult(
+  id: string,
+  status: 'ok' | 'error',
+  blocksFound: number,
+): Promise<void> {
+  const client = await getSheetsClient();
+  if (!client) return;
+  try {
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:A` })
+    );
+    const rows = res.data.values || [];
+    const rowIdx = rows.findIndex(r => r[0] === id);
+    if (rowIdx <= 0) return;
+
+    await sheetsCall(() =>
+      client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${OTA_CALENDARS_SHEET}!F${rowIdx + 1}:H${rowIdx + 1}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [[new Date().toISOString(), status, String(blocksFound)]] },
+      })
+    );
+  } catch (e: any) {
+    console.error('updateOTASyncResult error:', e.message);
+  }
+}

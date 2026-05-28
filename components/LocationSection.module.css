@@ -149,12 +149,19 @@
   padding: 16px 32px;
   border-radius: 2px;
   text-decoration: none;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
-.mapsBtn:hover {
-  background: var(--moss);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .mapsBtn:hover {
+    background: var(--moss);
+    transform: translateY(-2px);
+  }
+}
+
+.mapsBtn:active {
+  transform: translateY(0);
+  background: var(--forest);
 }
 
 .mapCol {
