@@ -45,7 +45,7 @@ const OPS_COLOR: Record<OpsState, { bg: string; color: string }> = {
   CHECK_IN_HOY:  { bg: '#e6f4e8', color: '#1a6b22' },
   CHECK_OUT_HOY: { bg: '#fff3d4', color: '#7a5a00' },
   EN_CASA:       { bg: '#e0f0f8', color: '#0d5070' },
-  PROXIMA:       { bg: '#f4f0e8', color: '#5a4e3c' },
+  PROXIMA:       { bg: '#f9fafb', color: '#6b7280' },
   COMPLETADA:    { bg: '#f0f0f0', color: '#888' },
   CANCELADA:     { bg: '#fde8e8', color: '#8a1a1a' },
   NO_SHOW:       { bg: '#f8e0e8', color: '#7a0030' },
@@ -66,7 +66,7 @@ function DaysChip({ days }: { days: number }) {
   if (days <= 3)  return <span className={styles.daysChip} style={{ background: '#fff3d4', color: '#7a5a00' }}>{days}d</span>;
   if (days <= 7)  return <span className={styles.daysChip} style={{ background: '#fdf6e8', color: '#8a6830' }}>{days}d</span>;
   if (days <= 14) return <span className={styles.daysChip} style={{ background: '#f0f7f0', color: '#3d6e40' }}>{days}d</span>;
-  return <span className={styles.daysChip} style={{ background: '#f4f0e8', color: '#888' }}>{days}d</span>;
+  return <span className={styles.daysChip} style={{ background: '#f9fafb', color: '#888' }}>{days}d</span>;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────

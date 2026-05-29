@@ -87,10 +87,10 @@ export default function RedesClient({ initialMetricas }: Props) {
           <h2 className={styles.chartTitle}>Evolución de seguidores</h2>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e4ddd3" />
-              <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: '#624820' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#624820' }} />
-              <Tooltip contentStyle={{ background: '#faf8f5', border: '1px solid #e4ddd3', borderRadius: 6, fontSize: 13 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: '#4b5563' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#4b5563' }} />
+              <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 13 }} />
               <Legend />
               <Line type="monotone" dataKey="ig_seguidores" name="IG Seguidores" stroke="#c9484a" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="fb_seguidores" name="FB Seguidores" stroke="#2e6b8a" strokeWidth={2} dot={false} />

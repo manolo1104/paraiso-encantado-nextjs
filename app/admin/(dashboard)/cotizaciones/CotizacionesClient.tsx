@@ -200,47 +200,47 @@ const SUITE_IMAGES_3: Record<string, string> = {
 const PDF_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Jost','Helvetica Neue',Arial,sans-serif;color:#2a2218;background:#f0ebe3;line-height:1.6}
-  .page{max-width:680px;margin:0 auto;background:#faf8f5}
-  .hero{background:#2f281f;padding:36px 40px 32px;text-align:left}
+  body{font-family:'Jost','Helvetica Neue',Arial,sans-serif;color:#1a1a1a;background:#f4f4f2;line-height:1.6}
+  .page{max-width:680px;margin:0 auto;background:#ffffff}
+  .hero{background:#374151;padding:36px 40px 32px;text-align:left}
   .hero-eye{font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin:0 0 10px;font-family:'Jost',sans-serif}
   .hero-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;font-style:italic;font-weight:300;color:#fff;line-height:1.1;margin:0 0 8px}
   .hero-sub{font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,0.72);margin:0}
   .body{padding:40px}
-  .ref-box{border:1px solid #c9b99a;background:#fdf9f4;padding:22px 28px;margin:0 0 32px}
-  .ref-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9a8a74;margin:0 0 6px}
-  .ref-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:500;color:#2a2218;margin:0}
-  .greeting{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;color:#2a2218;margin:0 0 24px}
-  .greeting em{font-style:italic;color:#7a6a52}
-  .divider{height:1px;background:#c9b99a;width:48px;margin:0 0 28px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e4ddd3;margin:0 0 28px}
-  .cell{padding:18px 20px;border-right:1px solid #e4ddd3;border-bottom:1px solid #e4ddd3}
+  .ref-box{border:1px solid #a7d4bb;background:#f9fafb;padding:22px 28px;margin:0 0 32px}
+  .ref-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9ca3af;margin:0 0 6px}
+  .ref-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:500;color:#1a1a1a;margin:0}
+  .greeting{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;color:#1a1a1a;margin:0 0 24px}
+  .greeting em{font-style:italic;color:#6b7280}
+  .divider{height:1px;background:#a7d4bb;width:48px;margin:0 0 28px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e5e7eb;margin:0 0 28px}
+  .cell{padding:18px 20px;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
   .cell:nth-child(2n){border-right:none}
   .cell:nth-last-child(-n+2){border-bottom:none}
-  .cell-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;margin:0 0 8px}
-  .cell-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;margin:0}
-  .cell-sub{font-family:'Jost',sans-serif;font-size:11px;color:#9a8a74;margin:4px 0 0}
-  .total-bar{background:#2a2218;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;margin:0 0 28px}
-  .total-label{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#c9b99a}
-  .total-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#faf8f5}
-  .total-currency{font-size:14px;color:#c9b99a;margin-left:4px}
-  .notes-box{border-left:2px solid #c9b99a;padding:0 0 0 20px;margin:0 0 28px}
-  .notes-text{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-style:italic;font-weight:300;color:#5a4e3c;line-height:1.7}
-  .validity{font-family:'Jost',sans-serif;font-size:12px;color:#9a8a74;margin:0 0 20px;text-align:center}
+  .cell-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9ca3af;margin:0 0 8px}
+  .cell-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#1a1a1a;margin:0}
+  .cell-sub{font-family:'Jost',sans-serif;font-size:11px;color:#9ca3af;margin:4px 0 0}
+  .total-bar{background:#1a1a1a;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;margin:0 0 28px}
+  .total-label{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#a7d4bb}
+  .total-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#ffffff}
+  .total-currency{font-size:14px;color:#a7d4bb;margin-left:4px}
+  .notes-box{border-left:2px solid #a7d4bb;padding:0 0 0 20px;margin:0 0 28px}
+  .notes-text{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-style:italic;font-weight:300;color:#6b7280;line-height:1.7}
+  .validity{font-family:'Jost',sans-serif;font-size:12px;color:#9ca3af;margin:0 0 20px;text-align:center}
   .cta{text-align:center;margin:0 0 40px}
-  .cta-btn{display:inline-block;background:#2a2218;color:#faf8f5;text-decoration:none;padding:14px 36px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase}
-  .contact{background:#faf8f5;padding:24px 40px;border-top:1px solid #e4ddd3}
-  .contact p{font-family:'Jost',sans-serif;font-size:13px;color:#2a2218;margin:0 0 6px}
-  .footer-bar{background:#f0ebe3;padding:32px 40px;text-align:center}
-  .footer-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;letter-spacing:3px;text-transform:uppercase;color:#8a7d6b;margin:0 0 8px}
-  .footer-addr{font-family:'Jost',sans-serif;font-size:11px;color:#a09080;line-height:1.6;margin:0}
+  .cta-btn{display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:14px 36px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase}
+  .contact{background:#ffffff;padding:24px 40px;border-top:1px solid #e5e7eb}
+  .contact p{font-family:'Jost',sans-serif;font-size:13px;color:#1a1a1a;margin:0 0 6px}
+  .footer-bar{background:#f4f4f2;padding:32px 40px;text-align:center}
+  .footer-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;letter-spacing:3px;text-transform:uppercase;color:#9ca3af;margin:0 0 8px}
+  .footer-addr{font-family:'Jost',sans-serif;font-size:11px;color:#9ca3af;line-height:1.6;margin:0}
   @page{size:letter;margin:0.6in}
-  .welcome-text{font-family:'Jost',sans-serif;font-size:13px;color:#5a4e3c;line-height:1.7;margin:0 0 20px}
-  .hotel-quote{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-style:italic;color:#7a6a52;text-align:center;border-top:1px solid #e4ddd3;border-bottom:1px solid #e4ddd3;padding:16px 24px;margin:0 0 28px;line-height:1.6}
-  .anticipo-bar{display:flex;gap:0;border:1px solid #e4ddd3;margin:0 0 20px}
-  .anticipo-item{flex:1;padding:14px 20px;border-right:1px solid #e4ddd3}
+  .welcome-text{font-family:'Jost',sans-serif;font-size:13px;color:#6b7280;line-height:1.7;margin:0 0 20px}
+  .hotel-quote{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-style:italic;color:#6b7280;text-align:center;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:16px 24px;margin:0 0 28px;line-height:1.6}
+  .anticipo-bar{display:flex;gap:0;border:1px solid #e5e7eb;margin:0 0 20px}
+  .anticipo-item{flex:1;padding:14px 20px;border-right:1px solid #e5e7eb}
   .anticipo-item:last-child{border-right:none}
-  .anticipo-label{display:block;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9a8a74;margin:0 0 6px}
+  .anticipo-label{display:block;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9ca3af;margin:0 0 6px}
   .anticipo-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:500}
   .anticipo-ok{color:#2d7a34}
   .anticipo-pend{color:#8a4a20}
@@ -271,53 +271,53 @@ function printQuotePDF(q: AdminQuote) {
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color:#2a2a25; padding:40px 16px; }
-.wrap { max-width:600px; margin:0 auto; background:#fffdf8; border:1px solid #ddd8cc; }
-.header { background:#1c2b1e; padding:40px 40px 36px; text-align:center; position:relative; overflow:hidden; }
+body { background:#f9fafb; font-family:'Jost',sans-serif; font-weight:300; color:#1f2937; padding:40px 16px; }
+.wrap { max-width:600px; margin:0 auto; background:#ffffff; border:1px solid #e5e7eb; }
+.header { background:#1B4332; padding:40px 40px 36px; text-align:center; position:relative; overflow:hidden; }
 .header::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
-.h-eye { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:#c9a96e; margin-bottom:14px; position:relative; }
-.h-logo { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; color:#f5f0e8; margin-bottom:5px; position:relative; }
-.h-logo em { font-style:italic; color:#c9a96e; }
+.h-eye { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:#52b788; margin-bottom:14px; position:relative; }
+.h-logo { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; color:#f9fafb; margin-bottom:5px; position:relative; }
+.h-logo em { font-style:italic; color:#52b788; }
 .h-sub { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8a9e8c; margin-bottom:28px; position:relative; }
-.h-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(201,169,110,0.15); border:1px solid rgba(201,169,110,0.4); color:#c9a96e; padding:8px 20px; font-size:11px; letter-spacing:3px; text-transform:uppercase; position:relative; }
-.suite-photo { height:130px; overflow:hidden; border-bottom:2px solid #c9a96e; background:linear-gradient(160deg,#2d4a2f 0%,#1c3320 50%,#152a1a 100%); }
+.h-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(201,169,110,0.15); border:1px solid rgba(201,169,110,0.4); color:#52b788; padding:8px 20px; font-size:11px; letter-spacing:3px; text-transform:uppercase; position:relative; }
+.suite-photo { height:130px; overflow:hidden; border-bottom:2px solid #52b788; background:linear-gradient(160deg,#2d4a2f 0%,#1B4332 50%,#14342a 100%); }
 .suite-photo img { width:100%; height:130px; object-fit:cover; display:block; }
-.cn-block { background:#1c2b1e; padding:18px 40px; display:flex; align-items:center; justify-content:space-between; }
+.cn-block { background:#1B4332; padding:18px 40px; display:flex; align-items:center; justify-content:space-between; }
 .cn-lbl { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#6a8a6e; margin-bottom:4px; }
-.cn-num { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#c9a96e; letter-spacing:2px; }
+.cn-num { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#52b788; letter-spacing:2px; }
 .cn-pres { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#6a8a6e; text-align:right; line-height:1.8; }
-.cn-pres span { display:block; color:#f5f0e8; font-size:11px; }
+.cn-pres span { display:block; color:#f9fafb; font-size:11px; }
 .body { padding:36px 40px; }
-.greeting { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:#1c2b1e; margin-bottom:6px; }
+.greeting { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:#1B4332; margin-bottom:6px; }
 .greeting em { font-style:italic; }
-.g-sub { font-size:13px; color:#7a7a6a; line-height:1.7; margin-bottom:32px; }
-.details-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#ddd8cc; border:1px solid #ddd8cc; margin-bottom:28px; }
-.d-cell { background:#fffdf8; padding:18px 22px; }
-.d-lbl { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9a9a8a; margin-bottom:5px; }
-.d-val { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#1c2b1e; line-height:1.3; }
-.d-sub { font-size:11px; color:#9a9a8a; margin-top:3px; }
-.sec-title { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9a9a8a; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #eae6dd; }
+.g-sub { font-size:13px; color:#9ca3af; line-height:1.7; margin-bottom:32px; }
+.details-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#e5e7eb; border:1px solid #e5e7eb; margin-bottom:28px; }
+.d-cell { background:#ffffff; padding:18px 22px; }
+.d-lbl { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9ca3af; margin-bottom:5px; }
+.d-val { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#1B4332; line-height:1.3; }
+.d-sub { font-size:11px; color:#9ca3af; margin-top:3px; }
+.sec-title { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9ca3af; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #f3f4f6; }
 .suites-sec { margin-bottom:28px; }
-.s-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid #eae6dd; }
+.s-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid #f3f4f6; }
 .s-row:last-child { border-bottom:none; }
-.s-name { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:400; color:#1c2b1e; }
-.total-block { background:#f5f2ec; border-left:3px solid #c9a96e; padding:18px 22px; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center; }
-.total-lbl { font-size:12px; color:#5a5a4a; }
-.total-amt { font-family:'Cormorant Garamond',serif; font-size:26px; color:#1c2b1e; }
-.validity { background:#fff8ee; border:1px solid #e0d4b4; padding:14px 20px; margin-bottom:28px; font-size:12px; color:#7a6a40; line-height:1.6; text-align:center; }
-.validity strong { color:#1c2b1e; }
-.note-box { background:#f5f2ec; border-left:3px solid #c9a96e; padding:14px 18px; margin-bottom:28px; font-family:'Cormorant Garamond',serif; font-size:16px; font-style:italic; color:#5a4e3c; line-height:1.7; }
+.s-name { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:400; color:#1B4332; }
+.total-block { background:#f9fafb; border-left:3px solid #52b788; padding:18px 22px; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center; }
+.total-lbl { font-size:12px; color:#6b7280; }
+.total-amt { font-family:'Cormorant Garamond',serif; font-size:26px; color:#1B4332; }
+.validity { background:#fff8ee; border:1px solid #e0d4b4; padding:14px 20px; margin-bottom:28px; font-size:12px; color:#6b7280; line-height:1.6; text-align:center; }
+.validity strong { color:#1B4332; }
+.note-box { background:#f9fafb; border-left:3px solid #52b788; padding:14px 18px; margin-bottom:28px; font-family:'Cormorant Garamond',serif; font-size:16px; font-style:italic; color:#6b7280; line-height:1.7; }
 .cta-wrap { text-align:center; margin-bottom:32px; }
-.cta-btn { display:inline-block; background:#1c2b1e; color:#c9a96e; text-decoration:none; padding:14px 36px; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; }
+.cta-btn { display:inline-block; background:#1B4332; color:#52b788; text-decoration:none; padding:14px 36px; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; }
 .contact-row { display:flex; gap:10px; margin-bottom:28px; }
-.c-card { flex:1; border:1px solid #eae6dd; padding:14px; text-align:center; }
+.c-card { flex:1; border:1px solid #f3f4f6; padding:14px; text-align:center; }
 .c-icon { font-size:16px; margin-bottom:5px; }
-.c-type { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#9a9a8a; margin-bottom:3px; }
-.c-val { font-size:11px; color:#1c2b1e; font-weight:400; }
-.footer { background:#f0ece3; padding:24px 40px; text-align:center; border-top:1px solid #ddd8cc; }
-.f-logo { font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; color:#7a7a6a; margin-bottom:8px; }
-.f-addr { font-size:11px; color:#9a9a8a; line-height:1.8; }
-.f-div { width:36px; height:1px; background:#c9a96e; margin:14px auto; }
+.c-type { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#9ca3af; margin-bottom:3px; }
+.c-val { font-size:11px; color:#1B4332; font-weight:400; }
+.footer { background:#f4f4f2; padding:24px 40px; text-align:center; border-top:1px solid #e5e7eb; }
+.f-logo { font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; color:#9ca3af; margin-bottom:8px; }
+.f-addr { font-size:11px; color:#9ca3af; line-height:1.8; }
+.f-div { width:36px; height:1px; background:#52b788; margin:14px auto; }
 @page { size:letter; margin:0.45in; }
 @media print { body { background:#fff; padding:0; } .wrap { border:none; max-width:100%; } }
 </style>
@@ -332,8 +332,8 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
   </div>
 
   ${suiteImg
-    ? `<div class="suite-photo"><img src="${suiteImg}" alt="${firstSuite}" onerror="this.parentElement.style.background='linear-gradient(160deg,#2d4a2f 0%,#152a1a 100%)'"></div>`
-    : `<div class="suite-photo" style="display:flex;align-items:center;justify-content:center;color:#c9a96e;font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic">${firstSuite}</div>`
+    ? `<div class="suite-photo"><img src="${suiteImg}" alt="${firstSuite}" onerror="this.parentElement.style.background='linear-gradient(160deg,#2d4a2f 0%,#14342a 100%)'"></div>`
+    : `<div class="suite-photo" style="display:flex;align-items:center;justify-content:center;color:#52b788;font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic">${firstSuite}</div>`
   }
 
   <div class="cn-block">
@@ -385,8 +385,8 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
       <div class="s-row">
         <p class="s-name" style="font-size:14px">${t.nombre}</p>
         <div style="text-align:right">
-          <span style="font-size:11px;color:#5a4e3c;display:block">${t.personas} persona${t.personas!==1?'s':''}</span>
-          <span style="font-size:12px;color:#1c2b1e;font-family:'Cormorant Garamond',serif">$${(t.precio*t.personas).toLocaleString('es-MX')} MXN</span>
+          <span style="font-size:11px;color:#6b7280;display:block">${t.personas} persona${t.personas!==1?'s':''}</span>
+          <span style="font-size:12px;color:#1B4332;font-family:'Cormorant Garamond',serif">$${(t.precio*t.personas).toLocaleString('es-MX')} MXN</span>
         </div>
       </div>`).join('')}
     </div>` : ''}
@@ -398,7 +398,7 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
       <div class="s-row">
         <div>
           <p class="s-name" style="font-size:15px">🎁 ${p.nombre}</p>
-          <p style="font-size:10px;color:#9a9a8a;margin-top:2px">${p.habitacion} · ${p.noches} noches · ${p.personas} persona${p.personas!==1?'s':''}</p>
+          <p style="font-size:10px;color:#9ca3af;margin-top:2px">${p.habitacion} · ${p.noches} noches · ${p.personas} persona${p.personas!==1?'s':''}</p>
         </div>
         <p class="total-amt" style="font-size:20px">$${p.precio.toLocaleString('es-MX')}</p>
       </div>`).join('')}
@@ -408,11 +408,11 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
       ${(toursTotal > 0 || paquetesTotal > 0) ? `
       <div>
         ${q.suite && q.suite !== '—' ? `<p class="d-lbl" style="margin-bottom:2px">Hospedaje</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1c2b1e;margin-bottom:4px">$${(q.precioTotal-toursTotal-paquetesTotal).toLocaleString('es-MX')} MXN</p>` : ''}
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1B4332;margin-bottom:4px">$${(q.precioTotal-toursTotal-paquetesTotal).toLocaleString('es-MX')} MXN</p>` : ''}
         ${toursTotal > 0 ? `<p class="d-lbl" style="margin-bottom:2px">Tours</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1c2b1e;margin-bottom:4px">$${toursTotal.toLocaleString('es-MX')} MXN</p>` : ''}
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1B4332;margin-bottom:4px">$${toursTotal.toLocaleString('es-MX')} MXN</p>` : ''}
         ${paquetesTotal > 0 ? `<p class="d-lbl" style="margin-bottom:2px">Paquetes</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1c2b1e">$${paquetesTotal.toLocaleString('es-MX')} MXN</p>` : ''}
+        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1B4332">$${paquetesTotal.toLocaleString('es-MX')} MXN</p>` : ''}
       </div>
       <div>
         <p class="d-lbl">Total cotización</p>
@@ -422,7 +422,7 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
         <p class="d-lbl">Total cotización</p>
         <p class="total-amt">$${q.precioTotal.toLocaleString('es-MX')}</p>
       </div>`}
-      <span style="font-size:13px;color:#9a9a8a">MXN</span>
+      <span style="font-size:13px;color:#9ca3af">MXN</span>
     </div>
 
     ${notasCliente ? `<div class="note-box">${notasCliente}</div>` : ''}
@@ -434,13 +434,13 @@ body { background:#f5f2ec; font-family:'Jost',sans-serif; font-weight:300; color
 
     <div class="cta-wrap">
       <a href="${confirmUrl}" class="cta-btn">Confirmar Reserva →</a>
-      <p style="font-size:10px;color:#9a9a8a;margin-top:10px;letter-spacing:1px">${confirmUrl}</p>
+      <p style="font-size:10px;color:#9ca3af;margin-top:10px;letter-spacing:1px">${confirmUrl}</p>
     </div>
 
     <div class="contact-row">
-      <div class="c-card"><p class="c-icon">📞</p><p class="c-type">Teléfono</p><p class="c-val"><a href="tel:+524891007679" style="color:#1c2b1e;text-decoration:none">489 100 7679</a></p></div>
-      <div class="c-card"><p class="c-icon">💬</p><p class="c-type">WhatsApp</p><p class="c-val"><a href="https://wa.me/524891007679" style="color:#1c2b1e;text-decoration:none">+52 489 100 7679</a></p></div>
-      <div class="c-card"><p class="c-icon">✉️</p><p class="c-type">Email</p><p class="c-val" style="font-size:10px"><a href="mailto:reservas@paraisoencantado.com" style="color:#1c2b1e;text-decoration:none">reservas@paraisoencantado.com</a></p></div>
+      <div class="c-card"><p class="c-icon">📞</p><p class="c-type">Teléfono</p><p class="c-val"><a href="tel:+524891007679" style="color:#1B4332;text-decoration:none">489 100 7679</a></p></div>
+      <div class="c-card"><p class="c-icon">💬</p><p class="c-type">WhatsApp</p><p class="c-val"><a href="https://wa.me/524891007679" style="color:#1B4332;text-decoration:none">+52 489 100 7679</a></p></div>
+      <div class="c-card"><p class="c-icon">✉️</p><p class="c-type">Email</p><p class="c-val" style="font-size:10px"><a href="mailto:reservas@paraisoencantado.com" style="color:#1B4332;text-decoration:none">reservas@paraisoencantado.com</a></p></div>
     </div>
   </div>
 
@@ -696,9 +696,9 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
                     title={cat.descripcion}
                     style={{
                       padding: '5px 10px', fontSize: '0.75rem', borderRadius: 6, cursor: yaAgregado ? 'default' : 'pointer',
-                      border: '1px solid', borderColor: yaAgregado ? '#4a7a2e' : '#c9b99a',
-                      background: yaAgregado ? '#e8f4e8' : '#fdf9f4',
-                      color: yaAgregado ? '#2d5016' : '#5a4e3c',
+                      border: '1px solid', borderColor: yaAgregado ? '#4a7a2e' : '#a7d4bb',
+                      background: yaAgregado ? '#e8f4e8' : '#f9fafb',
+                      color: yaAgregado ? '#2d5016' : '#6b7280',
                       fontFamily: 'inherit',
                     }}
                   >
@@ -746,13 +746,13 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
               );
             })}
             {tourItems.map((t, i) => (
-              <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#7a6a52' }}>
+              <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#6b7280' }}>
                 <span>🗺 {t.nombre.length > 30 ? t.nombre.slice(0,30)+'…' : t.nombre} ({t.personas}p)</span>
                 <span>${t.precio.toLocaleString('es-MX')}/p × {t.personas} = ${(t.precio*t.personas).toLocaleString('es-MX')}</span>
               </div>
             ))}
             {paqueteItems.map((p, i) => (
-              <div key={`pq${i}`} className={styles.priceBreakdownRow} style={{ color: '#1a2e1a', fontWeight: 500 }}>
+              <div key={`pq${i}`} className={styles.priceBreakdownRow} style={{ color: '#1B4332', fontWeight: 500 }}>
                 <span>🎁 {p.nombre} ({p.habitacion}, {p.personas}p, {p.noches}n)</span>
                 <span>${p.precio.toLocaleString('es-MX')} MXN</span>
               </div>
@@ -1042,9 +1042,9 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
                     title={cat.descripcion}
                     style={{
                       padding: '5px 10px', fontSize: '0.75rem', borderRadius: 6, cursor: yaAgregado ? 'default' : 'pointer',
-                      border: '1px solid', borderColor: yaAgregado ? '#4a7a2e' : '#c9b99a',
-                      background: yaAgregado ? '#e8f4e8' : '#fdf9f4',
-                      color: yaAgregado ? '#2d5016' : '#5a4e3c',
+                      border: '1px solid', borderColor: yaAgregado ? '#4a7a2e' : '#a7d4bb',
+                      background: yaAgregado ? '#e8f4e8' : '#f9fafb',
+                      color: yaAgregado ? '#2d5016' : '#6b7280',
                       fontFamily: 'inherit',
                     }}
                   >
@@ -1092,13 +1092,13 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
               );
             })}
             {tourItems.map((t, i) => (
-              <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#7a6a52' }}>
+              <div key={`t${i}`} className={styles.priceBreakdownRow} style={{ color: '#6b7280' }}>
                 <span>🗺 {t.nombre.length > 30 ? t.nombre.slice(0,30)+'…' : t.nombre} ({t.personas}p)</span>
                 <span>${(t.precio*t.personas).toLocaleString('es-MX')}</span>
               </div>
             ))}
             {paqueteItems.map((p, i) => (
-              <div key={`pqe${i}`} className={styles.priceBreakdownRow} style={{ color: '#1a2e1a', fontWeight: 500 }}>
+              <div key={`pqe${i}`} className={styles.priceBreakdownRow} style={{ color: '#1B4332', fontWeight: 500 }}>
                 <span>🎁 {p.nombre} ({p.habitacion}, {p.personas}p, {p.noches}n)</span>
                 <span>${p.precio.toLocaleString('es-MX')} MXN</span>
               </div>

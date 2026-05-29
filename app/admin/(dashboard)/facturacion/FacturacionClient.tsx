@@ -1,170 +1,265 @@
 'use client';
 
 import { useState } from 'react';
-import { Receipt, Clock, CheckCircle2, Circle, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Receipt, FileText, Download, X, CheckCircle2, AlertTriangle, Loader2, FlaskConical } from 'lucide-react';
 import styles from './facturacion.module.css';
 
-const PLAN = [
-  {
-    fase: 1,
-    titulo: 'Proveedor de timbrado PAC',
-    descripcion: 'Contratar un PAC (Proveedor Autorizado de Certificación) autorizado por el SAT.',
-    opciones: ['Facturama — API sencilla, ~$200 MXN/mes, 200 CFDIs incluidos', 'SW Sapiens — más económico para bajo volumen', 'Edicom — enterprise, overkill para hotel boutique'],
-    recomendacion: 'Facturama por su API REST bien documentada y precio accesible.',
-    estado: 'pendiente',
-  },
-  {
-    fase: 2,
-    titulo: 'CSD del hotel (Certificado de Sello Digital)',
-    descripcion: 'Necesitas obtener el CSD en el portal del SAT con la e.firma de la empresa.',
-    opciones: ['Descargar en sat.gob.mx → "Factura electrónica" → "Sellos digitales"', 'Requiere RFC del hotel, e.firma vigente', 'El CSD tiene vigencia de 4 años'],
-    recomendacion: 'Tramitar antes de contratar el PAC — algunos verifican el CSD al registrar.',
-    estado: 'pendiente',
-  },
-  {
-    fase: 3,
-    titulo: 'API de timbrado integrada al admin',
-    descripcion: 'Al confirmar una reserva, el staff puede generar CFDI 4.0 con un click.',
-    opciones: [
-      'Nueva ruta /api/admin/facturacion/generar — recibe datos de reserva, llama API del PAC, devuelve XML + PDF',
-      'Guardar UUID fiscal y folio CFDI en Google Sheets (columna nueva en Reservas)',
-      'Enviar CFDI al huésped vía email automáticamente',
-    ],
-    recomendacion: 'Agregar botón "Generar CFDI" en la vista detalle de cada reserva.',
-    estado: 'pendiente',
-  },
-  {
-    fase: 4,
-    titulo: 'Datos fiscales del huésped',
-    descripcion: 'El huésped debe proporcionar RFC, razón social y uso del CFDI para factura a nombre de empresa.',
-    opciones: [
-      'Formulario opcional en /reservar/checkout: "¿Necesitas factura?"',
-      'Campos: RFC, Razón Social, Régimen Fiscal, Uso CFDI (G03 — Gastos en general)',
-      'Guardar en la reserva; si no se llena, CFDI va a RFC público XAXX010101000',
-    ],
-    recomendacion: 'Campo opcional en checkout para no generar fricción en reservas normales.',
-    estado: 'pendiente',
-  },
-  {
-    fase: 5,
-    titulo: 'Portal de auto-facturación',
-    descripcion: 'Página pública donde el huésped ingresa su folio y RFC para generar su CFDI por su cuenta.',
-    opciones: [
-      '/facturacion — página pública en el sitio',
-      'Busca reserva por folio + email → muestra datos → genera CFDI al instante',
-      'Descarga PDF + XML directamente desde el browser',
-    ],
-    recomendacion: 'Implementar después de tener el timbrado funcionando en admin.',
-    estado: 'pendiente',
-  },
+interface Booking {
+  rowIndex: number;
+  fecha: string;
+  confirmacion: string;
+  cliente: string;
+  email: string;
+  total: number;
+  checkin: string;
+  checkout: string;
+  noches: number;
+  habitaciones: string;
+}
+
+interface Props {
+  bookings: Booking[];
+  facturama: { configured: boolean; sandbox: boolean };
+}
+
+// Catálogos SAT (los más usados en hotelería).
+const USOS_CFDI = [
+  { v: 'G03', l: 'G03 — Gastos en general' },
+  { v: 'G01', l: 'G01 — Adquisición de mercancías' },
+  { v: 'D01', l: 'D01 — Honorarios médicos / gastos' },
+  { v: 'S01', l: 'S01 — Sin efectos fiscales' },
+  { v: 'CP01', l: 'CP01 — Pagos' },
+];
+const REGIMENES = [
+  { v: '601', l: '601 — General de Ley Personas Morales' },
+  { v: '612', l: '612 — Personas Físicas con Actividades Empresariales' },
+  { v: '626', l: '626 — Régimen Simplificado de Confianza (RESICO)' },
+  { v: '605', l: '605 — Sueldos y Salarios' },
+  { v: '621', l: '621 — Incorporación Fiscal' },
+  { v: '616', l: '616 — Sin obligaciones fiscales' },
+];
+const FORMAS_PAGO = [
+  { v: '03', l: '03 — Transferencia electrónica' },
+  { v: '04', l: '04 — Tarjeta de crédito' },
+  { v: '28', l: '28 — Tarjeta de débito' },
+  { v: '01', l: '01 — Efectivo' },
 ];
 
-const REQS = [
-  { label: 'RFC del hotel registrado en el SAT', done: false },
-  { label: 'e.firma vigente del negocio', done: false },
-  { label: 'CSD (Certificado de Sello Digital)', done: false },
-  { label: 'Cuenta con PAC autorizado', done: false },
-  { label: 'API key del PAC', done: false },
-  { label: 'Régimen fiscal del hotel', done: false },
-];
+interface CfdiOk { id: string; uuid: string; folio: string; serie: string; total: number; }
 
-export default function FacturacionClient() {
-  const [openFase, setOpenFase] = useState<number | null>(null);
+export default function FacturacionClient({ bookings, facturama }: Props) {
+  const [openBooking, setOpenBooking] = useState<Booking | null>(null);
+  const [form, setForm] = useState({ rfc: '', name: '', regimen: '601', cp: '', uso: 'G03', formaPago: '03' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Resultados por reserva (rowIndex -> CFDI generado).
+  const [results, setResults] = useState<Record<number, CfdiOk>>({});
+
+  function openModal(b: Booking) {
+    setOpenBooking(b);
+    setError(null);
+    setForm({ rfc: '', name: b.cliente?.toUpperCase() || '', regimen: '601', cp: '', uso: 'G03', formaPago: '03' });
+  }
+
+  function closeModal() {
+    if (loading) return;
+    setOpenBooking(null);
+    setError(null);
+  }
+
+  async function generar() {
+    if (!openBooking) return;
+    setError(null);
+
+    if (!form.rfc.trim()) { setError('Escribe el RFC del huésped (o empresa) a facturar.'); return; }
+    if (!form.name.trim()) { setError('Escribe la razón social / nombre fiscal.'); return; }
+    if (!form.cp.trim()) { setError('Escribe el código postal fiscal del receptor.'); return; }
+
+    setLoading(true);
+    try {
+      const descripcion = `Servicio de hospedaje — ${openBooking.habitaciones || 'habitación'} — ${openBooking.noches} noche(s) (${openBooking.checkin} a ${openBooking.checkout})`;
+      const res = await fetch('/api/admin/facturacion/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          total: openBooking.total,
+          descripcion,
+          confirmacion: openBooking.confirmacion,
+          paymentForm: form.formaPago,
+          receiver: {
+            Rfc: form.rfc.trim().toUpperCase(),
+            Name: form.name.trim().toUpperCase(),
+            FiscalRegime: form.regimen,
+            TaxZipCode: form.cp.trim(),
+            CfdiUse: form.uso,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = typeof data?.detail === 'string' ? data.detail : (data?.error || 'No se pudo generar la factura.');
+        throw new Error(detail);
+      }
+      setResults((prev) => ({ ...prev, [openBooking.rowIndex]: data }));
+      setOpenBooking(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <div className={styles.headerIcon}><Receipt size={28} /></div>
         <div>
           <h1 className={styles.title}>Facturación / CFDI</h1>
-          <p className={styles.subtitle}>Módulo en preparación</p>
+          <p className={styles.subtitle}>Genera la factura (CFDI 4.0) de cada reserva</p>
         </div>
-        <span className={styles.statusChip}>
-          <Clock size={12} /> En planeación
-        </span>
+        {facturama.sandbox && (
+          <span className={styles.statusChip}><FlaskConical size={12} /> Modo prueba (sandbox)</span>
+        )}
       </div>
 
-      <div className={styles.alert}>
-        <AlertTriangle size={16} />
-        <div>
-          <strong>Este módulo aún no está activo.</strong> Para activarlo necesitas contratar un PAC (Proveedor Autorizado de Certificación) y obtener tu CSD del SAT. Una vez que me confirmes que tienes los requisitos, puedo implementar el timbrado completo.
+      {/* Estado de configuración */}
+      {!facturama.configured && (
+        <div className={styles.alert}>
+          <AlertTriangle size={16} />
+          <div>
+            <strong>Aún no está conectado el timbrado.</strong> Faltan las credenciales del PAC.
+            Una vez configuradas, podrás generar facturas desde aquí.
+          </div>
         </div>
-      </div>
+      )}
+      {facturama.configured && facturama.sandbox && (
+        <div className={styles.infoBanner}>
+          <FlaskConical size={15} />
+          <span>Estás en <strong>modo prueba</strong>. Las facturas generadas son de práctica (no tienen validez fiscal) hasta cambiar a producción con tu CSD real.</span>
+        </div>
+      )}
 
-      {/* Checklist de requisitos */}
+      {/* Tabla de reservas facturables */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Requisitos previos</h2>
-        <div className={styles.reqList}>
-          {REQS.map((r, i) => (
-            <div key={i} className={styles.reqItem}>
-              {r.done
-                ? <CheckCircle2 size={16} className={styles.iconDone} />
-                : <Circle size={16} className={styles.iconPending} />
-              }
-              <span className={r.done ? styles.reqDone : styles.reqText}>{r.label}</span>
+        <h2 className={styles.sectionTitle}>Reservas facturables</h2>
+        {bookings.length === 0 ? (
+          <p className={styles.subtitle}>No hay reservas con monto para facturar.</p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.hideMobile}>Confirmación</th>
+                  <th>Cliente</th>
+                  <th className={styles.hideMobile}>Habitación</th>
+                  <th className={styles.hideMobile}>Estancia</th>
+                  <th className={styles.right}>Total</th>
+                  <th className={styles.right}>Factura</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((b) => {
+                  const cfdi = results[b.rowIndex];
+                  return (
+                    <tr key={b.rowIndex}>
+                      <td className={`${styles.mono} ${styles.hideMobile}`}>{b.confirmacion || '—'}</td>
+                      <td>
+                        {b.cliente || '—'}
+                        <span className={styles.cellMeta}>{b.habitaciones} · {b.checkin}→{b.checkout}</span>
+                      </td>
+                      <td className={styles.hideMobile}>{b.habitaciones || '—'}</td>
+                      <td className={`${styles.dim} ${styles.hideMobile}`}>{b.checkin} → {b.checkout}</td>
+                      <td className={styles.right}>${b.total.toLocaleString('es-MX')}</td>
+                      <td className={styles.right}>
+                        {cfdi ? (
+                          <div className={styles.cfdiDone}>
+                            <span className={styles.cfdiUuid} title={cfdi.uuid}>
+                              <CheckCircle2 size={13} /> {cfdi.serie}{cfdi.folio || ''} timbrada
+                            </span>
+                            <span className={styles.cfdiLinks}>
+                              <a href={`/api/admin/facturacion/descargar?id=${cfdi.id}&formato=pdf`}><Download size={12} /> PDF</a>
+                              <a href={`/api/admin/facturacion/descargar?id=${cfdi.id}&formato=xml`}><Download size={12} /> XML</a>
+                            </span>
+                          </div>
+                        ) : (
+                          <button
+                            className={styles.generarBtn}
+                            onClick={() => openModal(b)}
+                            disabled={!facturama.configured}
+                            title={facturama.configured ? 'Generar CFDI' : 'Configura el PAC primero'}
+                          >
+                            <FileText size={14} /> Generar CFDI
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Modal de datos fiscales */}
+      {openBooking && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Datos fiscales para la factura</h3>
+              <button className={styles.modalClose} onClick={closeModal} aria-label="Cerrar"><X size={18} /></button>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Plan de implementación — acordeón colapsable */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Plan de implementación</h2>
-        <div className={styles.planList}>
-          {PLAN.map((fase) => {
-            const isOpen = openFase === fase.fase;
-            return (
-              <div key={fase.fase} className={styles.faseAccordion}>
-                <button
-                  className={styles.faseAccordionHeader}
-                  onClick={() => setOpenFase(isOpen ? null : fase.fase)}
-                >
-                  <span className={styles.faseNum}>Fase {fase.fase}</span>
-                  <span className={styles.faseTitulo}>{fase.titulo}</span>
-                  <span className={`${styles.faseChevron} ${isOpen ? styles.faseChevronOpen : ''}`}>›</span>
-                </button>
-                {isOpen && (
-                  <div className={styles.faseAccordionBody}>
-                    <p className={styles.faseDesc}>{fase.descripcion}</p>
-                    <ul className={styles.faseOpts}>
-                      {fase.opciones.map((o, i) => (
-                        <li key={i} className={styles.faseOpt}>
-                          <ChevronRight size={12} className={styles.faseOptIcon} />
-                          {o}
-                        </li>
-                      ))}
-                    </ul>
-                    <div className={styles.faseRec}>
-                      <strong>Recomendación:</strong> {fase.recomendacion}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
+            <div className={styles.modalSummary}>
+              <span>{openBooking.cliente}</span>
+              <span className={styles.dim}>{openBooking.habitaciones}</span>
+              <strong>${openBooking.total.toLocaleString('es-MX')} <small>(IVA incluido)</small></strong>
+            </div>
 
-      {/* Estimación */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Estimación de costo y tiempo</h2>
-        <div className={styles.estimGrid}>
-          <div className={styles.estimCard}>
-            <span className={styles.estimLabel}>Costo mensual PAC</span>
-            <span className={styles.estimVal}>~$200–500 MXN</span>
-            <span className={styles.estimSub}>según volumen de CFDIs</span>
-          </div>
-          <div className={styles.estimCard}>
-            <span className={styles.estimLabel}>Tiempo de implementación</span>
-            <span className={styles.estimVal}>1–2 semanas</span>
-            <span className={styles.estimSub}>una vez con CSD y API key</span>
-          </div>
-          <div className={styles.estimCard}>
-            <span className={styles.estimLabel}>CFDIs típicos por mes</span>
-            <span className={styles.estimVal}>10–40</span>
-            <span className={styles.estimSub}>según ocupación del hotel</span>
+            <div className={styles.formGrid}>
+              <label className={styles.field}>
+                <span>RFC del receptor</span>
+                <input value={form.rfc} onChange={(e) => setForm({ ...form, rfc: e.target.value.toUpperCase() })} placeholder="XAXX010101000" maxLength={13} />
+              </label>
+              <label className={styles.field}>
+                <span>Código postal fiscal</span>
+                <input value={form.cp} onChange={(e) => setForm({ ...form, cp: e.target.value.replace(/\D/g, '') })} placeholder="78000" maxLength={5} />
+              </label>
+              <label className={`${styles.field} ${styles.fieldWide}`}>
+                <span>Razón social / Nombre fiscal</span>
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value.toUpperCase() })} placeholder="Como está registrado en el SAT" />
+              </label>
+              <label className={`${styles.field} ${styles.fieldWide}`}>
+                <span>Régimen fiscal</span>
+                <select value={form.regimen} onChange={(e) => setForm({ ...form, regimen: e.target.value })}>
+                  {REGIMENES.map((r) => <option key={r.v} value={r.v}>{r.l}</option>)}
+                </select>
+              </label>
+              <label className={styles.field}>
+                <span>Uso del CFDI</span>
+                <select value={form.uso} onChange={(e) => setForm({ ...form, uso: e.target.value })}>
+                  {USOS_CFDI.map((u) => <option key={u.v} value={u.v}>{u.l}</option>)}
+                </select>
+              </label>
+              <label className={styles.field}>
+                <span>Forma de pago</span>
+                <select value={form.formaPago} onChange={(e) => setForm({ ...form, formaPago: e.target.value })}>
+                  {FORMAS_PAGO.map((f) => <option key={f.v} value={f.v}>{f.l}</option>)}
+                </select>
+              </label>
+            </div>
+
+            {error && <div className={styles.formError}><AlertTriangle size={14} /> {error}</div>}
+
+            <div className={styles.modalActions}>
+              <button className={styles.btnSecondary} onClick={closeModal} disabled={loading}>Cancelar</button>
+              <button className={styles.btnPrimary} onClick={generar} disabled={loading}>
+                {loading ? <><Loader2 size={15} className={styles.spin} /> Timbrando…</> : <>Generar CFDI</>}
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }

@@ -60,7 +60,7 @@
 }
 
 .navItem.active {
-  background: rgba(201,169,122,0.18);
+  background: rgba(82,183,136,0.22);
   color: var(--sand);
 }
 

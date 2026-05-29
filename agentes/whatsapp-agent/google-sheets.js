@@ -237,6 +237,16 @@ function formatDateYmd(dateInput = null) {
   return d.toISOString().slice(0, 10);
 }
 
+// 'YYYY-MM-DD' usando componentes locales del Date (evita el corrimiento de un día
+// que produce toISOString() en servidores con zona horaria distinta de UTC).
+function ymdLocal(d) {
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function formatDateTimeMx(dateInput = null) {
   const d = dateInput ? new Date(dateInput) : new Date();
   if (Number.isNaN(d.getTime())) return '';
@@ -467,9 +477,13 @@ export async function updateRoomStatusInDisponibilidad(folio, newStatus = 'RESER
     if (values.length === 0) return { success: false, reason: 'Pestaña Disponibilidad vacía.' };
 
     const headers = values[0];
-    // Para tab sin encabezados reconocibles: folio en col 4 (E), estado en col 3 (D)
-    const folioIdx = findHeaderIndex(headers, ['folio', 'confirmacion', 'sesion', 'sessionid']) ?? 4;
-    const statusIdx = findHeaderIndex(headers, ['estado', 'status', 'estatus']) ?? 3;
+    // Para tab sin encabezados reconocibles: folio en col 4 (E), estado en col 3 (D).
+    // findHeaderIndex devuelve -1 (no nullish) cuando no encuentra, así que el fallback
+    // debe comprobar < 0, no usar ?? (que nunca aplicaría con -1).
+    const folioIdxFound = findHeaderIndex(headers, ['folio', 'confirmacion', 'sesion', 'sessionid']);
+    const statusIdxFound = findHeaderIndex(headers, ['estado', 'status', 'estatus']);
+    const folioIdx = folioIdxFound < 0 ? 4 : folioIdxFound;
+    const statusIdx = statusIdxFound < 0 ? 3 : statusIdxFound;
 
     const updatedRows = [];
     for (let i = 1; i < values.length; i++) {
@@ -653,8 +667,8 @@ export async function findAlternativeDates(requestedCheckin, requestedCheckout, 
       const altCheckout = new Date(altCheckin);
       altCheckout.setDate(altCheckout.getDate() + nights);
 
-      const altCheckinStr = altCheckin.toISOString().slice(0, 10);
-      const altCheckoutStr = altCheckout.toISOString().slice(0, 10);
+      const altCheckinStr = ymdLocal(altCheckin);
+      const altCheckoutStr = ymdLocal(altCheckout);
 
       try {
         const availability = await getUnavailableRoomsFromGoogleSheet({

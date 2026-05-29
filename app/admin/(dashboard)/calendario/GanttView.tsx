@@ -12,7 +12,7 @@ const ROOMS = [
 ];
 
 const ROOM_COLORS = [
-  '#2d7a34','#c9a97a','#4a6e2e','#8b4a9a','#2e6b8a',
+  '#2d7a34','#52b788','#4a6e2e','#8b4a9a','#2e6b8a',
   '#8a4a2e','#6b4a8a','#2e8a7a','#8a6b2e','#4a8a6b',
   '#8a2e4a','#6b8a2e','#2e4a8a',
 ];
@@ -98,19 +98,19 @@ export default function GanttView({ bookings, onRefresh }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <button
           onClick={() => setOffsetDays(d => d - 14)}
-          style={{ background: '#fff', border: '1px solid #d4cec7', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+          style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
         >
           <ChevronLeft size={16} />
         </button>
         <button
           onClick={() => setOffsetDays(-3)}
-          style={{ background: '#fff', border: '1px solid #d4cec7', borderRadius: 4, padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'var(--font-jost, sans-serif)' }}
+          style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 4, padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'var(--font-jost, sans-serif)' }}
         >
           Hoy
         </button>
         <button
           onClick={() => setOffsetDays(d => d + 14)}
-          style={{ background: '#fff', border: '1px solid #d4cec7', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+          style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
         >
           <ChevronRight size={16} />
         </button>
@@ -124,18 +124,18 @@ export default function GanttView({ bookings, onRefresh }: Props) {
       {/* Scrollable gantt */}
       <div
         ref={containerRef}
-        style={{ overflowX: 'auto', borderRadius: 8, border: '1px solid #e4ddd3', background: '#fff' }}
+        style={{ overflowX: 'auto', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff' }}
       >
         <div style={{ position: 'relative', width: totalW, minWidth: totalW }}>
 
           {/* Month row */}
-          <div style={{ display: 'flex', height: 24, background: '#2a2218' }}>
+          <div style={{ display: 'flex', height: 24, background: '#1a1a1a' }}>
             <div style={{ width: LABEL_W, flexShrink: 0, borderRight: '2px solid rgba(255,255,255,0.1)' }} />
             {monthSpans.map(({ label, span }, mi) => (
               <div key={mi} style={{
                 width: span * CELL_W, flexShrink: 0,
                 fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase',
-                color: '#c9a96e', padding: '0 8px', lineHeight: '24px',
+                color: '#52b788', padding: '0 8px', lineHeight: '24px',
                 borderRight: '1px solid rgba(255,255,255,0.08)',
               }}>
                 {label}
@@ -144,12 +144,12 @@ export default function GanttView({ bookings, onRefresh }: Props) {
           </div>
 
           {/* Day numbers row */}
-          <div style={{ display: 'flex', height: 30, background: '#f4f0e8', borderBottom: '2px solid #2a2218' }}>
+          <div style={{ display: 'flex', height: 30, background: '#f9fafb', borderBottom: '2px solid #1a1a1a' }}>
             <div style={{
               width: LABEL_W, flexShrink: 0,
               fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase',
-              color: '#9a9a82', padding: '0 14px', lineHeight: '30px',
-              borderRight: '2px solid #d4cec7', background: '#faf7f2',
+              color: '#9ca3af', padding: '0 14px', lineHeight: '30px',
+              borderRight: '2px solid #e5e7eb', background: '#f9fafb',
             }}>
               Habitación
             </div>
@@ -161,9 +161,9 @@ export default function GanttView({ bookings, onRefresh }: Props) {
                   width: CELL_W, flexShrink: 0,
                   fontSize: 11, textAlign: 'center', lineHeight: '30px',
                   fontWeight: isToday ? 700 : 400,
-                  background: isToday ? '#2d7a34' : isWeekend ? '#ede8de' : 'transparent',
-                  color: isToday ? '#fff' : isWeekend ? '#7a6a52' : '#5a4e3c',
-                  borderRight: '1px solid #e4ddd3',
+                  background: isToday ? '#2d7a34' : isWeekend ? '#f3f4f6' : 'transparent',
+                  color: isToday ? '#fff' : isWeekend ? '#6b7280' : '#6b7280',
+                  borderRight: '1px solid #e5e7eb',
                   fontFamily: 'var(--font-jost, sans-serif)',
                 }}>
                   {d.getDate()}
@@ -182,7 +182,7 @@ export default function GanttView({ bookings, onRefresh }: Props) {
             return (
               <div key={room} style={{
                 display: 'flex', height: ROW_H,
-                borderBottom: '1px solid #f0ebe3',
+                borderBottom: '1px solid #f4f4f2',
                 position: 'relative',
               }}>
                 {/* Label */}
@@ -190,9 +190,9 @@ export default function GanttView({ bookings, onRefresh }: Props) {
                   width: LABEL_W, flexShrink: 0,
                   padding: '0 12px',
                   display: 'flex', alignItems: 'center', gap: 7,
-                  fontSize: 11.5, color: '#2a2218',
-                  background: '#faf7f2',
-                  borderRight: '2px solid #e4ddd3',
+                  fontSize: 11.5, color: '#1a1a1a',
+                  background: '#f9fafb',
+                  borderRight: '2px solid #e5e7eb',
                   position: 'sticky', left: 0, zIndex: 2,
                   fontFamily: 'var(--font-jost, sans-serif)',
                 }}>
@@ -210,8 +210,8 @@ export default function GanttView({ bookings, onRefresh }: Props) {
                       return (
                         <div key={idx} style={{
                           width: CELL_W, flexShrink: 0, height: '100%',
-                          background: isToday ? 'rgba(45,122,52,0.07)' : isWeekend ? '#f7f4ef' : 'transparent',
-                          borderRight: '1px solid #f5f0e8',
+                          background: isToday ? 'rgba(45,122,52,0.07)' : isWeekend ? '#f9fafb' : 'transparent',
+                          borderRight: '1px solid #f9fafb',
                         }} />
                       );
                     })}
@@ -289,7 +289,7 @@ export default function GanttView({ bookings, onRefresh }: Props) {
       {/* Legend */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 12 }}>
         {ROOMS.map((r, ri) => (
-          <span key={r} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem', color: '#5a4e3c', fontFamily: 'var(--font-jost, sans-serif)' }}>
+          <span key={r} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.75rem', color: '#6b7280', fontFamily: 'var(--font-jost, sans-serif)' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: ROOM_COLORS[ri], display: 'inline-block' }} />
             {r}
           </span>
@@ -308,7 +308,7 @@ export default function GanttView({ bookings, onRefresh }: Props) {
               position: 'fixed',
               top: Math.min(tooltip.y + 8, window.innerHeight - 180),
               left: Math.min(tooltip.x + 8, window.innerWidth - 220),
-              background: '#2a2218', color: '#f5f0e8',
+              background: '#1a1a1a', color: '#f9fafb',
               borderRadius: 8, padding: '12px 16px',
               fontSize: 12, fontFamily: 'var(--font-jost, sans-serif)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
@@ -316,7 +316,7 @@ export default function GanttView({ bookings, onRefresh }: Props) {
             }}
           >
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{tooltip.booking.cliente}</div>
-            <div style={{ color: '#c9a97a', marginBottom: 4 }}>{tooltip.booking.habitaciones}</div>
+            <div style={{ color: '#52b788', marginBottom: 4 }}>{tooltip.booking.habitaciones}</div>
             <div style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>
               {tooltip.booking.checkin} → {tooltip.booking.checkout}
             </div>
@@ -325,7 +325,7 @@ export default function GanttView({ bookings, onRefresh }: Props) {
             </div>
             <button
               onClick={() => { setModal({ booking: tooltip.booking }); setTooltip(null); }}
-              style={{ width: '100%', background: '#c9a97a', color: '#2a2218', border: 'none', borderRadius: 4, padding: '8px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              style={{ width: '100%', background: '#52b788', color: '#1a1a1a', border: 'none', borderRadius: 4, padding: '8px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
             >
               Ver / editar reserva
             </button>

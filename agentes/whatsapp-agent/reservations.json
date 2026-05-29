@@ -840,5 +840,55 @@
       "cuenta": "4217470058780996"
     },
     "createdAt": "2026-04-19T03:54:58.509Z"
+  },
+  {
+    "folio": "WA-MPR7ZC1E",
+    "status": "RESERVADO",
+    "userId": "247145370230927@lid",
+    "userName": "Manolo Covarrubias",
+    "guestEmail": "daftpunkmanolo@gmail.com",
+    "howFound": "WhatsApp",
+    "rooms": [
+      {
+        "id": "jungla",
+        "name": "Suite Jungla",
+        "backendName": "Jungla",
+        "guests": 4,
+        "price": 4800
+      }
+    ],
+    "tours": [
+      {
+        "id": "edward-james-huichihuayan-quilas-castillo",
+        "name": "Tour Ruta Surrealista (Edward James)",
+        "url": "https://www.huasteca-potosina.com/tours/ruta-surrealista-edward-james",
+        "participants": 4,
+        "price": 5200
+      }
+    ],
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla",
+      "backendName": "Jungla",
+      "guests": 4,
+      "price": 4800
+    },
+    "checkin": "2026-06-16",
+    "checkout": "2026-06-18",
+    "guests": 4,
+    "nights": 2,
+    "roomsTotal": 4800,
+    "toursTotal": 5200,
+    "totalPrice": 10000,
+    "depositAmount": 5000,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-05-29T17:52:41.138Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-05-29T17:55:54.797Z"
   }
 ]

@@ -53,14 +53,14 @@ export default function IngresosClient({ kpis }: Props) {
         <h2 className={styles.chartTitle}>Ingresos por mes (últimos 12 meses)</h2>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={kpis.porMes} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4ddd3" />
-            <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#624820' }} />
-            <YAxis tick={{ fontSize: 11, fill: '#624820' }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#4b5563' }} />
+            <YAxis tick={{ fontSize: 11, fill: '#4b5563' }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
             <Tooltip
               formatter={(v) => [`$${Number(v).toLocaleString('es-MX')} MXN`, 'Ingresos']}
-              contentStyle={{ background: '#faf8f5', border: '1px solid #e4ddd3', borderRadius: 6, fontSize: 13 }}
+              contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 13 }}
             />
-            <Bar dataKey="ingresos" fill="#1e3012" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="ingresos" fill="#1B4332" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

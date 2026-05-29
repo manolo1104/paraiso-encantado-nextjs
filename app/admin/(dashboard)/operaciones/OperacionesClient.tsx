@@ -194,7 +194,7 @@ export default function OperacionesClient({ initialCleaning, initialMaintenance,
   const statusIcon = (estado: string) => {
     if (estado === 'COMPLETO') return <CheckCircle size={16} color="#2d7a34" />;
     if (estado === 'INCOMPLETO') return <AlertTriangle size={16} color="#c9484a" />;
-    if (estado === 'EN_PROCESO') return <Clock size={16} color="#c9a97a" />;
+    if (estado === 'EN_PROCESO') return <Clock size={16} color="#52b788" />;
     return null;
   };
 
@@ -223,12 +223,12 @@ export default function OperacionesClient({ initialCleaning, initialMaintenance,
           <CheckCircle size={18} color="#2d7a34" />
           <div><strong>{completedToday}</strong><span>suites limpias hoy</span></div>
         </div>
-        <div className={styles.summaryCard} style={{ borderColor: overdueCount > 0 ? '#c9484a' : '#d4cec7' }}>
+        <div className={styles.summaryCard} style={{ borderColor: overdueCount > 0 ? '#c9484a' : '#e5e7eb' }}>
           <AlertTriangle size={18} color={overdueCount > 0 ? '#c9484a' : '#aaa'} />
           <div><strong>{overdueCount}</strong><span>tareas vencidas</span></div>
         </div>
-        <div className={styles.summaryCard} style={{ borderColor: soonTasks > 0 ? '#c9a97a' : '#d4cec7' }}>
-          <Clock size={18} color={soonTasks > 0 ? '#c9a97a' : '#aaa'} />
+        <div className={styles.summaryCard} style={{ borderColor: soonTasks > 0 ? '#52b788' : '#e5e7eb' }}>
+          <Clock size={18} color={soonTasks > 0 ? '#52b788' : '#aaa'} />
           <div><strong>{soonTasks}</strong><span>vencen pronto</span></div>
         </div>
       </div>

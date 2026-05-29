@@ -46,7 +46,7 @@
 
 .iconBtn {
   background: #fff;
-  border: 1px solid #d4cec7;
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
   padding: 8px 10px;
   cursor: pointer;
@@ -80,7 +80,7 @@
 
 .filtersPanel {
   background: #fff;
-  border: 1px solid #e4ddd3;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 16px 20px;
   margin-bottom: 12px;
@@ -107,7 +107,7 @@
 .filterField input,
 .filterField select {
   padding: 8px 10px;
-  border: 1px solid #d4cec7;
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
   font-size: 0.875rem;
   font-family: var(--font-jost), sans-serif;
@@ -119,7 +119,7 @@
 
 .clearBtn {
   background: none;
-  border: 1px solid #d4cec7;
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
   padding: 6px 14px;
   font-size: 0.78rem;
@@ -145,7 +145,7 @@
 .searchInput {
   width: 100%;
   padding: 9px 12px 9px 32px;
-  border: 1px solid #d4cec7;
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
   font-size: 0.875rem;
   font-family: var(--font-jost), sans-serif;
@@ -156,7 +156,7 @@
 
 .select {
   padding: 9px 12px;
-  border: 1px solid #d4cec7;
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
   font-size: 0.875rem;
   font-family: var(--font-jost), sans-serif;
@@ -169,7 +169,7 @@
 .tableWrap {
   background: #fff;
   border-radius: 8px;
-  border: 1px solid #e4ddd3;
+  border: 1px solid #e5e7eb;
   overflow-x: auto;
 }
 
@@ -196,7 +196,7 @@
   transition: background 0.12s;
 }
 .row:hover { background: var(--parch); }
-.row td { padding: 12px 14px; border-bottom: 1px solid #f0ebe3; vertical-align: middle; }
+.row td { padding: 12px 14px; border-bottom: 1px solid #f4f4f2; vertical-align: middle; }
 .row:last-child td { border-bottom: none; }
 
 .clienteName { font-weight: 500; color: var(--ink); }
@@ -222,7 +222,7 @@
 .actionBtn { background: var(--forest); color: #fff; border: none; border-radius: 4px; padding: 5px 7px; cursor: pointer; display: flex; align-items: center; }
 .actionBtn:hover { opacity: 0.85; }
 .actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-.actionBtnPdf { background: #624820; color: #fff; border: none; border-radius: 4px; padding: 5px 7px; cursor: pointer; display: flex; align-items: center; }
+.actionBtnPdf { background: #4b5563; color: #fff; border: none; border-radius: 4px; padding: 5px 7px; cursor: pointer; display: flex; align-items: center; }
 .actionBtnPdf:hover { opacity: 0.85; }
 
 /* ── Scroll indicator ────────────────────────────────────────────────────── */
@@ -249,7 +249,7 @@
 .mobileCardList { display: none; flex-direction: column; gap: 10px; }
 .mobileCard {
   background: #fff;
-  border: 1px solid #e4ddd3;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 14px 16px;
 }
@@ -284,8 +284,8 @@
   font-weight: 500; cursor: pointer;
 }
 .mobileCardBtnPrimary { background: var(--forest); color: var(--cream); }
-.mobileCardBtnSecondary { background: #fff; border: 1px solid #d4cec7 !important; color: var(--clay); }
-.mobileCardBtnPdf { background: #624820; color: #fff; }
+.mobileCardBtnSecondary { background: #fff; border: 1px solid #e5e7eb !important; color: var(--clay); }
+.mobileCardBtnPdf { background: #4b5563; color: #fff; }
 
 /* ── Mobile: filter bar en 2 filas ──────────────────────────────────────── */
 @media (max-width: 640px) {
@@ -313,7 +313,7 @@
 /* ── Vista Hoy ────────────────────────────────────────────────────────────── */
 .todayBtn {
   display: flex; align-items: center; gap: 6px;
-  background: #fff; border: 1px solid #d4cec7; border-radius: 4px;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 4px;
   padding: 8px 12px; font-size: 0.875rem;
   font-family: var(--font-jost), sans-serif; color: var(--clay);
   cursor: pointer; transition: all 0.15s;

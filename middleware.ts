@@ -26,14 +26,23 @@ export async function middleware(req: NextRequest) {
     pathname !== '/api/admin/login' && pathname !== '/api/admin/logout';
 
   if (isAdminApi) {
-    const token = req.cookies.get('admin_session')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-    try {
-      await jwtVerify(token, ADMIN_SECRET);
-    } catch {
-      return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 });
+    // Servicio interno (agente de WhatsApp) autenticado por token compartido.
+    // Si AGENT_API_TOKEN está configurado y el header coincide, se permite el acceso
+    // sin sesión JWT (el agente no tiene cookie de navegador).
+    const agentToken = process.env.AGENT_API_TOKEN;
+    const presentedAgentToken = req.headers.get('x-agent-token');
+    const isAgent = Boolean(agentToken) && presentedAgentToken === agentToken;
+
+    if (!isAgent) {
+      const token = req.cookies.get('admin_session')?.value;
+      if (!token) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      }
+      try {
+        await jwtVerify(token, ADMIN_SECRET);
+      } catch {
+        return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 });
+      }
     }
   }
 

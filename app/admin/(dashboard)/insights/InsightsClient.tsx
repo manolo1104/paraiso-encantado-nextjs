@@ -106,6 +106,15 @@ export default function InsightsClient() {
         body: JSON.stringify({ messages: next }),
       });
 
+      if (!res.ok) {
+        let serverMsg = 'Error al conectar con el asistente. Intenta de nuevo.';
+        try {
+          const data = await res.json();
+          if (data?.error) serverMsg = data.error;
+        } catch { /* respuesta sin JSON */ }
+        throw new Error(serverMsg);
+      }
+
       if (!res.body) throw new Error('Sin respuesta');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -127,8 +136,9 @@ export default function InsightsClient() {
       saveChatHistory(finalMsgs);
       setChatMessages(finalMsgs);
 
-    } catch {
-      const errorMsgs: ChatMsg[] = [...next, { role: 'assistant', content: 'Error al conectar con el asistente. Intenta de nuevo.' }];
+    } catch (e) {
+      const detail = e instanceof Error && e.message ? e.message : 'Error al conectar con el asistente. Intenta de nuevo.';
+      const errorMsgs: ChatMsg[] = [...next, { role: 'assistant', content: detail }];
       setChatMessages(errorMsgs);
       saveChatHistory(errorMsgs);
     } finally {
@@ -239,7 +249,7 @@ export default function InsightsClient() {
             <BarChart data={forecast7dias} barCategoryGap="30%">
               <XAxis
                 dataKey="label"
-                tick={{ fill: '#7a7060', fontSize: 12, fontFamily: 'var(--font-jost)' }}
+                tick={{ fill: '#6b7280', fontSize: 12, fontFamily: 'var(--font-jost)' }}
                 axisLine={false} tickLine={false}
               />
               <YAxis domain={[0, 13]} hide />
@@ -259,7 +269,7 @@ export default function InsightsClient() {
                 {forecast7dias.map((d, i) => (
                   <Cell
                     key={i}
-                    fill={d.porcentaje >= 80 ? '#2d7a34' : d.porcentaje >= 50 ? '#C9A97A' : '#e4ddd3'}
+                    fill={d.porcentaje >= 80 ? '#2d7a34' : d.porcentaje >= 50 ? '#52b788' : '#e5e7eb'}
                   />
                 ))}
               </Bar>
@@ -267,8 +277,8 @@ export default function InsightsClient() {
           </ResponsiveContainer>
           <div className={styles.chartLegend}>
             <span><span className={styles.dot} style={{ background: '#2d7a34' }} /> +80%</span>
-            <span><span className={styles.dot} style={{ background: '#C9A97A' }} /> 50-79%</span>
-            <span><span className={styles.dot} style={{ background: '#e4ddd3' }} /> &lt;50%</span>
+            <span><span className={styles.dot} style={{ background: '#52b788' }} /> 50-79%</span>
+            <span><span className={styles.dot} style={{ background: '#e5e7eb' }} /> &lt;50%</span>
           </div>
         </section>
 
@@ -320,9 +330,9 @@ export default function InsightsClient() {
                     return (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 10, height: 10, borderRadius: '50%', background: o.color, flexShrink: 0 }} />
-                        <span style={{ flex: 1, fontSize: 12, color: '#5a5a4a', fontFamily: 'var(--font-jost)' }}>{o.label}</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1a2218', fontFamily: 'var(--font-jost)' }}>{pct}%</span>
-                        <span style={{ fontSize: 11, color: '#9a9a82', fontFamily: 'var(--font-jost)' }}>({o.count})</span>
+                        <span style={{ flex: 1, fontSize: 12, color: '#6b7280', fontFamily: 'var(--font-jost)' }}>{o.label}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a', fontFamily: 'var(--font-jost)' }}>{pct}%</span>
+                        <span style={{ fontSize: 11, color: '#9ca3af', fontFamily: 'var(--font-jost)' }}>({o.count})</span>
                       </div>
                     );
                   });
@@ -365,7 +375,7 @@ export default function InsightsClient() {
             disabled
           />
           <AgentCard
-            icon={<PenSquare size={18} color="#C9A97A" />}
+            icon={<PenSquare size={18} color="#52b788" />}
             title="Blogs publicados"
             rows={[{ label: 'Este mes', value: String(agentes.blogs) }]}
           />
@@ -376,7 +386,7 @@ export default function InsightsClient() {
       <section className={styles.section}>
         <div className={styles.chatHeader}>
           <h2 className={styles.sectionTitle} style={{ margin: 0 }}>
-            <Sparkles size={15} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle', color: '#C9A97A' }} />
+            <Sparkles size={15} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle', color: '#52b788' }} />
             Asistente IA
           </h2>
           {chatMessages.length > 0 && (

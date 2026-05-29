@@ -12,6 +12,14 @@ import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservat
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const BOOKING_API = process.env.BOOKING_API_URL || 'https://paraisoencantado.com';
 
+// Token de servicio para autenticar las llamadas del agente a las APIs admin del sitio.
+// El middleware del sitio exige JWT en /api/admin/*; con este header el agente se
+// autentica como servicio interno. Debe coincidir con AGENT_API_TOKEN en el sitio.
+const AGENT_API_TOKEN = process.env.AGENT_API_TOKEN || '';
+function adminHeaders(extra = {}) {
+  return { ...(AGENT_API_TOKEN ? { 'x-agent-token': AGENT_API_TOKEN } : {}), ...extra };
+}
+
 // ── Estado del bot (caché 30s para no saturar la API) ─────
 let botEnabledCache = { value: true, expiresAt: 0 };
 
@@ -19,7 +27,7 @@ async function isBotEnabled() {
   const now = Date.now();
   if (now < botEnabledCache.expiresAt) return botEnabledCache.value;
   try {
-    const res = await fetch(`${BOOKING_API}/api/admin/bot-status`, { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`${BOOKING_API}/api/admin/bot-status`, { headers: adminHeaders(), signal: AbortSignal.timeout(3000) });
     if (res.ok) {
       const { enabled } = await res.json();
       botEnabledCache = { value: Boolean(enabled), expiresAt: now + 30_000 };
@@ -443,7 +451,26 @@ function sanitizeMessagesPayload(messages = []) {
     }
   }
 
-  return cleaned;
+  // Anthropic exige que los roles alternen (user/assistant). Tras una intervención
+  // humana pueden quedar varios mensajes del mismo rol seguidos (p.ej. varios 'user').
+  // Fusionamos los consecutivos del mismo rol cuando AMBOS son texto; si alguno trae
+  // bloques (tool_use/tool_result) no se fusiona para no romper esos pares.
+  const merged = [];
+  for (const m of cleaned) {
+    const last = merged[merged.length - 1];
+    if (
+      last &&
+      last.role === m.role &&
+      typeof last.content === 'string' &&
+      typeof m.content === 'string'
+    ) {
+      last.content = `${last.content}\n${m.content}`;
+    } else {
+      merged.push({ ...m });
+    }
+  }
+
+  return merged;
 }
 
 // ── Herramientas ──────────────────────────────────────────
@@ -511,7 +538,7 @@ const TOOLS = [
       type: 'object',
       properties: {
         guest_name:  { type: 'string', description: 'Nombre completo del huésped principal' },
-        guest_email: { type: 'string', description: 'Correo del huésped principal' },
+        guest_email: { type: 'string', description: 'Correo del huésped (OPCIONAL — NO lo pidas; omítelo si el cliente no lo da espontáneamente)' },
         how_found:   { type: 'string', description: '¿Cómo nos encontraste? Opciones: Google, Página web, Recomendación, Redes' },
         checkin:     { type: 'string', description: 'YYYY-MM-DD' },
         checkout:    { type: 'string', description: 'YYYY-MM-DD' },
@@ -547,7 +574,7 @@ const TOOLS = [
         total_price:    { type: 'number', description: 'Suma total global (habitaciones + tours) en MXN' },
         deposit_amount: { type: 'number', description: 'Anticipo (ej. 50% para 2+ noches). Omitir si es pago completo.' }
       },
-      required: ['guest_name', 'guest_email', 'how_found', 'rooms', 'checkin', 'checkout', 'nights', 'total_price']
+      required: ['guest_name', 'how_found', 'rooms', 'checkin', 'checkout', 'nights', 'total_price']
     }
   }
 ];
@@ -666,6 +693,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
       try {
         const cleanPhone = String(phone || '').replace(/\D/g, '');
         const res = await fetch(`${BOOKING_API}/api/admin/guest-notes?phone=${encodeURIComponent(cleanPhone)}`, {
+          headers: adminHeaders(),
           signal: AbortSignal.timeout(4000)
         });
         if (res.ok) {
@@ -779,6 +807,14 @@ async function executeTool(toolName, toolInput, userId, userName) {
       const toursTotal = resolvedTours.reduce((sum, t) => sum + t.price, 0);
       const officialTotal = roomsTotal + toursTotal;
 
+      // Anticipo: si Claude no lo envía, calcular 50% para estancias de 2+ noches
+      // (política del hotel); pago completo para 1 noche.
+      const nightsForDeposit = Number(nights || 1);
+      const defaultDeposit = nightsForDeposit >= 2 ? Math.round(officialTotal * 0.5) : officialTotal;
+      const depositFinal = (deposit_amount != null && Number(deposit_amount) > 0)
+        ? Number(deposit_amount)
+        : defaultDeposit;
+
       const quote = createQuote({
         userId, userName,
         guestName: guest_name,
@@ -790,7 +826,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
         roomsTotal,
         toursTotal,
         totalPrice: officialTotal,
-        depositAmount: deposit_amount ?? officialTotal
+        depositAmount: depositFinal
       });
 
       updateSession(userId, { lastFolio: quote.folio });
@@ -819,14 +855,22 @@ async function executeTool(toolName, toolInput, userId, userName) {
       }
 
       // Registrar bloqueo de CADA habitación en pestaña Disponibilidad
+      let sheetBlockOk = false;
       for (const r of resolvedRooms) {
         try {
           const dispResult = await appendTempBlockToSheet({ room: r, checkin, checkout, folio: quote.folio, sessionId });
           if (!dispResult.success) console.warn(`⚠️ Bloqueo Disponibilidad (${r.name}):`, dispResult.reason);
-          else console.log(`🔒 Bloqueo temporal: ${r.name} — ${quote.folio}`);
+          else { sheetBlockOk = true; console.log(`🔒 Bloqueo temporal: ${r.name} — ${quote.folio}`); }
         } catch (dispErr) {
           console.warn(`⚠️ Error bloqueo Disponibilidad (${r.name}):`, dispErr.message);
         }
+      }
+
+      // A1: si NINGÚN bloqueo (backend ni Sheets) quedó confirmado, no afirmar que la
+      // suite está apartada — el equipo debe validar disponibilidad antes de aceptar pago.
+      const blockConfirmed = Boolean(temporaryBlock.success) || sheetBlockOk;
+      if (!blockConfirmed) {
+        console.warn(`⚠️ Cotización ${quote.folio} SIN bloqueo confirmado — requiere validación manual.`);
       }
 
       // ── Integración con ecosistema admin ─────────────────
@@ -837,7 +881,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
           const suiteNames = resolvedRooms.map(r => r.name).join(', ');
           const cotRes = await fetch(`${BOOKING_API}/api/admin/cotizaciones`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: adminHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
               cliente: guest_name,
               telefono: '',
@@ -858,7 +902,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
             // 2) Enviar email de cotización
             const emailRes = await fetch(`${BOOKING_API}/api/admin/cotizaciones/${adminCotizacionId}/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
+              headers: adminHeaders({ 'Content-Type': 'application/json' })
             });
             if (emailRes.ok) {
               console.log(`📧 Email de cotización enviado a ${guest_email}`);
@@ -880,6 +924,10 @@ async function executeTool(toolName, toolInput, userId, userName) {
         rooms: resolvedRooms,
         tours: resolvedTours,
         temporaryBlock,
+        blockConfirmed,
+        ...(blockConfirmed ? {} : {
+          block_warning: 'No se pudo asegurar el bloqueo de la(s) suite(s). Aún no confirmes disponibilidad como garantizada: pide al cliente que espere validación del equipo antes de pagar.'
+        }),
         emailSent: Boolean(adminCotizacionId && guest_email)
       };
     }
@@ -904,10 +952,18 @@ export async function handleMessage(userId, userText, userName = '') {
   const history = conversations.get(userId);
   const session = getSession(userId); // debe ir antes de getDeterministicResponse
 
+  // Transparencia: en el PRIMER mensaje del bot en la conversación, aclarar que es
+  // un asistente virtual. Si el bot ya respondió antes (hay 'assistant' en el
+  // historial), no se repite.
+  const botHasReplied = history.some(m => m.role === 'assistant');
+  const VIRTUAL_ASSISTANT_DISCLOSURE = '🤖 _Soy *Camila*, la asistente virtual del Hotel Paraíso Encantado. Con gusto te ayudo; si en cualquier momento prefieres hablar con una persona del equipo, solo dímelo._';
+  const withDisclosure = (text) =>
+    (botHasReplied || !text) ? text : `${VIRTUAL_ASSISTANT_DISCLOSURE}\n\n${text}`;
+
   const incomingText = typeof userText === 'string' ? userText.trim() : String(userText || '').trim();
   if (!incomingText) {
     return {
-      text: '¿Me compartes tu mensaje en texto para ayudarte mejor? 🌿',
+      text: withDisclosure('¿Me compartes tu mensaje en texto para ayudarte mejor? 🌿'),
       requiresHumanIntervention: false, requiresTourNotification: false
     };
   }
@@ -918,7 +974,7 @@ export async function handleMessage(userId, userText, userName = '') {
     history.push({ role: 'user', content: incomingText });
     history.push({ role: 'assistant', content: confirmationText });
     while (history.length > MAX_HISTORY) history.shift();
-    return { text: confirmationText, requiresHumanIntervention: false, requiresTourNotification: false };
+    return { text: withDisclosure(confirmationText), requiresHumanIntervention: false, requiresTourNotification: false };
   }
 
   const deterministicResponse = getDeterministicResponse(incomingText, session);
@@ -929,7 +985,7 @@ export async function handleMessage(userId, userText, userName = '') {
     console.log(`💬 [${userName || userId}]: ${incomingText}`);
     console.log(`🤖 → ${deterministicResponse.slice(0, 100)}...`);
     return {
-      text: deterministicResponse,
+      text: withDisclosure(deterministicResponse),
       requiresHumanIntervention: needsHumanIntervention(incomingText, deterministicResponse), requiresTourNotification: wantsTourBooking(incomingText, deterministicResponse)
     };
   }
@@ -971,26 +1027,21 @@ export async function handleMessage(userId, userText, userName = '') {
     { ...TOOLS[TOOLS.length - 1], cache_control: { type: 'ephemeral' } }
   ];
 
+  // Tope de iteraciones de tools para que un encadenamiento de herramientas
+  // (o un stop_reason inesperado) nunca produzca un bucle infinito de llamadas a la API.
+  const MAX_TOOL_ITERATIONS = 6;
+  let iterations = 0;
+
   while (true) {
+    iterations++;
     const safeMessages = sanitizeMessagesPayload(messages);
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 1500,
       system: systemBlocks,
       tools: cachedTools,
       messages: safeMessages
     });
-
-    if (response.stop_reason === 'end_turn') {
-      const text = response.content.find(b => b.type === 'text')?.text?.trim() || '';
-      const finalText = text || 'Hubo un problema temporal al responder. ¿Me repites tu mensaje, por favor? 🌿';
-      effectiveHistory.push({ role: 'assistant', content: finalText });
-      console.log(`🤖 → ${text.slice(0, 100)}...`);
-      return {
-        text: finalText,
-        requiresHumanIntervention: needsHumanIntervention(userText, finalText), requiresTourNotification: wantsTourBooking(userText, finalText)
-      };
-    }
 
     if (response.stop_reason === 'tool_use') {
       const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
@@ -1001,12 +1052,12 @@ export async function handleMessage(userId, userText, userName = '') {
         if (partialText) {
           console.warn('⚠️ Claude: tool_use sin bloques; usando texto parcial como respuesta.');
           effectiveHistory.push({ role: 'assistant', content: partialText });
-          return { text: partialText, requiresHumanIntervention: needsHumanIntervention(userText, partialText), requiresTourNotification: wantsTourBooking(userText, partialText) };
+          return { text: withDisclosure(partialText), requiresHumanIntervention: needsHumanIntervention(userText, partialText), requiresTourNotification: wantsTourBooking(userText, partialText) };
         }
         console.warn('⚠️ Claude devolvió stop_reason=tool_use pero sin bloques tool_use; se omite ese turno.');
         const fallback = 'Hubo un problema temporal al procesar tu solicitud. ¿Me lo repites por favor? 🌿';
         effectiveHistory.push({ role: 'assistant', content: fallback });
-        return { text: fallback, requiresHumanIntervention: false, requiresTourNotification: false };
+        return { text: withDisclosure(fallback), requiresHumanIntervention: false, requiresTourNotification: false };
       }
       messages.push({ role: 'assistant', content: response.content });
 
@@ -1018,7 +1069,34 @@ export async function handleMessage(userId, userText, userName = '') {
       if (toolResults.length > 0) {
         messages.push({ role: 'user', content: toolResults });
       }
+
+      // Salvaguarda anti-bucle: si se excede el tope de iteraciones, escalar a humano.
+      if (iterations >= MAX_TOOL_ITERATIONS) {
+        console.warn(`⚠️ Tope de iteraciones (${MAX_TOOL_ITERATIONS}) alcanzado; escalando a humano.`);
+        const partial = response.content.find(b => b.type === 'text')?.text?.trim()
+          || 'Déjame confirmar unos detalles con el equipo y te respondo en breve. 🌿';
+        effectiveHistory.push({ role: 'assistant', content: partial });
+        return { text: withDisclosure(partial), requiresHumanIntervention: true, requiresTourNotification: false };
+      }
+
+      continue;
     }
+
+    // end_turn — y CUALQUIER otro stop_reason (max_tokens, stop_sequence, refusal,
+    // pause_turn): devolver el texto disponible y terminar. NUNCA repetir el request,
+    // para evitar bucles infinitos y costo descontrolado de API.
+    const text = response.content.find(b => b.type === 'text')?.text?.trim() || '';
+    const finalText = text || 'Hubo un problema temporal al responder. ¿Me repites tu mensaje, por favor? 🌿';
+    effectiveHistory.push({ role: 'assistant', content: finalText });
+    if (response.stop_reason && response.stop_reason !== 'end_turn') {
+      console.warn(`⚠️ stop_reason inesperado: ${response.stop_reason} — devolviendo texto disponible.`);
+    }
+    console.log(`🤖 → ${finalText.slice(0, 100)}...`);
+    return {
+      text: withDisclosure(finalText),
+      requiresHumanIntervention: needsHumanIntervention(userText, finalText),
+      requiresTourNotification: wantsTourBooking(userText, finalText)
+    };
   }
 }
 

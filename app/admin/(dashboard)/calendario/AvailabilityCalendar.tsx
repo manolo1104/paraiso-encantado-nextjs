@@ -182,24 +182,24 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
         gap: 1,
-        background: '#e4ddd3',
-        border: '1px solid #e4ddd3',
+        background: '#e5e7eb',
+        border: '1px solid #e5e7eb',
         borderRadius: 8,
         overflow: 'hidden',
       }}>
         {SUITES.map(room => {
           const free = countFree(room);
           return (
-            <div key={room} style={{ background: '#faf7f2', padding: '14px 14px 10px' }}>
+            <div key={room} style={{ background: '#f9fafb', padding: '14px 14px 10px' }}>
               {/* Suite name */}
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#1e1e18', marginBottom: 8, letterSpacing: '0.3px', fontFamily: 'var(--font-jost,sans-serif)' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#1a1a1a', marginBottom: 8, letterSpacing: '0.3px', fontFamily: 'var(--font-jost,sans-serif)' }}>
                 {room}
               </div>
 
               {/* Day-of-week header */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 3 }}>
                 {DOW.map(d => (
-                  <div key={d} style={{ textAlign: 'center', fontSize: 9, color: '#9a8a74', fontWeight: 500, fontFamily: 'var(--font-jost,sans-serif)', padding: '1px 0' }}>{d}</div>
+                  <div key={d} style={{ textAlign: 'center', fontSize: 9, color: '#9ca3af', fontWeight: 500, fontFamily: 'var(--font-jost,sans-serif)', padding: '1px 0' }}>{d}</div>
                 ))}
               </div>
 
@@ -256,11 +256,11 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               </div>
 
               {/* Footer */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid #e4ddd3' }}>
-                <span style={{ fontSize: 11, color: '#6a6a58', fontFamily: 'var(--font-jost,sans-serif)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+                <span style={{ fontSize: 11, color: '#6b7280', fontFamily: 'var(--font-jost,sans-serif)' }}>
                   <span style={{ color: '#3B6D11', fontWeight: 600 }}>{free}</span> libres
                 </span>
-                <span style={{ fontSize: 11, color: '#9a9a82', fontFamily: 'var(--font-jost,sans-serif)' }}>
+                <span style={{ fontSize: 11, color: '#9ca3af', fontFamily: 'var(--font-jost,sans-serif)' }}>
                   ${SUITE_PRICES[room]?.toLocaleString('es-MX')}/n
                 </span>
               </div>
@@ -275,15 +275,15 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={e => { if (e.target === e.currentTarget) { setClicked(null); setSaveError(''); } }}
         >
-          <div style={{ background: '#faf7f2', borderRadius: 8, width: 320, boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+          <div style={{ background: '#f9fafb', borderRadius: 8, width: 320, boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
             {/* Modal header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #e4ddd3' }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#1e1e18', fontFamily: 'var(--font-jost,sans-serif)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #e5e7eb' }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', fontFamily: 'var(--font-jost,sans-serif)' }}>
                 {clicked.state.status === 'available' ? 'Fecha disponible'
                   : clicked.state.status === 'blocked' ? 'Fecha bloqueada'
                   : 'Fecha ocupada'}
               </span>
-              <button onClick={() => { setClicked(null); setSaveError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a9a82', padding: '2px 6px', fontSize: 18 }}>
+              <button onClick={() => { setClicked(null); setSaveError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '2px 6px', fontSize: 18 }}>
                 <X size={16} />
               </button>
             </div>
@@ -301,12 +301,12 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               </span>
 
               {/* Suite + date */}
-              <div style={{ fontSize: 16, fontWeight: 600, color: '#1e1e18', marginBottom: 2, fontFamily: 'var(--font-cormorant,Georgia,serif)' }}>{clicked.room}</div>
-              <div style={{ fontSize: 13, color: '#6a6a58', marginBottom: 14, fontFamily: 'var(--font-jost,sans-serif)' }}>{fmtDay(clicked.date)}, {year}</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a', marginBottom: 2, fontFamily: 'var(--font-cormorant,Georgia,serif)' }}>{clicked.room}</div>
+              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 14, fontFamily: 'var(--font-jost,sans-serif)' }}>{fmtDay(clicked.date)}, {year}</div>
 
               {/* Booking info */}
               {clicked.state.status === 'booking' && clicked.state.booking && (
-                <div style={{ background: '#f4f0e8', borderRadius: 6, padding: '10px 12px', marginBottom: 14 }}>
+                <div style={{ background: '#f9fafb', borderRadius: 6, padding: '10px 12px', marginBottom: 14 }}>
                   {[
                     ['Huésped', clicked.state.booking.cliente],
                     ['Check-in', clicked.state.booking.checkin],
@@ -316,8 +316,8 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                     ['Folio', clicked.state.booking.confirmacion],
                   ].map(([label, val]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '2px 0', fontFamily: 'var(--font-jost,sans-serif)' }}>
-                      <span style={{ color: '#9a9a82' }}>{label}</span>
-                      <span style={{ color: '#1e1e18', fontWeight: 500 }}>{val}</span>
+                      <span style={{ color: '#9ca3af' }}>{label}</span>
+                      <span style={{ color: '#1a1a1a', fontWeight: 500 }}>{val}</span>
                     </div>
                   ))}
                 </div>
@@ -332,7 +332,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
 
               {/* Blocked info */}
               {clicked.state.status === 'blocked' && (
-                <div style={{ background: '#fff8ee', borderLeft: '3px solid #c9a96e', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#7a6a40', lineHeight: 1.6, fontFamily: 'var(--font-jost,sans-serif)' }}>
+                <div style={{ background: '#fff8ee', borderLeft: '3px solid #52b788', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#6b7280', lineHeight: 1.6, fontFamily: 'var(--font-jost,sans-serif)' }}>
                   Fecha bloqueada manualmente. Puedes desbloquearla para que vuelva a estar disponible.
                 </div>
               )}
@@ -356,7 +356,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                     <button
                       onClick={handleBlock}
                       disabled={saving}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#2a2218', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
                     >
                       {saving ? <Loader2 size={14} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Lock size={14} />}
                       Bloquear esta fecha
@@ -387,7 +387,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
 
                 <button
                   onClick={() => { setClicked(null); setSaveError(''); }}
-                  style={{ padding: '9px', background: 'transparent', border: '1px solid #e0dbd0', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#6a6a58', fontFamily: 'var(--font-jost,sans-serif)' }}
+                  style={{ padding: '9px', background: 'transparent', border: '1px solid #e5e7eb', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#6b7280', fontFamily: 'var(--font-jost,sans-serif)' }}
                 >
                   Cancelar
                 </button>
@@ -422,15 +422,15 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
 // ── Shared micro-styles ───────────────────────────────────────────────────────
 
 const navBtnStyle: React.CSSProperties = {
-  background: '#fff', border: '1px solid #d4cec7', borderRadius: 4,
-  padding: '5px 8px', cursor: 'pointer', color: '#5a4e3c',
+  background: '#fff', border: '1px solid #e5e7eb', borderRadius: 4,
+  padding: '5px 8px', cursor: 'pointer', color: '#6b7280',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   transition: 'border-color 0.15s',
 };
 
 const legendItem: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 5,
-  fontSize: 11, color: '#6a6a58',
+  fontSize: 11, color: '#6b7280',
   fontFamily: 'var(--font-jost,sans-serif)',
 };
 

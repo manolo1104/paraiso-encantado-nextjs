@@ -12,6 +12,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'messages requerido' }, { status: 400 });
   }
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('[ai-chat] ANTHROPIC_API_KEY no configurada');
+    return NextResponse.json(
+      { error: 'El asistente de IA no está configurado (falta ANTHROPIC_API_KEY).' },
+      { status: 500 },
+    );
+  }
+
   let bookings: Awaited<ReturnType<typeof getAllBookings>>;
   let agentMetrics: Awaited<ReturnType<typeof getAgentMetrics>>;
   let quotes: Awaited<ReturnType<typeof getAllQuotes>>;
@@ -79,28 +87,42 @@ TOTAL RESERVAS EN SISTEMA: ${bookings.length}`;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const stream = await client.messages.stream({
-    model: 'claude-haiku-4-5',
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: messages.map((m: { role: string; content: string }) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content,
-    })),
-  });
-
   const encoder = new TextEncoder();
   const readable = new ReadableStream({
     async start(controller) {
       try {
+        const stream = client.messages.stream({
+          model: 'claude-haiku-4-5',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: messages.map((m: { role: string; content: string }) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+        });
+
+        let emitted = false;
         for await (const chunk of stream) {
           if (
             chunk.type === 'content_block_delta' &&
             chunk.delta.type === 'text_delta'
           ) {
+            emitted = true;
             controller.enqueue(encoder.encode(chunk.delta.text));
           }
         }
+
+        // Si el modelo no devolvió nada, avisa en vez de dejar la burbuja vacía.
+        if (!emitted) {
+          controller.enqueue(encoder.encode('No recibí respuesta del modelo. Intenta de nuevo.'));
+        }
+      } catch (err: any) {
+        // No dejes que el error se trague en silencio: regístralo y dilo en el chat.
+        console.error('[ai-chat] Error de Anthropic:', err?.status, err?.message || err);
+        const msg = err?.status === 401
+          ? '⚠️ La llave de la API de IA es inválida o expiró. Revisa ANTHROPIC_API_KEY.'
+          : '⚠️ Hubo un error al generar la respuesta. Intenta de nuevo en unos segundos.';
+        controller.enqueue(encoder.encode(msg));
       } finally {
         controller.close();
       }
@@ -110,8 +132,11 @@ TOTAL RESERVAS EN SISTEMA: ${bookings.length}`;
   return new Response(readable, {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
-      'Transfer-Encoding': 'chunked',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-transform',
+      // Evita que el proxy (Railway/Nginx) acumule el stream en un buffer.
+      // NO fijamos 'Transfer-Encoding' a mano: es inválido en HTTP/2 y puede
+      // cortar la respuesta en producción (la plataforma lo gestiona sola).
+      'X-Accel-Buffering': 'no',
     },
   });
 }

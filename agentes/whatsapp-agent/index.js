@@ -331,6 +331,23 @@ const BLOCKED_INCOMING_NUMBERS = (() => {
   return new Set(normalized);
 })();
 
+// Números que SIEMPRE reciben respuesta automática, aunque estén guardados como
+// contacto en el teléfono del hotel. Se compara por número normalizado (variantes
+// MX 52/521/10-dígitos) para no fallar por el formato del JID (@c.us vs 521…).
+const ALWAYS_RESPOND_NUMBERS = (() => {
+  const configured = (process.env.ALWAYS_RESPOND_NUMBERS || '')
+    .split(',')
+    .map(n => n.trim())
+    .filter(Boolean);
+  const defaults = ['524891251458']; // Manolo — testing del bot
+  return new Set([...configured, ...defaults].flatMap(normalizeMxCandidates));
+})();
+
+function isAlwaysRespond(jid = '') {
+  const variants = normalizeMxCandidates(extractDigitsFromJid(jid));
+  return variants.some(v => ALWAYS_RESPOND_NUMBERS.has(v));
+}
+
 const CONTROL_HOTEL_GROUP_NAME = process.env.CONTROL_HOTEL_GROUP_NAME || 'Control Hotel';
 const CONTROL_HOTEL_GROUP_ID = process.env.CONTROL_HOTEL_GROUP_ID || '';
 const HUMAN_ESCALATION_ALERT_NUMBER = (process.env.HUMAN_ESCALATION_ALERT_NUMBER || '524891007601').replace(/\D/g, '');
@@ -611,11 +628,14 @@ async function processConfirmarCommand(msg) {
       await msg.reply('Uso: /continua +52XXXXXXXXXX');
       return true;
     }
-    const chatId = normalizeChatId(digits);
-    if (pausedChats.has(chatId)) {
-      pausedChats.delete(chatId);
+    // Probar todas las variantes MX (10 dígitos, 52…, 521…) porque las pausas se
+    // guardan con la lada del JID y el operador puede escribir solo 10 dígitos.
+    const candidateChatIds = normalizeMxCandidates(digits).map(normalizeChatId);
+    const foundKey = candidateChatIds.find(c => pausedChats.has(c));
+    if (foundKey) {
+      pausedChats.delete(foundKey);
       await msg.reply(`▶️ Bot reactivado para ${digits}. El agente retomará la conversación.`);
-      console.log(`▶️  Bot reactivado manualmente para ${chatId}`);
+      console.log(`▶️  Bot reactivado manualmente para ${foundKey}`);
     } else {
       await msg.reply(`ℹ️ El bot no estaba pausado para ${digits}.`);
     }
@@ -836,16 +856,16 @@ client.on('message', async (msg) => {
   const chat = await msg.getChat();
   if (chat.isGroup) return; // Solo chats individuales por ahora
 
-  // Números que siempre reciben respuesta automática aunque estén guardados en contactos
-  const ALWAYS_RESPOND = new Set([
-    '524891251458@c.us', // Manolo — testing del bot
-  ]);
-
   // Solo atender números desconocidos (nuevos prospectos)
-  // No intervenir en chats con contactos ya guardados en la agenda del teléfono
+  // No intervenir en chats con contactos ya guardados en la agenda del teléfono,
+  // EXCEPTO los números en ALWAYS_RESPOND_NUMBERS (comparación normalizada).
   const contact = await msg.getContact();
-  console.log(`🔍 DEBUG msg.from = "${msg.from}" | isMyContact = ${contact.isMyContact}`);
-  if (contact.isMyContact && !ALWAYS_RESPOND.has(msg.from)) {
+  // En chats @lid el JID (msg.from) NO contiene el número real; usamos el número
+  // resuelto del contacto para el match de ALWAYS_RESPOND.
+  const contactNumber = String(contact?.number || contact?.id?.user || '');
+  const alwaysRespond = isAlwaysRespond(msg.from) || isAlwaysRespond(contactNumber);
+  console.log(`🔍 DEBUG msg.from = "${msg.from}" | number = "${contactNumber}" | isMyContact = ${contact.isMyContact} | alwaysRespond = ${alwaysRespond}`);
+  if (contact.isMyContact && !alwaysRespond) {
     // Registrar el mensaje pero no responder automáticamente
     if (msg.body?.trim()) addToHistory(msg.from, 'user', msg.body.trim());
     console.log(`📋 Contacto conocido ${contact.pushname || msg.from} — sin respuesta automática`);
@@ -880,10 +900,17 @@ client.on('message', async (msg) => {
   }
 
   // Detectar imagen como comprobante de pago
-  if (msg.hasMedia && !msg.body?.trim()) {
+  if (msg.hasMedia) {
     const mediaData = await msg.downloadMedia().catch(() => null);
-    if (mediaData && mediaData.mimetype?.startsWith('image/')) {
-      const result = await handlePaymentProof(msg.from, userName, msg.caption || '');
+    const isImage = Boolean(mediaData && mediaData.mimetype?.startsWith('image/'));
+    const caption = (msg.body || msg.caption || '').trim();
+    const pend = getByUser(msg.from);
+    const hasPending = Boolean(pend && pend.status === 'PENDIENTE_PAGO');
+
+    // Imagen sin texto, O imagen con caption pero con reserva pendiente → comprobante de pago.
+    // (Antes una imagen con cualquier caption se ignoraba como comprobante.)
+    if (isImage && (!caption || hasPending)) {
+      const result = await handlePaymentProof(msg.from, userName, caption);
       trackBotReply();
       markRecentBotOutgoing(msg.from);
       await safeReply(client, msg, chat, result.message);
@@ -907,12 +934,19 @@ client.on('message', async (msg) => {
           console.warn('⚠️ No se pudo reenviar imagen al equipo:', String(fwdErr?.message || '').split('\n')[0]);
         }
       }
-    } else {
+      return;
+    }
+
+    // Media sin texto que no es imagen (audio, sticker, documento): avisar y salir.
+    if (!isImage && !caption) {
       trackBotReply();
       markRecentBotOutgoing(msg.from);
       await safeReply(client, msg, chat, 'Hola 👋 Solo puedo leer mensajes de texto o imágenes de comprobante. Escríbeme tu consulta y con gusto te ayudo. 🌿');
+      return;
     }
-    return;
+
+    // Imagen con caption y sin reserva pendiente (o media con texto): continuar al
+    // flujo de texto usando el caption para que Claude responda la consulta.
   }
 
   // Ignorar mensajes sin texto (audios, stickers, documentos, etc.)
