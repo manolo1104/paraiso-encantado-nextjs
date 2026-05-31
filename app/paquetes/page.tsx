@@ -8,13 +8,13 @@ import styles from './paquetes.module.css';
 export const metadata: Metadata = {
   title: 'Paquetes Todo Incluido · Xilitla Huasteca Potosina | Paraíso Encantado',
   description:
-    'Paquetes vacacionales todo incluido en Xilitla: habitación + desayunos + tours. Escapada Romántica, Aventura Huasteca y Explorer Familiar. Precio final, sin sorpresas.',
+    'Paquetes vacacionales todo incluido en Xilitla: hotel + desayunos + tours guiados. Paquete Esencial, Aventura y Completo Huasteca. Precio final, sin sorpresas.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/paquetes',
   },
   openGraph: {
     title: 'Paquetes Todo Incluido en Xilitla | Paraíso Encantado',
-    description: 'Suite + desayunos huastecos + tours coordinados. Precio total desde $5,200 MXN por pareja. Reserva directo y ahorra hasta 15%.',
+    description: 'Hotel + desayunos huastecos + tours coordinados. Precio total desde $5,000 MXN por pareja. Reserva directo y ahorra hasta 15%.',
     url: 'https://www.paraisoencantado.com/paquetes',
     images: [{ url: 'https://www.paraisoencantado.com/images/FLOR DE LIS 1/PORTADA.jpg', alt: 'Suite Flor de Liz con spa privado — Paraíso Encantado', width: 1200, height: 630 }],
   },
@@ -33,13 +33,13 @@ const paquetesSchema = {
       position: 1,
       item: {
         '@type': 'Product',
-        name: 'Noche de Selva',
-        description: '2 noches en suite con spa privado + 2 desayunos huastecos para dos + visita coordinada a Las Pozas de Edward James + decoración romántica.',
-        image: 'https://www.paraisoencantado.com/images/FLOR DE LIS 1/PORTADA.jpg',
+        name: 'Paquete Esencial',
+        description: '1 noche en Hotel Paraíso Encantado + desayuno + tour Ruta Surrealista (Las Pozas de Edward James) con guía certificado NOM-09 + transporte y entradas.',
+        image: 'https://www.paraisoencantado.com/images/atracciones/jardin_de_edward_james.jpg',
         brand: SELLER,
         aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.9, reviewCount: 32, bestRating: 5 },
         offers: {
-          '@type': 'Offer', priceCurrency: 'MXN', price: 5200,
+          '@type': 'Offer', priceCurrency: 'MXN', price: 5000,
           priceValidUntil: '2026-12-31',
           availability: 'https://schema.org/InStock',
           url: 'https://www.paraisoencantado.com/paquetes',
@@ -52,13 +52,13 @@ const paquetesSchema = {
       position: 2,
       item: {
         '@type': 'Product',
-        name: 'Ruta de las Pozas',
-        description: '3 noches + 3 desayunos para dos + tour Las Pozas + tour Cascada de Tamul con guía local certificado + traslados.',
+        name: 'Paquete Aventura',
+        description: '2 noches en Hotel Paraíso Encantado + desayunos + tour Expedición Tamul + tour Cascadas del Meco con guías certificados NOM-09 + transporte y entradas.',
         image: 'https://www.paraisoencantado.com/images/atracciones/cascada_de_tamul.jpg',
         brand: SELLER,
         aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.9, reviewCount: 41, bestRating: 5 },
         offers: {
-          '@type': 'Offer', priceCurrency: 'MXN', price: 8900,
+          '@type': 'Offer', priceCurrency: 'MXN', price: 9000,
           priceValidUntil: '2026-12-31',
           availability: 'https://schema.org/InStock',
           url: 'https://www.paraisoencantado.com/paquetes',
@@ -71,13 +71,13 @@ const paquetesSchema = {
       position: 3,
       item: {
         '@type': 'Product',
-        name: 'Familia Huasteca',
-        description: '3 noches en suite familiar Helechos (hasta 6 personas) + desayunos + tour Las Pozas + kit bienvenida para niños.',
+        name: 'Paquete Completo Huasteca',
+        description: '3 noches en Hotel Paraíso Encantado + desayunos + 3 tours completos a elegir + transporte + entradas + fotografías y video de cada recorrido.',
         image: 'https://www.paraisoencantado.com/images/HELECHOS 1/PORTADA.jpg',
         brand: SELLER,
         aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.8, reviewCount: 27, bestRating: 5 },
         offers: {
-          '@type': 'Offer', priceCurrency: 'MXN', price: 13500,
+          '@type': 'Offer', priceCurrency: 'MXN', price: 12200,
           priceValidUntil: '2026-12-31',
           availability: 'https://schema.org/InStock',
           url: 'https://www.paraisoencantado.com/paquetes',
@@ -99,113 +99,92 @@ const paquetesBreadcrumb = {
 
 const PAQUETES = [
   {
-    id: 'selva',
+    id: 'esencial',
+    featured: false,
+    badge: 'Primera visita',
+    badgeColor: 'forest' as const,
+    name: 'Paquete Esencial',
+    tagline: 'Tu primera noche en la Huasteca.',
+    noches: 1,
+    personas: '2 personas',
+    image: '/images/atracciones/jardin_de_edward_james.jpg',
+    imageAlt: 'Las Pozas de Edward James — Paquete Esencial en Xilitla',
+    experienceImg: '/images/atracciones/jardin-edward-james-aerial.png',
+    experienceAlt: 'Vista aérea de Las Pozas de Edward James',
+    experienceLabel: 'Tour Ruta Surrealista incluido',
+    includes: [
+      '1 noche en Hotel Paraíso Encantado Xilitla',
+      'Desayuno incluido (Día 2)',
+      'Tour Ruta Surrealista completo (Edward James)',
+      'Transporte desde el hotel al tour',
+      'Guía certificado NOM-09 SECTUR',
+      'Entradas a todas las atracciones',
+    ],
+    price: 5000,
+    priceNote: 'por pareja, 1 noche',
+    saving: 'Ahorras ~$1,600 vs. reservar por separado',
+    cta: '/reservar',
+    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Esencial%20(tour%20%2B%20hotel).%20%C2%BFTienen%20disponibilidad%3F',
+  },
+  {
+    id: 'aventura',
     featured: true,
-    badge: 'Más solicitado',
+    badge: 'Más popular',
     badgeColor: 'gold' as const,
-    name: 'Noche de Selva',
-    tagline: 'La selva, el spa y la persona que amas. Nada más.',
+    name: 'Paquete Aventura',
+    tagline: 'El mejor dúo de la región: Tamul + Cascadas del Meco.',
     noches: 2,
     personas: '2 personas',
-    image: '/images/FLOR DE LIS 1/PORTADA.jpg',
-    imageAlt: 'Suite Flor de Liz con spa privado al amanecer — Paquete Noche de Selva',
-    experienceImg: '/images/atracciones/jardin_de_edward_james.jpg',
-    experienceAlt: 'Las Pozas de Edward James incluidas en el paquete',
-    experienceLabel: 'Visita Las Pozas incluida',
+    image: '/images/atracciones/cascada_de_tamul.jpg',
+    imageAlt: 'Cascada de Tamul — Paquete Aventura',
+    experienceImg: '/images/atracciones/jardin-edward-james-aerial.png',
+    experienceAlt: 'Huasteca Potosina — Paquete Aventura',
+    experienceLabel: 'Tamul + Meco incluidos',
     includes: [
-      '2 noches en suite con spa privado al aire libre',
-      '2 desayunos huastecos para dos (El Papán)',
-      'Visita a Las Pozas de Edward James coordinada',
-      'Decoración romántica en suite (flores y velas)',
-      'Botella de vino de bienvenida',
-      'Check-in anticipado sujeto a disponibilidad',
+      '2 noches en Hotel Paraíso Encantado Xilitla',
+      'Desayunos ambos días',
+      'Tour Expedición Tamul completo',
+      'Tour Cascadas del Meco completo',
+      'Transporte desde el hotel a cada tour',
+      'Guías certificados NOM-09 SECTUR',
+      'Entradas a todas las atracciones',
     ],
-    price: 5200,
+    price: 9000,
     priceNote: 'por pareja, 2 noches',
-    saving: 'Ahorras ~$800 vs. reservar por separado',
+    saving: 'Ahorras ~$4,400 vs. reservar por separado',
     cta: '/reservar',
-    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Noche%20de%20Selva.%20%C2%BFTienen%20disponibilidad%3F',
+    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Aventura%20(Tamul%20%2B%20Meco).%20%C2%BFTienen%20disponibilidad%3F',
   },
   {
-    id: 'pozas',
+    id: 'completo',
     featured: false,
-    badge: 'La experiencia completa',
-    badgeColor: 'forest' as const,
-    name: 'Ruta de las Pozas',
-    tagline: 'Tres días. Dos cascadas. Una Huasteca que no olvidarás.',
+    badge: 'Experiencia total',
+    badgeColor: 'sage' as const,
+    name: 'Paquete Completo Huasteca',
+    tagline: 'La experiencia definitiva: tres días, tres tours.',
     noches: 3,
     personas: '2 personas',
-    image: '/images/atracciones/cascada_de_tamul.jpg',
-    imageAlt: 'Cascada de Tamul — Tour incluido en el Paquete Ruta de las Pozas',
-    experienceImg: '/images/atracciones/jardin-edward-james-aerial.png',
-    experienceAlt: 'Vista aérea Las Pozas de Edward James',
-    experienceLabel: 'Las Pozas + Tamul incluidos',
-    includes: [
-      '3 noches en suite (libre elección)',
-      '3 desayunos huastecos para dos (El Papán)',
-      'Tour a Las Pozas de Edward James con guía local',
-      'Tour a Cascada de Tamul (canoa incluida)',
-      'Traslado desde/hacia terminal de Xilitla',
-      'Mapa y guía impresa de la región',
-    ],
-    price: 8900,
-    priceNote: 'por pareja, 3 noches',
-    saving: 'Ahorras ~$1,400 vs. reservar por separado',
-    cta: '/reservar',
-    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Ruta%20de%20las%20Pozas.%20%C2%BFTienen%20disponibilidad%3F',
-  },
-  {
-    id: 'familiar',
-    featured: false,
-    badge: 'Ideal para familias',
-    badgeColor: 'sage' as const,
-    name: 'Familia Huasteca',
-    tagline: 'El viaje que tus hijos van a contar de adultos.',
-    noches: 3,
-    personas: '4–6 personas',
     image: '/images/HELECHOS 1/PORTADA.jpg',
-    imageAlt: 'Suite Helechos familiar — hasta 6 personas, acceso a piscina',
+    imageAlt: 'Suite Helechos — Paquete Completo Huasteca',
     experienceImg: '/images/atracciones/tamasopo.jpg',
     experienceAlt: 'Cascadas de Tamasopo — Huasteca Potosina',
-    experienceLabel: 'Tour Las Pozas para la familia',
+    experienceLabel: '3 tours a elegir + fotos y video',
     includes: [
-      '3 noches en suite familiar Helechos (hasta 6 personas)',
-      'Desayunos huastecos para toda la familia',
-      'Tour a Las Pozas de Edward James',
-      'Kit de bienvenida para niños',
-      'Recomendaciones personalizadas de rutas familiares',
-      'Estacionamiento privado gratuito',
+      '3 noches en Hotel Paraíso Encantado Xilitla',
+      'Desayunos los 3 días',
+      '3 tours completos a elegir',
+      'Transporte desde el hotel a cada tour',
+      'Guías certificados NOM-09 SECTUR',
+      'Entradas a todas las atracciones',
+      'Fotografías y video de cada recorrido',
     ],
-    price: 13500,
-    priceNote: 'por familia de 4, 3 noches',
-    saving: 'Ahorras ~$2,100 vs. reservar por separado',
+    price: 12200,
+    priceNote: 'por pareja, 3 noches',
+    saving: 'Ahorras ~$6,000 vs. reservar por separado',
     cta: '/reservar',
-    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Familia%20Huasteca.%20%C2%BFTienen%20disponibilidad%3F',
+    waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Completo%20Huasteca.%20%C2%BFTienen%20disponibilidad%3F',
   },
 ];
-
-const PAQUETE_TEMPORADA = {
-  id: 'temporada',
-  badge: 'EDICIÓN LIMITADA',
-  name: 'Selva en Silencio',
-  tagline: 'Temporada baja: el hotel más vacío, la naturaleza más presente.',
-  noches: 3,
-  personas: '2 personas',
-  image: '/images/Areas comunes/DSC09447-HDR.jpg',
-  imageAlt: 'Jardín y piscina del hotel en temporada baja — Paquete Selva en Silencio',
-  includes: [
-    '3 noches en la suite de tu elección',
-    '3 desayunos huastecos para dos',
-    'Tour a Las Pozas con grupo reducido (máx. 6 personas)',
-    'Sesión fotográfica en Las Pozas al amanecer',
-    'Late check-out hasta las 2 PM incluido',
-    'Precio especial de temporada baja',
-  ],
-  price: 6900,
-  priceNote: 'por pareja, 3 noches · temporada baja',
-  saving: 'Disponible oct–nov y ene–feb · Precio especial',
-  waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Selva%20en%20Silencio.%20%C2%BFEst%C3%A1%20disponible%3F',
-};
 
 const FAQ = [
   {
@@ -222,7 +201,7 @@ const FAQ = [
   },
   {
     q: '¿Los niños pagan igual que los adultos?',
-    a: 'Niños menores de 5 años son gratuitos. De 6 a 11 años pagan 50% del costo de adulto adicional. Para el paquete Familia Huasteca el precio ya contempla 2 adultos y 2 niños de hasta 12 años.',
+    a: 'Niños menores de 5 años son gratuitos. De 6 a 11 años pagan 50% del costo de adulto adicional. Si viajas con niños o en grupo, escríbenos y te armamos el paquete a la medida.',
   },
   {
     q: '¿Cómo reservo un paquete?',
@@ -347,46 +326,6 @@ export default function PaquetesPage() {
               ))}
             </div>
 
-            {/* PAQUETE TEMPORADA — cierre destacado */}
-            <div className={styles.cardTemporada} data-reveal>
-              <div className={styles.cardTemporadaImg}>
-                <Image
-                  src={PAQUETE_TEMPORADA.image}
-                  alt={PAQUETE_TEMPORADA.imageAlt}
-                  fill sizes="(max-width: 768px) 100vw, 40vw" quality={80}
-                  style={{ objectFit: 'cover' }}
-                />
-                <div className={styles.cardTemporadaOverlay} />
-              </div>
-              <div className={styles.cardTemporadaBody}>
-                <span className={styles.badgeTemporada}>{PAQUETE_TEMPORADA.badge}</span>
-                <h3 className={styles.cardTemporadaName}>{PAQUETE_TEMPORADA.name}</h3>
-                <p className={styles.cardTemporadaTagline}>{PAQUETE_TEMPORADA.tagline}</p>
-                <div className={styles.cardMeta} style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  <span><Calendar size={13} strokeWidth={1.8} />{PAQUETE_TEMPORADA.noches} noches</span>
-                  <span><Users size={13} strokeWidth={1.8} />{PAQUETE_TEMPORADA.personas}</span>
-                </div>
-                <ul className={styles.includes} style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  {PAQUETE_TEMPORADA.includes.map((item) => (
-                    <li key={item}>
-                      <Check size={13} strokeWidth={2.5} style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <div className={styles.cardTemporadaPricing}>
-                  <span className={styles.cardTemporadaPrice}>${PAQUETE_TEMPORADA.price.toLocaleString('es-MX')} MXN</span>
-                  <span className={styles.cardTemporadaPriceNote}>{PAQUETE_TEMPORADA.priceNote}</span>
-                </div>
-                <a
-                  href={`https://wa.me/524891007679?text=${PAQUETE_TEMPORADA.waMsg}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className={styles.cardTemporadaCta}
-                >
-                  Consultar disponibilidad
-                </a>
-              </div>
-            </div>
           </div>
         </section>
 

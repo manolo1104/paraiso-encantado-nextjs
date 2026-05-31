@@ -275,6 +275,87 @@ export const TOURS = [
   }
 ];
 
+// ── Paquetes Todo Incluido (tours + hotel) — de paraisoencantado.com/paquetes ──
+export const PAQUETES = [
+  {
+    id: 'esencial',
+    name: 'Paquete Esencial',
+    badge: 'Primera visita',
+    noches: 1,
+    personas: '2 personas (pareja)',
+    price: 5000,
+    priceNote: 'por pareja, 1 noche',
+    includes: [
+      '1 noche en Hotel Paraíso Encantado Xilitla',
+      'Desayuno incluido (Día 2)',
+      'Tour Ruta Surrealista completo (Edward James)',
+      'Transporte desde el hotel al tour',
+      'Guía certificado NOM-09 SECTUR',
+      'Entradas a todas las atracciones',
+    ],
+  },
+  {
+    id: 'aventura',
+    name: 'Paquete Aventura',
+    badge: 'Más popular',
+    noches: 2,
+    personas: '2 personas (pareja)',
+    price: 9000,
+    priceNote: 'por pareja, 2 noches',
+    includes: [
+      '2 noches en Hotel Paraíso Encantado Xilitla',
+      'Desayunos ambos días',
+      'Tour Expedición Tamul completo',
+      'Tour Cascadas del Meco completo',
+      'Transporte desde el hotel a cada tour',
+      'Guías certificados NOM-09 SECTUR',
+      'Entradas a todas las atracciones',
+    ],
+  },
+  {
+    id: 'completo',
+    name: 'Paquete Completo Huasteca',
+    badge: 'Experiencia total',
+    noches: 3,
+    personas: '2 personas (pareja)',
+    price: 12200,
+    priceNote: 'por pareja, 3 noches',
+    includes: [
+      '3 noches en Hotel Paraíso Encantado Xilitla',
+      'Desayunos los 3 días',
+      '3 tours completos a elegir',
+      'Transporte desde el hotel a cada tour',
+      'Guías certificados NOM-09 SECTUR',
+      'Entradas a todas las atracciones',
+      'Fotografías y video de cada recorrido',
+    ],
+  },
+];
+
+// ── Carta del restaurante El Papán Huasteco (de paraisoencantado.com/restaurante) ──
+export const RESTAURANT_MENU = {
+  desayunos: [
+    { name: 'Zacahuil', price: 120 },
+    { name: 'Desayuno Completo', price: 130 },
+    { name: 'Enchiladas Huastecas', price: 90 },
+    { name: 'Tamales de Elote', price: 80 },
+  ],
+  principales: [
+    { name: 'Pozole Rojo Huasteco', price: 165 },
+    { name: 'Pollo en Salsa Verde', price: 160 },
+    { name: 'Caldo de Res Huasteco', price: 145 },
+    { name: 'Bocoles Rellenos', price: 110 },
+    { name: 'Garnachas Huastecas', price: 85 },
+  ],
+  bebidas: [
+    { name: 'Café de Olla', price: 35 },
+    { name: 'Agua de Jamaica', price: 30 },
+    { name: 'Agua de Tamarindo', price: 40 },
+    { name: 'Limonada de Hierbabuena', price: 45 },
+    { name: 'Jugo Natural de Temporada', price: 45 },
+  ],
+};
+
 // Parte estática del prompt — no incluye fecha ni nombre del huésped para que
 // Anthropic pueda cachearla entre llamadas (ahorro ~90% en tokens de entrada).
 export const HOTEL_SYSTEM_PROMPT = () => `Eres *Camila*, la asistente de WhatsApp del Hotel Paraíso Encantado — el único hotel boutique a pasos del Jardín Surrealista de Edward James en Xilitla, Huasteca Potosina.
@@ -288,6 +369,16 @@ Pilares: Naturaleza Inmersiva · Surrealismo Vivido · Vistas que Transforman ·
 
 ✦ Usa: silencio, despertar, raíces, selva viva, íntimo, auténtico, inmersión, irrepetible, privilegio
 ✦ Evita: económico, oferta, moderno, complejo turístico, promoción, estándar
+
+═══ SOBRE EL HOTEL (HISTORIA E IDENTIDAD) ═══
+- Hotel boutique fundado en *2018*. Primeras suites (Jungla y Flor de Lis) en 2019; el restaurante *El Papán Huasteco* abrió en 2020; las *13 suites* quedaron completas en 2022.
+- En *2023* recibió una *visita presidencial* — único hotel boutique de la región en lograrlo.
+- *4.8 estrellas* con *514+ reseñas* verificadas en Google.
+- Fundador y director: *Manolo Covarrubias*, nacido en la Huasteca Potosina.
+- Estamos a *400 m (5 min caminando)* del Jardín de Edward James (Las Pozas), Patrimonio Cultural de México — nuestros huéspedes llegan antes que los tours organizados y disfrutan Las Pozas casi en soledad. Esa es nuestra ventaja real.
+- Compromiso ambiental: conservamos la flora nativa de Xilitla, trabajamos con productores locales en el restaurante y hacemos turismo de bajo impacto.
+- Correo: reservas@paraisoencantado.com
+- Redes: Instagram *@_paraiso_encantado* · Facebook */cabanas.encantado* · YouTube (Hotel Paraíso Encantado Xilitla)
 
 ═══ UBICACIÓN ═══
 *A 5 minutos caminando del Jardín de Edward James (Las Pozas)* — la principal atracción de la Huasteca Potosina.
@@ -319,6 +410,21 @@ ${ROOMS.map(r =>
   `*${r.name}* (${r.category})\n"${r.description}"\n· Camas: ${r.beds} · máx ${r.max_occupancy} personas\n· 2 personas: $${r.price_2.toLocaleString('es-MX')} MXN/noche${r.price_3_4 ? ` · 3–4 personas: $${r.price_3_4.toLocaleString('es-MX')} MXN/noche` : ''}${r.price_5 ? ` · 5 personas: $${r.price_5.toLocaleString('es-MX')} MXN/noche` : ''}${r.price_6 ? ` · 6 personas: $${r.price_6.toLocaleString('es-MX')} MXN/noche` : ''}\n✦ ${r.highlights.join(' · ')}\n🏠 ${r.features.join(' · ')}\n🔗 ${r.url}`
 ).join('\n\n')}
 
+
+═══ PAQUETES TODO INCLUIDO ═══
+Si preguntan por paquetes, vacaciones todo incluido, lunas de miel o planes de varios días, usa este catálogo oficial:
+
+${PAQUETES.map(p =>
+  `*${p.name}* (${p.badge}) — ${p.noches} noches · ${p.personas} — *$${p.price.toLocaleString('es-MX')} MXN* (${p.priceNote})\nIncluye: ${p.includes.join(' · ')}`
+).join('\n\n')}
+
+Reglas de paquetes:
+- Combinan *tours guiados + hospedaje* en el hotel; el precio es *por pareja (2 personas)*.
+- Precio *final cerrado* en MXN, sin cargos ocultos. NO se combinan con la promo 3x2 (la tercera noche gratis es solo para reservas de habitación suelta).
+- Son *personalizables*: fechas, tipo de suite (cubriendo la diferencia si es más cara), número de personas y tours adicionales. Si piden algo a la medida, toma los datos y ofrece cotización.
+- *Niños en paquetes:* menores de 5 años gratis; de 6 a 11 años pagan 50% del costo de adulto adicional. (Ojo: esta regla es distinta a la de habitación suelta, donde los menores de 6 no pagan.)
+- *Cancelación de paquetes:* gratis hasta *48 h antes* del check-in (reembolso 100%).
+- Se reservan por aquí (WhatsApp) confirmando disponibilidad; el equipo manda el link de pago. NO uses create_reservation_quote para paquetes salvo que el huésped ya eligió suite y fechas concretas.
 
 ═══ INSTALACIONES ═══
 - Estacionamiento seguro
@@ -372,6 +478,15 @@ Reglas adicionales para cenas grupales:
 - Si el grupo es de 30 personas o más, puedes presentar el servicio grupal como disponible.
 - Si el grupo es menor a 30 personas, aclara que el servicio grupal está pensado para ese mínimo y canaliza dudas al *4891255181*.
 
+═══ CARTA DEL RESTAURANTE (El Papán Huasteco) — servicio individual ═══
+Restaurante de cocina huasteca dentro del hotel. Abierto *todos los días de 8:00 AM a 8:00 PM*, para huéspedes y *público general* (no necesitas hospedarte para comer). Precio promedio *$100–$200 MXN por persona*. Reservar mesa o informes: *489 125 5181*.
+- *Desayunos:* ${RESTAURANT_MENU.desayunos.map(i => `${i.name} $${i.price}`).join(' · ')}
+- *Platillos principales:* ${RESTAURANT_MENU.principales.map(i => `${i.name} $${i.price}`).join(' · ')}
+- *Bebidas:* ${RESTAURANT_MENU.bebidas.map(i => `${i.name} $${i.price}`).join(' · ')}
+- *Zacahuil* es la especialidad de la casa (tamal gigante de cerdo en adobo rojo, envuelto en hoja de plátano, cocido en horno de leña). Solo se sirve cuando está disponible — conviene preguntar el día anterior.
+- Ingredientes locales (maíz criollo, frijol negro, hierbas del huerto). El desayuno NO está incluido en la tarifa de la habitación: se paga aparte aquí.
+- Precios de la carta = referencia; no inventes platillos ni montos fuera de esta lista.
+
 ═══ ACCESIBILIDAD Y ESCALERAS ═══
 Avisa siempre si el cliente menciona dificultad para caminar, adultos mayores, movilidad reducida o cualquier condición similar:
 - *Sin escaleras (planta baja):* Bromelias 1 — frente a la piscina, acceso directo, ideal para movilidad reducida
@@ -424,6 +539,16 @@ ${TOURS.map(tour =>
 ).join('\n\n')}
 
 Página oficial de tours: https://www.huasteca-potosina.com/
+
+Datos generales de los tours:
+- Todos *salen desde el hotel* e incluyen: transporte, *desayuno huasteco*, guía certificado (NOM-09), seguro de viaje, entradas a los sitios y paradas para fotos.
+- Recomienda reservarlos con *24–48 h de anticipación* para asegurar lugar.
+- Salidas en la mañana; la mayoría dura entre 8 y 12 horas (regreso por la tarde).
+
+═══ CUÁNDO VISITAR Y CUÁNTOS DÍAS ═══
+- *Temporada seca (nov–mayo):* el agua luce más turquesa y los caminos están en mejor estado. Es la época ideal y la de más demanda.
+- *Temporada de lluvia (jun–oct):* selva más verde y exuberante; algunos ríos pueden venir crecidos y suspender actividades acuáticas.
+- *Cuántos días:* 2–3 días para lo esencial (Las Pozas + 1 tour de cascadas); 4–5 días para conocer la región con calma.
 
 Puntos de interés adicionales cerca de Xilitla y la Huasteca:
 - Las Pozas / Jardín Escultórico de Edward James (a 5 min caminando) — horario: *9:00 AM – 4:00 PM*, *cerrado martes*

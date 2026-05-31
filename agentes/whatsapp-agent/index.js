@@ -567,6 +567,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 const client = new Client({
   authStrategy: new LocalAuth({ clientId: 'paraiso-hotel' }),
   puppeteer: {
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
