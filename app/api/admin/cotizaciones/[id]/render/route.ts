@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { getAllQuotes } from '@/lib/admin/sheets-admin';
-import { BOOKING_ROOMS } from '@/lib/booking';
+import { BOOKING_ROOMS, getRoomBasePrice } from '@/lib/booking';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +39,7 @@ function parsePaquetes(notas: string): { nombre: string; habitacion: string; noc
   if (idx === -1) return [];
   try { return JSON.parse(notas.slice(idx + 12).split('||HABS||')[0]); } catch { return []; }
 }
-function parseHabs(notas: string): { suite: string; huespedes: number }[] | null {
+function parseHabs(notas: string): { suite: string; huespedes: number; precioOverride?: number }[] | null {
   const idx = notas.indexOf('||HABS||');
   if (idx === -1) return null;
   try { return JSON.parse(notas.slice(idx + 8)); } catch { return null; }
@@ -90,26 +90,39 @@ export async function GET(
   const paquetes = parsePaquetes(q.notas || '');
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
-  const habsTotal = q.precioTotal - toursTotal - paquetesTotal;
-  const habsPerRoom = roomNames.length > 0 ? Math.round(habsTotal / roomNames.length / noches) : 1500;
-
   const habsData = parseHabs(q.notas || '');
-  const rooms = roomNames.map(name => {
-    const guestsForRoom = habsData
-      ? (habsData.find(h => h.suite === name)?.huespedes ?? 2)
-      : inferGuests(name, habsPerRoom);
-    return {
-      name,
-      category: SUITE_CATEGORY[name] ?? 'Suite Boutique',
-      guests: guestsForRoom,
-      nights: noches,
-      rate: habsPerRoom,
-      subtotal: habsPerRoom * noches,
-    };
-  });
-  const totalGuests = habsData
-    ? habsData.reduce((s, h) => s + h.huespedes, 0)
-    : rooms.reduce((s, r) => s + r.guests, 0);
+  const habsTotal = q.precioTotal - toursTotal - paquetesTotal;
+  // Tarifa promedio: solo se usa como respaldo para cotizaciones viejas
+  // que no guardan datos por habitación (||HABS||).
+  const avgRate = roomNames.length > 0 ? Math.round(habsTotal / roomNames.length / noches) : 1500;
+
+  // Renglones por habitación con la tarifa REAL por noche cuando está disponible.
+  // Antes se promediaba el total entre todas las habitaciones, lo que mostraba
+  // tarifas incorrectas cuando las suites tenían precios distintos.
+  const rooms = (habsData && habsData.length > 0)
+    ? habsData.map(h => {
+        const room = BOOKING_ROOMS.find(r => r.name === h.suite);
+        const rate = h.precioOverride ?? (room ? getRoomBasePrice(room, h.huespedes) : avgRate);
+        return {
+          name: h.suite,
+          category: SUITE_CATEGORY[h.suite] ?? 'Suite Boutique',
+          guests: h.huespedes,
+          nights: noches,
+          rate,
+          subtotal: rate * noches,
+        };
+      })
+    : roomNames.map(name => ({
+        name,
+        category: SUITE_CATEGORY[name] ?? 'Suite Boutique',
+        guests: inferGuests(name, avgRate),
+        nights: noches,
+        rate: avgRate,
+        subtotal: avgRate * noches,
+      }));
+
+  const habsComputed = rooms.reduce((s, r) => s + r.subtotal, 0);
+  const totalGuests = rooms.reduce((s, r) => s + r.guests, 0);
 
   // Add tours as extra line items
   for (const t of tours) {
@@ -128,6 +141,11 @@ export async function GET(
     });
   }
 
+  // Subtotal bruto (suma real de renglones). Si el total guardado es menor,
+  // la diferencia se muestra como "Descuento" para que las cuentas cuadren.
+  const grossSubtotal = habsComputed + toursTotal + paquetesTotal;
+  const discount = grossSubtotal > q.precioTotal ? grossSubtotal - q.precioTotal : 0;
+
   const data = {
     folio: q.id,
     fechaEmision: fmtToday(),
@@ -145,9 +163,9 @@ export async function GET(
     },
     rooms,
     pricing: {
-      subtotal:      q.precioTotal,
-      discount:      0,
-      discountLabel: '',
+      subtotal:      discount > 0 ? grossSubtotal : q.precioTotal,
+      discount,
+      discountLabel: discount > 0 ? 'Descuento' : '',
       total:         q.precioTotal,
       currency:      'MXN',
     },

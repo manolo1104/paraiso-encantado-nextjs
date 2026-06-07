@@ -8,7 +8,7 @@ import styles from './hotel-las-pozas.module.css';
 export const metadata: Metadata = {
   title: 'Hotel Cerca de Las Pozas de Edward James · Xilitla | Paraíso Encantado',
   description:
-    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. A 5 minutos caminando del Jardín Surrealista. 13 suites con spa privado desde $1,200 MXN. Reserva directa.',
+    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. A 5 minutos caminando del Jardín Surrealista. 13 suites con spa privado desde $1,500 MXN. Reserva directa.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/hotel-cerca-de-las-pozas',
   },
@@ -320,7 +320,7 @@ export default function HotelCercaDeLasPozasPage() {
               </div>
               <div className={styles.faqItem}>
                 <dt>¿Cuánto cuesta hospedarse en Paraíso Encantado?</dt>
-                <dd>Las suites comienzan desde $1,200 MXN por noche para 2 personas. Al reservar directamente en paraisoencantado.com ahorras hasta 15% vs. Booking o Expedia.</dd>
+                <dd>Las suites comienzan desde $1,500 MXN por noche para 2 personas. Al reservar directamente en paraisoencantado.com ahorras hasta 15% vs. Booking o Expedia.</dd>
               </div>
               <div className={styles.faqItem}>
                 <dt>¿Tienen piscina compartida?</dt>

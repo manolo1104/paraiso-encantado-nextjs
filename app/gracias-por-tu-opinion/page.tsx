@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = { title: 'Gracias por tu opinión — Paraíso Encantado' };
+export const metadata: Metadata = {
+  title: 'Gracias por tu opinión — Paraíso Encantado',
+  robots: { index: false, follow: false },
+};
 
 const STARS = ['', '★', '★★', '★★★', '★★★★', '★★★★★'];
 const MESSAGES: Record<number, { title: string; sub: string }> = {

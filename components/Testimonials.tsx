@@ -95,15 +95,15 @@ export default function Testimonials() {
           Lo Que Dicen <em>Quienes Ya Lo Vivieron</em>
         </h2>
         <div className={styles.ratingSummary}>
-          <div className={styles.ratingNumber} aria-label="Calificación 4.8 de 5">
-            4.8
+          <div className={styles.ratingNumber} aria-label="Calificación 4.6 de 5">
+            4.6
           </div>
           <div className={styles.ratingStars} aria-hidden="true">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star key={i} size={18} strokeWidth={0} fill="currentColor" />
             ))}
           </div>
-          <p>Basado en 514 reseñas verificadas en Google</p>
+          <p>Basado en 519 reseñas verificadas en Google</p>
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export default function Testimonials() {
           rel="noopener noreferrer"
           className={styles.reviewsLink}
         >
-          Ver las 514 reseñas en Google →
+          Ver las 519 reseñas en Google →
         </a>
       </div>
     </section>

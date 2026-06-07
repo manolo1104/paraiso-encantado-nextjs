@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     url: 'https://www.paraisoencantado.com/galeria',
     images: [
       {
-        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09471-HDR.jpg',
+        url: '/og/galeria.jpg',
         width: 1200,
         height: 630,
         alt: 'Atardecer en el Hotel Paraíso Encantado — Xilitla, Huasteca Potosina',

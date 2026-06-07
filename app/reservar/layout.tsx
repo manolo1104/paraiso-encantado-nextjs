@@ -3,16 +3,16 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Reservar Suite | Paraíso Encantado · Desde $1,200 MXN/noche sin comisiones',
+  title: 'Reservar Suite | Paraíso Encantado · Desde $1,500 MXN/noche sin comisiones',
   description:
-    'Reserva directa sin comisiones desde $1,200 MXN/noche. 13 suites boutique con spa privado en Xilitla, Huasteca Potosina. Confirmación instantánea, cancelación gratuita hasta 48h.',
+    'Reserva directa sin comisiones desde $1,500 MXN/noche. 13 suites boutique con spa privado en Xilitla, Huasteca Potosina. Confirmación instantánea, cancelación gratuita hasta 48h.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/reservar',
   },
   openGraph: {
     title: 'Reservar Suite | Paraíso Encantado · Xilitla',
     description:
-      'Reserva directa desde $1,200 MXN/noche. 13 suites con spa privado a 5 min del Jardín de Edward James. Sin comisiones de intermediarios.',
+      'Reserva directa desde $1,500 MXN/noche. 13 suites con spa privado a 5 min del Jardín de Edward James. Sin comisiones de intermediarios.',
     url: 'https://www.paraisoencantado.com/reservar',
     images: [
       {

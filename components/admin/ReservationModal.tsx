@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Loader2, AlertTriangle, CheckCircle, Plus, MessageSquare, Mail, Download, Pencil } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
+import { BOOKING_ROOMS, getRoomBasePrice } from '@/lib/booking';
 import { TOURS_CATALOG, PAQUETES_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import type { TourItem } from '@/lib/booking-html';
 import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
@@ -16,28 +17,11 @@ const SUITES = [
 
 interface HabItem { suite: string; huespedes: number; precioOverride?: number }
 
-const PRECIO_TIERS: Record<string, Record<number, number>> = {
-  'Jungla':              { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite LindaVista':    { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite Flor de Liz 1': { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite Flor de Liz 2': { 2: 1900, 3: 2400, 4: 2400 },
-  'Suite Lajas':         { 2: 1900, 3: 2400, 4: 2400 },
-  'Helechos 1':          { 2: 1900, 3: 2400, 4: 2400, 5: 2700, 6: 3000 },
-  'Helechos 2':          { 2: 1900, 3: 2400, 4: 2400, 5: 2700, 6: 3000 },
-  'Lirios 1':            { 2: 1500, 3: 1900, 4: 1900 },
-  'Lirios 2':            { 2: 1500, 3: 1900, 4: 1900 },
-  'Orquídeas 2':         { 2: 1500 },
-  'Orquídeas Doble':     { 2: 1500, 3: 1900, 4: 1900 },
-  'Orquídeas 3':         { 2: 1500 },
-  'Bromelias':           { 2: 1500, 3: 1900, 4: 1900 },
-};
-
 function getPrecioNoche(suite: string, personas: number): number {
-  const tiers = PRECIO_TIERS[suite] || { 2: 1900 };
-  const keys = Object.keys(tiers).map(Number).sort((a, b) => a - b);
-  let precio = tiers[keys[0]];
-  for (const k of keys) { if (personas >= k) precio = tiers[k]; }
-  return precio;
+  // Fuente única de precios: lib/booking.ts (antes había una copia local de tarifas
+  // que podía desincronizarse si cambiaban los precios en booking.ts).
+  const room = BOOKING_ROOMS.find(r => r.name === suite);
+  return room ? getRoomBasePrice(room, personas) : 1900;
 }
 
 function getHabPrecio(hab: HabItem): number {
@@ -223,11 +207,12 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
     if (booking?.habitaciones) {
       const suiteList = booking.habitaciones.split(', ').filter(Boolean).map(s => s.trim());
-      // Bug fix: use booking.huespedes for single-room, distribute for multi-room
-      const guestsPerRoom = suiteList.length === 1
-        ? Math.min(booking.huespedes || 2, 8)
-        : 2;
-      return suiteList.map(s => ({ suite: s, huespedes: guestsPerRoom }));
+      // Distribuye el total real de huéspedes entre las habitaciones (las reservas no
+      // guardan el reparto por cuarto). Así el total no cambia al editar.
+      const total = booking.huespedes || suiteList.length * 2;
+      const base = Math.floor(total / suiteList.length);
+      const remainder = total % suiteList.length;
+      return suiteList.map((s, i) => ({ suite: s, huespedes: Math.max(1, base + (i < remainder ? 1 : 0)) }));
     }
     // Pre-fill room from calendar click if provided
     const startSuite = defaultRoom && SUITES.includes(defaultRoom) ? defaultRoom : SUITES[3];

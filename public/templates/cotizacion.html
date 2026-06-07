@@ -52,9 +52,10 @@
   body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
 
   .page{
-    width:794px;height:1123px;
+    width:794px;min-height:1123px;
     background:var(--cream);
-    position:relative;overflow:hidden;
+    position:relative;
+    display:flex;flex-direction:column;
     box-shadow:0 30px 80px rgba(30,48,18,.2),0 4px 16px rgba(30,48,18,.08);
   }
 
@@ -158,9 +159,11 @@
   }
   .terms strong{color:var(--forest);font-weight:400}
 
-  /* CTA block — replaces "footer area" with action */
+  /* CTA block — replaces "footer area" with action.
+     margin-top:auto lo empuja al fondo cuando la cotización es corta;
+     cuando es larga (muchas suites) fluye después del contenido sin encimarse. */
   .cta{
-    position:absolute;left:48px;right:48px;bottom:60px;
+    margin:auto 48px 18px;
     display:grid;grid-template-columns:1fr 1fr;gap:14px;
   }
   .cta a{
@@ -176,7 +179,6 @@
 
   /* Footer */
   .foot{
-    position:absolute;left:0;right:0;bottom:0;
     background:var(--forest);color:rgba(250,248,245,.85);
     padding:10px 48px;
     display:flex;justify-content:space-between;align-items:center;

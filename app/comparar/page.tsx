@@ -8,6 +8,14 @@ import styles from './comparar.module.css';
 export const metadata = {
   title: 'Comparar Suites | Hotel Paraíso Encantado · Xilitla',
   description: 'Compara las suites de Paraíso Encantado lado a lado para elegir la perfecta para tu escapada.',
+  alternates: { canonical: 'https://www.paraisoencantado.com/comparar' },
+  openGraph: {
+    title: 'Comparar Suites | Hotel Paraíso Encantado · Xilitla',
+    description: 'Compara las suites de Paraíso Encantado lado a lado para elegir la perfecta para tu escapada.',
+    url: 'https://www.paraisoencantado.com/comparar',
+    type: 'website',
+    images: [{ url: 'https://www.paraisoencantado.com/og/home.jpg', width: 1200, height: 630, alt: 'Suites del Hotel Paraíso Encantado — Xilitla, Huasteca Potosina' }],
+  },
 };
 
 interface Row {

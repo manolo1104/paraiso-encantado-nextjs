@@ -165,296 +165,6 @@ const SUITE_IMAGES: Record<string, string> = {
   'Helechos 2': '/images/HELECHOS 2/PORTADA.jpg',
 };
 
-const SUITE_IMAGES_2: Record<string, string> = {
-  'Suite Flor de Liz 1': '/images/FLOR DE LIS 1/DSCF1191.jpg',
-  'Suite Flor de Liz 2': '/images/FLOR DE LIS 2/Copia de FDL2.jpg',
-  'Suite LindaVista': '/images/LINDAVISTA/Copia de DSC09539-HDR.jpg',
-  'Jungla': '/images/JUNGLA/DSCF1065.jpg',
-  'Suite Lajas': '/images/LAJAS/Copia de DSC09589-HDR.jpg',
-  'Lirios 1': '/images/LIRIOS 1/Copia de DSC09524-HDR.jpg',
-  'Lirios 2': '/images/LIRIOS 2/Copia de DSC09483-HDR.jpg',
-  'Orquídeas 2': '/images/ORQUIDEAS 2/Copia de DSC09568-HDR.jpg',
-  'Orquídeas Doble': '/images/ORQUIDEAS DOBLE/Copia de DSC09602-HDR.jpg',
-  'Orquídeas 3': '/images/ORQUIDEAS 3/Copia de DSC09567-HDR.jpg',
-  'Bromelias': '/images/BROMELIAS 1/Copia de DSC09385-HDR.jpg',
-  'Helechos 1': '/images/HELECHOS 1/Copia de DSC09461-HDR 2.jpg',
-  'Helechos 2': '/images/HELECHOS 2/Copia de DSC09461-HDR.jpg',
-};
-
-const SUITE_IMAGES_3: Record<string, string> = {
-  'Suite Flor de Liz 1': '/images/FLOR DE LIS 1/DSCF1312.jpeg',
-  'Suite Flor de Liz 2': '/images/FLOR DE LIS 2/DSCF1191.jpg',
-  'Suite LindaVista': '/images/LINDAVISTA/Copia de DSC09569.jpg',
-  'Jungla': '/images/JUNGLA/DSCF1078.jpg',
-  'Suite Lajas': '/images/LAJAS/Copia de DSC09610-HDR.jpg',
-  'Lirios 1': '/images/LIRIOS 1/Copia de DSCF1620.jpg',
-  'Lirios 2': '/images/LIRIOS 2/Copia de DSC09489-2.jpg',
-  'Orquídeas 2': '/images/ORQUIDEAS 2/DSCF1607.jpg',
-  'Orquídeas Doble': '/images/ORQUIDEAS DOBLE/Copia de DSCF1607.jpg',
-  'Orquídeas 3': '/images/ORQUIDEAS 3/PORTADA.jpg',
-  'Bromelias': '/images/BROMELIAS 1/Copia de DSC09419-HDR.jpg',
-  'Helechos 1': '/images/HELECHOS 1/Copia de DSC09516-HDR.jpg',
-  'Helechos 2': '/images/HELECHOS 2/Copia de DSC09556-HDR.jpg',
-};
-
-const PDF_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Jost','Helvetica Neue',Arial,sans-serif;color:#1a1a1a;background:#f4f4f2;line-height:1.6}
-  .page{max-width:680px;margin:0 auto;background:#ffffff}
-  .hero{background:#374151;padding:36px 40px 32px;text-align:left}
-  .hero-eye{font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin:0 0 10px;font-family:'Jost',sans-serif}
-  .hero-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:40px;font-style:italic;font-weight:300;color:#fff;line-height:1.1;margin:0 0 8px}
-  .hero-sub{font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,0.72);margin:0}
-  .body{padding:40px}
-  .ref-box{border:1px solid #a7d4bb;background:#f9fafb;padding:22px 28px;margin:0 0 32px}
-  .ref-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9ca3af;margin:0 0 6px}
-  .ref-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:500;color:#1a1a1a;margin:0}
-  .greeting{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;color:#1a1a1a;margin:0 0 24px}
-  .greeting em{font-style:italic;color:#6b7280}
-  .divider{height:1px;background:#a7d4bb;width:48px;margin:0 0 28px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e5e7eb;margin:0 0 28px}
-  .cell{padding:18px 20px;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
-  .cell:nth-child(2n){border-right:none}
-  .cell:nth-last-child(-n+2){border-bottom:none}
-  .cell-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9ca3af;margin:0 0 8px}
-  .cell-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#1a1a1a;margin:0}
-  .cell-sub{font-family:'Jost',sans-serif;font-size:11px;color:#9ca3af;margin:4px 0 0}
-  .total-bar{background:#1a1a1a;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;margin:0 0 28px}
-  .total-label{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#a7d4bb}
-  .total-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#ffffff}
-  .total-currency{font-size:14px;color:#a7d4bb;margin-left:4px}
-  .notes-box{border-left:2px solid #a7d4bb;padding:0 0 0 20px;margin:0 0 28px}
-  .notes-text{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-style:italic;font-weight:300;color:#6b7280;line-height:1.7}
-  .validity{font-family:'Jost',sans-serif;font-size:12px;color:#9ca3af;margin:0 0 20px;text-align:center}
-  .cta{text-align:center;margin:0 0 40px}
-  .cta-btn{display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:14px 36px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase}
-  .contact{background:#ffffff;padding:24px 40px;border-top:1px solid #e5e7eb}
-  .contact p{font-family:'Jost',sans-serif;font-size:13px;color:#1a1a1a;margin:0 0 6px}
-  .footer-bar{background:#f4f4f2;padding:32px 40px;text-align:center}
-  .footer-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;letter-spacing:3px;text-transform:uppercase;color:#9ca3af;margin:0 0 8px}
-  .footer-addr{font-family:'Jost',sans-serif;font-size:11px;color:#9ca3af;line-height:1.6;margin:0}
-  @page{size:letter;margin:0.6in}
-  .welcome-text{font-family:'Jost',sans-serif;font-size:13px;color:#6b7280;line-height:1.7;margin:0 0 20px}
-  .hotel-quote{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-style:italic;color:#6b7280;text-align:center;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:16px 24px;margin:0 0 28px;line-height:1.6}
-  .anticipo-bar{display:flex;gap:0;border:1px solid #e5e7eb;margin:0 0 20px}
-  .anticipo-item{flex:1;padding:14px 20px;border-right:1px solid #e5e7eb}
-  .anticipo-item:last-child{border-right:none}
-  .anticipo-label{display:block;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#9ca3af;margin:0 0 6px}
-  .anticipo-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:500}
-  .anticipo-ok{color:#2d7a34}
-  .anticipo-pend{color:#8a4a20}
-  @media print{body{background:#fff}@page{margin:0.5cm}
-    .page{max-width:100%;box-shadow:none}}
-`;
-
-// ── PDF Cotización ──────────────────────────────────────────────────────────
-function printQuotePDF(q: AdminQuote) {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const firstSuite = q.suite.split(', ')[0].trim();
-  const suiteImg = SUITE_IMAGES[firstSuite] ? `${baseUrl}${SUITE_IMAGES[firstSuite]}` : '';
-  const notasCliente = parseNotasCliente(q.notas || '');
-  const tourItems = parseTours(q.notas || '');
-  const toursTotal = getToursTotalQ(tourItems);
-  const paqueteItems = parsePaquetes(q.notas || '');
-  const paquetesTotal = getPaquetesTotal(paqueteItems);
-  const confirmUrl = `https://www.paraisoencantado.com/reservar?checkin=${q.checkin}&checkout=${q.checkout}`;
-
-  const win = window.open('', '_blank');
-  if (!win) return;
-  win.document.write(`<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cotización ${q.id} · Paraíso Encantado</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:#f9fafb; font-family:'Jost',sans-serif; font-weight:300; color:#1f2937; padding:40px 16px; }
-.wrap { max-width:600px; margin:0 auto; background:#ffffff; border:1px solid #e5e7eb; }
-.header { background:#1B4332; padding:40px 40px 36px; text-align:center; position:relative; overflow:hidden; }
-.header::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
-.h-eye { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:#52b788; margin-bottom:14px; position:relative; }
-.h-logo { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; color:#f9fafb; margin-bottom:5px; position:relative; }
-.h-logo em { font-style:italic; color:#52b788; }
-.h-sub { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8a9e8c; margin-bottom:28px; position:relative; }
-.h-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(201,169,110,0.15); border:1px solid rgba(201,169,110,0.4); color:#52b788; padding:8px 20px; font-size:11px; letter-spacing:3px; text-transform:uppercase; position:relative; }
-.suite-photo { height:130px; overflow:hidden; border-bottom:2px solid #52b788; background:linear-gradient(160deg,#2d4a2f 0%,#1B4332 50%,#14342a 100%); }
-.suite-photo img { width:100%; height:130px; object-fit:cover; display:block; }
-.cn-block { background:#1B4332; padding:18px 40px; display:flex; align-items:center; justify-content:space-between; }
-.cn-lbl { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#6a8a6e; margin-bottom:4px; }
-.cn-num { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#52b788; letter-spacing:2px; }
-.cn-pres { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#6a8a6e; text-align:right; line-height:1.8; }
-.cn-pres span { display:block; color:#f9fafb; font-size:11px; }
-.body { padding:36px 40px; }
-.greeting { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:#1B4332; margin-bottom:6px; }
-.greeting em { font-style:italic; }
-.g-sub { font-size:13px; color:#9ca3af; line-height:1.7; margin-bottom:32px; }
-.details-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#e5e7eb; border:1px solid #e5e7eb; margin-bottom:28px; }
-.d-cell { background:#ffffff; padding:18px 22px; }
-.d-lbl { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9ca3af; margin-bottom:5px; }
-.d-val { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:#1B4332; line-height:1.3; }
-.d-sub { font-size:11px; color:#9ca3af; margin-top:3px; }
-.sec-title { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#9ca3af; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #f3f4f6; }
-.suites-sec { margin-bottom:28px; }
-.s-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid #f3f4f6; }
-.s-row:last-child { border-bottom:none; }
-.s-name { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:400; color:#1B4332; }
-.total-block { background:#f9fafb; border-left:3px solid #52b788; padding:18px 22px; margin-bottom:28px; display:flex; justify-content:space-between; align-items:center; }
-.total-lbl { font-size:12px; color:#6b7280; }
-.total-amt { font-family:'Cormorant Garamond',serif; font-size:26px; color:#1B4332; }
-.validity { background:#fff8ee; border:1px solid #e0d4b4; padding:14px 20px; margin-bottom:28px; font-size:12px; color:#6b7280; line-height:1.6; text-align:center; }
-.validity strong { color:#1B4332; }
-.note-box { background:#f9fafb; border-left:3px solid #52b788; padding:14px 18px; margin-bottom:28px; font-family:'Cormorant Garamond',serif; font-size:16px; font-style:italic; color:#6b7280; line-height:1.7; }
-.cta-wrap { text-align:center; margin-bottom:32px; }
-.cta-btn { display:inline-block; background:#1B4332; color:#52b788; text-decoration:none; padding:14px 36px; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; }
-.contact-row { display:flex; gap:10px; margin-bottom:28px; }
-.c-card { flex:1; border:1px solid #f3f4f6; padding:14px; text-align:center; }
-.c-icon { font-size:16px; margin-bottom:5px; }
-.c-type { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#9ca3af; margin-bottom:3px; }
-.c-val { font-size:11px; color:#1B4332; font-weight:400; }
-.footer { background:#f4f4f2; padding:24px 40px; text-align:center; border-top:1px solid #e5e7eb; }
-.f-logo { font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; color:#9ca3af; margin-bottom:8px; }
-.f-addr { font-size:11px; color:#9ca3af; line-height:1.8; }
-.f-div { width:36px; height:1px; background:#52b788; margin:14px auto; }
-@page { size:letter; margin:0.45in; }
-@media print { body { background:#fff; padding:0; } .wrap { border:none; max-width:100%; } }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="header">
-    <p class="h-eye">Cotización personalizada</p>
-    <h1 class="h-logo">Paraíso <em>Encantado</em></h1>
-    <p class="h-sub">Xilitla · Huasteca Potosina</p>
-    <div class="h-badge">Válida por 48 horas</div>
-  </div>
-
-  ${suiteImg
-    ? `<div class="suite-photo"><img src="${suiteImg}" alt="${firstSuite}" onerror="this.parentElement.style.background='linear-gradient(160deg,#2d4a2f 0%,#14342a 100%)'"></div>`
-    : `<div class="suite-photo" style="display:flex;align-items:center;justify-content:center;color:#52b788;font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic">${firstSuite}</div>`
-  }
-
-  <div class="cn-block">
-    <div>
-      <p class="cn-lbl">Referencia de cotización</p>
-      <p class="cn-num">${q.id}</p>
-    </div>
-    <p class="cn-pres">Válida hasta<span>48 horas</span></p>
-  </div>
-
-  <div class="body">
-    <h2 class="greeting">Estimado/a, <em>${q.cliente}.</em></h2>
-    <p class="g-sub">Hemos preparado esta cotización especialmente para ti. Confirma antes de que expire para asegurar tus fechas.</p>
-
-    <div class="details-grid">
-      <div class="d-cell">
-        <p class="d-lbl">Check-in</p>
-        <p class="d-val">${fmtDate(q.checkin)}</p>
-        <p class="d-sub">A partir de las 3:00 PM</p>
-      </div>
-      <div class="d-cell">
-        <p class="d-lbl">Check-out</p>
-        <p class="d-val">${fmtDate(q.checkout)}</p>
-        <p class="d-sub">Antes de las 12:00 PM</p>
-      </div>
-      <div class="d-cell">
-        <p class="d-lbl">Noches</p>
-        <p class="d-val">${q.noches}</p>
-      </div>
-      <div class="d-cell">
-        <p class="d-lbl">Estado</p>
-        <p class="d-val" style="font-size:14px;font-family:'Jost',sans-serif">${q.estado}</p>
-      </div>
-    </div>
-
-    <div class="suites-sec">
-      <p class="sec-title">Suite${q.suite.includes(',') ? 's incluidas' : ' incluida'}</p>
-      ${q.suite.split(', ').map(s => `
-      <div class="s-row">
-        <p class="s-name">${s.trim()}</p>
-        <span style="font-size:11px;color:#5a7a5c">incluida</span>
-      </div>`).join('')}
-    </div>
-
-    ${tourItems.length > 0 ? `
-    <div class="suites-sec">
-      <p class="sec-title">Tours incluidos</p>
-      ${tourItems.map(t => `
-      <div class="s-row">
-        <p class="s-name" style="font-size:14px">${t.nombre}</p>
-        <div style="text-align:right">
-          <span style="font-size:11px;color:#6b7280;display:block">${t.personas} persona${t.personas!==1?'s':''}</span>
-          <span style="font-size:12px;color:#1B4332;font-family:'Cormorant Garamond',serif">$${(t.precio*t.personas).toLocaleString('es-MX')} MXN</span>
-        </div>
-      </div>`).join('')}
-    </div>` : ''}
-
-    ${paqueteItems.length > 0 ? `
-    <div class="suites-sec">
-      <p class="sec-title">Paquetes incluidos</p>
-      ${paqueteItems.map(p => `
-      <div class="s-row">
-        <div>
-          <p class="s-name" style="font-size:15px">🎁 ${p.nombre}</p>
-          <p style="font-size:10px;color:#9ca3af;margin-top:2px">${p.habitacion} · ${p.noches} noches · ${p.personas} persona${p.personas!==1?'s':''}</p>
-        </div>
-        <p class="total-amt" style="font-size:20px">$${p.precio.toLocaleString('es-MX')}</p>
-      </div>`).join('')}
-    </div>` : ''}
-
-    <div class="total-block">
-      ${(toursTotal > 0 || paquetesTotal > 0) ? `
-      <div>
-        ${q.suite && q.suite !== '—' ? `<p class="d-lbl" style="margin-bottom:2px">Hospedaje</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1B4332;margin-bottom:4px">$${(q.precioTotal-toursTotal-paquetesTotal).toLocaleString('es-MX')} MXN</p>` : ''}
-        ${toursTotal > 0 ? `<p class="d-lbl" style="margin-bottom:2px">Tours</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1B4332;margin-bottom:4px">$${toursTotal.toLocaleString('es-MX')} MXN</p>` : ''}
-        ${paquetesTotal > 0 ? `<p class="d-lbl" style="margin-bottom:2px">Paquetes</p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#1B4332">$${paquetesTotal.toLocaleString('es-MX')} MXN</p>` : ''}
-      </div>
-      <div>
-        <p class="d-lbl">Total cotización</p>
-        <p class="total-amt">$${q.precioTotal.toLocaleString('es-MX')}</p>
-      </div>` : `
-      <div>
-        <p class="d-lbl">Total cotización</p>
-        <p class="total-amt">$${q.precioTotal.toLocaleString('es-MX')}</p>
-      </div>`}
-      <span style="font-size:13px;color:#9ca3af">MXN</span>
-    </div>
-
-    ${notasCliente ? `<div class="note-box">${notasCliente}</div>` : ''}
-
-    <div class="validity">
-      Esta cotización es válida por <strong>48 horas</strong> a partir de su emisión.<br>
-      Confirma tu reserva antes de que expire para asegurar disponibilidad y precio.
-    </div>
-
-    <div class="cta-wrap">
-      <a href="${confirmUrl}" class="cta-btn">Confirmar Reserva →</a>
-      <p style="font-size:10px;color:#9ca3af;margin-top:10px;letter-spacing:1px">${confirmUrl}</p>
-    </div>
-
-    <div class="contact-row">
-      <div class="c-card"><p class="c-icon">📞</p><p class="c-type">Teléfono</p><p class="c-val"><a href="tel:+524891007679" style="color:#1B4332;text-decoration:none">489 100 7679</a></p></div>
-      <div class="c-card"><p class="c-icon">💬</p><p class="c-type">WhatsApp</p><p class="c-val"><a href="https://wa.me/524891007679" style="color:#1B4332;text-decoration:none">+52 489 100 7679</a></p></div>
-      <div class="c-card"><p class="c-icon">✉️</p><p class="c-type">Email</p><p class="c-val" style="font-size:10px"><a href="mailto:reservas@paraisoencantado.com" style="color:#1B4332;text-decoration:none">reservas@paraisoencantado.com</a></p></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <p class="f-logo">Paraíso Encantado</p>
-    <div class="f-div"></div>
-    <p class="f-addr">Xilitla, San Luis Potosí 79910 · México<br>A 5 minutos caminando del Jardín Surrealista de Edward James<br>paraisoencantado.com</p>
-  </div>
-</div>
-<script>window.onload=function(){window.print()}<\/script>
-</body></html>`);
-  win.document.close();
-}
-
 // ── PDF Confirmación de reserva v2 ──────────────────────────────────────────
 export function printBookingPDF(b: {
   confirmacion: string; cliente: string; email: string; telefono: string;
@@ -511,8 +221,6 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>([]);
   const [precioManual, setPrecioManual] = useState<number | null>(null);
   const [promoActiva, setPromoActiva] = useState(false);
-  const [anticipo, setAnticipo] = useState(0);
-  const [restanteOverride, setRestanteOverride] = useState<number | null>(null);
   const [notasCliente, setNotasCliente] = useState('');
   const [notasInternas, setNotasInternas] = useState('');
   const [loading, setLoading] = useState(false);
@@ -568,7 +276,6 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   const precioAuto = habsAuto + toursAuto + paquetesAuto;
   const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAuto + paquetesAuto;
   const precioTotal = precioManual ?? precioAuto;
-  const restante = restanteOverride ?? (precioTotal - anticipo);
 
   function aplicarPromo3x2() { setPrecioManual(precio2Noches); setPromoActiva(true); }
   function resetPrecio() { setPrecioManual(null); setPromoActiva(false); }
@@ -792,35 +499,6 @@ function QuoteModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
             </div>
           </div>
 
-          {/* Anticipo / Restante */}
-          <div className={styles.anticipoSection}>
-            <span className={styles.anticipoLabel}>Anticipo y saldo</span>
-            <div className={styles.anticipoGrid}>
-              <div className={styles.anticipoFieldWrap}>
-                <span>Anticipo solicitado (MXN)</span>
-                <input
-                  type="number" min={0}
-                  value={anticipo}
-                  onChange={e => { setAnticipo(parseInt(e.target.value) || 0); setRestanteOverride(null); }}
-                />
-              </div>
-              <div className={styles.anticipoFieldWrap}>
-                <span>Saldo restante (MXN)</span>
-                <input
-                  type="number" min={0}
-                  value={restante}
-                  onChange={e => setRestanteOverride(parseInt(e.target.value) || 0)}
-                />
-              </div>
-            </div>
-            {restanteOverride !== null && (
-              <button type="button" className={styles.resetPriceBtn}
-                onClick={() => setRestanteOverride(null)} style={{ alignSelf: 'flex-start' }}>
-                ↩ Recalcular
-              </button>
-            )}
-          </div>
-
           <div className={styles.grid2}>
             <label className={styles.field}>
               <span>Notas para el cliente (aparece en PDF)</span>
@@ -869,8 +547,6 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
   const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(() => parsePaquetes(quote.notas || ''));
   const [precioManual, setPrecioManual] = useState<number | null>(quote.precioTotal || null);
   const [promoActiva, setPromoActiva] = useState(false);
-  const [anticipo, setAnticipo] = useState(0);
-  const [restanteOverride, setRestanteOverride] = useState<number | null>(null);
   const [notasCliente, setNotasCliente] = useState(() => parseNotasCliente(quote.notas || ''));
   const [notasInternas, setNotasInternas] = useState(() => {
     const idx = (quote.notas || '').indexOf(INTERNO_SEP);
@@ -930,7 +606,6 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
   const precioAuto = habsAuto + toursAutoE + paquetesAutoE;
   const precio2Noches = habitaciones.reduce((sum, h) => sum + getHabPrecioQ(h) * 2, 0) + toursAutoE + paquetesAutoE;
   const precioTotal = precioManual ?? precioAuto;
-  const restante = restanteOverride ?? (precioTotal - anticipo);
 
   function aplicarPromo3x2() { setPrecioManual(precio2Noches); setPromoActiva(true); }
   function resetPrecio() { setPrecioManual(null); setPromoActiva(false); }
@@ -1116,7 +791,7 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
               </button>
               {promoActiva && (
                 <span className={styles.promoSaving}>
-                  Ahorro: ${(habsAuto - precio2Noches + toursAutoE).toLocaleString('es-MX')} MXN
+                  Ahorro: ${(precioAuto - precio2Noches).toLocaleString('es-MX')} MXN
                 </span>
               )}
             </div>
@@ -1135,35 +810,6 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Anticipo / Restante */}
-          <div className={styles.anticipoSection}>
-            <span className={styles.anticipoLabel}>Anticipo y saldo</span>
-            <div className={styles.anticipoGrid}>
-              <div className={styles.anticipoFieldWrap}>
-                <span>Anticipo solicitado (MXN)</span>
-                <input
-                  type="number" min={0}
-                  value={anticipo}
-                  onChange={e => { setAnticipo(parseInt(e.target.value) || 0); setRestanteOverride(null); }}
-                />
-              </div>
-              <div className={styles.anticipoFieldWrap}>
-                <span>Saldo restante (MXN)</span>
-                <input
-                  type="number" min={0}
-                  value={restante}
-                  onChange={e => setRestanteOverride(parseInt(e.target.value) || 0)}
-                />
-              </div>
-            </div>
-            {restanteOverride !== null && (
-              <button type="button" className={styles.resetPriceBtn}
-                onClick={() => setRestanteOverride(null)} style={{ alignSelf: 'flex-start' }}>
-                ↩ Recalcular
-              </button>
-            )}
           </div>
 
           <div className={styles.grid2}>

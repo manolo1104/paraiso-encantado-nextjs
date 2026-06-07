@@ -35,7 +35,7 @@ const schema = {
       url: 'https://www.paraisoencantado.com/hotel-familias-xilitla',
       telephone: '+524891007679',
       address: { '@type': 'PostalAddress', addressLocality: 'Xilitla', addressRegion: 'San Luis Potosí', addressCountry: 'MX' },
-      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.8, reviewCount: 514, bestRating: 5 },
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.6, reviewCount: 519, bestRating: 5 },
     },
     {
       '@type': 'BreadcrumbList',

@@ -75,7 +75,7 @@ const paquetesSchema = {
         description: '3 noches en Hotel Paraíso Encantado + desayunos + 3 tours completos a elegir + transporte + entradas + fotografías y video de cada recorrido.',
         image: 'https://www.paraisoencantado.com/images/HELECHOS 1/PORTADA.jpg',
         brand: SELLER,
-        aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.8, reviewCount: 27, bestRating: 5 },
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.6, reviewCount: 27, bestRating: 5 },
         offers: {
           '@type': 'Offer', priceCurrency: 'MXN', price: 12200,
           priceValidUntil: '2026-12-31',
@@ -240,7 +240,7 @@ export default function PaquetesPage() {
         {/* BANNER DE CONFIANZA — separa el hero de la info */}
         <div className={styles.trustBanner} role="list" aria-label="Garantías de reserva directa" data-reveal>
           <span role="listitem" className={styles.trustItem}>
-            <span className={styles.stars} aria-hidden="true">★★★★★</span> 4.8 · 514 reseñas Google
+            <span className={styles.stars} aria-hidden="true">★★★★★</span> 4.6 · 519 reseñas Google
           </span>
           <span className={styles.trustSep} aria-hidden="true" />
           <span role="listitem" className={styles.trustItem}>Cancelación gratis 48 hrs</span>

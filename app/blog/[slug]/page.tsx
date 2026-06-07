@@ -313,7 +313,7 @@ export default async function ArticlePage({ params }: Props) {
               <div className={styles.inlineCtaBottomInner}>
                 <p className={styles.inlineCtaBottomTitle}>Hotel Paraíso Encantado</p>
                 <p className={styles.inlineCtaBottomSub}>
-                  13 suites con spa privado · A 5 minutos de Las Pozas · Desde $1,200 MXN
+                  13 suites con spa privado · A 5 minutos de Las Pozas · Desde $1,500 MXN
                 </p>
                 <div className={styles.inlineCtaBottomActions}>
                   <a href="/reservar" className={styles.inlineCtaBottomPrimary}>Reservar suite</a>

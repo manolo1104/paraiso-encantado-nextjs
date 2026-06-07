@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     url: 'https://www.paraisoencantado.com/sobre-nosotros',
     images: [
       {
-        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09447-HDR.jpg',
+        url: '/og/sobre-nosotros.jpg',
         width: 1200,
         height: 630,
         alt: 'Jardín y piscina — Hotel Paraíso Encantado, Xilitla',
@@ -70,8 +70,8 @@ const aboutSchema = {
       ],
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: 4.8,
-        reviewCount: 514,
+        ratingValue: 4.6,
+        reviewCount: 519,
         bestRating: 5,
       },
       hasOfferCatalog: {
@@ -274,8 +274,8 @@ export default function SobreNosotrosPage() {
           <div className={styles.statsGrid}>
             {[
               { num: '13', label: 'Suites únicas' },
-              { num: '4.8★', label: 'Estrellas en Google' },
-              { num: '514+', label: 'Reseñas verificadas' },
+              { num: '4.6★', label: 'Estrellas en Google' },
+              { num: '519+', label: 'Reseñas verificadas' },
               { num: '5 min', label: 'A pie del Jardín de Edward James' },
               { num: '2018', label: 'Año de fundación' },
             ].map((s) => (

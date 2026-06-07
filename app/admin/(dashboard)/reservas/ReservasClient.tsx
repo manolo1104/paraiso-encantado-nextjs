@@ -26,8 +26,6 @@ function getOpsState(b: AdminBooking, today: string): OpsState {
   if (co === today) return 'CHECK_OUT_HOY';
   if (ci < today && co > today) return 'EN_CASA';
   if (co < today) return 'COMPLETADA';
-  // Upcoming — check if it's past the checkin without showing up
-  if (ci < today && co <= today) return 'NO_SHOW';
   return 'PROXIMA';
 }
 
@@ -87,7 +85,10 @@ export default function ReservasClient({ initialBookings }: Props) {
   const [loading, setLoading] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  // Fecha de HOY en la zona horaria del hotel (no UTC). 'en-CA' da formato YYYY-MM-DD.
+  // Antes usaba toISOString() (UTC), que de noche en México adelantaba un día y
+  // desfasaba los estados operativos (Hoy/Mañana/En casa).
+  const today = useMemo(() => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }), []);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -262,7 +263,6 @@ export default function ReservasClient({ initialBookings }: Props) {
                 <option value="PROXIMA">Próxima</option>
                 <option value="COMPLETADA">Completada</option>
                 <option value="CANCELADA">Cancelada</option>
-                <option value="NO_SHOW">No Show</option>
               </select>
             </label>
             <label className={styles.filterField}>

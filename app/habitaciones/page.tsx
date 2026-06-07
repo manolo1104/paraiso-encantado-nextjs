@@ -102,7 +102,7 @@ export default function HabitacionesPage() {
             Todas a 5 minutos caminando del Jardín de Edward James.
           </p>
           <div className={styles.headerMeta}>
-            <span>Disfruta de esta experiencia desde <strong>$1,200 MXN</strong>/noche</span>
+            <span>Disfruta de esta experiencia desde <strong>$1,500 MXN</strong>/noche</span>
             <span className={styles.dot}>·</span>
             <span>Persona adicional <strong>+$300 MXN</strong></span>
             <span className={styles.dot}>·</span>
