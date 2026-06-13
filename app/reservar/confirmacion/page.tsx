@@ -16,9 +16,43 @@ export default function ConfirmacionPage() {
     const cn = sessionStorage.getItem('pe_confirmation_number') || '';
     const raw = sessionStorage.getItem('pe_booking_for_confirm');
     setConfirmationNumber(cn);
+    let parsed: BookingState | null = null;
     if (raw) {
-      try { setBooking(JSON.parse(raw)); } catch {}
+      try { parsed = JSON.parse(raw) as BookingState; setBooking(parsed); } catch {}
     }
+
+    // ── Conversión GA4 / Google Ads (vía GTM) ──────────────────────────────
+    // Empuja un evento `purchase` (formato ecommerce GA4) en la página de
+    // gracias. Esto es lo que permite a Google Ads saber qué reservas y cuánto
+    // ingreso vienen de los anuncios (y calcular el costo por reserva).
+    // El tag de conversión se configura en GTM (ver marketing/MEDICION-GOOGLE-ADS.md).
+    if (cn && parsed) {
+      const b = parsed;
+      const sub = calcCartSubtotal(b.cart, b.checkin, b.checkout);
+      const totalValue = Math.max(0, sub - b.promoDiscount);
+      type DataLayerWindow = { dataLayer?: Array<Record<string, unknown>> };
+      const w = window as unknown as DataLayerWindow;
+      w.dataLayer = w.dataLayer || [];
+      w.dataLayer.push({ ecommerce: null }); // limpia ecommerce previo (buena práctica GA4)
+      w.dataLayer.push({
+        event: 'purchase',
+        ecommerce: {
+          transaction_id: cn,
+          value: totalValue,
+          currency: 'MXN',
+          items: b.cart.map((it) => {
+            const room = BOOKING_ROOMS.find((r) => r.id === it.roomId);
+            return {
+              item_id: it.roomId,
+              item_name: room?.name ?? it.roomId,
+              quantity: 1,
+              price: room ? calcRoomStayTotal(room, it.guestCount, b.checkin, b.checkout) : 0,
+            };
+          }),
+        },
+      });
+    }
+
     // Clear so back navigation doesn't re-show confirmation
     sessionStorage.removeItem('pe_confirmation_number');
     sessionStorage.removeItem('pe_booking_for_confirm');
