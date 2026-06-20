@@ -51,8 +51,6 @@ export default function Navbar() {
           <li><a href="/restaurante">Restaurante</a></li>
           <li><a href="/galeria">Galería</a></li>
           <li><a href="/experiencias">Experiencias</a></li>
-          <li><a href="/paquetes">Paquetes</a></li>
-          <li><a href="/grupos-eventos">Grupos</a></li>
           <li><a href="/blog">Blog</a></li>
           <li><a href="/contacto">Contacto</a></li>
         </ul>
@@ -94,8 +92,6 @@ export default function Navbar() {
           <li><a href="/restaurante" onClick={() => setMenuOpen(false)}>Restaurante</a></li>
           <li><a href="/galeria" onClick={() => setMenuOpen(false)}>Galería</a></li>
           <li><a href="/experiencias" onClick={() => setMenuOpen(false)}>Experiencias</a></li>
-          <li><a href="/paquetes" onClick={() => setMenuOpen(false)}>Paquetes</a></li>
-          <li><a href="/grupos-eventos" onClick={() => setMenuOpen(false)}>Grupos & Eventos</a></li>
           <li><a href="/blog" onClick={() => setMenuOpen(false)}>Blog</a></li>
           <li><a href="/contacto" onClick={() => setMenuOpen(false)}>Contacto</a></li>
           <li>

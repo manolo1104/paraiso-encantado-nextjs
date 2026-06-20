@@ -8,7 +8,6 @@ import DestinoSection from '@/components/DestinoSection';
 import ToursSection from '@/components/ToursSection';
 import VIPQuote from '@/components/VIPQuote';
 import Testimonials from '@/components/Testimonials';
-import TripAdvisorReviews from '@/components/TripAdvisorReviews';
 import NewsletterSection from '@/components/NewsletterSection';
 import LocationSection from '@/components/LocationSection';
 import FAQ from '@/components/FAQ';
@@ -481,47 +480,32 @@ const homeFaqSchema = {
     {
       '@type': 'Question',
       name: '¿Qué tan cerca está del Jardín de Edward James?',
-      acceptedAnswer: { '@type': 'Answer', text: 'A 5 minutos caminando (aproximadamente 400 metros). Somos el hotel MÁS cercano al Jardín Surrealista de Edward James (Las Pozas) en todo Xilitla.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'A 5 minutos caminando, unos 400 metros. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada de Las Pozas. Somos el hotel más cercano al Jardín de Edward James en Xilitla.' },
     },
     {
       '@type': 'Question',
       name: '¿El desayuno está incluido en el precio?',
-      acceptedAnswer: { '@type': 'Answer', text: 'El desayuno no está incluido en la tarifa. Nuestro restaurante El Papán Huasteco sirve desayunos auténticos de $100 a $200 MXN: tortillas hechas a mano en comal, zacahuil y café de olla.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'No está incluido en la tarifa. Nuestro restaurante El Papán Huasteco sirve desayunos de $100 a $200 MXN: tortillas hechas a mano en comal, zacahuil y café de olla.' },
     },
     {
       '@type': 'Question',
       name: '¿Puedo cancelar mi reserva sin cargo?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Sí. Puedes cancelar hasta 48 horas antes de tu llegada sin ningún cargo y te reembolsamos el 100% en 5-7 días hábiles. Política más flexible que Booking o Expedia.' },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Qué incluye la tarifa de habitación?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Incluye: suite con todas sus amenidades, WiFi de alta velocidad, estacionamiento privado gratuito, acceso a la piscina spa y amenidades de baño. No incluye desayunos ni tours.' },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Cuántas personas caben por habitación?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Entre 2 y 8 personas según la suite. Las suites estándar admiten 2-4 personas; las familiares Helechos hasta 6-8 personas. Persona adicional: +$300 MXN por noche.' },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Es seguro pagar en línea?',
-      acceptedAnswer: { '@type': 'Answer', text: '100% seguro. Usamos Stripe, el mismo sistema que Amazon y Uber. Tu información bancaria está encriptada de extremo a extremo. Nunca almacenamos datos de tarjetas. Recibes confirmación instantánea por email.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'Sí. Puedes cancelar hasta 48 horas antes de tu llegada sin ningún cargo y te reembolsamos el 100% en 5 a 7 días hábiles.' },
     },
     {
       '@type': 'Question',
       name: '¿Con cuánto se confirma la reserva?',
-      acceptedAnswer: { '@type': 'Answer', text: '1 noche: se cobra el 100% al confirmar en línea. 2 noches o más: solo pagas el 50% ahora y el 50% restante lo liquidas en el hotel al check-in. Cancelación gratuita hasta 48 horas antes con reembolso total.' },
+      acceptedAnswer: { '@type': 'Answer', text: '1 noche: se cobra el 100% al confirmar en línea. 2 noches o más: pagas el 50% ahora y el 50% restante en el hotel al llegar (efectivo, tarjeta o transferencia). El pago en línea es seguro, con Stripe.' },
+    },
+    {
+      '@type': 'Question',
+      name: '¿Cuántas personas caben por habitación?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Entre 2 y 8 personas según la suite. Las suites estándar admiten 2 a 4 personas; las familiares Helechos hasta 6 u 8. El precio base es para 2 personas; persona adicional, +$300 MXN por noche.' },
     },
     {
       '@type': 'Question',
       name: '¿Necesito coche para llegar al hotel?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Con auto propio es ideal — hay estacionamiento privado gratuito. Sin auto: toma autobús hasta Xilitla centro y luego taxi ($50 MXN). Te recogemos gratis si reservas 3 o más noches.' },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Aceptan mascotas?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Actualmente no aceptamos mascotas en las habitaciones para preservar el ecosistema del hotel y el confort de todos los huéspedes.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'Con auto propio es lo ideal: hay estacionamiento privado gratuito. Sin auto, puedes llegar en autobús a Xilitla centro y luego tomar un taxi (unos $50 MXN); te enviamos la ubicación exacta por WhatsApp.' },
     },
   ],
 };
@@ -542,12 +526,11 @@ export default function HomePage() {
         <SuitesGrid />
         <PromoStrip />
         <AmenitiesGrid />
-        {/* DestinoSection moved after suites — user already knows where Xilitla is */}
         <DestinoSection />
         <ToursSection />
+        {/* Bloque único de prueba social: visita presidencial + reseñas */}
         <VIPQuote />
         <Testimonials />
-        <TripAdvisorReviews />
         <NewsletterSection />
         <LocationSection />
         <FAQ />

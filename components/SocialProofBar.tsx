@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Star, MapPin, Award, ShieldCheck } from 'lucide-react';
+import { Star, MapPin, Waves, ShieldCheck } from 'lucide-react';
 import { useInView } from '../hooks/useInView';
 import styles from './SocialProofBar.module.css';
 
@@ -61,8 +61,8 @@ export default function SocialProofBar() {
             <MapPin size={24} strokeWidth={1.5} />
           </div>
           <div className={styles.content}>
-            <strong>#1 en Ubicación</strong>
-            <p>El más cercano al Jardín de Edward James</p>
+            <strong>A 5 min de Las Pozas</strong>
+            <p>El hotel más cercano al Jardín de Edward James</p>
           </div>
         </div>
 
@@ -70,11 +70,11 @@ export default function SocialProofBar() {
 
         <div className={styles.item}>
           <div className={styles.icon} aria-hidden="true">
-            <Award size={24} strokeWidth={1.5} />
+            <Waves size={24} strokeWidth={1.5} />
           </div>
           <div className={styles.content}>
-            <strong>Reserva Directa</strong>
-            <p>Sin comisiones · Confirmación instantánea</p>
+            <strong>13 suites con spa privado</strong>
+            <p>Cada una con su propio carácter</p>
           </div>
         </div>
 
@@ -85,8 +85,8 @@ export default function SocialProofBar() {
             <ShieldCheck size={24} strokeWidth={1.5} />
           </div>
           <div className={styles.content}>
-            <strong>Pago Seguro</strong>
-            <p>Plataforma Stripe — encriptación total</p>
+            <strong>Pago seguro</strong>
+            <p>Procesado por Stripe</p>
           </div>
         </div>
 

@@ -17,9 +17,9 @@ export default function VIPQuote() {
               loading="lazy"
             />
           </div>
-          <div className={styles.badge} aria-label="Validación VIP">
+          <div className={styles.badge} aria-label="Visita oficial 2023">
             <Star size={12} strokeWidth={0} fill="currentColor" className={styles.badgeStar} />
-            <span>Validación VIP</span>
+            <span>Visita oficial · 2023</span>
           </div>
         </div>
 
@@ -38,8 +38,8 @@ export default function VIPQuote() {
             </footer>
           </blockquote>
           <p className={styles.context}>
-            El único hotel boutique de la región que recibió a un mandatario en funciones.
-            No es marketing — es historia.
+            En 2023, el Presidente de México se hospedó en Paraíso Encantado
+            durante su visita oficial a Xilitla.
           </p>
         </div>
       </div>

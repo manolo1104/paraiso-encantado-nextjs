@@ -8,47 +8,32 @@ const faqs = [
   {
     question: '¿Qué tan cerca está del Jardín de Edward James?',
     answer:
-      'A 5 minutos caminando (aproximadamente 400 metros). Literalmente puedes desayunar en El Papán y a las 9am ya estás en la entrada de Las Pozas. Somos el hotel MÁS cercano al jardín surrealista de todo Xilitla.',
+      'A 5 minutos caminando, unos 400 metros. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada de Las Pozas. Somos el hotel más cercano al Jardín de Edward James en Xilitla.',
   },
   {
     question: '¿El desayuno está incluido en el precio?',
     answer:
-      'El desayuno no está incluido en la tarifa de habitación. Nuestro restaurante El Papán Huasteco sirve desayunos auténticos entre $100 y $200 MXN: tortillas hechas a mano en comal, zacahuil y café de olla.',
+      'No está incluido en la tarifa. Nuestro restaurante El Papán Huasteco sirve desayunos de $100 a $200 MXN: tortillas hechas a mano en comal, zacahuil y café de olla.',
   },
   {
     question: '¿Puedo cancelar mi reserva sin cargo?',
     answer:
-      'Sí. Puedes cancelar hasta 48 horas antes de tu llegada sin ningún cargo. Reembolsamos el 100% de tu pago a tu tarjeta en 5-7 días hábiles. Nuestra política es más flexible que la de las OTAs (Booking, Expedia), que generalmente solo permiten cancelación 24hrs.',
-  },
-  {
-    question: '¿Es seguro pagar en línea?',
-    answer:
-      '100% seguro. Utilizamos Stripe, el mismo sistema de pago que usan Amazon y Uber. Tu información bancaria está encriptada de extremo a extremo. Nunca almacenamos datos de tarjetas en nuestros servidores. Recibes confirmación instantánea por email después del pago.',
-  },
-  {
-    question: '¿Qué incluye la tarifa de habitación?',
-    answer:
-      'Incluye: suite con todas las amenidades, WiFi de alta velocidad, estacionamiento privado gratuito, acceso a piscina spa, toallas y amenidades de baño, spa privado (en suites que lo incluyen). No incluye: desayunos ($100–200 MXN), tours a Las Pozas y masajes terapéuticos.',
+      'Sí. Puedes cancelar hasta 48 horas antes de tu llegada sin ningún cargo y te reembolsamos el 100% en 5 a 7 días hábiles.',
   },
   {
     question: '¿Con cuánto se confirma la reserva?',
     answer:
-      '1 noche: se cobra el 100% al confirmar en línea. 2 noches o más: solo pagas el 50% ahora con tarjeta y el 50% restante lo liquidas directamente en el hotel al momento del check-in (efectivo, tarjeta o transferencia). Cancelaciones gratuitas hasta 48 hrs antes con reembolso total.',
+      '1 noche: se cobra el 100% al confirmar en línea. 2 noches o más: pagas el 50% ahora y el 50% restante en el hotel al llegar (efectivo, tarjeta o transferencia). El pago en línea es seguro, con Stripe.',
   },
   {
     question: '¿Cuántas personas caben por habitación?',
     answer:
-      'Varía según la suite: Habitaciones Standard: 2–4 personas. Suites Plus/Master: 4 personas. Suites Familiares (Helechos): hasta 6–8 personas. El precio base es para 2 personas. Persona adicional: +$300 MXN por noche.',
+      'Entre 2 y 8 personas según la suite. Las suites estándar admiten 2 a 4 personas; las familiares Helechos hasta 6 u 8. El precio base es para 2 personas; persona adicional, +$300 MXN por noche.',
   },
   {
     question: '¿Necesito coche para llegar al hotel?',
     answer:
-      'Con auto propio es ideal. Estamos a 7 min del centro de Xilitla y te enviamos ubicación GPS exacta por WhatsApp. Sin auto: puedes tomar autobús ADO hasta Xilitla centro, luego taxi ($50 MXN) o te recogemos gratis si reservas 3+ noches.',
-  },
-  {
-    question: '¿Aceptan mascotas?',
-    answer:
-      'Actualmente no aceptamos mascotas en las habitaciones. Estamos trabajando en una política pet-friendly para el futuro cercano. Te recomendamos contactarnos directamente si tienes necesidades especiales.',
+      'Con auto propio es lo ideal: hay estacionamiento privado gratuito. Sin auto, puedes llegar en autobús a Xilitla centro y luego tomar un taxi (unos $50 MXN); te enviamos la ubicación exacta por WhatsApp.',
   },
 ];
 

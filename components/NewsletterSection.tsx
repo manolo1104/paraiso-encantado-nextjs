@@ -27,13 +27,13 @@ export default function NewsletterSection() {
     <section className={styles.section} aria-labelledby="newsletter-heading">
       <div className={styles.inner}>
         <div className={styles.iconWrap} aria-hidden="true">✦</div>
-        <p className={styles.eyebrow}>Viajeros con criterio</p>
+        <p className={styles.eyebrow}>Antes de tu viaje</p>
         <h2 id="newsletter-heading" className={styles.title}>
-          Recibe la <em>Guía Secreta de Xilitla</em>
+          Recibe nuestra <em>guía de Xilitla</em>
         </h2>
         <p className={styles.sub}>
-          Pozas ocultas, senderos sin turistas y las mejores épocas para visitar.
-          Solo para suscriptores — más acceso a tarifas exclusivas antes de que salgan al público.
+          Pozas escondidas, senderos tranquilos y las mejores épocas para visitar.
+          Y serás de los primeros en conocer nuestras tarifas de temporada.
         </p>
 
         {status === 'success' ? (

@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { MessageCircle } from 'lucide-react';
-import TripAdvisorBadges from './TripAdvisorBadges';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -130,7 +129,6 @@ export default function Footer() {
               style={{ width: '160px', maxWidth: '100%', height: 'auto', display: 'inline-block' }}
             />
           </a>
-          <TripAdvisorBadges />
         </div>
       </div>
 

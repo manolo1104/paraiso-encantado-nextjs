@@ -2,20 +2,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Bus, Coffee, GraduationCap, ShieldCheck, Leaf, Camera, MessageCircle, CheckCircle, Clock } from 'lucide-react';
+import { Bus, Coffee, GraduationCap, ShieldCheck, Leaf, Camera, MessageCircle, Clock } from 'lucide-react';
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
-  title: 'Tours Huasteca Potosina · Tamul, Las Pozas y Cascadas | Desde Xilitla',
+  title: 'Tours Huasteca Potosina · Tamul, Las Pozas, Rappel y RZR | Desde Xilitla',
   description:
-    'Cascada de Tamul, Las Pozas de Edward James, Puente de Dios y más. Guía certificado + transporte + desayuno incluidos. Salidas diarias desde el hotel. Desde $1,300 MXN/persona.',
+    '7 tours en la Huasteca: Cascada de Tamul, Las Pozas de Edward James, Puente de Dios, rappel y RZR. Guía certificado NOM-09, transporte y desayuno incluidos. Salidas diarias desde el hotel. Desde $800 MXN/persona.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/experiencias',
   },
   openGraph: {
     title: 'Tours en la Huasteca Potosina — Desde Paraíso Encantado, Xilitla',
     description:
-      'Cascada Tamul, Las Pozas de Edward James, Puente de Dios y más. Guía certificado, transporte y desayuno incluidos. Salidas diarias desde el hotel.',
+      'Cascada Tamul, Las Pozas de Edward James, Puente de Dios, rappel y RZR. Guía certificado NOM-09, transporte y desayuno incluidos. Salidas diarias desde el hotel.',
     url: 'https://www.paraisoencantado.com/experiencias',
     images: [
       {
@@ -32,32 +32,6 @@ const WHATSAPP_URL = 'https://wa.me/524891007679';
 const BOOKING_URL = '/reservar';
 const TOURS_EXTERNAL_URL = 'https://www.huasteca-potosina.com/';
 
-// Reseñas por tour — 2-3 por excursión
-const tourReviews: Record<string, { name: string; location: string; date: string; rating: number; text: string }[]> = {
-  'expedicion-tamul': [
-    { name: 'Andrés Villanueva', location: 'Guadalajara, Jal.', date: 'Marzo 2025', rating: 5, text: 'La Cascada Tamul desde la canoa es uno de los momentos más impresionantes que he vivido en México. El guía conoce cada rincón, el desayuno antes de salir estaba delicioso y llegamos frescos al sótano. Completamente recomendado.' },
-    { name: 'Sofía Guerrero', location: 'Ciudad de México', date: 'Febrero 2025', rating: 5, text: 'Hicimos el tour en familia con tres niños. El guía fue extraordinariamente paciente y hizo que hasta los más pequeños entendieran la geología del sótano. La cueva del Agua fue la cereza del pastel. Volveríamos mañana.' },
-    { name: 'Carlos Medina', location: 'Monterrey, N.L.', date: 'Enero 2025', rating: 5, text: 'Llevaba años queriendo ver Tamul en canoa. Gracias a que salimos desde el hotel todo estuvo perfectamente coordinado — sin esperas, sin improvisaciones. La cascada desde abajo es simplemente inhumana de bonita.' },
-  ],
-  'ruta-surrealista': [
-    { name: 'Mariana Fuentes', location: 'Querétaro, Qro.', date: 'Abril 2025', rating: 5, text: 'Las Pozas de Edward James me dejaron sin palabras. Habíamos visto fotos pero nada prepara para la escala real de las esculturas rodeadas de selva. El manantial Huichihuayán fue la mejor sorpresa — agua turquesa en plena montaña.' },
-    { name: 'Roberto Salas', location: 'Ciudad de México', date: 'Marzo 2025', rating: 5, text: 'Tour perfecto para entender qué es la Huasteca más allá de las cascadas. Cultura, arte y naturaleza en un solo día. El guía dio contexto histórico sobre Edward James que no encontrarías en ninguna guía turística convencional.' },
-  ],
-  'cascadas-meco': [
-    { name: 'Patricia López', location: 'San Luis Potosí', date: 'Abril 2025', rating: 5, text: 'El mirador panorámico justifica el tour por sí solo. Cuando ves las tres cascadas desde arriba con la selva verde alrededor entiendes por qué la Huasteca es única. Y las pozas turquesas para nadar al final son el premio perfecto.' },
-    { name: 'Diego Herrera', location: 'CDMX', date: 'Febrero 2025', rating: 5, text: 'Fácil de caminar, altamente recomendado para parejas y familias. Las fotos en El Gran Salto con la caída de agua al fondo son espectaculares. El desayuno huasteco antes de salir nos dio energía para todo el día.' },
-    { name: 'Valeria Cruz', location: 'Tampico, Tamps.', date: 'Enero 2025', rating: 5, text: 'La mejor relación precio-experiencia de todos los tours que hice en la Huasteca. Tres cascadas en un día, guía atento, transporte puntual. Lo único que lamentamos es no haber venido antes.' },
-  ],
-  'paraiso-escalonado': [
-    { name: 'Luz Elena Torres', location: 'Guadalajara, Jal.', date: 'Marzo 2025', rating: 5, text: 'Las Cascadas de Micos superaron todas mis expectativas. Son escalonadas, lo que significa que puedes nadar en niveles distintos y la vista desde arriba es increíble. Salir en la mañana desde el hotel con desayuno incluido fue fundamental para llegar con tiempo.' },
-    { name: 'Jorge Romero', location: 'Monterrey, N.L.', date: 'Febrero 2025', rating: 5, text: 'Minas Viejas es un secreto que pocas guías mencionan. Agua completamente cristalina, sin aglomeraciones. Combinado con Micos es el día perfecto para los que aman la naturaleza tranquila y fotogénica.' },
-  ],
-  'ruta-acuatica': [
-    { name: 'Fernanda Ibarra', location: 'Ciudad de México', date: 'Abril 2025', rating: 5, text: 'El Puente de Dios es sencillamente mágico. Agua turquesa bajo un arco natural de roca. Hay que verlo para creerlo. La hacienda Los Gómez añade historia al recorrido. Tour muy completo y bien organizado desde el hotel.' },
-    { name: 'Miguel Ángel Castillo', location: 'Querétaro, Qro.', date: 'Marzo 2025', rating: 5, text: 'Las Siete Cascadas al final del tour fueron la sorpresa que no esperábamos. Terminamos el día mojados y felices. El guía fue puntual, conocedor y nos ayudó a encontrar los mejores ángulos para las fotos en cada parada.' },
-  ],
-};
-
 const tours = [
   {
     id: 'expedicion-tamul',
@@ -67,11 +41,12 @@ const tours = [
     difficulty: 'Media',
     price: '$1,450',
     priceUnit: 'MXN / persona',
-    duration: '10–12 horas',
+    duration: '9 horas',
+    durationHours: 9,
     image: '/images/atracciones/cascada_de_tamul.jpg',
     description:
-      'El tour más completo de la Huasteca en un solo día. Incluye Sótano de las Huahuastecas, Cascada Tamul en canoa y Cenote Cueva del Agua.',
-    highlights: ['Sótano de las Huahuastecas', 'Cascada Tamul en canoa', 'Cenote Cueva del Agua', 'Guía certificado'],
+      'El tour más completo de la Huasteca en un solo día. Navega en canoa por el Cañón del Tampaón hasta la Cascada de Tamul —la más alta de México—, asómate al abismo del Sótano de las Huahuas y termina en la Cueva del Agua.',
+    highlights: ['Cascada de Tamul en canoa', 'Sótano de las Huahuas (abismo 512 m)', 'Cenote Cueva del Agua', 'Guía certificado NOM-09'],
   },
   {
     id: 'ruta-surrealista',
@@ -81,39 +56,12 @@ const tours = [
     difficulty: 'Fácil',
     price: '$1,300',
     priceUnit: 'MXN / persona',
-    duration: '8–10 horas',
+    duration: '8 horas',
+    durationHours: 8,
     image: '/images/atracciones/jardin_de_edward_james.jpg',
     description:
-      'Arte, agua y misterio en un recorrido de contrastes únicos. Las Pozas de Edward James, manantial Huichihuayán y Cueva de las Quilas.',
-    highlights: ['Las Pozas de Edward James', 'Manantial Huichihuayán', 'Cueva de las Quilas', 'Selva tropical'],
-  },
-  {
-    id: 'cascadas-meco',
-    name: 'Cascadas del Meco',
-    subtitle: 'Turquesas, Mirador & El Gran Salto',
-    category: 'Cascadas & Fotografía',
-    difficulty: 'Fácil',
-    price: '$1,600',
-    priceUnit: 'MXN / persona',
-    duration: '9–11 horas',
-    image: '/images/atracciones/cascadas_de_micos.jpg',
-    description:
-      'Tres caídas de agua, tres emociones distintas. Cascada El Meco, mirador panorámico y Cascada El Salto en un solo recorrido.',
-    highlights: ['Cascada El Meco', 'Mirador panorámico', 'Cascada El Salto', 'Pozas naturales turquesas'],
-  },
-  {
-    id: 'paraiso-escalonado',
-    name: 'Paraíso Escalonado',
-    subtitle: 'Minas Viejas & Cascadas de Micos',
-    category: 'Cascadas & Bienestar',
-    difficulty: 'Fácil',
-    price: '$1,500',
-    priceUnit: 'MXN / persona',
-    duration: '9–11 horas',
-    image: '/images/atracciones/nacimiento_de_huichihuayan.jpg',
-    description:
-      'Dos joyas naturales, un día perfecto para desconectar. Cascadas de Minas Viejas y las famosas Cascadas de Micos.',
-    highlights: ['Cascadas de Minas Viejas', 'Cascadas de Micos', 'Baño en pozas naturales', 'Paisaje de selva'],
+      'Arte, agua y misterio en un día de contrastes. Las Pozas de Edward James, las aguas cristalinas del Nacimiento de Huichihuayán, la Cueva de las Quilas y el Castillo de la Salud.',
+    highlights: ['Las Pozas de Edward James', 'Nacimiento de Huichihuayán', 'Cueva de las Quilas', 'Castillo de la Salud'],
   },
   {
     id: 'ruta-acuatica',
@@ -123,11 +71,72 @@ const tours = [
     difficulty: 'Media',
     price: '$1,500',
     priceUnit: 'MXN / persona',
-    duration: '10–12 horas',
+    duration: '10 horas',
+    durationHours: 10,
     image: '/images/atracciones/puente_de_dios.jpg',
     description:
-      'El recorrido más refrescante y completo de la región. Puente de Dios, Hacienda Los Gómez y las Siete Cascadas.',
-    highlights: ['Puente de Dios', 'Hacienda Los Gómez', 'Siete Cascadas', 'Senderismo guiado'],
+      'El recorrido más refrescante de la región. Atraviesa la cueva natural del Puente de Dios, explora la Hacienda Los Gómez y desciende por las Siete Cascadas. Las pozas de Tamasopo, opcionales para quien quiera más.',
+    highlights: ['Puente de Dios', 'Hacienda Los Gómez', 'Siete Cascadas', 'Cascadas de Tamasopo (opcional)'],
+  },
+  {
+    id: 'cascadas-meco',
+    name: 'Cascadas del Meco',
+    subtitle: 'Turquesas, Mirador & El Gran Salto',
+    category: 'Cascadas & Fotografía',
+    difficulty: 'Fácil',
+    price: '$1,600',
+    priceUnit: 'MXN / persona',
+    duration: '7 horas',
+    durationHours: 7,
+    image: '/images/atracciones/cascada_el_salto.jpg',
+    description:
+      'El recorrido más fotogénico de la región. Las pozas turquesa de la Cascada del Meco, un mirador panorámico que quita el aliento y la imponente Cascada del Salto de 40 metros.',
+    highlights: ['Cascada del Meco', 'Mirador panorámico', 'Cascada del Salto (40 m)', 'Pozas turquesas para nadar'],
+  },
+  {
+    id: 'paraiso-escalonado',
+    name: 'Paraíso Escalonado',
+    subtitle: 'Minas Viejas & Cascadas de Micos',
+    category: 'Cascadas & Bienestar',
+    difficulty: 'Fácil',
+    price: '$1,500',
+    priceUnit: 'MXN / persona',
+    duration: '8 horas',
+    durationHours: 8,
+    image: '/images/atracciones/cascadas_de_micos.jpg',
+    description:
+      'Dos joyas naturales para desconectar. Minas Viejas despliega terrazas de travertino color jade; las Cascadas de Micos encadenan pozas turquesa entre la selva. Aguas cristalinas y paz lejos del ruido.',
+    highlights: ['Cascadas de Minas Viejas', 'Cascadas de Micos', 'Terrazas de travertino jade', 'Ideal para familias'],
+  },
+  {
+    id: 'rappel-tamul',
+    name: 'Rappel en Tamul',
+    subtitle: 'Descenso frente a la caída más alta de México',
+    category: 'Aventura Extrema',
+    difficulty: 'Alta',
+    price: '$1,700',
+    priceUnit: 'MXN / persona',
+    duration: '5 horas',
+    durationHours: 5,
+    image: '/images/atracciones/rappel_tamul.jpg',
+    description:
+      'Adrenalina pura: desciende en rappel por la pared del cañón del Tampaón con la Cascada de Tamul —105 metros— rugiendo a tu lado. Equipo profesional, guías certificados y fotos con dron. Apto también para principiantes.',
+    highlights: ['Rappel frente a la Cascada de Tamul', 'Cañón del Río Tampaón', 'Equipo y guías certificados', 'Fotos y video con dron'],
+  },
+  {
+    id: 'rzr-xilitla',
+    name: 'RZR por Xilitla',
+    subtitle: 'Ruta Nanacatli · Todoterreno',
+    category: 'Aventura Off-Road',
+    difficulty: 'Media',
+    price: '$800',
+    priceUnit: 'MXN / persona',
+    duration: '2 horas',
+    durationHours: 2,
+    image: '/images/atracciones/rzr_xilitla.jpg',
+    description:
+      'Maneja tu propio RZR por la selva húmeda de Xilitla: cruza ríos de agua cristalina, atraviesa el barro y llega a la escondida Cascada Nanacatli. Adrenalina sin necesidad de experiencia.',
+    highlights: ['Maneja tu propio todoterreno', 'Cruce de ríos y selva', 'Cascada Nanacatli', 'Casco, goggles y guía instructor'],
   },
 ];
 
@@ -154,18 +163,6 @@ const attractions = [
   },
 ];
 
-const packageHighlight = {
-  name: 'Las Pozas Experience',
-  price: '$4,600',
-  includes: [
-    '2 noches en suite seleccionada',
-    'Desayuno huasteco cada mañana',
-    'Entrada a Las Pozas de Edward James',
-    'Tour guiado por Xilitla (3 hrs)',
-    'Cóctel de bienvenida',
-  ],
-};
-
 // Schema TouristAttraction por tour + ItemList
 const toursSchema = {
   '@context': 'https://schema.org',
@@ -184,7 +181,7 @@ const toursSchema = {
       url: `https://www.paraisoencantado.com/experiencias#${tour.id}`,
       image: `https://www.paraisoencantado.com${tour.image}`,
       touristType: ['Adventure traveler', 'Nature enthusiast'],
-      duration: tour.id === 'ruta-surrealista' ? 'PT8H' : tour.id === 'cascadas-meco' || tour.id === 'paraiso-escalonado' ? 'PT9H' : 'PT10H',
+      duration: `PT${tour.durationHours}H`,
       itinerary: {
         '@type': 'ItemList',
         itemListElement: tour.highlights.map((h, idx) => ({
@@ -194,7 +191,7 @@ const toursSchema = {
         })),
       },
       departureTime: '08:00',
-      arrivalTime: tour.id === 'ruta-surrealista' ? '16:00' : '18:00',
+      arrivalTime: `${String(8 + tour.durationHours).padStart(2, '0')}:00`,
       offers: {
         '@type': 'Offer',
         price: tour.price.replace('$', '').replace(',', ''),
@@ -206,19 +203,6 @@ const toursSchema = {
           url: 'https://www.paraisoencantado.com',
         },
       },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: 4.9,
-        reviewCount: (tourReviews[tour.id] || []).length,
-        bestRating: 5,
-      },
-      review: (tourReviews[tour.id] || []).map(r => ({
-        '@type': 'Review',
-        author: { '@type': 'Person', name: r.name },
-        reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5 },
-        reviewBody: r.text,
-        datePublished: r.date,
-      })),
       containedInPlace: {
         '@type': 'LodgingBusiness',
         name: 'Hotel Paraíso Encantado',
@@ -243,7 +227,7 @@ const experienciasFaqSchema = {
       name: '¿Qué tours ofrece el Hotel Paraíso Encantado?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Ofrecemos 5 tours con guía certificado: Expedición Tamul (Cascada Tamul + Sótano de las Huahuastecas), Ruta Surrealista (Las Pozas de Edward James), Cascadas del Meco, Paraíso Escalonado (Minas Viejas + Micos) y Ruta Acuática (Puente de Dios). Todos salen desde el hotel e incluyen transporte, guía y desayuno.',
+        text: 'Ofrecemos 7 tours con guía certificado NOM-09 SECTUR: Expedición Tamul (Cascada de Tamul + Sótano de las Huahuas), Ruta Surrealista (Las Pozas de Edward James), Ruta Acuática (Puente de Dios), Cascadas del Meco, Paraíso Escalonado (Minas Viejas + Micos), y dos de aventura: Rappel en la Cascada de Tamul y RZR por Xilitla. Todos salen desde el hotel e incluyen transporte, guía y desayuno.',
       },
     },
     {
@@ -312,18 +296,18 @@ export default function ExperienciasPage() {
           </p>
           <div className={styles.heroStats}>
             <div className={styles.stat}>
-              <span className={styles.statNum}>5</span>
+              <span className={styles.statNum}>7</span>
               <span className={styles.statLabel}>Tours disponibles</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.stat}>
-              <span className={styles.statNum}>9</span>
-              <span className={styles.statLabel}>Atracciones cubiertas</span>
+              <span className={styles.statNum}>4.9</span>
+              <span className={styles.statLabel}>492 reseñas en Google</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.stat}>
-              <span className={styles.statNum}>4.9</span>
-              <span className={styles.statLabel}>Calificación promedio</span>
+              <span className={styles.statNum}>10K+</span>
+              <span className={styles.statLabel}>Viajeros guiados</span>
             </div>
           </div>
         </div>
@@ -336,46 +320,6 @@ export default function ExperienciasPage() {
             sizes="(max-width: 768px) 100vw, 50vw"
             className={styles.heroImg}
           />
-        </div>
-      </section>
-
-      {/* Paquete Destacado */}
-      <section className={styles.packageSection}>
-        <div className={styles.packageCard}>
-          <div className={styles.packageBadge}>Paquete Recomendado</div>
-          <div className={styles.packageContent}>
-            <div>
-              <p className={styles.eyebrow}>Paquete Especial</p>
-              <h2 className={styles.packageName}>{packageHighlight.name}</h2>
-              <ul className={styles.packageList}>
-                {packageHighlight.includes.map((item) => (
-                  <li key={item} className={styles.packageItem}>
-                    <CheckCircle size={14} strokeWidth={2} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className={styles.packagePricing}>
-              <p className={styles.packageFrom}>Desde</p>
-              <p className={styles.packagePrice}>{packageHighlight.price}</p>
-              <p className={styles.packageUnit}>MXN por pareja</p>
-              <a
-                href={`${WHATSAPP_URL}?text=Hola,%20me%20interesa%20el%20Paquete%20Las%20Pozas%20Experience`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.packageBtn}
-              >
-                Solicitar Paquete
-              </a>
-              <a
-                href={BOOKING_URL}
-                className={styles.packageBtnOutline}
-              >
-                Reservar Suite
-              </a>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -436,28 +380,6 @@ export default function ExperienciasPage() {
                   </a>
                 </div>
               </div>
-              {/* Reseñas del tour */}
-              {(tourReviews[tour.id] || []).length > 0 && (
-                <div className={styles.tourReviews}>
-                  <p className={styles.tourReviewsTitle}>
-                    ★★★★★ <span>Lo que dicen quienes lo vivieron</span>
-                  </p>
-                  <div className={styles.tourReviewsList}>
-                    {(tourReviews[tour.id] || []).map((r) => (
-                      <div key={r.name} className={styles.tourReviewCard}>
-                        <div className={styles.tourReviewHeader}>
-                          <span className={styles.tourReviewAvatar}>{r.name.charAt(0)}</span>
-                          <div>
-                            <span className={styles.tourReviewName}>{r.name}</span>
-                            <span className={styles.tourReviewMeta}>{r.location} · {r.date}</span>
-                          </div>
-                        </div>
-                        <p className={styles.tourReviewText}>"{r.text}"</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </article>
           ))}
         </div>
@@ -474,7 +396,7 @@ export default function ExperienciasPage() {
             [
               { icon: <Bus size={22} strokeWidth={1.5} />, title: 'Transporte', desc: 'Vehículo privado desde y hacia el hotel.' },
               { icon: <Coffee size={22} strokeWidth={1.5} />, title: 'Desayuno', desc: 'Desayuno huasteco antes de la salida.' },
-              { icon: <GraduationCap size={22} strokeWidth={1.5} />, title: 'Guía Certificado', desc: 'Guía local con certificación y seguro.' },
+              { icon: <GraduationCap size={22} strokeWidth={1.5} />, title: 'Guía Certificado', desc: 'Guía local certificado NOM-09 SECTUR.' },
               { icon: <ShieldCheck size={22} strokeWidth={1.5} />, title: 'Seguro de viaje', desc: 'Cobertura durante toda la excursión.' },
               { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Entradas', desc: 'Entradas a reservas y sitios naturales.' },
               { icon: <Camera size={22} strokeWidth={1.5} />, title: 'Fotografía', desc: 'Paradas en los mejores puntos de foto.' },

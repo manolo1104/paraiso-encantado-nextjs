@@ -9,20 +9,20 @@ export default function FinalCTA() {
     <section className={styles.section} aria-label="Reserva ahora">
       <div className={styles.content}>
         <h2>
-          ¿Listo para Tu Escapada a la <em>Huasteca</em>?
+          Tu escapada a la <em>Huasteca</em> empieza aquí
         </h2>
 
         <p className={styles.subtitle}>
-          Solo 13 suites disponibles. Reserva hoy y asegura tu lugar
-          en el hotel más cercano al Jardín de Edward James.
+          13 suites a cinco minutos de Las Pozas. Reserva directo con nosotros
+          y vive Xilitla con calma.
         </p>
 
         <a
           href="/reservar"
           className={styles.ctaBtn}
-          aria-label="Asegura tu escapada — confirmación instantánea"
+          aria-label="Ver disponibilidad y reservar"
         >
-          Asegura Tu Escapada
+          Ver disponibilidad
         </a>
 
         <ul className={styles.guarantees} role="list" aria-label="Garantías">

@@ -1,43 +1,36 @@
-import Image from 'next/image';
 import styles from './AmenitiesGrid.module.css';
-import { DropletsIcon, SunriseIcon, UtensilsIcon, CompassIcon, WifiIcon, CarIcon } from './icons';
+import { DropletsIcon, UtensilsIcon, CompassIcon, SunriseIcon, WifiIcon, CarIcon } from './icons';
 
 const amenities = [
   {
     Icon: DropletsIcon,
-    title: 'Piscina Spa Privada',
-    desc: 'Tu propio spa al aire libre, exclusivo para tu suite. Nadie más — solo tú y el paisaje de Xilitla.',
-    image: '/images/JUNGLA/PORTADA.JPG',
-  },
-  {
-    Icon: SunriseIcon,
-    title: 'Terraza Panorámica',
-    desc: 'Desayuna frente a las montañas de la Huasteca. La vista más impresionante de toda la región.',
-    image: '/images/FLOR DE LIS 2/PORTADA.jpeg',
+    title: 'Spa privado',
+    desc: 'Tu propio spa al aire libre en las suites que lo incluyen.',
   },
   {
     Icon: UtensilsIcon,
     title: 'Restaurante El Papán',
-    desc: 'Cocina huasteca auténtica a pasos de tu habitación. Tortillas hechas a mano y zacahuil de temporada.',
-    image: '/images/RESTAURANTE/DSC09679.jpg',
+    desc: 'Cocina huasteca hecha a mano, dentro del hotel.',
   },
   {
     Icon: CompassIcon,
     title: 'Tours a Las Pozas',
-    desc: 'A 5 minutos caminando del Jardín Surrealista de Edward James. Te organizamos la visita desde el hotel.',
-    image: '/images/atracciones/ruta-surrealista-pozas.png',
+    desc: 'Salidas diarias al Jardín de Edward James y la Huasteca.',
+  },
+  {
+    Icon: SunriseIcon,
+    title: 'Terraza panorámica',
+    desc: 'Desayuna frente a la sierra de la Huasteca.',
   },
   {
     Icon: WifiIcon,
-    title: 'WiFi de Alta Velocidad',
-    desc: 'Conexión estable en toda la propiedad. Trabaja o desconéctate — tú eliges desde tu suite.',
-    image: '/images/ORQUIDEAS DOBLE/PORTADA.jpg',
+    title: 'WiFi gratuito',
+    desc: 'Conexión estable en toda la propiedad.',
   },
   {
     Icon: CarIcon,
-    title: 'Estacionamiento Gratuito',
-    desc: 'Llegada sin estrés: estacionamiento privado y seguro incluido sin costo adicional.',
-    image: '/images/LAJAS/PORTADA.jpg',
+    title: 'Estacionamiento gratuito',
+    desc: 'Privado y seguro, incluido sin costo.',
   },
 ];
 
@@ -45,32 +38,22 @@ export default function AmenitiesGrid() {
   return (
     <section className={styles.section} aria-labelledby="amenities-heading">
       <div className={styles.header}>
-        <p className={styles.eyebrow}>Todo Incluido</p>
+        <p className={styles.eyebrow}>La estancia</p>
         <h2 id="amenities-heading" className={styles.title}>
-          La <em>Experiencia</em> Completa
+          Servicios del <em>hotel</em>
         </h2>
         <p className={styles.subtitle}>
-          Cada aspecto de tu estadía está cuidado al detalle.
+          Lo más importante para tu estancia, cuidado con calma.
         </p>
       </div>
       <div className={styles.grid}>
-        {amenities.map(({ Icon, title, desc, image }) => (
+        {amenities.map(({ Icon, title, desc }) => (
           <div key={title} className={styles.cell}>
-            <Image
-              src={image}
-              alt={`${title} — Hotel Paraíso Encantado, Xilitla, Huasteca Potosina`}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className={styles.cellImage}
-            />
-            <div className={styles.cellOverlay} aria-hidden="true" />
-            <div className={styles.cellContent}>
-              <Icon size={26} className={styles.cellIcon} />
-              <div>
-                <p className={styles.cellTitle}>{title}</p>
-                <p className={styles.cellDesc}>{desc}</p>
-              </div>
-            </div>
+            <span className={styles.iconBadge} aria-hidden="true">
+              <Icon size={28} className={styles.cellIcon} />
+            </span>
+            <p className={styles.cellTitle}>{title}</p>
+            <p className={styles.cellDesc}>{desc}</p>
           </div>
         ))}
       </div>

@@ -27,10 +27,10 @@ export default function SuitesGrid() {
 
       <div className={styles.cta}>
         <a href="/habitaciones" className={styles.ctaBtn}>
-          Explorar Todas las Suites
+          Ver todas las suites
         </a>
         <p className={styles.ctaNote}>
-          Confirmación instantánea · Cancelación gratuita 48hrs
+          Desde $1,500 MXN la noche
         </p>
       </div>
     </section>

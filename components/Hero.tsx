@@ -1,9 +1,7 @@
 import Image from 'next/image';
 import styles from './Hero.module.css';
 import HeroDatePicker from './HeroDatePicker';
-import HeroLiveSignals from './HeroLiveSignals';
 import VideoBackground from './VideoBackground';
-import { StarIcon, ShieldCheckIcon, CheckCircleIcon } from './icons';
 
 export default function Hero() {
   return (
@@ -39,33 +37,12 @@ export default function Hero() {
         </h1>
 
         <p className={styles.heroSubtitle}>
-          13 suites boutique con spa privado a 5 minutos caminando de Las Pozas.<br />
-          Disfruta de esta experiencia desde $1,500 MXN/noche.
+          13 suites boutique con spa privado, a 5 minutos caminando de Las Pozas.<br />
+          Desde $1,500 MXN la noche.
         </p>
-
-        {/* Live signals — viewers, escasez, última reserva */}
-        <HeroLiveSignals />
 
         {/* Date picker */}
         <HeroDatePicker />
-
-        {/* Trust bar con SVG */}
-        <div className={styles.heroTrust} role="list" aria-label="Indicadores de confianza">
-          <span role="listitem" className={styles.trustItem}>
-            <StarIcon size={14} className={styles.trustIcon} />
-            4.6/5 · 519 reseñas
-          </span>
-          <span className={styles.separator} aria-hidden="true">·</span>
-          <span role="listitem" className={styles.trustItem}>
-            <ShieldCheckIcon size={14} className={styles.trustIcon} />
-            Pago 100% seguro
-          </span>
-          <span className={styles.separator} aria-hidden="true">·</span>
-          <span role="listitem" className={styles.trustItem}>
-            <CheckCircleIcon size={14} className={styles.trustIcon} />
-            Cancelación gratis 48hrs
-          </span>
-        </div>
 
         <div className={styles.ctaRow}>
           <a
@@ -87,7 +64,7 @@ export default function Hero() {
         </div>
 
         <p className={styles.ctaNote}>
-          Confirmación instantánea &nbsp;·&nbsp; Sin comisiones de OTAs
+          Reserva directa &nbsp;·&nbsp; Confirmación inmediata &nbsp;·&nbsp; Cancela gratis hasta 48 h
         </p>
       </div>
 

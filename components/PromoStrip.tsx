@@ -23,10 +23,7 @@ function InnerContent() {
 export default function PromoStrip() {
   return (
     <aside className={styles.strip} aria-label="Oferta especial vigente">
-      <div className={styles.marqueTrack}>
-        <InnerContent />
-        <InnerContent />
-      </div>
+      <InnerContent />
     </aside>
   );
 }
