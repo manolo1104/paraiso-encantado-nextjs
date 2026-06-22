@@ -8,7 +8,9 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
-const FILE = './reservations.json';
+// En local usa el archivo de la carpeta; en Railway apunta al disco persistente
+// (RESERVATIONS_FILE=/data/reservations.json) para no perder reservas al actualizar.
+const FILE = process.env.RESERVATIONS_FILE || './reservations.json';
 
 function load() {
   if (!existsSync(FILE)) return [];

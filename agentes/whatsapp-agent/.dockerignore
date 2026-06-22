@@ -1,0 +1,13 @@
+node_modules
+.wwebjs_auth
+.wwebjs_cache
+.venv
+.vscode
+.claude
+.env
+.env.example
+.git
+.gitignore
+.DS_Store
+*.log
+reservations.json

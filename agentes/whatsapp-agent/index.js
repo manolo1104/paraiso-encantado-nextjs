@@ -21,6 +21,8 @@ import { appendConfirmedReservationToSheet, updateRoomStatusInDisponibilidad } f
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:http';
+import QRCode from 'qrcode';
 
 const escalatedChats = new Set();
 const hydratedChats = new Set(); // chatId ya inicializado con historial previo
@@ -565,7 +567,9 @@ if (!process.env.ANTHROPIC_API_KEY) {
 // ── Cliente WhatsApp ──────────────────────────────────────
 
 const client = new Client({
-  authStrategy: new LocalAuth({ clientId: 'paraiso-hotel' }),
+  // En local guarda la sesión en ./.wwebjs_auth; en Railway en el disco persistente
+  // (WWEBJS_DATA_PATH=/data/wwebjs_auth) para no tener que reescanear el QR al actualizar.
+  authStrategy: new LocalAuth({ clientId: 'paraiso-hotel', dataPath: process.env.WWEBJS_DATA_PATH || undefined }),
   puppeteer: {
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     args: [
@@ -1175,6 +1179,74 @@ process.on('uncaughtException', (err) => {
     console.error('❌ Excepción no capturada:', msg);
     process.exit(1);
   }
+});
+
+// ── Página web de estado + QR ─────────────────────────────
+// En un servidor (Railway) no hay terminal para escanear el QR. Esta página lo
+// muestra en el navegador y sirve además de healthcheck (/health) para Railway.
+let latestQr = null;
+let waStatus = 'starting'; // starting | qr | authenticated | ready | disconnected
+
+client.on('qr', (qr) => { latestQr = qr; waStatus = 'qr'; });
+client.on('authenticated', () => { waStatus = 'authenticated'; });
+client.on('ready', () => { latestQr = null; waStatus = 'ready'; });
+client.on('disconnected', () => { waStatus = 'disconnected'; });
+
+const WEB_PORT = process.env.PORT || 3001;
+const QR_TOKEN = process.env.QR_PAGE_TOKEN || ''; // opcional: protege la página con ?token=
+
+function htmlShell(body) {
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="8">
+<title>Camila · WhatsApp Hotel Paraíso</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0e1116;color:#e6edf3;
+      display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;text-align:center}
+ .card{background:#161b22;border:1px solid #30363d;border-radius:16px;padding:32px 28px;max-width:420px}
+ h1{font-size:20px;margin:0 0 10px} p{color:#9da7b3;line-height:1.5;font-size:15px;margin:8px 0}
+ img{width:280px;height:280px;background:#fff;border-radius:12px;padding:10px;margin:18px 0}
+ .ok{font-size:54px;margin:6px 0} ol{text-align:left;color:#9da7b3;font-size:14px;line-height:1.8;margin:14px 0}
+</style></head><body><div class="card">${body}</div></body></html>`;
+}
+
+createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    if (url.pathname === '/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: waStatus }));
+      return;
+    }
+    if (QR_TOKEN && url.searchParams.get('token') !== QR_TOKEN) {
+      res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(htmlShell('<h1>🔒 Acceso restringido</h1><p>Agrega <b>?token=…</b> al final de la URL.</p>'));
+      return;
+    }
+    let body;
+    if (waStatus === 'ready') {
+      body = '<div class="ok">✅</div><h1>Camila está conectada</h1>' +
+             '<p>El bot de WhatsApp está activo y respondiendo 24/7.</p>';
+    } else if (latestQr) {
+      const dataUrl = await QRCode.toDataURL(latestQr, { margin: 1, width: 280 });
+      body = '<h1>📱 Vincula el WhatsApp del hotel</h1>' +
+             `<img src="${dataUrl}" alt="Código QR">` +
+             '<ol><li>Abre WhatsApp en el teléfono del hotel</li>' +
+             '<li>Menú (⋮) → <b>Dispositivos vinculados</b></li>' +
+             '<li><b>Vincular un dispositivo</b> y escanea este código</li></ol>' +
+             '<p>La página se actualiza sola.</p>';
+    } else {
+      body = '<div class="ok">⏳</div><h1>Iniciando Camila…</h1>' +
+             '<p>Espera unos segundos; el código QR aparecerá aquí solo.</p>';
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(htmlShell(body));
+  } catch (e) {
+    res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Error: ' + (e?.message || e));
+  }
+}).listen(WEB_PORT, () => {
+  console.log(`🌐 Página de estado/QR escuchando en el puerto ${WEB_PORT}`);
 });
 
 // ── Iniciar ───────────────────────────────────────────────
