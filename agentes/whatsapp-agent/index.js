@@ -22,7 +22,20 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
+import { rmSync } from 'node:fs';
 import QRCode from 'qrcode';
+
+// Borra los "candados" viejos del perfil de Chromium en el disco persistente.
+// Si un contenedor anterior no cerró bien (p.ej. al redeploy en Railway), deja
+// un SingletonLock que impide arrancar el navegador en el siguiente contenedor:
+// "Failed to launch the browser process: Code 21". Esto lo hace auto-recuperable.
+function cleanChromiumLocks() {
+  const base = process.env.WWEBJS_DATA_PATH || './.wwebjs_auth';
+  const sessionDir = path.join(base, 'session-paraiso-hotel');
+  for (const f of ['SingletonLock', 'SingletonCookie', 'SingletonSocket', 'DevToolsActivePort']) {
+    try { rmSync(path.join(sessionDir, f), { force: true, recursive: true }); } catch { /* no-op */ }
+  }
+}
 
 const escalatedChats = new Set();
 const hydratedChats = new Set(); // chatId ya inicializado con historial previo
@@ -1144,6 +1157,7 @@ async function safeRestart(reason = '') {
   try { await client.destroy(); } catch { /* ignorar errores al destruir */ }
   setTimeout(() => {
     isRestarting = false;
+    cleanChromiumLocks();
     client.initialize().catch(e => {
       console.error('❌ Error al reinicializar:', e.message);
       isRestarting = false;
@@ -1252,4 +1266,5 @@ createServer(async (req, res) => {
 // ── Iniciar ───────────────────────────────────────────────
 
 console.log('\n🚀 Iniciando Agente WhatsApp — Hotel Paraíso Encantado...');
+cleanChromiumLocks();
 client.initialize();
