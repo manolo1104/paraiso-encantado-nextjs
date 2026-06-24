@@ -1,43 +1,49 @@
 import Image from 'next/image';
-import { MapPin, Clock, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { Calendar, Users, ArrowRight, MapPin } from 'lucide-react';
 import styles from './ToursSection.module.css';
 
-const TOURS_URL      = 'https://www.huasteca-potosina.com/';
-const TOURS_BOOK_URL = 'https://www.huasteca-potosina.com/';
+const PACKAGES_URL = '/paquetes';
 
-const tours = [
+const packages = [
   {
-    id: 'tamul',
-    name: 'Expedición Tamul',
-    subtitle: 'Cascada Tamul · Sótano · Cenote',
+    id: 'esencial',
+    name: 'Paquete Esencial',
+    subtitle: 'Ruta Surrealista · Edward James',
     description:
-      'La cascada más impresionante de San Luis Potosí. Navega en canoa hasta el salto de 105 metros de caída libre. Incluye sótano de las Huahuastecas y Cenote Cueva del Agua.',
-    duration: '10–12 hrs',
-    from: 'Desde $1,450 MXN/persona',
-    image: '/images/atracciones/cascada_de_tamul.jpg',
-    href: TOURS_BOOK_URL,
-  },
-  {
-    id: 'xilitla',
-    name: 'Ruta Surrealista',
-    subtitle: 'Jardín de Edward James · Las Pozas',
-    description:
-      'Arte surrealista, agua turquesa y selva húmeda en un solo recorrido. Las Pozas de Edward James, el manantial de Huichihuayán y la magia de la sierra potosina.',
-    duration: '8–10 hrs',
-    from: 'Desde $1,300 MXN/persona',
+      '1 noche en el hotel + desayuno + tour Ruta Surrealista (Las Pozas de Edward James) con guía certificado NOM-09, transporte y entradas.',
+    nights: '2 días · 1 noche',
+    guests: '2 personas',
+    price: 'Desde $5,000 MXN',
     image: '/images/atracciones/jardin_de_edward_james.jpg',
-    href: TOURS_BOOK_URL,
+    badge: 'Primera visita',
+    featured: false,
   },
   {
-    id: 'puente-de-dios',
-    name: 'Ruta Acuática',
-    subtitle: 'Puente de Dios · Siete Cascadas',
+    id: 'aventura',
+    name: 'Paquete Aventura',
+    subtitle: 'Tamul + Cascadas del Meco',
     description:
-      'El recorrido más refrescante de la Huasteca. Aguas cristalinas del Puente de Dios, Hacienda Los Gómez y las Siete Cascadas escalonadas rodeadas de selva.',
-    duration: '10–12 hrs',
-    from: 'Desde $1,500 MXN/persona',
-    image: '/images/atracciones/puente_de_dios.jpg',
-    href: TOURS_BOOK_URL,
+      '2 noches + desayunos + tour Expedición Tamul y tour Cascadas del Meco con guías certificados, transporte y entradas a todas las atracciones.',
+    nights: '3 días · 2 noches',
+    guests: '2 personas',
+    price: 'Desde $9,000 MXN',
+    image: '/images/atracciones/cascada_de_tamul.jpg',
+    badge: 'Más popular',
+    featured: true,
+  },
+  {
+    id: 'completo',
+    name: 'Paquete Completo Huasteca',
+    subtitle: '3 tours a elegir + fotos y video',
+    description:
+      '3 noches + desayunos + 3 tours completos a elegir, transporte, entradas y fotografías y video profesional de cada recorrido.',
+    nights: '4 días · 3 noches',
+    guests: '2 personas',
+    price: 'Desde $12,200 MXN',
+    image: '/images/HELECHOS 1/PORTADA.jpg',
+    badge: 'Experiencia total',
+    featured: false,
   },
 ];
 
@@ -45,63 +51,63 @@ export default function ToursSection() {
   return (
     <section className={styles.section} aria-labelledby="tours-heading">
       <div className={styles.header}>
-        <p className={styles.eyebrow}>Huasteca Potosina</p>
+        <p className={styles.eyebrow}>Xilitla · Huasteca Potosina</p>
         <h2 id="tours-heading">
-          Tours desde <em>el Hotel</em>
+          Paquetes <em>Todo Incluido</em>
         </h2>
         <p className={styles.subtitle}>
-          Guía certificado, transporte y desayuno incluidos. Salidas diarias desde Paraíso Encantado.
+          Hotel + desayunos + tours guiados en un solo precio. Reserva directo y ahorra hasta 15% vs. plataformas externas.
         </p>
       </div>
 
       <div className={styles.grid}>
-        {tours.map((tour) => (
-          <article key={tour.id} className={styles.card}>
+        {packages.map((pkg) => (
+          <article
+            key={pkg.id}
+            className={`${styles.card} ${pkg.featured ? styles.cardFeatured : ''}`}
+          >
             <div className={styles.imageWrap}>
               <Image
-                src={tour.image}
-                alt={`${tour.name} — Tour Huasteca Potosina desde Xilitla`}
+                src={pkg.image}
+                alt={`${pkg.name} — Paquete todo incluido en Xilitla, Huasteca Potosina`}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className={styles.image}
               />
               <div className={styles.overlay} />
+              <span className={styles.badge}>{pkg.badge}</span>
             </div>
             <div className={styles.content}>
-              <p className={styles.cardEyebrow}>{tour.subtitle}</p>
-              <h3 className={styles.name}>{tour.name}</h3>
-              <p className={styles.desc}>{tour.description}</p>
+              <p className={styles.cardEyebrow}>{pkg.subtitle}</p>
+              <h3 className={styles.name}>{pkg.name}</h3>
+              <p className={styles.desc}>{pkg.description}</p>
               <div className={styles.meta}>
                 <span className={styles.duration}>
-                  <Clock size={13} strokeWidth={1.5} /> {tour.duration}
+                  <Calendar size={13} strokeWidth={1.5} /> {pkg.nights}
                 </span>
-                <span className={styles.price}>{tour.from}</span>
+                <span className={styles.duration}>
+                  <Users size={13} strokeWidth={1.5} /> {pkg.guests}
+                </span>
               </div>
-              <a
-                href={tour.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.btn}
-              >
-                Ver tour <ArrowRight size={14} strokeWidth={2} />
-              </a>
+              <div className={styles.priceRow}>
+                <span className={styles.price}>{pkg.price}</span>
+                <span className={styles.priceUnit}>por pareja</span>
+              </div>
+              <Link href={PACKAGES_URL} className={styles.btn}>
+                Ver paquete <ArrowRight size={14} strokeWidth={2} />
+              </Link>
             </div>
           </article>
         ))}
       </div>
 
       <div className={styles.cta}>
-        <a
-          href={TOURS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.ctaBtn}
-        >
-          Ver todos los tours en Huasteca-Potosina.com
+        <Link href={PACKAGES_URL} className={styles.ctaBtn}>
+          Ver todos los paquetes
           <ArrowRight size={15} strokeWidth={2} />
-        </a>
+        </Link>
         <p className={styles.ctaNote}>
-          <MapPin size={12} strokeWidth={1.5} /> Todas las salidas parten desde el hotel
+          <MapPin size={12} strokeWidth={1.5} /> Hotel + tours + desayunos · un solo precio, sin sorpresas
         </p>
       </div>
     </section>

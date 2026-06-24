@@ -86,7 +86,7 @@ JSON-LD schema (`LodgingBusiness`) lives **only** in `app/page.tsx` (not duplica
 
 `HeroLiveSignals` shows 15–45 viewers, drifts ±5 every 20–40 seconds.
 
-`ToursSection` — all external links point to `https://www.huasteca-potosina.com/` with `target="_blank"`.
+`ToursSection` — renamed in content to "Paquetes Todo Incluido": shows the 3 packages (Esencial $5,000 / Aventura $9,000 / Completo $12,200, por pareja) mirrored from `/paquetes`. All links are internal `<Link href="/paquetes">` (previously external links to `huasteca-potosina.com`).
 
 `NewsletterSection` — captures email via `/api/capture-lead` (saves to Sheets). Positioned after Testimonials.
 

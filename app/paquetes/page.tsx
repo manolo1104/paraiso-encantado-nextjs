@@ -123,7 +123,6 @@ const PAQUETES = [
     price: 5000,
     priceNote: 'por pareja, 1 noche',
     saving: 'Ahorras ~$1,600 vs. reservar por separado',
-    cta: '/reservar',
     waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Esencial%20(tour%20%2B%20hotel).%20%C2%BFTienen%20disponibilidad%3F',
   },
   {
@@ -152,7 +151,6 @@ const PAQUETES = [
     price: 9000,
     priceNote: 'por pareja, 2 noches',
     saving: 'Ahorras ~$4,400 vs. reservar por separado',
-    cta: '/reservar',
     waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Aventura%20(Tamul%20%2B%20Meco).%20%C2%BFTienen%20disponibilidad%3F',
   },
   {
@@ -181,7 +179,6 @@ const PAQUETES = [
     price: 12200,
     priceNote: 'por pareja, 3 noches',
     saving: 'Ahorras ~$6,000 vs. reservar por separado',
-    cta: '/reservar',
     waMsg: 'Hola%2C%20me%20interesa%20el%20Paquete%20Completo%20Huasteca.%20%C2%BFTienen%20disponibilidad%3F',
   },
 ];
@@ -205,7 +202,7 @@ const FAQ = [
   },
   {
     q: '¿Cómo reservo un paquete?',
-    a: 'Escríbenos por WhatsApp al +52 489-100-7679 con las fechas deseadas y el paquete que te interesa. Te confirmamos disponibilidad en menos de 2 horas y te enviamos el link de pago directo.',
+    a: 'Escríbenos por WhatsApp al +52 489-125-1458 con las fechas deseadas y el paquete que te interesa. Te confirmamos disponibilidad en menos de 2 horas y te enviamos el link de pago directo.',
   },
   {
     q: '¿Qué pasa si necesito cancelar?',
@@ -309,16 +306,21 @@ export default function PaquetesPage() {
 
                       <div className={styles.cardActions}>
                         <a
-                          href={`https://wa.me/524891007679?text=${p.waMsg}`}
+                          href={`https://wa.me/524891251458?text=${p.waMsg}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={styles.ctaPrimary}
                         >
                           Consultar disponibilidad
                         </a>
-                        <Link href={p.cta} className={styles.ctaSecondary}>
-                          Ver suites disponibles <span className="pe-arrow">→</span>
-                        </Link>
+                        <a
+                          href="https://www.huasteca-potosina.com/paquetes"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.ctaSecondary}
+                        >
+                          Ver tours y paquetes <span className="pe-arrow">→</span>
+                        </a>
                       </div>
                     </div>
                   </TiltCard>
@@ -341,7 +343,7 @@ export default function PaquetesPage() {
               </p>
             </div>
             <a
-              href="https://wa.me/524891007679?text=Hola%2C%20me%20gustar%C3%ADa%20un%20paquete%20personalizado."
+              href="https://wa.me/524891251458?text=Hola%2C%20me%20gustar%C3%ADa%20un%20paquete%20personalizado."
               target="_blank"
               rel="noopener noreferrer"
               className={styles.customCta}
@@ -407,16 +409,21 @@ export default function PaquetesPage() {
             </p>
             <div className={styles.ctaButtons}>
               <a
-                href="https://wa.me/524891007679?text=Hola%2C%20me%20interesa%20reservar%20un%20paquete."
+                href="https://wa.me/524891251458?text=Hola%2C%20me%20interesa%20reservar%20un%20paquete."
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.ctaBtn}
               >
                 WhatsApp — Reservar ahora
               </a>
-              <Link href="/habitaciones" className={styles.ctaBtnOutline}>
-                Ver todas las suites
-              </Link>
+              <a
+                href="https://www.huasteca-potosina.com/paquetes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.ctaBtnOutline}
+              >
+                Ver tours y experiencias
+              </a>
             </div>
           </div>
         </section>
