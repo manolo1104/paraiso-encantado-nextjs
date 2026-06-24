@@ -126,9 +126,9 @@ export interface CartItem {
 }
 
 // ── Coupon logic ─────────────────────────────────────────
-export type PromoCode = 'XILITLA50' | 'XILITLA3MX' | 'XILITLA2026PE' | '2026GOOGLE';
+export type PromoCode = 'XILITLA50' | 'XILITLA3MX' | 'XILITLA2026PE';
 
-export const VALID_PROMO_CODES: PromoCode[] = ['XILITLA50', 'XILITLA3MX', 'XILITLA2026PE', '2026GOOGLE'];
+export const VALID_PROMO_CODES: PromoCode[] = ['XILITLA50', 'XILITLA3MX', 'XILITLA2026PE'];
 
 export interface PromoValidation {
   valid: boolean;
@@ -188,7 +188,6 @@ export function calcPromoDiscount(
     }, 0);
   }
   if (code === 'XILITLA2026PE') return Math.round(subtotal * 0.10);
-  if (code === '2026GOOGLE') return subtotal;
   return 0;
 }
 

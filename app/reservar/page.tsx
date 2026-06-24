@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle, Check, Ban } from 'lucide-react';
+import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Baby, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle, Check, Ban } from 'lucide-react';
 import {
   BOOKING_ROOMS,
   SUITE_ID_TO_ROOM_ID,
@@ -22,14 +22,24 @@ import {
   formatMXN,
 } from '@/lib/booking';
 import styles from './reservar.module.css';
-import ReservationUrgencyBar from '@/components/ReservationUrgencyBar';
-import RecentBookingsTicker from '@/components/RecentBookingsTicker';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
 import TrustBadgesReservar from '@/components/TrustBadgesReservar';
 import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
 import { trackEvent } from '@/lib/analytics';
 
 const API = '';
+
+// "Hoy" en la zona horaria del hotel (no UTC) — evita bloquear reservas del mismo día por la tarde
+function hotelToday(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+}
+// Suma días a una fecha YYYY-MM-DD con aritmética pura (sin desfase de zona horaria)
+function addDays(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return dt.toISOString().split('T')[0];
+}
 
 // ── Room Detail Drawer ────────────────────────────────────
 function RoomDrawer({
@@ -73,7 +83,7 @@ function RoomDrawer({
 
   return (
     <div className={styles.drawerOverlay} onClick={onClose}>
-      <div className={styles.drawer} onClick={e => e.stopPropagation()}>
+      <div className={styles.drawer} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={room.name}>
         <div className={styles.drawerHeader}>
           <h2 className={styles.drawerTitle}>{room.name}</h2>
           <button className={styles.drawerClose} onClick={onClose} aria-label="Cerrar">
@@ -93,10 +103,10 @@ function RoomDrawer({
             />
             {room.images.length > 1 && (
               <>
-                <button className={styles.drawerPrev} onClick={() => setImgIdx(i => (i - 1 + room.images.length) % room.images.length)}>
+                <button className={styles.drawerPrev} onClick={() => setImgIdx(i => (i - 1 + room.images.length) % room.images.length)} aria-label="Foto anterior">
                   <ChevronLeft size={20} strokeWidth={2} />
                 </button>
-                <button className={styles.drawerNext} onClick={() => setImgIdx(i => (i + 1) % room.images.length)}>
+                <button className={styles.drawerNext} onClick={() => setImgIdx(i => (i + 1) % room.images.length)} aria-label="Foto siguiente">
                   <ChevronRight size={20} strokeWidth={2} />
                 </button>
                 <span className={styles.drawerImgCount}>{imgIdx + 1} / {room.images.length}</span>
@@ -197,10 +207,8 @@ function ReservarPageInner() {
   const [detailRoom, setDetailRoom] = useState<BookingRoom | null>(null);
 
   const nights = calcNights(checkin, checkout);
-  const today = new Date().toISOString().split('T')[0];
-  const minCheckout = checkin
-    ? new Date(new Date(checkin).getTime() + 86400000).toISOString().split('T')[0]
-    : today;
+  const today = hotelToday();
+  const minCheckout = checkin ? addDays(checkin, 1) : today;
 
   // ── Fetch blocked dates from Sheets on mount ──────────
   useEffect(() => {
@@ -222,8 +230,8 @@ function ReservarPageInner() {
     const autoselect = searchParams.get('autoselect') === '1';
 
     // Leer fechas guardadas en sessionStorage si no vienen en la URL
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const today = hotelToday();
+    const tomorrow = addDays(today, 1);
     let saved: { checkin: string; checkout: string; adults: string } | null = null;
     try {
       const raw = sessionStorage.getItem('pe_last_dates');
@@ -283,7 +291,7 @@ function ReservarPageInner() {
   useEffect(() => {
     trackEvent('PAGE_VIEW', { path: '/reservar' });
     // Solo disparar BOOKING_START si las fechas iniciales son válidas (no en el pasado)
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = hotelToday();
     if (!checkin || checkin >= todayStr) {
       trackEvent('BOOKING_START');
     }
@@ -383,7 +391,7 @@ function ReservarPageInner() {
     setCheckin(v);
     let newCo = checkout;
     if (checkout && v >= checkout) {
-      const next = new Date(new Date(v).getTime() + 86400000).toISOString().split('T')[0];
+      const next = addDays(v, 1);
       setCheckout(next);
       newCo = next;
     }
@@ -417,7 +425,10 @@ function ReservarPageInner() {
     const assignedSoFar = cart.reduce((sum, item) => sum + item.guestCount, 0);
     const remaining = Math.max(1, adults - assignedSoFar);
     const guestCount = Math.min(remaining, room.maxGuests);
-    setCart(prev => [...prev, { roomId: room.id, guestCount }]);
+    const next = [...cart, { roomId: room.id, guestCount }];
+    setCart(next);
+    // Recalcular descuento de promo con el carrito actualizado (consistente con quitar/editar)
+    if (promoCode) setPromoDiscount(calcPromoDiscount(promoCode, next, checkin, checkout, nights));
     // Usuario eligió habitación — ya no es abandono
     if (cartAbandonTimer.current) { clearTimeout(cartAbandonTimer.current); cartAbandonTimer.current = null; }
   }
@@ -478,6 +489,8 @@ function ReservarPageInner() {
   }
 
   // ── Capacity validation ───────────────────────────────
+  // Los menores (0–5 años) SÍ ocupan cupo en la habitación, aunque NO se cobren.
+  const totalGuests = adults + children;
   const cartCapacity = cart.reduce((sum, item) => {
     const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
     return sum + (room?.maxGuests ?? 0);
@@ -486,7 +499,7 @@ function ReservarPageInner() {
     const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
     return room && unavailable.includes(room.name);
   });
-  const capacityOk = cart.length === 0 || cartCapacity >= adults;
+  const capacityOk = cart.length === 0 || cartCapacity >= totalGuests;
 
   // ── Room grid helpers ─────────────────────────────────
   const visibleRooms = BOOKING_ROOMS.filter(r => !r.disabled);
@@ -505,65 +518,78 @@ function ReservarPageInner() {
 
       <CheckoutProgressBar currentStep={1} />
       <TrustBadgesReservar />
-      <RecentBookingsTicker />
-      <ReservationUrgencyBar />
 
       {/* ── Checkin error ── */}
       {checkinError && (
         <div style={{ maxWidth: 1100, margin: '0 auto 8px', padding: '0 24px' }}>
-          <p style={{ background: '#fff3cd', border: '1px solid #f5c542', borderRadius: 8, padding: '10px 16px', fontSize: '0.85rem', color: '#7a4f00', margin: 0 }}>
+          <p role="alert" style={{ background: '#fff3cd', border: '1px solid #f5c542', borderRadius: 8, padding: '10px 16px', fontSize: '0.85rem', color: '#7a4f00', margin: 0 }}>
             ⚠️ {checkinError}
           </p>
         </div>
       )}
 
-      {/* ── Search bar ── */}
+      {/* ── Search bar (selectores) ── */}
       <div className={styles.searchBar}>
         <div className={styles.searchFields}>
-          <label className={styles.fieldLabel}>
-            <span>Llegada</span>
-            <input
-              type="date"
-              className={styles.dateInput}
-              value={checkin}
-              min={today}
-              onChange={e => handleCheckinChange(e.target.value)}
-            />
+          <label className={styles.fieldCell}>
+            <span className={styles.fieldIcon}><CalendarDays size={18} strokeWidth={1.5} /></span>
+            <span className={styles.fieldText}>
+              <span className={styles.fieldLabel}>Llegada</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={checkin}
+                min={today}
+                onChange={e => handleCheckinChange(e.target.value)}
+                aria-label="Fecha de llegada"
+              />
+            </span>
           </label>
-          <div className={styles.fieldDivider} />
-          <label className={styles.fieldLabel}>
-            <span>Salida</span>
-            <input
-              type="date"
-              className={styles.dateInput}
-              value={checkout}
-              min={minCheckout}
-              onChange={e => handleCheckoutChange(e.target.value)}
-            />
+
+          <label className={styles.fieldCell}>
+            <span className={styles.fieldIcon}><CalendarDays size={18} strokeWidth={1.5} /></span>
+            <span className={styles.fieldText}>
+              <span className={styles.fieldLabel}>Salida</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={checkout}
+                min={minCheckout}
+                onChange={e => handleCheckoutChange(e.target.value)}
+                aria-label="Fecha de salida"
+              />
+            </span>
           </label>
-          <div className={styles.fieldDivider} />
-          <div className={styles.guestField}>
-            <span className={styles.guestLabel}>Adultos</span>
-            <div className={styles.counter}>
-              <button onClick={() => setAdults(a => Math.max(1, a - 1))} aria-label="Menos adultos"><Minus size={14} /></button>
-              <span>{adults}</span>
-              <button onClick={() => setAdults(a => Math.min(12, a + 1))} aria-label="Más adultos"><Plus size={14} /></button>
-            </div>
+
+          <div className={styles.fieldCell}>
+            <span className={styles.fieldIcon}><Users size={18} strokeWidth={1.5} /></span>
+            <span className={styles.fieldText}>
+              <span className={styles.fieldLabel}>Adultos</span>
+              <div className={styles.counter} role="group" aria-label="Número de adultos">
+                <button type="button" onClick={() => setAdults(a => Math.max(1, a - 1))} disabled={adults <= 1} aria-label="Quitar un adulto"><Minus size={15} strokeWidth={2} /></button>
+                <span aria-live="polite">{adults}</span>
+                <button type="button" onClick={() => setAdults(a => Math.min(12, a + 1))} disabled={adults >= 12} aria-label="Agregar un adulto"><Plus size={15} strokeWidth={2} /></button>
+              </div>
+            </span>
           </div>
-          <div className={styles.fieldDivider} />
-          <div className={styles.guestField}>
-            <span className={styles.guestLabel}>Menores (−6)</span>
-            <div className={styles.counter}>
-              <button onClick={() => setChildren(c => Math.max(0, c - 1))} aria-label="Menos menores"><Minus size={14} /></button>
-              <span>{children}</span>
-              <button onClick={() => setChildren(c => c + 1)} aria-label="Más menores"><Plus size={14} /></button>
-            </div>
+
+          <div className={styles.fieldCell}>
+            <span className={styles.fieldIcon}><Baby size={18} strokeWidth={1.5} /></span>
+            <span className={styles.fieldText}>
+              <span className={styles.fieldLabel}>Menores <em className={styles.fieldHint}>0&ndash;5 años</em></span>
+              <div className={styles.counter} role="group" aria-label="Número de menores de 6 años">
+                <button type="button" onClick={() => setChildren(c => Math.max(0, c - 1))} disabled={children <= 0} aria-label="Quitar un menor"><Minus size={15} strokeWidth={2} /></button>
+                <span aria-live="polite">{children}</span>
+                <button type="button" onClick={() => setChildren(c => Math.min(10, c + 1))} disabled={children >= 10} aria-label="Agregar un menor"><Plus size={15} strokeWidth={2} /></button>
+              </div>
+            </span>
           </div>
         </div>
         <button
           className={styles.searchBtn}
           onClick={handleSearch}
           disabled={!checkin || !checkout || nights <= 0 || searching}
+          aria-busy={searching}
         >
           {searching ? 'Verificando…' : searched ? 'Actualizar' : 'Ver disponibilidad'}
         </button>
@@ -577,7 +603,7 @@ function ReservarPageInner() {
             {' '}{nights} noche{nights !== 1 ? 's' : ''} · {new Date(`${checkin}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} → {new Date(`${checkout}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
           </p>
           {datesOverlapBlocked && (
-            <p className={styles.blockedWarning}>
+            <p className={styles.blockedWarning} role="alert">
               <AlertTriangle size={13} strokeWidth={2} />
               {' '}Algunas noches en este rango están completamente reservadas. Podría haber disponibilidad limitada.
             </p>
@@ -595,14 +621,14 @@ function ReservarPageInner() {
             </div>
           )}
           {searching && (
-            <div className={styles.searchingBanner}>
+            <div className={styles.searchingBanner} role="status" aria-live="polite">
               <div className={styles.searchSpinner} />
               <span>Consultando disponibilidad en tiempo real…</span>
             </div>
           )}
 
           {autoSelectUnavailable && (
-            <div className={styles.autoSelectWarning}>
+            <div className={styles.autoSelectWarning} role="alert">
               <AlertTriangle size={15} strokeWidth={2} />
               <span>
                 <strong>{autoSelectUnavailable}</strong> no está disponible para las fechas seleccionadas.
@@ -626,10 +652,6 @@ function ReservarPageInner() {
                 className={`${styles.roomCard} ${unavail ? styles.unavailable : ''} ${added ? styles.inCart : ''}`}
                 onClick={() => setDetailRoom(room)}
                 style={{ cursor: 'pointer' }}
-                role="button"
-                tabIndex={0}
-                aria-label={`Ver detalles de ${room.name}`}
-                onKeyDown={e => e.key === 'Enter' && setDetailRoom(room)}
               >
                 {/* Image */}
                 <div
@@ -662,7 +684,7 @@ function ReservarPageInner() {
                     </div>
                   )}
                   {added && <div className={styles.addedOverlay}><span><Check size={14} strokeWidth={2} /> Agregada al carrito</span></div>}
-                  {!unavail && !added && adults > room.maxGuests && (
+                  {!unavail && !added && totalGuests > room.maxGuests && (
                     <div className={styles.overCapacityBadge}>
                       <Users size={12} strokeWidth={2} /> Máx. {room.maxGuests} personas
                     </div>
@@ -824,6 +846,7 @@ function ReservarPageInner() {
                     <input
                       type="text"
                       placeholder="Código de descuento"
+                      aria-label="Código de descuento"
                       value={promoInput}
                       onChange={e => { setPromoInput(e.target.value); setPromoError(''); }}
                       onKeyDown={e => e.key === 'Enter' && applyPromo()}
@@ -831,7 +854,7 @@ function ReservarPageInner() {
                     <button onClick={applyPromo}>Aplicar</button>
                   </div>
                 )}
-                {promoError && <p className={styles.promoError}>{promoError}</p>}
+                {promoError && <p className={styles.promoError} role="alert">{promoError}</p>}
               </div>
             )}
 
@@ -855,17 +878,17 @@ function ReservarPageInner() {
             )}
 
             {!capacityOk && cart.length > 0 && (
-              <div className={styles.capacityWarning}>
+              <div className={styles.capacityWarning} role="alert">
                 <AlertTriangle size={14} strokeWidth={2} />
                 <span>
-                  {adults} adultos pero capacidad del carrito es {cartCapacity}.
+                  {totalGuests} huésped{totalGuests !== 1 ? 'es' : ''} ({adults} adulto{adults !== 1 ? 's' : ''}{children > 0 ? ` + ${children} menor${children !== 1 ? 'es' : ''}` : ''}) pero la capacidad del carrito es {cartCapacity}.
                   Agrega otra habitación o elige Helechos 1 ó 2 (hasta 6 personas).
                 </span>
               </div>
             )}
 
             {cartHasUnavailable && cart.length > 0 && (
-              <div className={styles.capacityWarning}>
+              <div className={styles.capacityWarning} role="alert">
                 <AlertTriangle size={14} strokeWidth={2} />
                 <span>
                   Una o más habitaciones del carrito no están disponibles para estas fechas. Cámbialas o elige otras fechas.
@@ -985,13 +1008,13 @@ function ReservarPageInner() {
 
       {/* ── Lightbox ── */}
       {lightboxRoom && (
-        <div className={styles.lightbox} onClick={() => setLightboxRoom(null)}>
-          <button className={styles.lbClose} onClick={() => setLightboxRoom(null)}>✕</button>
-          <button className={styles.lbPrev} onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i - 1 + lightboxRoom.images.length) % lightboxRoom.images.length); }}>‹</button>
+        <div className={styles.lightbox} onClick={() => setLightboxRoom(null)} role="dialog" aria-modal="true" aria-label={`Galería de ${lightboxRoom.name}`}>
+          <button className={styles.lbClose} onClick={() => setLightboxRoom(null)} aria-label="Cerrar galería">✕</button>
+          <button className={styles.lbPrev} onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i - 1 + lightboxRoom.images.length) % lightboxRoom.images.length); }} aria-label="Foto anterior">‹</button>
           <div className={styles.lbImg} onClick={e => e.stopPropagation()}>
             <Image src={lightboxRoom.images[lightboxIdx]} alt={lightboxRoom.name} fill sizes="100vw" className={styles.lbImage} priority />
           </div>
-          <button className={styles.lbNext} onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i + 1) % lightboxRoom.images.length); }}>›</button>
+          <button className={styles.lbNext} onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i + 1) % lightboxRoom.images.length); }} aria-label="Foto siguiente">›</button>
           <p className={styles.lbCaption}>{lightboxRoom.name} · {lightboxIdx + 1}/{lightboxRoom.images.length}</p>
         </div>
       )}
