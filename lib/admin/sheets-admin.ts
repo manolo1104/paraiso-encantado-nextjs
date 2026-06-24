@@ -796,7 +796,7 @@ export async function getAllOTACalendars(): Promise<OTACalendar[]> {
       client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:H` })
     );
     const rows = res.data.values || [];
-    return rows.slice(1).map(r => ({
+    const mapped = rows.slice(1).map(r => ({
       id: r[0] || '',
       roomName: r[1] || '',
       platform: (r[2] || 'booking_com') as OTACalendar['platform'],
@@ -806,6 +806,11 @@ export async function getAllOTACalendars(): Promise<OTACalendar[]> {
       status: (r[6] || 'pending') as OTACalendar['status'],
       blocksFound: parseInt(r[7]) || 0,
     })).filter(r => r.id);
+
+    // Deduplicar por habitación+plataforma (conserva la última) — limpia filas repetidas de reintentos
+    const byKey = new Map<string, OTACalendar>();
+    for (const c of mapped) byKey.set(`${c.roomName}|${c.platform}`, c);
+    return [...byKey.values()];
   } catch (e: any) {
     console.error('getAllOTACalendars error:', e.message);
     return [];
@@ -814,35 +819,44 @@ export async function getAllOTACalendars(): Promise<OTACalendar[]> {
 
 export async function saveOTACalendar(cal: Omit<OTACalendar, 'lastSync' | 'status' | 'blocksFound'>): Promise<void> {
   const client = await getSheetsClient();
-  if (!client) return;
+  if (!client) throw new Error('Google Sheets no está configurado (faltan credenciales en el entorno).');
   await ensureSheet(OTA_CALENDARS_SHEET, OTA_HEADERS);
 
   const res = await sheetsCall(() =>
-    client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:A` })
+    client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:H` })
   );
   const rows = res.data.values || [];
-  const rowIdx = rows.findIndex(r => r[0] === cal.id);
+
+  // Upsert: primero por id; si no, por (habitación + plataforma) para que los reintentos NO dupliquen filas
+  let rowIdx = rows.findIndex((r, i) => i > 0 && r[0] === cal.id);
+  if (rowIdx < 0) {
+    rowIdx = rows.findIndex((r, i) => i > 0 && r[1] === cal.roomName && r[2] === cal.platform);
+  }
 
   const row = [cal.id, cal.roomName, cal.platform, cal.icalUrl, String(cal.active), '', 'pending', '0'];
 
   if (rowIdx > 0) {
-    await sheetsCall(() =>
+    row[0] = rows[rowIdx][0] || cal.id; // conservar el id existente
+    const upd = await sheetsCall(() =>
       client.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `${OTA_CALENDARS_SHEET}!A${rowIdx + 1}`,
+        range: `${OTA_CALENDARS_SHEET}!A${rowIdx + 1}:H${rowIdx + 1}`,
         valueInputOption: 'USER_ENTERED',
         requestBody: { values: [row] },
       })
     );
+    if (!upd.data?.updatedCells) throw new Error('La actualización en Google Sheets no escribió ninguna celda.');
   } else {
-    await sheetsCall(() =>
+    const app = await sheetsCall(() =>
       client.spreadsheets.values.append({
         spreadsheetId: SHEET_ID,
         range: `${OTA_CALENDARS_SHEET}!A:H`,
         valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
         requestBody: { values: [row] },
       })
     );
+    if (!app.data?.updates?.updatedRows) throw new Error('El guardado en Google Sheets no agregó ninguna fila.');
   }
 }
 
