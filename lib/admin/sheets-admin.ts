@@ -796,16 +796,20 @@ export async function getAllOTACalendars(): Promise<OTACalendar[]> {
       client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${OTA_CALENDARS_SHEET}!A:H` })
     );
     const rows = res.data.values || [];
-    const mapped = rows.slice(1).map(r => ({
-      id: r[0] || '',
-      roomName: r[1] || '',
-      platform: (r[2] || 'booking_com') as OTACalendar['platform'],
-      icalUrl: r[3] || '',
-      active: r[4] !== 'false',
-      lastSync: r[5] || '',
-      status: (r[6] || 'pending') as OTACalendar['status'],
-      blocksFound: parseInt(r[7]) || 0,
-    })).filter(r => r.id);
+    // Filas de datos válidas: ignora el encabezado (r[0]==='id') y filas basura (sin id/habitación/plataforma).
+    // NO asume que la fila 0 es encabezado (la hoja pudo quedar sin encabezado).
+    const mapped = rows
+      .filter(r => r[0] && r[0] !== 'id' && r[1] && r[2])
+      .map(r => ({
+        id: r[0] as string,
+        roomName: r[1] as string,
+        platform: (r[2] || 'booking_com') as OTACalendar['platform'],
+        icalUrl: r[3] || '',
+        active: r[4] !== 'false',
+        lastSync: r[5] || '',
+        status: (r[6] || 'pending') as OTACalendar['status'],
+        blocksFound: parseInt(r[7]) || 0,
+      }));
 
     // Deduplicar por habitación+plataforma (conserva la última) — limpia filas repetidas de reintentos
     const byKey = new Map<string, OTACalendar>();
@@ -827,15 +831,17 @@ export async function saveOTACalendar(cal: Omit<OTACalendar, 'lastSync' | 'statu
   );
   const rows = res.data.values || [];
 
-  // Upsert: primero por id; si no, por (habitación + plataforma) para que los reintentos NO dupliquen filas
-  let rowIdx = rows.findIndex((r, i) => i > 0 && r[0] === cal.id);
+  // Upsert por id; si no, por (habitación + plataforma) para que los reintentos NO dupliquen.
+  // Ignora encabezado (r[0]==='id') y filas basura (sin id); NO asume que la fila 0 sea encabezado.
+  const isData = (r: any[]) => r[0] && r[0] !== 'id';
+  let rowIdx = rows.findIndex(r => isData(r) && r[0] === cal.id);
   if (rowIdx < 0) {
-    rowIdx = rows.findIndex((r, i) => i > 0 && r[1] === cal.roomName && r[2] === cal.platform);
+    rowIdx = rows.findIndex(r => isData(r) && r[1] === cal.roomName && r[2] === cal.platform);
   }
 
   const row = [cal.id, cal.roomName, cal.platform, cal.icalUrl, String(cal.active), '', 'pending', '0'];
 
-  if (rowIdx > 0) {
+  if (rowIdx >= 0) {
     row[0] = rows[rowIdx][0] || cal.id; // conservar el id existente
     const upd = await sheetsCall(() =>
       client.spreadsheets.values.update({
