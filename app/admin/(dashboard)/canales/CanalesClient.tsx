@@ -36,13 +36,24 @@ export default function CanalesClient() {
   const [syncResult, setSyncResult] = useState<string>('');
   const [modal, setModal] = useState<ModalState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const [loadError, setLoadError] = useState('');
 
   const reload = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/canales');
       const data = await res.json();
-      setCalendars(Array.isArray(data) ? data : []);
+      if (!res.ok || !Array.isArray(data)) {
+        setLoadError(data?.error || `Error ${res.status} al cargar`);
+        setCalendars([]);
+      } else {
+        setLoadError('');
+        setCalendars(data);
+      }
+    } catch {
+      setLoadError('Error de red al cargar los canales');
+      setCalendars([]);
     } finally {
       setLoading(false);
     }
@@ -53,14 +64,22 @@ export default function CanalesClient() {
   async function handleSave() {
     if (!modal) return;
     setSaving(true);
+    setModalError('');
     try {
-      await fetch('/api/admin/canales', {
+      const res = await fetch('/api/admin/canales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(modal),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        setModalError(data.error || `No se pudo guardar (error ${res.status}).`);
+        return;
+      }
       setModal(null);
       await reload();
+    } catch {
+      setModalError('Error de red al guardar. Revisa tu conexión e intenta de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -106,10 +125,12 @@ export default function CanalesClient() {
   }
 
   function openAdd(roomName: string) {
+    setModalError('');
     setModal({ roomName, platform: 'booking_com', icalUrl: '' });
   }
 
   function openEdit(cal: OTACalendar) {
+    setModalError('');
     setModal({ id: cal.id, roomName: cal.roomName, platform: cal.platform, icalUrl: cal.icalUrl });
   }
 
@@ -171,6 +192,15 @@ export default function CanalesClient() {
         </div>
       </div>
 
+      {loadError && (
+        <p style={{
+          background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c',
+          borderRadius: 6, padding: '10px 14px', fontSize: 13, marginBottom: 16,
+        }}>
+          ⚠️ {loadError}
+        </p>
+      )}
+
       {loading ? (
         <p style={{ color: '#9ca3af' }}>Cargando…</p>
       ) : (
@@ -230,7 +260,7 @@ export default function CanalesClient() {
                         </div>
                       ) : (
                         <button
-                          onClick={() => setModal({ roomName, platform: p.value, icalUrl: '' })}
+                          onClick={() => { setModalError(''); setModal({ roomName, platform: p.value, icalUrl: '' }); }}
                           style={{
                             background: 'none', border: '1px dashed #d1d5db',
                             borderRadius: 4, padding: '3px 10px', cursor: 'pointer',
@@ -314,9 +344,18 @@ export default function CanalesClient() {
               </p>
             </div>
 
+            {modalError && (
+              <p style={{
+                background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c',
+                borderRadius: 6, padding: '8px 12px', fontSize: 13, margin: '0 0 14px',
+              }}>
+                ⚠️ {modalError}
+              </p>
+            )}
+
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setModal(null)}
+                onClick={() => { setModal(null); setModalError(''); }}
                 style={{ background: '#f3f4f6', border: 'none', borderRadius: 6, padding: '8px 16px', cursor: 'pointer' }}
               >
                 Cancelar
