@@ -85,15 +85,18 @@ export default function CanalesClient() {
     setSyncing(true);
     setSyncResult('');
     try {
-      const res = await fetch('/api/cron/ical-sync', {
-        headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ''}` },
-      });
+      const res = await fetch('/api/admin/canales/sync', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setSyncResult(`Sincronizados: ${data.synced} calendarios`);
+        const errs = (data.results || []).filter((r: { error?: string }) => r.error);
+        setSyncResult(
+          errs.length
+            ? `Sincronizados ${data.synced}, con ${errs.length} error(es) — revisa las URLs marcadas en rojo`
+            : `Sincronizados: ${data.synced} calendario(s)`
+        );
         await reload();
       } else {
-        setSyncResult('Error al sincronizar (verifica CRON_SECRET)');
+        setSyncResult('Error al sincronizar. Vuelve a intentar.');
       }
     } catch {
       setSyncResult('Error de red al sincronizar');

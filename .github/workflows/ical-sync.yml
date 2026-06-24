@@ -1,0 +1,20 @@
+name: iCal OTA Sync
+
+# Sincroniza los calendarios de Booking/Expedia con el motor de reservas.
+# Llama al endpoint del cron en producción cada 15 minutos.
+# Requiere el secreto de repositorio CRON_SECRET (debe coincidir con el de Railway).
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # cada 15 minutos
+  workflow_dispatch: {}        # permite ejecutarlo a mano desde la pestaña Actions
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar sincronización iCal
+        run: |
+          curl -fsS -X GET "https://www.paraisoencantado.com/api/cron/ical-sync" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --max-time 90
