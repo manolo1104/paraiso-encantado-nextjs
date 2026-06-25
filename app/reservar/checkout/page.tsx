@@ -309,6 +309,7 @@ function CheckoutForm({
             <option value="google_maps">Google Maps</option>
             <option value="instagram">Instagram</option>
             <option value="facebook">Facebook</option>
+            <option value="tiktok">TikTok</option>
             <option value="recomendacion">Recomendación</option>
             <option value="booking">Booking.com</option>
             <option value="otro">Otro</option>
