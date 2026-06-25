@@ -245,6 +245,7 @@ export default function GaleriaClient() {
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className={styles.videoThumb}
+                  unoptimized
                 />
                 <div className={styles.videoOverlay}>
                   <div className={styles.playBtn} aria-hidden="true">
