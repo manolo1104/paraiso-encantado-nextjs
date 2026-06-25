@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'booking-paraisoencantado.up.railway.app',
       },
+      // Miniaturas de videos de YouTube (galería)
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+      },
     ],
     // AVIF primero → ~40% más pequeño que WebP; fallback WebP para browsers viejos
     formats: ['image/avif', 'image/webp'],

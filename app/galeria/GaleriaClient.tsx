@@ -240,7 +240,7 @@ export default function GaleriaClient() {
                 aria-label={`Reproducir: ${v.title}`}
               >
                 <Image
-                  src={`https://img.youtube.com/vi/${v.id}/maxresdefault.jpg`}
+                  src={`https://img.youtube.com/vi/${v.id}/hqdefault.jpg`}
                   alt={v.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
