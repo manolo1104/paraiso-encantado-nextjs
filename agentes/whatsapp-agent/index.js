@@ -16,7 +16,7 @@ import pkg from 'whatsapp-web.js';
 const { Client, LocalAuth, MessageMedia } = pkg;
 import qrcode from 'qrcode-terminal';
 import { handleMessage, handlePaymentProof, getStats, addToHistory, getConversationSummary } from './claude-handler.js';
-import { confirmPayment, getByUser } from './reservations.js';
+import { confirmPayment, getByUser, getByFolio } from './reservations.js';
 import { appendConfirmedReservationToSheet, updateRoomStatusInDisponibilidad } from './google-sheets.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -1095,7 +1095,8 @@ client.on('message', async (msg) => {
           const folioMatch = String(responseText || '').match(/\bWA-[A-Z0-9]+\b/i);
           const folio = folioMatch?.[0];
           if (folio) {
-            const pr = getByUser(finalMsg.from);
+            // Buscar por folio (robusto ante mismatch @lid/@c.us); respaldo: por usuario
+            const pr = getByFolio(folio) || getByUser(finalMsg.from);
             const rooms = Array.isArray(pr?.rooms) && pr.rooms.length
               ? pr.rooms.map(r => `· ${r.name} (${r.guests} personas) — $${Number(r.price).toLocaleString('es-MX')} MXN`).join('\n')
               : '(ver folio)';

@@ -159,3 +159,11 @@ export function getByUser(userId) {
     .filter(r => r.userId === userId)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0] || null;
 }
+
+// ── Buscar reserva por folio (identificador único, robusto ante @lid/@c.us) ──
+
+export function getByFolio(folio) {
+  if (!folio) return null;
+  const f = String(folio).trim().toUpperCase();
+  return load().find(r => String(r.folio || '').toUpperCase() === f) || null;
+}
