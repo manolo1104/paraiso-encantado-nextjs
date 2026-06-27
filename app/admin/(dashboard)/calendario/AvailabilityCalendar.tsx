@@ -30,7 +30,7 @@ function fmtDay(ds: string) {
   return `${parseInt(d)} ${['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(m)-1]}`;
 }
 
-interface DayState { status: 'available' | 'booking' | 'blocked'; booking?: AdminBooking }
+interface DayState { status: 'available' | 'booking' | 'blocked' | 'ota'; booking?: AdminBooking }
 
 interface ClickedDay {
   room: string;
@@ -84,6 +84,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
 
     const roomSheet = sheetData[room] || {};
     const val = roomSheet[ds]?.toUpperCase();
+    if (val === 'OTA') return { status: 'ota' };
     if (val === 'BLOQUEADO' || val === 'MANTENIMIENTO') return { status: 'blocked' };
     if (val === 'RESERVADO') {
       // Reservado en sheets pero sin booking en admin — puede ser reserva pública
@@ -165,6 +166,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
             <span style={legendItem}><span style={{ ...dot, background: '#3B6D11' }} />Libre</span>
             <span style={legendItem}><span style={{ ...dot, background: '#A32D2D' }} />Ocupada</span>
             <span style={legendItem}><span style={{ ...dot, background: '#7a5a00' }} />Bloqueada</span>
+            <span style={legendItem}><span style={{ ...dot, background: '#7C3AED' }} />Ocupada en OTA</span>
           </div>
           <button
             onClick={() => { loadSheet(); onRefresh(); }}
@@ -218,11 +220,13 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                   const bg = isPast ? 'transparent'
                     : state.status === 'available' ? '#EAF3DE'
                     : state.status === 'blocked' ? '#FAEEDA'
+                    : state.status === 'ota' ? '#F1E9FA'
                     : '#FCEBEB';
 
                   const color = isPast ? '#ccc'
                     : state.status === 'available' ? '#27500A'
                     : state.status === 'blocked' ? '#633806'
+                    : state.status === 'ota' ? '#5B2C91'
                     : '#791F1F';
 
                   return (
@@ -281,6 +285,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               <span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', fontFamily: 'var(--font-jost,sans-serif)' }}>
                 {clicked.state.status === 'available' ? 'Fecha disponible'
                   : clicked.state.status === 'blocked' ? 'Fecha bloqueada'
+                  : clicked.state.status === 'ota' ? 'Ocupada en OTA'
                   : 'Fecha ocupada'}
               </span>
               <button onClick={() => { setClicked(null); setSaveError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '2px 6px', fontSize: 18 }}>
@@ -293,11 +298,11 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               {/* Status tag */}
               <span style={{
                 display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500, marginBottom: 10,
-                background: clicked.state.status === 'available' ? '#EAF3DE' : clicked.state.status === 'blocked' ? '#FAEEDA' : '#FCEBEB',
-                color: clicked.state.status === 'available' ? '#27500A' : clicked.state.status === 'blocked' ? '#633806' : '#791F1F',
+                background: clicked.state.status === 'available' ? '#EAF3DE' : clicked.state.status === 'blocked' ? '#FAEEDA' : clicked.state.status === 'ota' ? '#F1E9FA' : '#FCEBEB',
+                color: clicked.state.status === 'available' ? '#27500A' : clicked.state.status === 'blocked' ? '#633806' : clicked.state.status === 'ota' ? '#5B2C91' : '#791F1F',
                 fontFamily: 'var(--font-jost,sans-serif)',
               }}>
-                {clicked.state.status === 'available' ? '● Disponible' : clicked.state.status === 'blocked' ? '● Bloqueada' : '● Ocupada'}
+                {clicked.state.status === 'available' ? '● Disponible' : clicked.state.status === 'blocked' ? '● Bloqueada' : clicked.state.status === 'ota' ? '● Ocupada en OTA' : '● Ocupada'}
               </span>
 
               {/* Suite + date */}
@@ -334,6 +339,13 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               {clicked.state.status === 'blocked' && (
                 <div style={{ background: '#fff8ee', borderLeft: '3px solid #52b788', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#6b7280', lineHeight: 1.6, fontFamily: 'var(--font-jost,sans-serif)' }}>
                   Fecha bloqueada manualmente. Puedes desbloquearla para que vuelva a estar disponible.
+                </div>
+              )}
+
+              {/* OTA info */}
+              {clicked.state.status === 'ota' && (
+                <div style={{ background: '#F1E9FA', borderLeft: '3px solid #7C3AED', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#6b7280', lineHeight: 1.6, fontFamily: 'var(--font-jost,sans-serif)' }}>
+                  Fecha ocupada por una reserva en una OTA (Expedia), importada automáticamente del calendario iCal. Se actualiza sola en cada sincronización; no la edites a mano.
                 </div>
               )}
 
