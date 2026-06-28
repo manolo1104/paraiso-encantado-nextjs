@@ -307,6 +307,7 @@ function CheckoutForm({
             <option value="">Selecciona una opción</option>
             <option value="google_busqueda">Google Búsqueda</option>
             <option value="google_maps">Google Maps</option>
+            <option value="chatgpt_ia">ChatGPT / IA (Gemini, Perplexity, etc.)</option>
             <option value="instagram">Instagram</option>
             <option value="facebook">Facebook</option>
             <option value="tiktok">TikTok</option>
