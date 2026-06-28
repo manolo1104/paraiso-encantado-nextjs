@@ -302,7 +302,7 @@ export const suites: Suite[] = [
       '/images/ORQUIDEAS 2/DSCF1607.jpg',
     ],
     badge: 'KING BED',
-    featured: false,
+    featured: true,
   },
   {
     id: 'orquideas-doble',
@@ -358,7 +358,7 @@ export const suites: Suite[] = [
       '/images/ORQUIDEAS 3/DSCF1612.jpg',
     ],
     badge: 'KING BED',
-    featured: true,
+    featured: false,
   },
   {
     id: 'bromelias',
