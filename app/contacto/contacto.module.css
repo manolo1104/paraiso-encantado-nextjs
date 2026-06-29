@@ -577,3 +577,90 @@
   color: #9a9a82;
 }
 .faqExtra a { color: #1a2e1a; font-weight: 500; }
+
+/* Scroll-driven entrance */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Quick-action cards */
+    .actionCard {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .actionCard:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .actionCard:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .actionCard:nth-child(3) { animation-range: entry 8% cover 25%; }
+
+    /* Form + image */
+    .formLayout {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Contact info blocks */
+    .infoBlock {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .infoBlock:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .infoBlock:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .infoBlock:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .infoBlock:nth-child(4) { animation-range: entry 12% cover 25%; }
+
+    /* Social block (inner content, not the colored band) */
+    .socialTitle {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .socialSubtitle {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 4% cover 25%;
+    }
+    .socialLinks {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 8% cover 25%;
+    }
+
+    /* Map header + distance shortcuts (iframe left untouched) */
+    .mapHeader {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .distanceItem {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .distanceItem:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .distanceItem:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .distanceItem:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .distanceItem:nth-child(4) { animation-range: entry 12% cover 25%; }
+
+    /* FAQ */
+    .faqHeader {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .faqItem {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .faqItem:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .faqItem:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .faqItem:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .faqItem:nth-child(4) { animation-range: entry 12% cover 25%; }
+    .faqItem:nth-child(5) { animation-range: entry 16% cover 25%; }
+    .faqItem:nth-child(6) { animation-range: entry 20% cover 25%; }
+    .faqItem:nth-child(n+7) { animation-range: entry 20% cover 25%; }
+  }
+}

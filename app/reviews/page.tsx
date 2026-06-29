@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './reviews.module.css';
 
 export const metadata: Metadata = {
@@ -117,6 +118,7 @@ export default function ReviewsPage() {
 
         {/* HEADER */}
         <section className={styles.header}>
+          <FloatingLeaves />
           <div className={styles.headerInner}>
             <nav className={styles.breadcrumb} aria-label="Breadcrumb">
               <Link href="/">Inicio</Link>
@@ -202,6 +204,7 @@ export default function ReviewsPage() {
 
         {/* CTA */}
         <section className={styles.cta}>
+          <FloatingLeaves />
           <div className={styles.ctaInner}>
             <h2>¿Listo para tu experiencia?</h2>
             <p>Únete a los 519 huéspedes que nos califican con 4.6★ en Google</p>

@@ -283,6 +283,9 @@
   background: var(--forest);
   color: white;
   padding: 72px 24px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .whenToInner {
@@ -537,4 +540,76 @@
   line-height: 1.75;
   color: #555;
   margin: 0;
+}
+
+/* Scroll-driven entrances (additive, calm) */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Intro (single block) */
+    .introInner {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Atracciones */
+    .attractionsInner > h2 {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .attraction { animation: revealUp linear both; animation-timeline: view(); }
+    .attraction:nth-of-type(1) { animation-range: entry 0% cover 25%; }
+    .attraction:nth-of-type(2) { animation-range: entry 4% cover 25%; }
+    .attraction:nth-of-type(3) { animation-range: entry 8% cover 25%; }
+    .attraction:nth-of-type(4) { animation-range: entry 12% cover 25%; }
+
+    /* Como llegar */
+    .howToInner > h2 {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .howToCard { animation: revealUp linear both; animation-timeline: view(); }
+    .howToCard:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .howToCard:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .howToCard:nth-child(3) { animation-range: entry 8% cover 25%; }
+
+    /* Cuando ir */
+    .whenToInner h2 {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .season { animation: revealUp linear both; animation-timeline: view(); }
+    .season:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .season:nth-child(2) { animation-range: entry 5% cover 25%; }
+
+    /* Gastronomia (single block) */
+    .foodInner {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Donde hospedarse (single block) */
+    .stayInner {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* FAQ */
+    .faqInner h2 {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .faqItem { animation: revealUp linear both; animation-timeline: view(); }
+    .faqItem:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .faqItem:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .faqItem:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .faqItem:nth-child(4) { animation-range: entry 12% cover 25%; }
+    .faqItem:nth-child(5) { animation-range: entry 16% cover 25%; }
+  }
 }

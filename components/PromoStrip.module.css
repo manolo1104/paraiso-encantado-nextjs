@@ -80,6 +80,17 @@
   opacity: 1 !important;
 }
 
+/* Scroll-driven entrance - aparicion suave del contenido al entrar en vista */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .inner {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+  }
+}
+
 @media (max-width: 600px) {
   .checks {
     gap: 10px;

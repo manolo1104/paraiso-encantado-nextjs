@@ -177,6 +177,22 @@
   display: block;
 }
 
+/* Scroll-driven entrance - info y mapa con stagger suave */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .infoCol {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .mapCol {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 6% cover 25%;
+    }
+  }
+}
+
 @media (max-width: 1024px) {
   .inner {
     grid-template-columns: 1fr;

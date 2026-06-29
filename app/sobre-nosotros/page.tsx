@@ -209,11 +209,21 @@ const aboutFaqSchema = {
   ],
 };
 
+const aboutBreadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+    { '@type': 'ListItem', position: 2, name: 'Sobre Nosotros', item: 'https://www.paraisoencantado.com/sobre-nosotros' },
+  ],
+};
+
 // ── Componente ────────────────────────────────────────────────────────────────
 export default function SobreNosotrosPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutBreadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutFaqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',

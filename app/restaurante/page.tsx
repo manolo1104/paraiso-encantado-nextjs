@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Leaf, BookOpen, Sun, MessageCircle, Star, UtensilsCrossed } from 'lucide-react';
 import RestaurantGallery from '@/components/RestaurantGallery';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './restaurante.module.css';
 
 const BOOKING_URL = '/reservar';
@@ -200,45 +201,6 @@ const restaurantReviews = [
 ];
 
 // ── Componente ────────────────────────────────────────────────────────────────
-const restaurantFaqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: '¿Cuál es el horario del restaurante El Papán Huasteco?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'El Papán Huasteco está abierto todos los días de 8:00 AM a 8:00 PM, incluyendo fines de semana y días festivos.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Puedo comer en el restaurante sin hospedarme en el hotel?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Sí, El Papán Huasteco está abierto al público general. No es necesario hospedarse en el hotel para disfrutar la cocina huasteca auténtica.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Qué tipo de cocina sirven en El Papán Huasteco?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Cocina huasteca auténtica: zacahuil (tamal gigante de la región), enchiladas huastecas, pozole rojo, bocoles, garnachas y café de olla preparado en olla de barro con canela y piloncillo. Todos los ingredientes son locales.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Hacen reservaciones para grupos o eventos?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Sí. Para grupos y reservaciones contacta al +52 489 125 5181 o escríbenos por WhatsApp. Ofrecemos servicio de desayuno y cena para grupos con menú especial desde $160 MXN por persona.',
-      },
-    },
-  ],
-};
-
 const restaurantBreadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -253,7 +215,6 @@ export default function RestaurantePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(menuSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantFaqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantBreadcrumbSchema) }} />
 
       <main className={styles.main}>
@@ -477,6 +438,7 @@ export default function RestaurantePage() {
 
         {/* CTA */}
         <section className={styles.ctaSection}>
+          <FloatingLeaves />
           <p className={styles.eyebrow}>¿Listo para visitarnos?</p>
           <h2 className={styles.ctaTitle}>
             Tu mesa está <em>esperándote</em>

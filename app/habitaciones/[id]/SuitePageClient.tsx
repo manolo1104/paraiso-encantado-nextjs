@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import {
   Bed, Sofa, ShowerHead, Bath, Droplets, Mountain, Wifi,
   Wind, Trees, Waves, CheckCircle, MessageCircle, X, ChevronLeft, ChevronRight, ZoomIn,
-  Flame, Clock
+  Star
 } from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import StickySuiteCTA from '@/components/StickySuiteCTA';
@@ -130,11 +130,9 @@ function Lightbox({
   );
 }
 
-// Urgency messaging by occupancy level
-function getUrgencyBadge(suite: Suite): { text: string; icon: 'flame' | 'clock' } | null {
-  if (suite.featured) return { text: 'La más solicitada · Pocas fechas disponibles', icon: 'flame' };
-  if ((suite as any).occupancy === 'HIGH') return { text: 'Alta demanda este mes', icon: 'flame' };
-  if ((suite as any).occupancy === 'MEDIUM') return { text: 'Solo quedan algunos fines de semana libres', icon: 'clock' };
+// Distintivo honesto de la suite (sin escasez ni urgencia)
+function getSuiteBadge(suite: Suite): { text: string } | null {
+  if (suite.featured) return { text: 'Favorita de huéspedes' };
   return null;
 }
 
@@ -163,7 +161,7 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
   const price3 = suite.priceTiers[3];
   const price4 = suite.priceTiers[4];
   const usdBase = mxnToUsd(suite.price);
-  const urgency = getUrgencyBadge(suite);
+  const suiteBadge = getSuiteBadge(suite);
   const similarSuites = getSimilarSuites(suite, suites);
 
   const handleDatesSelected = useCallback((ci: string, co: string, guestsCount: number) => {
@@ -271,14 +269,11 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
           </h1>
           <p className={styles.description}>{suite.description}</p>
 
-          {/* Urgencia / escasez */}
-          {urgency && (
+          {/* Distintivo honesto (sin urgencia) */}
+          {suiteBadge && (
             <div className={styles.urgencyBadge}>
-              {urgency.icon === 'flame'
-                ? <Flame size={13} strokeWidth={1.5} />
-                : <Clock size={13} strokeWidth={1.5} />
-              }
-              {urgency.text}
+              <Star size={13} strokeWidth={1.5} />
+              {suiteBadge.text}
             </div>
           )}
 

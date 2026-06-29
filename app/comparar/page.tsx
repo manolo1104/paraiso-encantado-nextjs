@@ -44,6 +44,15 @@ const ROWS: {
   { label: 'WiFi', getValue: (s) => s.features.some(f => f.toLowerCase().includes('wifi')), highlight: 'bool' },
 ];
 
+const compararBreadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+    { '@type': 'ListItem', position: 2, name: 'Comparar Suites', item: 'https://www.paraisoencantado.com/comparar' },
+  ],
+};
+
 export default async function CompararPage({
   searchParams,
 }: {
@@ -58,6 +67,7 @@ export default async function CompararPage({
   if (selectedSuites.length < 2) {
     return (
       <main className={styles.main}>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(compararBreadcrumbSchema) }} />
         <div className={styles.empty}>
           <p>Selecciona al menos 2 suites desde la página de habitaciones para comparar.</p>
           <Link href="/habitaciones" className={styles.backBtn}>
@@ -88,6 +98,7 @@ export default async function CompararPage({
 
   return (
     <main className={styles.main}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(compararBreadcrumbSchema) }} />
       <div className={styles.topBar}>
         <Link href="/habitaciones" className={styles.backLink}>
           <ArrowLeft size={14} strokeWidth={1.5} /> Volver a Habitaciones

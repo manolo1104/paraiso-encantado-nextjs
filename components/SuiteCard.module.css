@@ -215,3 +215,16 @@
   color: var(--cream);
   transform: scale(0.97);
 }
+
+/* Scroll-driven entrance - stagger por nth-child (igual que Testimonios) */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .card { animation: revealUp linear both; animation-timeline: view(); }
+    .card:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .card:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .card:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .card:nth-child(4) { animation-range: entry 12% cover 25%; }
+    .card:nth-child(5) { animation-range: entry 16% cover 25%; }
+    .card:nth-child(6) { animation-range: entry 20% cover 25%; }
+  }
+}

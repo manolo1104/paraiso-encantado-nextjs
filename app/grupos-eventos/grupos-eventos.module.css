@@ -135,6 +135,9 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 0;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .statItem {
@@ -494,6 +497,9 @@
   background: var(--forest);
   color: white;
   padding: 80px 24px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .featuresInner {

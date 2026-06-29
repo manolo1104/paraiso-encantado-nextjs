@@ -1,6 +1,9 @@
 .section {
   background: var(--forest);
   padding: var(--spacing-2xl) 24px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .content {
@@ -8,6 +11,8 @@
   margin: 0 auto;
   text-align: center;
   display: flex;
+  position: relative;
+  z-index: 1;
   flex-direction: column;
   align-items: center;
   gap: 32px;
@@ -111,14 +116,18 @@
   border-bottom-color: var(--sand);
 }
 
-/* Scroll-driven entrance */
+/* Scroll-driven entrance - cascada suave de los elementos */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .content {
+    .content > * {
       animation: revealUp linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 20%;
     }
+    .content > *:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .content > *:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .content > *:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .content > *:nth-child(4) { animation-range: entry 12% cover 25%; }
+    .content > *:nth-child(5) { animation-range: entry 16% cover 25%; }
   }
 }
 

@@ -3,7 +3,9 @@ import { CheckCircle } from 'lucide-react';
 import { suites } from '@/data/suites';
 import { BOOKING_URL } from '@/lib/config';
 import styles from './habitaciones.module.css';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import AvailabilityFilterClient from './AvailabilityFilterClient';
+import SuiteReservationPopup from '@/components/SuiteReservationPopup';
 
 export const metadata = {
   title: '13 Suites Boutique con Spa Privado · Xilitla | Hotel Paraíso Encantado',
@@ -93,6 +95,7 @@ export default function HabitacionesPage() {
     <main className={styles.main}>
       {/* Header */}
       <section className={styles.header}>
+        <FloatingLeaves />
         <div className={styles.headerContent}>
           <Link href="/" className={styles.backLink}>← Inicio</Link>
           <p className={styles.eyebrow}>Xilitla, San Luis Potosí · Huasteca Potosina</p>
@@ -123,6 +126,8 @@ export default function HabitacionesPage() {
       </div>
 
       <AvailabilityFilterClient groups={groups} allSuites={suites} />
+
+      <SuiteReservationPopup />
     </main>
     </>
   );

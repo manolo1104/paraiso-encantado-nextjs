@@ -113,6 +113,9 @@
   font-size: 13.5px;
   font-family: var(--font-jost, sans-serif);
   letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .trustItem {
@@ -677,6 +680,9 @@
   color: white;
   padding: 80px 24px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .ctaInner {

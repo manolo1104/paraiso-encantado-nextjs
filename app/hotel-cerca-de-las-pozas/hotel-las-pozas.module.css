@@ -109,6 +109,9 @@
 .distance {
   background: var(--forest);
   padding: 48px 24px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .distanceInner {
@@ -484,6 +487,9 @@
   color: white;
   padding: 80px 24px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .finalCtaInner {

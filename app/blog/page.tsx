@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/blog';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './blog.module.css';
 
 // Pre-render estático en build time — evita fs.readdirSync en producción Railway
@@ -104,6 +105,7 @@ export default function BlogPage() {
     <main className={styles.main}>
       {/* HEADER */}
       <section className={styles.header}>
+        <FloatingLeaves />
         <div className={styles.headerInner}>
           <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
             <Link href="/">Inicio</Link>
@@ -186,6 +188,7 @@ export default function BlogPage() {
 
       {/* CTA */}
       <section className={styles.cta}>
+        <FloatingLeaves />
         <div className={styles.ctaInner}>
           <h2>¿Listo para Visitar Xilitla?</h2>
           <p>Hotel Paraíso Encantado · A 5 minutos caminando de Las Pozas de Edward James</p>

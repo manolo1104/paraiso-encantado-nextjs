@@ -331,6 +331,9 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .ctaSection .eyebrow {
@@ -645,5 +648,72 @@
   .ctaButtons {
     flex-direction: column;
     align-items: center;
+  }
+}
+
+/* ── Entrada al hacer scroll (calma, nativa) ──────────────────────────────── */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+
+    /* Zacahuil -bloque de texto */
+    .zacahuilText {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Menú -encabezado y títulos de categoría */
+    .menuHeader,
+    .categoryTitle {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Menú -tarjetas con stagger (4 por grid) */
+    .menuItem {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .menuItem:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .menuItem:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .menuItem:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .menuItem:nth-child(4) { animation-range: entry 12% cover 25%; }
+
+    /* Info -tarjetas con stagger */
+    .infoCard {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .infoCard:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .infoCard:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .infoCard:nth-child(3) { animation-range: entry 8% cover 25%; }
+
+    /* Reseñas -encabezado y tarjetas con stagger */
+    .reviewsHeader {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .reviewCard {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .reviewCard:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .reviewCard:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .reviewCard:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .reviewCard:nth-child(4) { animation-range: entry 12% cover 25%; }
+
+    /* CTA -título y descripción */
+    .ctaTitle {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .ctaDesc {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 4% cover 25%;
+    }
   }
 }

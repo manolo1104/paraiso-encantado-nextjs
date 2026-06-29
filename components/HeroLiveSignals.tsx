@@ -1,108 +1,66 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, Check } from 'lucide-react';
 
-const NAMES  = ['Ana', 'Carlos', 'María', 'Luis', 'Sofía', 'Diego', 'Valentina', 'Andrés', 'Camila', 'Roberto'];
-const CITIES = ['CDMX', 'Monterrey', 'Guadalajara', 'Querétaro', 'Puebla', 'Tampico', 'León', 'Mérida'];
-const SUITES = ['Jungla', 'LindaVista', 'Helechos 1', 'Lirios 1', 'Flor de Lis'];
-
-function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
+// Número aleatorio de "personas viendo ahora" entre 15 y 35.
+function randomViewers() {
+  return Math.floor(Math.random() * 21) + 15; // 15..35 inclusive
+}
 
 export default function HeroLiveSignals() {
-  const [viewers, setViewers]   = useState(() => Math.floor(Math.random() * 31) + 15);
-  const [scarcity]              = useState(() => Math.floor(Math.random() * 5) + 2);
-  const [booking, setBooking]   = useState(() => ({
-    name: pick(NAMES), city: pick(CITIES), suite: pick(SUITES),
-    hours: Math.floor(Math.random() * 4) + 1,
-  }));
-  const [bookFade, setBookFade] = useState(true);
-  const currentMonth = new Date().toLocaleString('es-MX', { month: 'long' });
+  const [viewers, setViewers] = useState(randomViewers);
 
   useEffect(() => {
-    const viewerTimer = setInterval(() => {
-      setViewers(v => {
-        // Drift ±5 from current value, clamped to [15, 45]
-        const delta = Math.floor(Math.random() * 11) - 5;
-        return Math.min(45, Math.max(15, v + delta));
+    // Pequeña variación en vivo, siempre dentro de [15, 35].
+    const timer = setInterval(() => {
+      setViewers((v) => {
+        const delta = Math.floor(Math.random() * 5) - 2; // -2..+2
+        return Math.min(35, Math.max(15, v + delta));
       });
-    }, (20 + Math.random() * 20) * 1000);
-
-    const bookingTimer = setInterval(() => {
-      setBookFade(false);
-      setTimeout(() => {
-        setBooking({
-          name: pick(NAMES), city: pick(CITIES), suite: pick(SUITES),
-          hours: Math.floor(Math.random() * 4) + 1,
-        });
-        setBookFade(true);
-      }, 400);
-    }, 60_000);
-
-    return () => { clearInterval(viewerTimer); clearInterval(bookingTimer); };
+    }, 18000 + Math.random() * 14000);
+    return () => clearInterval(timer);
   }, []);
 
   return (
     <>
       <style>{`
-        .hero-signals {
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-          margin: 14px 0 18px;
-          align-items: flex-start;
-        }
-        @media (min-width: 640px) {
-          .hero-signals {
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px 16px;
-          }
-        }
-        .hs-item {
-          display: flex;
+        .hero-viewers {
+          display: inline-flex;
           align-items: center;
-          gap: 7px;
-          font-size: 0.78rem;
-          color: rgba(250,248,245,0.88);
-          background: rgba(0,0,0,0.28);
+          gap: 8px;
+          margin: 0;
+          font-family: var(--font-jost, sans-serif);
+          font-size: 0.8rem;
+          letter-spacing: 0.01em;
+          color: rgba(250, 248, 245, 0.92);
+          background: rgba(0, 0, 0, 0.26);
           backdrop-filter: blur(6px);
           -webkit-backdrop-filter: blur(6px);
-          border: 1px solid rgba(201,169,122,0.25);
+          border: 1px solid rgba(201, 169, 122, 0.32);
           border-radius: 20px;
-          padding: 5px 12px;
-          white-space: nowrap;
+          padding: 6px 14px;
         }
-        .hs-item svg { flex-shrink: 0; }
-        .hs-dot {
-          width: 7px;
-          height: 7px;
+        .hero-viewers strong { font-weight: 600; color: #fff; }
+        .hv-dot {
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
-          background: #22c55e;
-          animation: hsPulse 1.5s ease-in-out infinite;
+          background: #5fbf6a;
           flex-shrink: 0;
+          box-shadow: 0 0 0 0 rgba(95, 191, 106, 0.55);
+          animation: hvPulse 2s ease-out infinite;
         }
-        @keyframes hsPulse {
-          0%,100% { opacity:1; transform:scale(1); }
-          50%      { opacity:0.4; transform:scale(0.7); }
+        @keyframes hvPulse {
+          0%   { box-shadow: 0 0 0 0 rgba(95, 191, 106, 0.55); }
+          70%  { box-shadow: 0 0 0 7px rgba(95, 191, 106, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(95, 191, 106, 0); }
         }
-        .hs-booking { transition: opacity 0.28s ease-out, transform 0.28s ease-out; }
+        @media (prefers-reduced-motion: reduce) { .hv-dot { animation: none; } }
       `}</style>
-      <div className="hero-signals" role="status" aria-live="polite">
-        <div className="hs-item">
-          <span className="hs-dot" aria-hidden="true" />
-          <span><strong>{viewers}</strong> personas viendo ahora</span>
-        </div>
-        <div className="hs-item">
-          <Zap size={12} strokeWidth={2} color="#c9a97a" aria-hidden="true" />
-          <span>Solo <strong>{scarcity} suites</strong> para {currentMonth}</span>
-        </div>
-        <div className="hs-item hs-booking" style={{ opacity: bookFade ? 1 : 0, transform: bookFade ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.95)' }}>
-          <Check size={12} strokeWidth={2.5} color="#22c55e" aria-hidden="true" />
-          <span><strong>{booking.name}</strong> de {booking.city} reservó {booking.suite} hace {booking.hours}h</span>
-        </div>
-      </div>
+      <p className="hero-viewers" role="status" aria-live="polite">
+        <span className="hv-dot" aria-hidden="true" />
+        <span><strong>{viewers}</strong> personas viendo ahora</span>
+      </p>
     </>
   );
 }

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Droplets, Bed, Leaf, Compass, Utensils, MapPin } from 'lucide-react';
 import { suites } from '@/data/suites';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './familias.module.css';
 
 export const metadata: Metadata = {
@@ -47,14 +48,10 @@ const schema = {
     {
       '@type': 'FAQPage',
       mainEntity: [
-        { '@type': 'Question', name: '¿Tienen suites para familias de 6 u 8 personas?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Helechos 1 tiene 3 camas matrimoniales (hasta 6 personas) con terraza y piscina spa. Helechos 2 tiene 4 camas matrimoniales (hasta 8 personas). Ambas están diseñadas para que toda la familia duerma junta sin comprometer comodidad. También Lajas y Orquídeas Doble son perfectas para familias de 4.' } },
-        { '@type': 'Question', name: '¿Son seguros los tours para niños en Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'El Puente de Dios (pozas turquesas someras), Las Pozas de Edward James y Cascadas de Micos son perfectos desde los 5-6 años. La Cascada de Tamul en canoa es recomendable a partir de los 8 años en temporada seca (oct-abril). Todos los tours incluyen guía certificado local que conoce cada destino.' } },
-        { '@type': 'Question', name: '¿Tiene el hotel piscina o área de juegos para niños?', acceptedAnswer: { '@type': 'Answer', text: 'Cada suite tiene su propia piscina spa privada. Las suites Helechos tienen piscina en terraza — los niños pueden disfrutarla con supervisión. El hotel tiene jardines amplios de vegetación tropical que los niños pueden explorar libremente. No hay toboganes, pero la naturaleza del lugar hace que los niños no pidan pantallas.' } },
-        { '@type': 'Question', name: '¿Cuánto cuesta una suite para 4-6 personas?', acceptedAnswer: { '@type': 'Answer', text: 'Las suites familiares Helechos 1 y 2 comienzan desde $1,900 MXN por noche para 2 personas. La persona adicional cuesta $300 MXN/noche. Para una familia de 4 (2 adultos + 2 niños mayores de 12 años): a partir de $2,500 MXN/noche todo incluido en la misma suite.' } },
-        { '@type': 'Question', name: '¿Qué pueden comer los niños en el restaurante El Papán?', acceptedAnswer: { '@type': 'Answer', text: 'El restaurante tiene opciones que a los niños encantan: tamales de elote dulce, enchiladas huastecas, frijoles de olla y tortillas hechas a mano en comal. Para los más pequeños, se preparan platillos sencillos como huevos con tortillas. El restaurante opera de 8 AM a 8 PM.' } },
-        { '@type': 'Question', name: '¿Qué edad mínima tienen los tours?', acceptedAnswer: { '@type': 'Answer', text: 'Las Pozas de Edward James: sin edad mínima (es caminar en terreno seguro). Cascadas de Micos y Puente de Dios: recomendado 5+ años. Tamul en canoa: 8+ años en temporada seca, 12+ en temporada de lluvias. Sótano de las Golondrinas: 10+ años.' } },
-        { '@type': 'Question', name: '¿Xilitla es un destino seguro para familias con niños?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Xilitla es un pueblo serrano tranquilo con muy bajo índice de inseguridad. El hotel está en el centro histórico a 400 metros de Las Pozas. Las carreteras de acceso son buenas autopistas y federales pavimentadas. El único riesgo real es el tiempo en las cascadas durante temporada de lluvias (jun-sep).' } },
-        { '@type': 'Question', name: '¿Cuántos días necesita una familia en Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'Mínimo 3 noches: día 1 descanso y Las Pozas, día 2 tour a cascadas (Micos o Tamul), día 3 mañana libre y regreso. Con 4 noches pueden hacer 2 tours diferentes y aún tener tiempo de explorar el pueblo de Xilitla con calma.' } },
+        { '@type': 'Question', name: '¿Tienen suites para familias grandes (6-8 personas)?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Helechos 1 tiene 3 camas matrimoniales (hasta 6 personas) y Helechos 2 tiene 4 camas matrimoniales (hasta 8 personas). Ambas incluyen piscina spa y terraza.' } },
+        { '@type': 'Question', name: '¿Son seguros los tours para niños?', acceptedAnswer: { '@type': 'Answer', text: 'El Puente de Dios (pozas turquesas) y Cascadas de Micos son perfectos para niños mayores de 6 años. Tamul en canoa es ideal a partir de 8-10 años en temporada seca. Las Pozas de Edward James son fascinantes para cualquier edad.' } },
+        { '@type': 'Question', name: '¿Tiene el hotel área de juegos o actividades para niños?', acceptedAnswer: { '@type': 'Answer', text: 'El hotel tiene jardines amplios y los niños pueden explorar la vegetación tropical del entorno. El spa privado de cada suite es disfrutable para toda la familia.' } },
+        { '@type': 'Question', name: '¿Cuál es el precio por persona adicional?', acceptedAnswer: { '@type': 'Answer', text: 'La tarifa base incluye 2 personas. La persona adicional tiene un costo de $300 MXN por noche. Las suites Helechos y Lajas están diseñadas para familias y tienen tarifas ya incluidas para mayor número de personas.' } },
       ],
     },
   ],
@@ -101,6 +98,7 @@ export default function HotelFamiliasPage() {
 
         {/* STATS */}
         <section className={styles.stats}>
+          <FloatingLeaves />
           <div className={styles.statsInner}>
             <div className={styles.stat}><span className={styles.statNum}>8</span><span className={styles.statLabel}>personas máximo en suites familiares</span></div>
             <div className={styles.statDivider} />
@@ -158,7 +156,8 @@ export default function HotelFamiliasPage() {
         </section>
 
         {/* QUÉ HACER CON NIÑOS */}
-        <section className={styles.reasons} style={{ background: 'var(--forest)', color: 'white' }}>
+        <section className={styles.reasons} style={{ background: 'var(--forest)', color: 'white', position: 'relative', overflow: 'hidden', isolation: 'isolate' }}>
+          <FloatingLeaves />
           <div className={styles.reasonsInner}>
             <p className={styles.eyebrowCenter} style={{ color: 'var(--gold)' }}>Itinerario familiar</p>
             <h2 style={{ color: 'white' }}>3 Días Perfectos con la Familia</h2>
@@ -219,6 +218,7 @@ export default function HotelFamiliasPage() {
 
         {/* CTA FINAL */}
         <section className={styles.finalCta}>
+          <FloatingLeaves />
           <div className={styles.finalCtaInner}>
             <h2>El Mejor Viaje Familiar de la Huasteca</h2>
             <p>Xilitla, Las Pozas y la naturaleza de la sierra potosina para toda la familia.</p>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import styles from './NewsletterSection.module.css';
+import FloatingLeaves from './FloatingLeaves';
 
 export default function NewsletterSection() {
   const [email, setEmail] = useState('');
@@ -25,6 +26,7 @@ export default function NewsletterSection() {
 
   return (
     <section className={styles.section} aria-labelledby="newsletter-heading">
+      <FloatingLeaves count={14} />
       <div className={styles.inner}>
         <div className={styles.iconWrap} aria-hidden="true">✦</div>
         <p className={styles.eyebrow}>Antes de tu viaje</p>

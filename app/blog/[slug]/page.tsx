@@ -48,6 +48,54 @@ const AUTHORS: Record<string, { name: string; role: string; bio: string; color: 
   },
 };
 
+// HowTo JSON-LD por artículo: solo para guías con pasos de ruta visibles y reales.
+// El texto refleja los pasos numerados que aparecen en el cuerpo del artículo.
+const HOWTO_SCHEMAS: Record<string, object> = {
+  'como-llegar-a-xilitla': {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'Cómo Llegar a Xilitla desde Ciudad de México en Carro',
+    description: 'Ruta en carro desde CDMX a Xilitla, San Luis Potosí, 5.5 horas por autopista de cuota.',
+    totalTime: 'PT5H30M',
+    estimatedCost: { '@type': 'MonetaryAmount', currency: 'MXN', value: '500' },
+    tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
+    step: [
+      { '@type': 'HowToStep', position: 1, name: 'Salir por la autopista México-Tampico (MEX-85D)', text: 'Toma la autopista México-Tampico hacia el noreste desde CDMX.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#en-carro-la-opcion-mas-flexible' },
+      { '@type': 'HowToStep', position: 2, name: 'Pasar por Pachuca y Tamazunchale', text: 'Pachuca en ~1 hora, Tamazunchale en ~3.5 horas. En este tramo la carretera sube la sierra con curvas, ve despacio.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
+      { '@type': 'HowToStep', position: 3, name: 'Llegar a Ciudad Valles (4 horas)', text: 'Ciudad Valles es el punto de conexión principal. Puedes parar a cargar gasolina y comer.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
+      { '@type': 'HowToStep', position: 4, name: 'Tomar la carretera federal 120 hacia Xilitla', text: 'Desde Ciudad Valles toma la carretera 120. Son ~1.5 horas más con curvas de sierra.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#ultimos-kilometros-ciudad-valles-xilitla' },
+      { '@type': 'HowToStep', position: 5, name: 'Llegar al Hotel Paraíso Encantado en Xilitla', text: 'El hotel está en el centro de Xilitla, a 400 metros de Las Pozas de Edward James. Estacionamiento privado incluido.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#al-llegar-donde-esta-el-hotel' },
+    ],
+  },
+  'puente-de-dios-xilitla': {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'Cómo Llegar al Puente de Dios desde Xilitla en Carro',
+    description: 'Ruta en carro desde Xilitla al Puente de Dios en Tamasopo, San Luis Potosí. Aproximadamente 45 a 60 minutos.',
+    totalTime: 'PT1H',
+    tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
+    step: [
+      { '@type': 'HowToStep', position: 1, name: 'Toma la carretera 120 hacia Ciudad Valles', text: 'Toma la carretera 120 desde Xilitla hacia Ciudad Valles.', url: 'https://www.paraisoencantado.com/blog/puente-de-dios-xilitla#como-llegar-desde-xilitla' },
+      { '@type': 'HowToStep', position: 2, name: 'Desvía hacia Tamasopo', text: 'Antes de Ciudad Valles, sigue hacia Tamasopo.', url: 'https://www.paraisoencantado.com/blog/puente-de-dios-xilitla#como-llegar-desde-xilitla' },
+      { '@type': 'HowToStep', position: 3, name: 'Llega al Puente de Dios', text: 'El Puente de Dios está en las afueras de Tamasopo, bien señalizado.', url: 'https://www.paraisoencantado.com/blog/puente-de-dios-xilitla#como-llegar-desde-xilitla' },
+    ],
+  },
+  'sotano-golondrinas-xilitla': {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'Cómo Llegar al Sótano de las Golondrinas desde Xilitla en Carro',
+    description: 'Ruta en carro desde Xilitla al Sótano de las Golondrinas en Aquismón, San Luis Potosí. Aproximadamente 1.5 a 2 horas.',
+    totalTime: 'PT2H',
+    tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
+    step: [
+      { '@type': 'HowToStep', position: 1, name: 'Toma la carretera 120 hacia Ciudad Valles', text: 'Toma la carretera 120 hacia Ciudad Valles (baja la sierra).', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
+      { '@type': 'HowToStep', position: 2, name: 'Sigue hacia Aquismón', text: 'En Ciudad Valles, sigue por la federal hacia Aquismón.', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
+      { '@type': 'HowToStep', position: 3, name: 'Sigue las señales hacia el sótano', text: 'En Aquismón, sigue las señales hacia el sótano.', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
+      { '@type': 'HowToStep', position: 4, name: 'Recorre los últimos kilómetros de terracería', text: 'Los últimos kilómetros son terracería. Recomendamos vehículo con buena guardia.', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
+    ],
+  },
+};
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -163,22 +211,7 @@ export default async function ArticlePage({ params }: Props) {
     },
   };
 
-  const howToSchema = slug === 'como-llegar-a-xilitla' ? {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: 'Cómo Llegar a Xilitla desde Ciudad de México en Carro',
-    description: 'Ruta en carro desde CDMX a Xilitla, San Luis Potosí — 5.5 horas por autopista de cuota.',
-    totalTime: 'PT5H30M',
-    estimatedCost: { '@type': 'MonetaryAmount', currency: 'MXN', value: '500' },
-    tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
-    step: [
-      { '@type': 'HowToStep', position: 1, name: 'Salir por la autopista México-Tampico (MEX-85D)', text: 'Toma la autopista México-Tampico hacia el noreste desde CDMX.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#en-carro-la-opcion-mas-flexible' },
-      { '@type': 'HowToStep', position: 2, name: 'Pasar por Pachuca y Tamazunchale', text: 'Pachuca en ~1 hora, Tamazunchale en ~3.5 horas. En este tramo la carretera sube la sierra con curvas — ve despacio.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
-      { '@type': 'HowToStep', position: 3, name: 'Llegar a Ciudad Valles (4 horas)', text: 'Ciudad Valles es el punto de conexión principal. Puedes parar a cargar gasolina y comer.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
-      { '@type': 'HowToStep', position: 4, name: 'Tomar la carretera federal 120 hacia Xilitla', text: 'Desde Ciudad Valles toma la carretera 120. Son ~1.5 horas más con curvas de sierra.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#ultimos-kilometros-ciudad-valles-xilitla' },
-      { '@type': 'HowToStep', position: 5, name: 'Llegar al Hotel Paraíso Encantado en Xilitla', text: 'El hotel está en el centro de Xilitla, a 400 metros de Las Pozas de Edward James. Estacionamiento privado incluido.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#al-llegar-donde-esta-el-hotel' },
-    ],
-  } : null;
+  const howToSchema = HOWTO_SCHEMAS[slug] ?? null;
 
   const INTERNAL_LINKS: Record<string, { text: string; links: { href: string; label: string; desc: string }[] }> = {
     'como-llegar-a-xilitla': {

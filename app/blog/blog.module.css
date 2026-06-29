@@ -7,6 +7,9 @@
   background: var(--forest);
   color: white;
   padding: 120px 24px 64px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .headerInner {
@@ -227,6 +230,9 @@
   color: white;
   padding: 64px 24px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .ctaInner {

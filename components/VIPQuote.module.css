@@ -2,12 +2,16 @@
   background: var(--forest);
   padding: 0;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
 }
 
 .inner {
   display: grid;
   grid-template-columns: 45fr 55fr;
   min-height: 480px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Imagen */
@@ -146,12 +150,12 @@
     .imageWrap {
       animation: blurReveal linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 22%;
+      animation-range: entry 0% cover 25%;
     }
     .quoteWrap {
       animation: blurReveal linear both;
       animation-timeline: view();
-      animation-range: entry 5% entry 27%;
+      animation-range: entry 5% cover 25%;
     }
   }
 }

@@ -1,9 +1,11 @@
 import { Star } from 'lucide-react';
 import styles from './VIPQuote.module.css';
+import FloatingLeaves from './FloatingLeaves';
 
 export default function VIPQuote() {
   return (
     <section className={styles.section} aria-labelledby="vip-quote-heading">
+      <FloatingLeaves />
       <div className={styles.inner}>
         {/* Video de YouTube en lugar de foto */}
         <div className={styles.imageWrap}>

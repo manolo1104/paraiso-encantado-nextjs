@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle, MessageCircle, Phone, BarChart2, X as XIcon } from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import { mxnToUsd, BOOKING_URL } from '@/lib/config';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './habitaciones.module.css';
 
 const URGENCY_MESSAGES: Record<string, string> = {
@@ -148,6 +149,7 @@ export default function HabitacionesClient({ groups, unavailableNames = [], chec
 
       {/* CTA final */}
       <section className={styles.finalCta}>
+        <FloatingLeaves />
         <h2>¿Lista tu <em>Escapada</em>?</h2>
         <p>Confirmación instantánea · Cancelación gratuita hasta 48hrs antes</p>
         <a href={BOOKING_URL} className={styles.finalCtaBtn}>Reservar Ahora</a>

@@ -336,6 +336,9 @@
 .videosSection {
   padding: 48px 24px;
   background: #0e1f10;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 .videosTitle {
   font-family: var(--font-cormorant), Georgia, serif;
@@ -463,6 +466,9 @@
   text-align: center;
   padding: 56px 24px;
   background: #1a2e1a;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 .finalCtaText {
   font-family: var(--font-cormorant), Georgia, serif;
@@ -487,3 +493,62 @@
   transition: background 0.15s;
 }
 .finalCtaBtn:hover { background: #d9ba8e; }
+
+/* ── Scroll-driven entrance (reveals calmados) ─────────────────────────────── */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Hero (texto) */
+    .hero > * {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .hero > *:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .hero > *:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .hero > *:nth-child(3) { animation-range: entry 8% cover 25%; }
+
+    /* Grid masonry: cascada modular que se reinicia cada 6 fotos.
+       Solo opacity/translate: no afecta el layout del grid ni el lightbox. */
+    .item {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .item:nth-child(6n+1) { animation-range: entry 0% cover 25%; }
+    .item:nth-child(6n+2) { animation-range: entry 4% cover 25%; }
+    .item:nth-child(6n+3) { animation-range: entry 8% cover 25%; }
+    .item:nth-child(6n+4) { animation-range: entry 12% cover 25%; }
+    .item:nth-child(6n+5) { animation-range: entry 16% cover 25%; }
+    .item:nth-child(6n)   { animation-range: entry 20% cover 25%; }
+
+    /* CTA contextual por categoría */
+    .categoryCta > * {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .categoryCta > *:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .categoryCta > *:nth-child(2) { animation-range: entry 6% cover 25%; }
+
+    /* Videos */
+    .videosTitle {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .videoCard {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .videoCard:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .videoCard:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .videoCard:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .videoCard:nth-child(4) { animation-range: entry 12% cover 25%; }
+    .videoCard:nth-child(5) { animation-range: entry 16% cover 25%; }
+
+    /* CTA final */
+    .finalCta > * {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .finalCta > *:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .finalCta > *:nth-child(2) { animation-range: entry 6% cover 25%; }
+  }
+}

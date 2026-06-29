@@ -1,7 +1,7 @@
 /* ===== REVIEWS PAGE ===== */
 .main { padding-top: 0; }
 
-.header { background: var(--forest); color: white; padding: 88px 24px 64px; }
+.header { background: var(--forest); color: white; padding: 88px 24px 64px; position: relative; overflow: hidden; isolation: isolate; }
 .headerInner { max-width: 720px; margin: 0 auto; }
 .breadcrumb { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 20px; font-family: var(--font-jost,sans-serif); }
 .breadcrumb a { color: rgba(255,255,255,0.55); text-decoration: none; }
@@ -52,9 +52,46 @@
 .moreReviewsBtn:hover { background: var(--forest); color: white; }
 
 /* CTA */
-.cta { background: var(--forest); color: white; padding: 72px 24px; text-align: center; }
+.cta { background: var(--forest); color: white; padding: 72px 24px; text-align: center; position: relative; overflow: hidden; isolation: isolate; }
 .ctaInner { max-width: 480px; margin: 0 auto; }
 .cta h2 { font-family: var(--font-cormorant),serif; font-size: clamp(28px,4vw,38px); font-weight: 300; margin-bottom: 12px; }
 .cta p { font-size: 14px; opacity: 0.75; margin-bottom: 28px; font-family: var(--font-jost,sans-serif); }
 .ctaBtn { display: inline-block; background: var(--gold); color: white; padding: 13px 30px; border-radius: 7px; font-size: 14px; font-weight: 600; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: opacity 0.2s; }
 .ctaBtn:hover { opacity: 0.88; }
+
+/* Scroll-driven entrance */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .headerInner {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .summaryInner {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .reviewCard {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .reviewCard:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .reviewCard:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .reviewCard:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .reviewCard:nth-child(4) { animation-range: entry 12% cover 25%; }
+    .reviewCard:nth-child(5) { animation-range: entry 16% cover 25%; }
+    .reviewCard:nth-child(6) { animation-range: entry 20% cover 25%; }
+    .reviewCard:nth-child(n+7) { animation-range: entry 20% cover 25%; }
+    .moreReviews {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .ctaInner {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+  }
+}

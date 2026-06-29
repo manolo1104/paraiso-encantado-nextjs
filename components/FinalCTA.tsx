@@ -3,10 +3,12 @@
 import { CheckCircle, Phone, MessageCircle, Mail } from 'lucide-react';
 import { track } from '@/lib/track';
 import styles from './FinalCTA.module.css';
+import FloatingLeaves from './FloatingLeaves';
 
 export default function FinalCTA() {
   return (
     <section className={styles.section} aria-label="Reserva ahora">
+      <FloatingLeaves count={16} />
       <div className={styles.content}>
         <h2>
           Tu escapada a la <em>Huasteca</em> empieza aquí

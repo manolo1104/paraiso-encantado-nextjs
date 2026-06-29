@@ -5,6 +5,7 @@ import { Users, CalendarCheck, Home, Leaf, Star, Shield } from 'lucide-react';
 import GruposForm from './GruposForm';
 import GaleriaGrupos, { type GaleriaImg } from './GaleriaGrupos';
 import StatCounter from '@/components/StatCounter';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './grupos-eventos.module.css';
 
 export const metadata: Metadata = {
@@ -49,6 +50,15 @@ const gruposSchema = {
   ],
 };
 
+const gruposBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+    { '@type': 'ListItem', position: 2, name: 'Grupos y Eventos', item: 'https://www.paraisoencantado.com/grupos-eventos' },
+  ],
+};
+
 const FEATURES = [
   { icon: <Home size={24} strokeWidth={1.5} />, title: 'Renta exclusiva del hotel', desc: '13 suites completamente para tu grupo. Sin extraños — solo tu celebración.' },
   { icon: <Users size={24} strokeWidth={1.5} />, title: 'Hasta 60 personas', desc: 'Capacidad de hospedaje para grupos grandes con suites de 2 a 6 personas cada una.' },
@@ -84,6 +94,7 @@ export default function GruposEventosPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(gruposSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(gruposBreadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@graph': [
@@ -134,6 +145,7 @@ export default function GruposEventosPage() {
 
         {/* CAPACIDAD RÁPIDA */}
         <div className={styles.statsBar} role="list" aria-label="Capacidades del hotel para eventos">
+          <FloatingLeaves />
           {[
             { num: '13', label: 'Suites disponibles' },
             { num: '60', label: 'Personas de hospedaje' },
@@ -234,6 +246,7 @@ export default function GruposEventosPage() {
 
         {/* FEATURES */}
         <section className={styles.featuresSection} aria-labelledby="features-heading">
+          <FloatingLeaves />
           <div className={styles.featuresInner}>
             <div className={styles.featuresLayout}>
               <div className={styles.featuresIntro} data-reveal>

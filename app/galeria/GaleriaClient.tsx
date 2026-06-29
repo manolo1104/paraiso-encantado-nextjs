@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Share2, Download, X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './galeria.module.css';
 
 type Category = 'Todo' | 'Suites' | 'Áreas Comunes' | 'Restaurante' | 'Naturaleza' | 'Experiencias' | 'Videos';
@@ -228,6 +229,7 @@ export default function GaleriaClient() {
       {/* Videos */}
       {showingVideos && (
         <section className={styles.videosSection} aria-labelledby="videos-heading">
+          <FloatingLeaves />
           <h2 id="videos-heading" className={styles.videosTitle}>
             {active === 'Videos' ? 'Videos de Paraíso Encantado y la Huasteca' : 'Videos'}
           </h2>
@@ -268,6 +270,7 @@ export default function GaleriaClient() {
 
       {/* CTA final */}
       <div className={styles.finalCta}>
+        <FloatingLeaves />
         <p className={styles.finalCtaText}>¿Listo para vivir la experiencia?</p>
         <Link href="/reservar" className={styles.finalCtaBtn}>Reservar suite ahora →</Link>
       </div>

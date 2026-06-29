@@ -663,6 +663,9 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .ctaSection .eyebrow {
@@ -871,4 +874,68 @@
   font-family: var(--font-cormorant), Georgia, serif;
   font-size: 0.95rem; font-style: italic;
   color: #3a3a30; line-height: 1.6; margin: 0;
+}
+
+/* ── Entrada al hacer scroll (calma, nativa) ──────────────────────────────── */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+
+    /* Tours -encabezado y tarjetas con stagger por columna (grid de 3) */
+    .toursHeader {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .tourCard {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .tourCard:nth-child(3n+1) { animation-range: entry 0% cover 25%; }
+    .tourCard:nth-child(3n+2) { animation-range: entry 4% cover 25%; }
+    .tourCard:nth-child(3n)   { animation-range: entry 8% cover 25%; }
+
+    /* Qué incluye -encabezado y elementos con stagger */
+    .includesHeader {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .includeItem {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .includeItem:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .includeItem:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .includeItem:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .includeItem:nth-child(4) { animation-range: entry 12% cover 25%; }
+    .includeItem:nth-child(5) { animation-range: entry 16% cover 25%; }
+    .includeItem:nth-child(6) { animation-range: entry 20% cover 25%; }
+
+    /* Atracciones -encabezado y tarjetas con stagger */
+    .attractionsHeader {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .attractionCard {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .attractionCard:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .attractionCard:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .attractionCard:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .attractionCard:nth-child(4) { animation-range: entry 12% cover 25%; }
+
+    /* CTA -título y descripción */
+    .ctaTitle {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+    .ctaDesc {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 4% cover 25%;
+    }
+  }
 }

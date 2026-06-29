@@ -181,12 +181,12 @@
     .sectionHeader {
       animation: revealUp linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 18%;
+      animation-range: entry 0% cover 25%;
     }
     .item {
       animation: revealUp linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 22%;
+      animation-range: entry 0% cover 25%;
     }
   }
 }

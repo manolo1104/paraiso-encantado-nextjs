@@ -2,6 +2,7 @@ import Image from 'next/image';
 import styles from './Hero.module.css';
 import HeroDatePicker from './HeroDatePicker';
 import VideoBackground from './VideoBackground';
+import HeroLiveSignals from './HeroLiveSignals';
 
 export default function Hero() {
   return (
@@ -66,6 +67,10 @@ export default function Hero() {
         <p className={styles.ctaNote}>
           Reserva directa &nbsp;·&nbsp; Confirmación inmediata &nbsp;·&nbsp; Cancela gratis hasta 48 h
         </p>
+
+        <div style={{ marginTop: 16 }}>
+          <HeroLiveSignals />
+        </div>
       </div>
 
       {/* Scroll indicator */}

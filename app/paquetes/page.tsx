@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Calendar, Users, Coffee, MapPin } from 'lucide-react';
 import TiltCard from '@/components/TiltCard';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './paquetes.module.css';
 
 export const metadata: Metadata = {
@@ -210,11 +211,23 @@ const FAQ = [
   },
 ];
 
+// FAQPage — refleja exactamente las preguntas visibles del acordeón de paquetes
+const paquetesFaqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
 export default function PaquetesPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(paquetesSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(paquetesBreadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(paquetesFaqSchema) }} />
       <main className={styles.main}>
 
         {/* HERO */}
@@ -236,6 +249,7 @@ export default function PaquetesPage() {
 
         {/* BANNER DE CONFIANZA — separa el hero de la info */}
         <div className={styles.trustBanner} role="list" aria-label="Garantías de reserva directa" data-reveal>
+          <FloatingLeaves />
           <span role="listitem" className={styles.trustItem}>
             <span className={styles.stars} aria-hidden="true">★★★★★</span> 4.6 · 519 reseñas Google
           </span>
@@ -401,6 +415,7 @@ export default function PaquetesPage() {
 
         {/* CTA FINAL */}
         <section className={styles.ctaSection}>
+          <FloatingLeaves />
           <div className={styles.ctaInner} data-reveal>
             <p className={styles.eyebrow}>¿Listo para reservar?</p>
             <h2>El Jardín de Edward James<br /><em>te espera</em></h2>

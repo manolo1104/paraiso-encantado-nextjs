@@ -13,6 +13,9 @@
   background: var(--forest);
   padding: 120px 24px 80px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .headerContent {
@@ -356,6 +359,9 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .finalCta h2 {
@@ -657,5 +663,48 @@
 
   .contactRow {
     gap: 16px;
+  }
+}
+
+/* ── Scroll-driven entrance (reveals calmados) ─────────────────────────────── */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Header (texto) */
+    .headerContent {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Título de cada grupo */
+    .groupTitle {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+
+    /* Tarjetas de suites: se anima la card interior (no el wrap, para no
+       pisar el dimmer de .cardWrapUnavailable). Stagger por celda del grid. */
+    .card {
+      animation: revealUp linear both;
+      animation-timeline: view();
+      animation-range: entry 16% cover 25%;
+    }
+    .cardWrap:nth-child(1) .card { animation-range: entry 0% cover 25%; }
+    .cardWrap:nth-child(2) .card { animation-range: entry 4% cover 25%; }
+    .cardWrap:nth-child(3) .card { animation-range: entry 8% cover 25%; }
+    .cardWrap:nth-child(4) .card { animation-range: entry 12% cover 25%; }
+    .cardWrap:nth-child(5) .card { animation-range: entry 16% cover 25%; }
+    .cardWrap:nth-child(6) .card { animation-range: entry 20% cover 25%; }
+
+    /* CTA final */
+    .finalCta > * {
+      animation: revealUp linear both;
+      animation-timeline: view();
+    }
+    .finalCta > *:nth-child(1) { animation-range: entry 0% cover 25%; }
+    .finalCta > *:nth-child(2) { animation-range: entry 4% cover 25%; }
+    .finalCta > *:nth-child(3) { animation-range: entry 8% cover 25%; }
+    .finalCta > *:nth-child(4) { animation-range: entry 12% cover 25%; }
   }
 }

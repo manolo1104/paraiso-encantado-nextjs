@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Clock } from 'lucide-react';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './xilitla.module.css';
 
 export const metadata: Metadata = {
@@ -79,7 +80,7 @@ const schema = {
           name: '¿Qué es lo más famoso de Xilitla?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Las Pozas de Edward James (también conocidas como el Jardín Surrealista de Edward James) son la principal atracción. Es un jardín escultórico único en el mundo, declarado Patrimonio Cultural de México.',
+            text: 'Las Pozas de Edward James, el jardín surrealista único en el mundo. Esculturas de concreto de varios pisos rodeadas de selva tropical y agua cristalina. Declarado Patrimonio Cultural de México.',
           },
         },
         {
@@ -87,23 +88,23 @@ const schema = {
           name: '¿Cuántos días se necesitan para visitar Xilitla?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Con 2-3 noches tienes tiempo para visitar Las Pozas con calma, hacer un tour a Cascada Tamul y explorar el pueblo. Si quieres combinar con Puente de Dios o Cascada El Meco, recomendamos 3-4 noches.',
+            text: 'Con 2-3 noches tienes tiempo para Las Pozas con calma y un tour a Cascada Tamul. Para combinar Puente de Dios y El Meco recomendamos 3-4 noches.',
           },
         },
         {
           '@type': 'Question',
-          name: '¿Cuándo es la mejor época para visitar Xilitla?',
+          name: '¿Cuándo es la mejor época para visitar?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'La temporada seca (noviembre a mayo) es ideal para actividades acuáticas como Tamul en canoa. De junio a octubre llueve más pero la selva está espectacularmente verde. Xilitla se visita todo el año.',
+            text: 'La temporada seca (noviembre a mayo) es ideal para tours acuáticos. De junio a octubre llueve más pero la selva es espectacular. Xilitla se visita todo el año.',
           },
         },
         {
           '@type': 'Question',
-          name: '¿Cómo llegar a Xilitla desde Ciudad de México?',
+          name: '¿Cuánto cuesta la entrada a Las Pozas?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'En carro son aproximadamente 5-6 horas por la carretera México-Tampico pasando por Ciudad Valles. También hay autobuses directos desde la Central del Norte CDMX hasta Ciudad Valles, y de ahí transporte a Xilitla (45 min).',
+            text: 'La entrada general cuesta alrededor de $120-150 MXN por persona. Los horarios son de 9 AM a 6 PM. El jardín es administrado por el Fideicomiso Las Pozas.',
           },
         },
         {
@@ -111,7 +112,7 @@ const schema = {
           name: '¿Hay hotel cerca de Las Pozas de Edward James?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Hotel Paraíso Encantado está a solo 5 minutos caminando de Las Pozas — es el hotel boutique más cercano al jardín en todo Xilitla. Con 13 suites con spa privado y reserva directa sin comisiones en paraisoencantado.com.',
+            text: 'Hotel Paraíso Encantado está a 5 minutos caminando — el más cercano al jardín en todo Xilitla. 13 suites boutique con spa privado desde $1,500 MXN. Reserva directa en paraisoencantado.com.',
           },
         },
       ],
@@ -305,6 +306,7 @@ export default function XilitlaPage() {
 
         {/* CUÁNDO IR */}
         <section className={styles.whenTo}>
+          <FloatingLeaves />
           <div className={styles.whenToInner}>
             <h2>Cuándo Visitar Xilitla</h2>
             <p>

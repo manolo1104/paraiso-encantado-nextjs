@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -25,125 +25,6 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
   'pk_live_51TBljS2NTr97DEMsM069f4O7Zp5uHM2L4HkJZrButJxsHmcluZNR0OQ2qfpX9EFhoXBRW2AY2ADs2bbLin4kszJ900HuSVXYz0'
 );
-
-const PROMO_CODE = 'PARAISO10';
-
-// ── Exit-intent popup ─────────────────────────────────────
-function ExitIntentPopup({ sessionId }: { sessionId: string }) {
-  const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
-  const [email, setEmail] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-  const fired = useRef(false);
-
-  useEffect(() => {
-    if (pathname.includes('/checkout')) return;
-    function trigger() {
-      if (fired.current) return;
-      fired.current = true;
-      setVisible(true);
-      fetch('/api/track-event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: 'EXIT_INTENT_TRIGGER', sessionId, payload: { page: 'checkout' } }),
-      }).catch(() => {});
-    }
-
-    // Cursor sale por arriba del viewport
-    function handleMouseLeave(e: MouseEvent) {
-      if (e.clientY <= 0) trigger();
-    }
-
-    // Botón atrás del browser — empujamos un estado extra al cargar
-    // para interceptar el popstate
-    window.history.pushState(null, '', window.location.href);
-    function handlePopState() {
-      trigger();
-      // Volvemos a poner el estado para que si cierra el popup pueda seguir
-      window.history.pushState(null, '', window.location.href);
-    }
-
-    document.addEventListener('mouseleave', handleMouseLeave);
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [sessionId, pathname]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.trim() || !email.includes('@')) {
-      setError('Ingresa un correo válido.');
-      return;
-    }
-    setSubmitting(true);
-    setError('');
-    try {
-      const res = await fetch('/api/capture-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      if (res.ok) {
-        setSuccess(true);
-        fetch('/api/track-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event: 'EXIT_POPUP_CONVERT', sessionId, payload: { email: email.trim() } }),
-        }).catch(() => {});
-      } else {
-        setError('No se pudo guardar. Intenta de nuevo.');
-        setSubmitting(false);
-      }
-    } catch {
-      setError('Error de conexión.');
-      setSubmitting(false);
-    }
-  }
-
-  if (!visible) return null;
-
-  return (
-    <div className={styles.exitOverlay} onClick={e => { if (e.target === e.currentTarget) setVisible(false); }}>
-      <div className={styles.exitPopup}>
-        <button className={styles.exitClose} onClick={() => setVisible(false)} aria-label="Cerrar">×</button>
-        <span className={styles.exitTag}>Oferta exclusiva</span>
-        <h2 className={styles.exitTitle}>¡Espera! 10% de descuento</h2>
-        <p className={styles.exitDesc}>
-          Déjanos tu correo y recibe un cupón de 10% de descuento para aplicar en tu reserva directa.
-        </p>
-        {!success ? (
-          <form onSubmit={handleSubmit} className={styles.exitForm}>
-            <input
-              type="email"
-              className={styles.exitInput}
-              placeholder="tu@correo.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              autoFocus
-            />
-            <button type="submit" className={styles.exitBtn} disabled={submitting}>
-              {submitting ? 'Enviando…' : 'Obtener cupón'}
-            </button>
-            {error && <p className={styles.exitError}>{error}</p>}
-          </form>
-        ) : (
-          <div className={styles.exitSuccess}>
-            <p style={{ margin: '0 0 8px', fontFamily: 'var(--font-jost), sans-serif', fontSize: '0.85rem', color: '#2d5a27' }}>
-              ¡Listo! Tu cupón:
-            </p>
-            <div className={styles.exitCode}>{PROMO_CODE}</div>
-            <p className={styles.exitSuccessNote}>Aplícalo en el campo de código promocional al pagar.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ── Inner form (needs Stripe context) ────────────────────
 function CheckoutForm({
@@ -552,7 +433,6 @@ export default function CheckoutPage() {
 
   return (
     <main className={styles.main}>
-      <ExitIntentPopup sessionId={sessionId} />
       <CheckoutProgressBar currentStep={2} />
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => router.push('/reservar')}>

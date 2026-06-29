@@ -1,12 +1,14 @@
 import Image from 'next/image';
 import { MessageCircle } from 'lucide-react';
 import styles from './Footer.module.css';
+import FloatingLeaves from './FloatingLeaves';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className={styles.footer} id="contacto">
+      <FloatingLeaves count={14} />
       <div className={styles.content}>
 
         {/* Marca */}

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Droplets, Sunrise, Utensils, ShieldCheck, Leaf } from 'lucide-react';
 import { suites } from '@/data/suites';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './hotel-las-pozas.module.css';
 
 export const metadata: Metadata = {
@@ -184,6 +185,7 @@ export default function HotelCercaDeLasPozasPage() {
 
         {/* DISTANCIA VISUAL */}
         <section className={styles.distance}>
+          <FloatingLeaves />
           <div className={styles.distanceInner}>
             <div className={styles.distanceStat}>
               <span className={styles.distanceNum}>400</span>
@@ -332,6 +334,7 @@ export default function HotelCercaDeLasPozasPage() {
 
         {/* CTA FINAL */}
         <section className={styles.finalCta}>
+          <FloatingLeaves />
           <div className={styles.finalCtaInner}>
             <h2>Despierta a 5 Minutos<br />del Jardín de Edward James</h2>
             <p>Confirma tu fecha y elige la suite perfecta para tu visita a Las Pozas.</p>

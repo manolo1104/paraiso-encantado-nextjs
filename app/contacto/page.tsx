@@ -190,11 +190,21 @@ const contactFaqSchema = {
   })),
 };
 
+const contactBreadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
+    { '@type': 'ListItem', position: 2, name: 'Contacto', item: 'https://www.paraisoencantado.com/contacto' },
+  ],
+};
+
 // ── Componente ─────────────────────────────────────────────────────────────────
 export default function ContactoPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(contactBreadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(contactFaqSchema) }} />
 
       <main className={styles.main}>

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Bath, Leaf, MapPin, Utensils, Mountain, Flower2 } from 'lucide-react';
 import { suites } from '@/data/suites';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './luna-de-miel.module.css';
 
 export const metadata: Metadata = {
@@ -48,14 +49,10 @@ const schema = {
     {
       '@type': 'FAQPage',
       mainEntity: [
-        { '@type': 'Question', name: '¿Es Xilitla un buen destino para luna de miel?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Xilitla combina naturaleza tropical única, el jardín surrealista de Edward James — único en el mundo — spa privado en cada suite y gastronomía huasteca auténtica. Pocas regiones de México ofrecen esa combinación de privacidad, belleza natural y experiencia cultural en un solo lugar.' } },
-        { '@type': 'Question', name: '¿Qué suites son las más románticas del hotel?', acceptedAnswer: { '@type': 'Answer', text: 'LindaVista: tina de hidromasaje y vistas panorámicas a la sierra. Jungla: piscina spa privada inmersa en la selva, completa privacidad. Lajas: balcón privado con vista a Xilitla y dos camas matrimoniales. Lirios 2: balcón privado hacia los jardines del hotel. Todas para máximo 4 personas — en pareja tienes el espacio para ustedes solos.' } },
-        { '@type': 'Question', name: '¿Ofrecen decoración especial para luna de miel o aniversario?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Al reservar, indícanos en los comentarios que es luna de miel o aniversario y preparamos detalles especiales en la suite sin costo adicional: flores, velas y un detalle de bienvenida. También puedes avisarnos por WhatsApp.' } },
-        { '@type': 'Question', name: '¿Qué actividades románticas hay cerca del hotel?', acceptedAnswer: { '@type': 'Answer', text: 'Las Pozas de Edward James a 5 min caminando — ideal al amanecer cuando está vacío. Tour privado en canoa a la Cascada de Tamul. Cenas a la luz de velas en El Papán Huasteco. Paseo al atardecer por el pueblo mágico de Xilitla. Y las noches en el spa privado de tu suite con la sierra al fondo.' } },
-        { '@type': 'Question', name: '¿En qué época del año es más romántico visitar Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'Octubre a abril es la temporada ideal: clima fresco (18-24°C), sin lluvia, cascadas en buen caudal y Las Pozas con su mejor luz. Diciembre y enero son especialmente mágicos por el ambiente del pueblo. Semana Santa y verano son temporada alta — más visitantes en Las Pozas.' } },
-        { '@type': 'Question', name: '¿Cuántas noches recomienda para una luna de miel en Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'Mínimo 3 noches para disfrutar el hotel, Las Pozas con calma y un tour a Tamul o a las cascadas. Con 4 noches puedes hacer el tour completo de la Huasteca y aún tener un día de descanso absoluto en el spa privado.' } },
-        { '@type': 'Question', name: '¿El hotel Paraíso Encantado está en el pueblo o alejado?', acceptedAnswer: { '@type': 'Answer', text: 'En el corazón de Xilitla, a 400 metros de Las Pozas y a 5 minutos a pie del centro del pueblo. Tienen estacionamiento privado gratuito y se puede llegar caminando a restaurantes, mercado y el mirador. Lo mejor de ambos mundos: naturaleza rodeándote y el pueblo a pasos.' } },
-        { '@type': 'Question', name: '¿Cuánto cuesta una noche en pareja en el Hotel Paraíso Encantado?', acceptedAnswer: { '@type': 'Answer', text: 'Las suites para parejas comienzan desde $1,500 MXN por noche (Lirios 1 y 2) hasta $1,900 MXN para las suites master con spa privado (Jungla, LindaVista, Flor de Liz). Persona adicional: $300 MXN. Las reservas de 2 noches o más solo requieren 50% de anticipo.' } },
+        { '@type': 'Question', name: '¿Es Xilitla un buen destino para luna de miel?', acceptedAnswer: { '@type': 'Answer', text: 'Sí — es uno de los destinos más especiales e íntimos de México. Selva tropical, el jardín surrealista de Edward James, spa privado y gastronomía huasteca auténtica. Pocas regiones combinan naturaleza, arte y privacidad de esta manera.' } },
+        { '@type': 'Question', name: '¿Qué suites son las más románticas?', acceptedAnswer: { '@type': 'Answer', text: 'LindaVista (tina de hidromasaje, vistas panorámicas), Jungla (piscina spa privada entre la selva), Lajas (balcón con vista a Xilitla) y Lirios 2 (balcón privado con jardines). Todas son para máximo 4 personas — en pareja tienes el espacio para ustedes.' } },
+        { '@type': 'Question', name: '¿Ofrecen decoración especial para luna de miel o aniversario?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Avísanos por WhatsApp al reservar y preparamos detalles en la suite. Sin costo adicional.' } },
+        { '@type': 'Question', name: '¿Qué actividades románticas hay en Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'Las Pozas de Edward James (5 min caminando), tour privado a Tamul en canoa, cenas en El Papán, paseo por el pueblo al atardecer y disfrutar el spa privado en tu terraza con vista a las montañas.' } },
       ],
     },
   ],
@@ -150,7 +147,8 @@ export default function LunaDePageMielPage() {
         </section>
 
         {/* MEJOR ÉPOCA */}
-        <section className={styles.reasons} style={{ background: 'var(--forest)', color: 'white' }}>
+        <section className={styles.reasons} style={{ background: 'var(--forest)', color: 'white', position: 'relative', overflow: 'hidden', isolation: 'isolate' }}>
+          <FloatingLeaves />
           <div className={styles.reasonsInner}>
             <p className={styles.eyebrowCenter} style={{ color: 'var(--gold)' }}>¿Cuándo ir?</p>
             <h2 style={{ color: 'white' }}>La Mejor Época para tu Escapada</h2>
@@ -213,6 +211,7 @@ export default function LunaDePageMielPage() {
 
         {/* CTA FINAL */}
         <section className={styles.finalCta}>
+          <FloatingLeaves />
           <div className={styles.finalCtaInner}>
             <h2>Regálense una Escapada Inolvidable</h2>
             <p>Confirma tu suite y dinos que es luna de miel o aniversario — preparamos los detalles.</p>

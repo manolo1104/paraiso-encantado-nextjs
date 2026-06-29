@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Bus, Coffee, GraduationCap, ShieldCheck, Leaf, Camera, MessageCircle, Clock } from 'lucide-react';
+import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
@@ -218,45 +219,6 @@ const toursSchema = {
   })),
 };
 
-const experienciasFaqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: '¿Qué tours ofrece el Hotel Paraíso Encantado?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Ofrecemos 7 tours con guía certificado NOM-09 SECTUR: Expedición Tamul (Cascada de Tamul + Sótano de las Huahuas), Ruta Surrealista (Las Pozas de Edward James), Ruta Acuática (Puente de Dios), Cascadas del Meco, Paraíso Escalonado (Minas Viejas + Micos), y dos de aventura: Rappel en la Cascada de Tamul y RZR por Xilitla. Todos salen desde el hotel e incluyen transporte, guía y desayuno.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Cuánto cuesta el tour a la Cascada de Tamul?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'La Expedición Tamul tiene un precio de $1,450 MXN por persona e incluye: transporte privado, guía certificado, desayuno huasteco, entrada al Sótano de las Huahuastecas y recorrido en canoa hasta la Cascada de Tamul. La excursión dura entre 10 y 12 horas.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Necesito reservar los tours con anticipación?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Sí, recomendamos reservar con al menos 24-48 horas de anticipación para garantizar disponibilidad. Puedes reservar a través de WhatsApp al +52 489-100-7679 o en nuestra página web.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Los tours a las Pozas de Edward James son diarios?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Sí, la Ruta Surrealista que incluye Las Pozas de Edward James tiene salidas diarias desde el hotel. El Jardín Surrealista está a solo 5 minutos caminando del hotel. Recuerda que Las Pozas cierra los martes y tiene horario de 9:00 AM a 4:00 PM.',
-      },
-    },
-  ],
-};
-
 const experienciasBreadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -273,7 +235,6 @@ export default function ExperienciasPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toursSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(experienciasFaqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(experienciasBreadcrumbSchema) }} />
     <main className={styles.main}>
       {/* Breadcrumb */}
@@ -457,6 +418,7 @@ export default function ExperienciasPage() {
 
       {/* CTA */}
       <section className={styles.ctaSection}>
+        <FloatingLeaves />
         <p className={styles.eyebrow}>¿Listo para Explorar?</p>
         <h2 className={styles.ctaTitle}>
           La Huasteca <em>te espera</em>

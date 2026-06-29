@@ -2,6 +2,9 @@
   background: var(--forest);
   color: var(--cream);
   padding: 64px 24px 32px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .content {
@@ -10,6 +13,8 @@
   gap: 48px;
   max-width: 1280px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 /* Brand section */
@@ -163,6 +168,8 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
+  position: relative;
+  z-index: 1;
   border-top: 1px solid rgba(201, 169, 122, 0.18);
   padding-top: 32px;
   margin-top: 48px;
