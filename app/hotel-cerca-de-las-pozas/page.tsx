@@ -9,14 +9,14 @@ import styles from './hotel-las-pozas.module.css';
 export const metadata: Metadata = {
   title: 'Hotel Cerca de Las Pozas de Edward James · Xilitla | Paraíso Encantado',
   description:
-    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. A 5 minutos caminando del Jardín Surrealista. 13 suites con spa privado desde $1,500 MXN. Reserva directa.',
+    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. A 5 minutos caminando del Jardín Surrealista. 13 suites boutique, 4 con spa privado desde $1,500 MXN. Reserva directa.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/hotel-cerca-de-las-pozas',
   },
   openGraph: {
     title: 'Hotel Más Cercano a Las Pozas de Edward James — Xilitla, Huasteca Potosina',
     description:
-      'A solo 5 minutos caminando del Jardín Surrealista. 13 suites boutique con spa privado en el corazón de Xilitla, San Luis Potosí.',
+      'A solo 5 minutos caminando del Jardín Surrealista. 13 suites boutique, 4 con spa privado en el corazón de Xilitla, San Luis Potosí.',
     url: 'https://www.paraisoencantado.com/hotel-cerca-de-las-pozas',
     images: [
       {
@@ -36,7 +36,7 @@ const schema = {
       '@type': 'LodgingBusiness',
       name: 'Hotel Paraíso Encantado',
       description:
-        'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. 13 suites con spa privado a 5 minutos caminando del Jardín Surrealista, Huasteca Potosina.',
+        'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. 13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín Surrealista, Huasteca Potosina.',
       url: 'https://www.paraisoencantado.com/hotel-cerca-de-las-pozas',
       image: 'https://www.paraisoencantado.com/images/JUNGLA/PORTADA.JPG',
       telephone: '+524891007679',
@@ -49,8 +49,8 @@ const schema = {
       geo: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: 4.6,
-        reviewCount: 519,
+        ratingValue: 4.5,
+        reviewCount: 523,
         bestRating: 5,
       },
       nearbyAttractions: [
@@ -100,7 +100,7 @@ const schema = {
           name: '¿Qué hace diferente a Paraíso Encantado de otros hoteles en Xilitla?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Tres cosas: 1) Somos el hotel boutique más cercano a Las Pozas. 2) Cada suite tiene su propia piscina spa privada — no compartes el agua con nadie. 3) Precios directos, sin comisiones de Booking o Expedia, con cancelación gratuita 48h antes.',
+            text: 'Tres cosas: 1) Somos el hotel boutique más cercano a Las Pozas. 2) Tenemos 4 suites con spa o tina de hidromasaje privada — el agua no se comparte con nadie. 3) Precios directos, sin comisiones de Booking o Expedia, con reembolso del 100% si cancelas hasta 7 días antes.',
           },
         },
       ],
@@ -116,8 +116,8 @@ const REASONS = [
   },
   {
     icon: <Droplets size={22} strokeWidth={1.5} />,
-    title: 'Spa Privado en tu Suite',
-    body: 'Cada una de las 13 suites tiene su propia piscina spa. No compartes el agua con nadie. Llega de Las Pozas y sumérgete en tu spa privado con vista a la selva.',
+    title: 'Suites con Spa Privado',
+    body: '4 de nuestras 13 suites tienen su propia piscina spa o tina de hidromasaje privada. No compartes el agua con nadie. Llega de Las Pozas y sumérgete en tu spa privado con vista a la selva.',
   },
   {
     icon: <Sunrise size={22} strokeWidth={1.5} />,
@@ -132,7 +132,7 @@ const REASONS = [
   {
     icon: <ShieldCheck size={22} strokeWidth={1.5} />,
     title: 'Reserva Directa — Sin Comisiones',
-    body: 'Al reservar en paraisoencantado.com ahorras hasta 15% vs. Booking o Expedia. Confirmación instantánea, cancelación gratuita 48 horas antes.',
+    body: 'Al reservar en paraisoencantado.com no pagas comisiones de intermediarios y ves las 13 suites completas — en las OTAs no siempre está todo el inventario. Confirmación instantánea y reembolso del 100% si cancelas hasta 7 días antes.',
   },
   {
     icon: <Leaf size={22} strokeWidth={1.5} />,
@@ -173,7 +173,7 @@ export default function HotelCercaDeLasPozasPage() {
             <p className={styles.eyebrow}>Xilitla · San Luis Potosí · Huasteca Potosina</p>
             <h1>El Hotel Boutique <em>Más Cercano</em><br />a Las Pozas de Edward James</h1>
             <p className={styles.heroSub}>
-              A solo <strong>5 minutos caminando</strong> del Jardín Surrealista. 13 suites con spa privado.
+              A solo <strong>5 minutos caminando</strong> del Jardín Surrealista. 13 suites boutique, 4 con spa privado.
               Despierta y camina hasta Las Pozas antes de que lleguen los grupos.
             </p>
             <div className={styles.heroCtas}>
@@ -268,7 +268,7 @@ export default function HotelCercaDeLasPozasPage() {
             <p className={styles.sectionEyebrow}>El Hotel</p>
             <h2>Suites Boutique a 5 Minutos de Las Pozas</h2>
             <p className={styles.suitesSubtitle}>
-              13 espacios únicos. Cada uno con spa privado, terraza y diseño diferente.
+              13 espacios únicos, 4 con spa privado. Cada uno con su propio diseño y carácter.
             </p>
             <div className={styles.suitesGrid}>
               {featuredSuites.map((suite) => (
@@ -322,11 +322,11 @@ export default function HotelCercaDeLasPozasPage() {
               </div>
               <div className={styles.faqItem}>
                 <dt>¿Cuánto cuesta hospedarse en Paraíso Encantado?</dt>
-                <dd>Las suites comienzan desde $1,500 MXN por noche para 2 personas. Al reservar directamente en paraisoencantado.com ahorras hasta 15% vs. Booking o Expedia.</dd>
+                <dd>Las suites comienzan desde $1,500 MXN por noche para 2 personas. Al reservar directamente en paraisoencantado.com no pagas comisiones de intermediarios y ves las 13 suites completas — en las OTAs no siempre está todo el inventario.</dd>
               </div>
               <div className={styles.faqItem}>
                 <dt>¿Tienen piscina compartida?</dt>
-                <dd>Cada suite tiene su propia piscina spa privada — no compartida. Puedes usar tu spa a cualquier hora sin coordinarte con otros huéspedes.</dd>
+                <dd>Sí, hay piscina del hotel para todos los huéspedes. Además, 4 suites cuentan con su propia piscina spa o tina de hidromasaje privada — no compartida — que puedes usar a cualquier hora.</dd>
               </div>
             </dl>
           </div>
@@ -344,7 +344,7 @@ export default function HotelCercaDeLasPozasPage() {
                 Preguntar por WhatsApp
               </a>
             </div>
-            <p className={styles.finalCtaNote}>Confirmación instantánea · Cancelación gratuita 48h · Sin comisiones</p>
+            <p className={styles.finalCtaNote}>Confirmación instantánea · Cancelación flexible · Sin comisiones</p>
           </div>
         </section>
 

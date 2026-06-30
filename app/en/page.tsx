@@ -7,7 +7,7 @@ const jsonLdEn = {
   '@type': 'LodgingBusiness',
   name: 'Hotel Paraíso Encantado',
   description:
-    '13 boutique suites with private spa 5 minutes walk from the Edward James Surrealist Garden (Las Pozas) in Xilitla, Huasteca Potosina, Mexico.',
+    '13 boutique suites (4 with private spa) 5 minutes walk from the Edward James Surrealist Garden (Las Pozas) in Xilitla, Huasteca Potosina, Mexico.',
   url: 'https://www.paraisoencantado.com',
   telephone: '+524891007679',
   email: 'reservas@paraisoencantado.com',
@@ -20,8 +20,8 @@ const jsonLdEn = {
   geo: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingValue: 4.6,
-    reviewCount: 519,
+    ratingValue: 4.5,
+    reviewCount: 523,
     bestRating: 5,
   },
   priceRange: '$$',
@@ -34,35 +34,35 @@ const SUITES = [
     name: 'Jungle Suite',
     spanish: 'Jungla',
     desc: 'A sanctuary immersed in the cloud forest. Private plunge spa, king bed, mountain views.',
-    price: 'from $80 USD/night',
+    price: 'from $122 USD/night',
     img: '/images/JUNGLA/PORTADA.JPG',
   },
   {
     name: 'LindaVista Suite',
     spanish: 'LindaVista',
     desc: 'Total forest immersion with private jacuzzi and uninterrupted views from the treetops.',
-    price: 'from $80 USD/night',
+    price: 'from $133 USD/night',
     img: '/images/LINDAVISTA/PORTADA.jpg',
   },
   {
     name: 'Helechos Suite',
     spanish: 'Helechos 1',
     desc: 'Family-friendly suite with three queen beds and direct pool access. Sleeps up to 6.',
-    price: 'from $80 USD/night',
+    price: 'from $101 USD/night',
     img: '/images/HELECHOS 1/PORTADA.jpg',
   },
   {
     name: 'Lirios Suite',
     spanish: 'Lirios 1',
     desc: 'Quiet retreat with garden views, perfect for couples seeking total relaxation.',
-    price: 'from $63 USD/night',
+    price: 'from $80 USD/night',
     img: '/images/LIRIOS 1/PORTADA.jpg',
   },
 ];
 
 const AMENITIES = [
   { icon: '🌿', title: '5-minute walk to Las Pozas', desc: 'The Edward James Surrealist Garden, a UNESCO-listed masterpiece.' },
-  { icon: '🛁', title: 'Private spa in most suites', desc: 'Outdoor plunge pools and jacuzzis surrounded by tropical jungle.' },
+  { icon: '🛁', title: 'Private spa in 4 suites', desc: 'Outdoor plunge pools and jacuzzis surrounded by tropical jungle.' },
   { icon: '🍽️', title: 'Restaurant on-site', desc: 'El Papán Huasteco — regional cuisine with panoramic terrace views.' },
   { icon: '🚗', title: 'Free parking', desc: 'Secure private parking for all guests.' },
   { icon: '📶', title: 'High-speed WiFi', desc: 'Throughout the hotel and in every suite.' },
@@ -84,7 +84,7 @@ const FAQS = [
   },
   {
     q: 'Can I book directly without a commission fee?',
-    a: 'Yes — booking directly through our website or WhatsApp saves you up to 15% vs. third-party platforms.',
+    a: 'Yes — booking directly means no third-party commissions, and you can see all 13 suites (OTAs do not always list everything).',
   },
   {
     q: 'Is Xilitla safe to visit?',
@@ -110,7 +110,7 @@ export default function EnglishPage() {
             <em>next to Las Pozas</em>
           </h1>
           <p className={styles.heroSub}>
-            13 boutique suites with private spa · 5 minutes walk from the Edward James Surrealist Garden
+            13 boutique suites, 4 with private spa · 5 minutes walk from the Edward James Surrealist Garden
           </p>
           <div className={styles.heroCtas}>
             <Link href="/reservar" className={styles.ctaPrimary}>Book directly — no fees</Link>
@@ -155,7 +155,7 @@ export default function EnglishPage() {
           <h2 className={styles.sectionTitle}>13 suites · <em>each one unique</em></h2>
           <p className={styles.sectionSub}>
             From intimate retreats for couples to spacious family suites sleeping 6.
-            Most include a private outdoor spa pool surrounded by tropical jungle.
+            Four of them include a private outdoor spa pool surrounded by tropical jungle.
           </p>
           <div className={styles.suitesGrid}>
             {SUITES.map(s => (
@@ -221,7 +221,7 @@ export default function EnglishPage() {
               { value: '400m', label: 'walking distance to Las Pozas' },
               { value: '800m', label: 'altitude — perfect cool climate year-round' },
               { value: '13', label: 'unique suites, each individually designed' },
-              { value: '4.6★', label: 'average rating — 519+ reviews' },
+              { value: '4.5★', label: 'average rating — 523+ reviews' },
             ].map(s => (
               <div key={s.label} className={styles.statCard}>
                 <span className={styles.statValue}>{s.value}</span>
@@ -255,7 +255,7 @@ export default function EnglishPage() {
             Ready to stay next to<br /><em>Edward James' garden?</em>
           </h2>
           <p className={styles.finalCtaSub}>
-            Book directly and save up to 15% vs. OTAs.<br />
+            Book directly — no commissions, all 13 suites available.<br />
             We confirm within 2 hours.
           </p>
           <div className={styles.heroCtas}>

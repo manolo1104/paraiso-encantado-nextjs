@@ -5,19 +5,18 @@ import { BOOKING_URL } from '@/lib/config';
 import styles from './habitaciones.module.css';
 import FloatingLeaves from '@/components/FloatingLeaves';
 import AvailabilityFilterClient from './AvailabilityFilterClient';
-import SuiteReservationPopup from '@/components/SuiteReservationPopup';
 
 export const metadata = {
-  title: '13 Suites Boutique con Spa Privado · Xilitla | Hotel Paraíso Encantado',
+  title: '13 Suites Boutique · 4 con Spa Privado · Xilitla | Hotel Paraíso Encantado',
   description:
-    '13 suites boutique con spa privado en Xilitla, a 5 min de Las Pozas de Edward James. Desde $1,500 MXN. Reserva directa sin comisiones. Cancelación gratuita.',
+    '13 suites boutique, 4 con spa privado en Xilitla, a 5 min de Las Pozas de Edward James. Desde $1,500 MXN. Reserva directa sin comisiones. Cancelación gratuita.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/habitaciones',
   },
   openGraph: {
-    title: '13 Suites Boutique con Spa Privado | Hotel Paraíso Encantado, Xilitla',
+    title: '13 Suites Boutique · 4 con Spa Privado | Hotel Paraíso Encantado, Xilitla',
     description:
-      '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla, Huasteca Potosina. A 5 min del Jardín de Edward James.',
+      '13 suites únicas, 4 con spa privado, terrazas y vistas a la selva en Xilitla, Huasteca Potosina. A 5 min del Jardín de Edward James.',
     url: 'https://www.paraisoencantado.com/habitaciones',
     images: [
       {
@@ -31,11 +30,12 @@ export const metadata = {
 };
 
 export default function HabitacionesPage() {
+  // Orden de las 3 categorías por vista; dentro de cada grupo, mayor precio primero
+  const VIEW_ORDER = ['Vista a las Montañas', 'Vista a los Jardines', 'Vista a la Piscina'];
   const sorted = [...suites].sort((a, b) => {
-    const aSpa = a.amenities.some((x) => x.toLowerCase().includes('spa') || x.toLowerCase().includes('piscina') || x.toLowerCase().includes('hidro'));
-    const bSpa = b.amenities.some((x) => x.toLowerCase().includes('spa') || x.toLowerCase().includes('piscina') || x.toLowerCase().includes('hidro'));
-    if (aSpa && !bSpa) return -1;
-    if (!aSpa && bSpa) return 1;
+    const ga = VIEW_ORDER.indexOf(a.categoryGroup);
+    const gb = VIEW_ORDER.indexOf(b.categoryGroup);
+    if (ga !== gb) return ga - gb;
     return b.price - a.price;
   });
 
@@ -53,7 +53,7 @@ export default function HabitacionesPage() {
       {
         '@type': 'CollectionPage',
         name: '13 Suites Boutique — Hotel Paraíso Encantado, Xilitla',
-        description: '13 suites únicas con spa privado, terrazas y vistas a la selva en Xilitla, Huasteca Potosina.',
+        description: '13 suites únicas, 4 con spa privado, terrazas y vistas a la selva en Xilitla, Huasteca Potosina.',
         url: 'https://www.paraisoencantado.com/habitaciones',
       },
       {
@@ -109,7 +109,7 @@ export default function HabitacionesPage() {
             <span className={styles.dot}>·</span>
             <span>Persona adicional <strong>+$300 MXN</strong></span>
             <span className={styles.dot}>·</span>
-            <span><CheckCircle size={13} strokeWidth={2} /> Cancelación gratuita 48hrs</span>
+            <span><CheckCircle size={13} strokeWidth={2} /> Reembolso hasta 7 días antes</span>
           </div>
           <a href={BOOKING_URL} className={styles.headerCta}>
             Encuentra tu Suite Perfecta
@@ -126,8 +126,6 @@ export default function HabitacionesPage() {
       </div>
 
       <AvailabilityFilterClient groups={groups} allSuites={suites} />
-
-      <SuiteReservationPopup />
     </main>
     </>
   );

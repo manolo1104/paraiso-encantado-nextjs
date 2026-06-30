@@ -56,7 +56,7 @@ export default function ToursSection() {
           Paquetes <em>Todo Incluido</em>
         </h2>
         <p className={styles.subtitle}>
-          Hotel + desayunos + tours guiados en un solo precio. Reserva directo y ahorra hasta 15% vs. plataformas externas.
+          Hotel + desayunos + tours guiados en un solo precio. Reserva directo, sin comisiones de intermediarios.
         </p>
       </div>
 

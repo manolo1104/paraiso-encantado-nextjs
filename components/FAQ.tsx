@@ -18,7 +18,7 @@ const faqs = [
   {
     question: '¿Puedo cancelar mi reserva sin cargo?',
     answer:
-      'Sí. Puedes cancelar hasta 48 horas antes de tu llegada sin ningún cargo y te reembolsamos el 100% en 5 a 7 días hábiles.',
+      'Sí. Reembolsamos el 100% si cancelas hasta 7 días antes de tu llegada, el 50% hasta 3 días antes, y con menos de 72 horas no hay reembolso pero puedes cambiar la fecha. Los reembolsos se procesan en 5 a 10 días hábiles.',
   },
   {
     question: '¿Con cuánto se confirma la reserva?',

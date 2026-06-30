@@ -41,7 +41,7 @@ const jsonLd = {
   '@id': 'https://www.paraisoencantado.com/#hotel',
   name: 'Hotel Paraíso Encantado',
   description:
-    '13 suites boutique con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina. El hotel más cercano a Las Pozas.',
+    '13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina. El hotel más cercano a Las Pozas.',
   url: 'https://www.paraisoencantado.com',
   telephone: '+524891007679',
   email: 'reservas@paraisoencantado.com',
@@ -63,8 +63,8 @@ const jsonLd = {
   numberOfRooms: 13,
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingValue: 4.6,
-    reviewCount: 519,
+    ratingValue: 4.5,
+    reviewCount: 523,
     bestRating: 5,
     worstRating: 1,
   },
@@ -127,12 +127,12 @@ const RETURN_POLICY = {
   '@type': 'MerchantReturnPolicy',
   applicableCountry: 'MX',
   returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-  merchantReturnDays: 2,
+  merchantReturnDays: 7,
   refundType: 'https://schema.org/FullRefund',
   returnFees: 'https://schema.org/FreeReturn',
   customerRemorseReturnFees: 'https://schema.org/FreeReturn',
   customerRemorseReturnLabelSource: 'https://schema.org/ReturnLabelCustomerResponsibility',
-  description: 'Cancelación gratuita hasta 48 horas antes del check-in. Reembolso del 100%.',
+  description: 'Reembolso del 100% hasta 7 días antes del check-in; 50% hasta 3 días antes; con menos de 72 horas, solo cambio de fecha.',
 };
 
 function roomOffer(price: number, slug: string) {
@@ -191,7 +191,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
       aggregateRating: roomRating(4.9, 48),
-      offers: roomOffer(1900, 'flor-de-lis-1'),
+      offers: roomOffer(2300, 'flor-de-lis-1'),
     },
     {
       '@type': 'HotelRoom',
@@ -212,7 +212,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
       aggregateRating: roomRating(4.8, 52),
-      offers: roomOffer(1900, 'flor-de-lis-2'),
+      offers: roomOffer(2300, 'flor-de-lis-2'),
     },
     {
       '@type': 'HotelRoom',
@@ -233,7 +233,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza privada con vista a la montaña', value: true },
       ],
       aggregateRating: roomRating(4.8, 31),
-      offers: roomOffer(1900, 'lindavista'),
+      offers: roomOffer(2500, 'lindavista'),
     },
     {
       '@type': 'HotelRoom',
@@ -254,7 +254,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza privada con vista a la selva', value: true },
       ],
       aggregateRating: roomRating(4.9, 67),
-      offers: roomOffer(1900, 'jungla'),
+      offers: roomOffer(2300, 'jungla'),
     },
     {
       '@type': 'HotelRoom',
@@ -335,7 +335,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista a piscina y selva', value: true },
       ],
       aggregateRating: roomRating(4.7, 35),
-      offers: roomOffer(1500, 'orquideas-2'),
+      offers: roomOffer(1600, 'orquideas-2'),
     },
     {
       '@type': 'HotelRoom',
@@ -375,7 +375,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista elevada a piscina', value: true },
       ],
       aggregateRating: roomRating(4.9, 39),
-      offers: roomOffer(1500, 'orquideas-3'),
+      offers: roomOffer(1600, 'orquideas-3'),
     },
     {
       '@type': 'HotelRoom',
@@ -490,7 +490,7 @@ const homeFaqSchema = {
     {
       '@type': 'Question',
       name: '¿Puedo cancelar mi reserva sin cargo?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Sí. Puedes cancelar hasta 48 horas antes de tu llegada sin ningún cargo y te reembolsamos el 100% en 5 a 7 días hábiles.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'Sí. Reembolsamos el 100% si cancelas hasta 7 días antes de tu llegada, el 50% hasta 3 días antes, y con menos de 72 horas no hay reembolso pero puedes cambiar la fecha. Los reembolsos se procesan en 5 a 10 días hábiles.' },
     },
     {
       '@type': 'Question',

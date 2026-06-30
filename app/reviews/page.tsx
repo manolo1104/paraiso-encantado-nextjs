@@ -4,15 +4,15 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './reviews.module.css';
 
 export const metadata: Metadata = {
-  title: 'Reseñas y Opiniones · Hotel Paraíso Encantado Xilitla | 4.6★ Google',
+  title: 'Reseñas y Opiniones · Hotel Paraíso Encantado Xilitla | 4.5★ Google',
   description:
-    'Opiniones verificadas de huéspedes del Hotel Paraíso Encantado en Xilitla, Huasteca Potosina. 519 reseñas en Google con 4.6★. Lee qué dicen familias, parejas y viajeros.',
+    'Opiniones verificadas de huéspedes del Hotel Paraíso Encantado en Xilitla, Huasteca Potosina. 523 reseñas en Google con 4.5★. Lee qué dicen familias, parejas y viajeros.',
   alternates: { canonical: 'https://www.paraisoencantado.com/reviews' },
   openGraph: {
-    title: 'Reseñas Reales — Hotel Paraíso Encantado · 4.6★ · 519 Opiniones',
+    title: 'Reseñas Reales — Hotel Paraíso Encantado · 4.5★ · 523 Opiniones',
     description: 'Opiniones verificadas de huéspedes del hotel boutique más cercano a Las Pozas de Edward James en Xilitla.',
     url: 'https://www.paraisoencantado.com/reviews',
-    images: [{ url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg', width: 1200, height: 630, alt: 'Hotel Paraíso Encantado — 4.6 estrellas en Google' }],
+    images: [{ url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg', width: 1200, height: 630, alt: 'Hotel Paraíso Encantado — 4.5 estrellas en Google' }],
   },
 };
 
@@ -46,7 +46,7 @@ const REVIEWS = [
 ];
 
 const RATING_DIST = { 5: 22, 4: 3, 3: 0, 2: 0, 1: 0 };
-const AVG = 4.6;
+const AVG = 4.5;
 
 const reviewsSchema = {
   '@context': 'https://schema.org',
@@ -57,7 +57,7 @@ const reviewsSchema = {
   aggregateRating: {
     '@type': 'AggregateRating',
     ratingValue: AVG,
-    reviewCount: 519,
+    reviewCount: 523,
     bestRating: 5,
     worstRating: 1,
   },
@@ -108,7 +108,6 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function ReviewsPage() {
   const totalReviews = REVIEWS.length;
-  const avgScore = (REVIEWS.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1);
 
   return (
     <>
@@ -137,10 +136,10 @@ export default function ReviewsPage() {
         <section className={styles.summary}>
           <div className={styles.summaryInner}>
             <div className={styles.summaryScore}>
-              <span className={styles.scoreNum}>{avgScore}</span>
+              <span className={styles.scoreNum}>{AVG.toFixed(1)}</span>
               <div>
                 <StarRating rating={5} />
-                <p className={styles.scoreTotal}>{totalReviews} reseñas seleccionadas · 519 en Google</p>
+                <p className={styles.scoreTotal}>{totalReviews} reseñas seleccionadas · 523 en Google</p>
               </div>
             </div>
             <div className={styles.summaryBars}>
@@ -190,7 +189,7 @@ export default function ReviewsPage() {
             </div>
 
             <div className={styles.moreReviews}>
-              <p>Ver las <strong>519 reseñas</strong> en Google Maps</p>
+              <p>Ver las <strong>523 reseñas</strong> en Google Maps</p>
               <a
                 href="https://maps.google.com/?q=Hotel+Paraíso+Encantado+Xilitla"
                 target="_blank" rel="noopener noreferrer"
@@ -207,7 +206,7 @@ export default function ReviewsPage() {
           <FloatingLeaves />
           <div className={styles.ctaInner}>
             <h2>¿Listo para tu experiencia?</h2>
-            <p>Únete a los 519 huéspedes que nos califican con 4.6★ en Google</p>
+            <p>Únete a los 523 huéspedes que nos califican con 4.5★ en Google</p>
             <Link href="/reservar" className={styles.ctaBtn}>Reservar Suite</Link>
           </div>
         </section>

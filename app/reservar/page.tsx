@@ -512,7 +512,7 @@ function ReservarPageInner() {
         <p className={styles.eyebrow}>Reserva Directa · Sin Comisiones</p>
         <h1>Reserva tu <em>Suite</em></h1>
         <p className={styles.headerSub}>
-          Sin intermediarios · Confirmación instantánea · Cancela hasta 48 hrs antes
+          Sin intermediarios · Confirmación instantánea · Reembolso 100% hasta 7 días antes
         </p>
       </div>
 
@@ -906,7 +906,7 @@ function ReservarPageInner() {
 
             <div className={styles.guarantees}>
               <span><ShieldCheck size={12} strokeWidth={1.5} /> Pago seguro con Stripe</span>
-              <span><ShieldCheck size={12} strokeWidth={1.5} /> Cancelación gratuita 48 hrs</span>
+              <span><ShieldCheck size={12} strokeWidth={1.5} /> Reembolso hasta 7 días antes</span>
             </div>
 
             {/* ── Incluido en tu reserva ── */}

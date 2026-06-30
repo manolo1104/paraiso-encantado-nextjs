@@ -97,8 +97,8 @@ export default async function SuitePage({ params, searchParams }: Props) {
         },
         aggregateRating: {
           '@type': 'AggregateRating',
-          ratingValue: 4.6,
-          reviewCount: 519,
+          ratingValue: 4.5,
+          reviewCount: 523,
           bestRating: 5,
           worstRating: 1,
         },
@@ -129,7 +129,7 @@ export default async function SuitePage({ params, searchParams }: Props) {
         name: '¿Cuál es la política de cancelación?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Cancelación gratuita hasta 48 horas antes del check-in. Después de ese plazo aplica cargo del 100%. Puedes cancelar directamente desde la confirmación que recibes por email.',
+          text: 'Reembolso del 100% si cancelas hasta 7 días antes del check-in, 50% hasta 3 días antes, y con menos de 72 horas solo cambio de fecha. Lo gestionas desde la confirmación que recibes por email.',
         },
       },
       {

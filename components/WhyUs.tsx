@@ -12,7 +12,7 @@ const benefits = [
     title: 'Reserva directa',
     highlight: 'Trato directo con el hotel',
     description:
-      'Al reservar con nosotros obtienes el mejor precio y atención personal, sin intermediarios ni comisiones de plataformas como Booking o Airbnb.',
+      'Al reservar con nosotros tratas directo con el hotel y ves las 13 suites completas, sin intermediarios ni comisiones de plataformas como Booking o Airbnb.',
     proof: 'Hablas siempre con el hotel, nunca con una central.',
   },
   {

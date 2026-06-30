@@ -17,7 +17,7 @@ const BADGES = [
   {
     icon: <RotateCcw size={18} strokeWidth={1.5} />,
     title: 'Cancela Gratis',
-    sub: 'Hasta 48hrs antes',
+    sub: 'Hasta 7 días antes',
   },
   {
     icon: <CreditCard size={18} strokeWidth={1.5} />,

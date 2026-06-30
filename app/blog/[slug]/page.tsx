@@ -235,7 +235,7 @@ export default async function ArticlePage({ params }: Props) {
       links: [
         { href: '/experiencias', label: 'Tours desde el hotel', desc: 'Tamul, Micos, Pozas con guía certificado' },
         { href: '/paquetes', label: 'Paquetes de aventura', desc: 'Ruta de las Pozas · 3 noches todo incluido' },
-        { href: '/habitaciones', label: 'Ver habitaciones', desc: '13 suites · Spa privado · WiFi' },
+        { href: '/habitaciones', label: 'Ver habitaciones', desc: '13 suites · 4 con spa privado · WiFi' },
       ],
     },
     'cascada-tamul-guia-completa': {
@@ -346,7 +346,7 @@ export default async function ArticlePage({ params }: Props) {
               <div className={styles.inlineCtaBottomInner}>
                 <p className={styles.inlineCtaBottomTitle}>Hotel Paraíso Encantado</p>
                 <p className={styles.inlineCtaBottomSub}>
-                  13 suites con spa privado · A 5 minutos de Las Pozas · Desde $1,500 MXN
+                  13 suites boutique, 4 con spa privado · A 5 minutos de Las Pozas · Desde $1,500 MXN
                 </p>
                 <div className={styles.inlineCtaBottomActions}>
                   <a href="/reservar" className={styles.inlineCtaBottomPrimary}>Reservar suite</a>
@@ -392,7 +392,7 @@ export default async function ArticlePage({ params }: Props) {
             <div className={styles.sidebarCard}>
               <p className={styles.sidebarEyebrow}>El Hotel Más Cercano</p>
               <h3>Hotel Paraíso Encantado</h3>
-              <p>A 5 minutos caminando de Las Pozas de Edward James. 13 suites boutique con spa privado.</p>
+              <p>A 5 minutos caminando de Las Pozas de Edward James. 13 suites boutique, 4 con spa privado.</p>
               <Link href="/reservar" className={styles.sidebarCta}>Reservar Ahora</Link>
               <Link href="/habitaciones" className={styles.sidebarLink}>Ver las 13 Suites →</Link>
             </div>

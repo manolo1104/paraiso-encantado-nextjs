@@ -112,7 +112,7 @@ const schema = {
           name: '¿Hay hotel cerca de Las Pozas de Edward James?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Hotel Paraíso Encantado está a 5 minutos caminando — el más cercano al jardín en todo Xilitla. 13 suites boutique con spa privado desde $1,500 MXN. Reserva directa en paraisoencantado.com.',
+            text: 'Hotel Paraíso Encantado está a 5 minutos caminando — el más cercano al jardín en todo Xilitla. 13 suites boutique, 4 con spa privado desde $1,500 MXN. Reserva directa en paraisoencantado.com.',
           },
         },
       ],
@@ -377,9 +377,9 @@ export default function XilitlaPage() {
                 antes que los grupos organizados y disfrutas el jardín casi en soledad.
               </p>
               <p>
-                13 suites boutique únicas, cada una con piscina spa privada, terraza y vista a la selva.
-                Desde <strong>$1,500 MXN por noche</strong>. Reserva directa: sin comisiones, cancelación
-                gratuita 48 horas antes, confirmación instantánea.
+                13 suites boutique únicas, 4 con piscina spa privada, todas con terraza y vista a la selva.
+                Desde <strong>$1,500 MXN por noche</strong>. Reserva directa: sin comisiones, reembolso del
+                100% si cancelas hasta 7 días antes, confirmación instantánea.
               </p>
               <div className={styles.stayActions}>
                 <Link href="/habitaciones" className={styles.stayCtaPrimary}>
@@ -416,7 +416,7 @@ export default function XilitlaPage() {
               </div>
               <div className={styles.faqItem}>
                 <dt>¿Hay hotel cerca de Las Pozas de Edward James?</dt>
-                <dd>Hotel Paraíso Encantado está a 5 minutos caminando — el más cercano al jardín en todo Xilitla. 13 suites boutique con spa privado desde $1,500 MXN. Reserva directa en paraisoencantado.com.</dd>
+                <dd>Hotel Paraíso Encantado está a 5 minutos caminando — el más cercano al jardín en todo Xilitla. 13 suites boutique, 4 con spa privado desde $1,500 MXN. Reserva directa en paraisoencantado.com.</dd>
               </div>
             </dl>
           </div>

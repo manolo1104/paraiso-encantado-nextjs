@@ -2,7 +2,6 @@ import Image from 'next/image';
 import styles from './Hero.module.css';
 import HeroDatePicker from './HeroDatePicker';
 import VideoBackground from './VideoBackground';
-import HeroLiveSignals from './HeroLiveSignals';
 
 export default function Hero() {
   return (
@@ -38,7 +37,7 @@ export default function Hero() {
         </h1>
 
         <p className={styles.heroSubtitle}>
-          13 suites boutique con spa privado, a 5 minutos caminando de Las Pozas.<br />
+          13 suites boutique, 4 con spa privado, a 5 minutos caminando de Las Pozas.<br />
           Desde $1,500 MXN la noche.
         </p>
 
@@ -65,12 +64,8 @@ export default function Hero() {
         </div>
 
         <p className={styles.ctaNote}>
-          Reserva directa &nbsp;·&nbsp; Confirmación inmediata &nbsp;·&nbsp; Cancela gratis hasta 48 h
+          Reserva directa &nbsp;·&nbsp; Confirmación inmediata &nbsp;·&nbsp; Reembolso 100% hasta 7 días antes
         </p>
-
-        <div style={{ marginTop: 16 }}>
-          <HeroLiveSignals />
-        </div>
       </div>
 
       {/* Scroll indicator */}

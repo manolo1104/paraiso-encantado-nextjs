@@ -5,14 +5,14 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Reservar Suite | Paraíso Encantado · Desde $1,500 MXN/noche sin comisiones',
   description:
-    'Reserva directa sin comisiones desde $1,500 MXN/noche. 13 suites boutique con spa privado en Xilitla, Huasteca Potosina. Confirmación instantánea, cancelación gratuita hasta 48h.',
+    'Reserva directa sin comisiones desde $1,500 MXN/noche. 13 suites boutique, 4 con spa privado en Xilitla, Huasteca Potosina. Confirmación instantánea, reembolso del 100% hasta 7 días antes.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/reservar',
   },
   openGraph: {
     title: 'Reservar Suite | Paraíso Encantado · Xilitla',
     description:
-      'Reserva directa desde $1,500 MXN/noche. 13 suites con spa privado a 5 min del Jardín de Edward James. Sin comisiones de intermediarios.',
+      'Reserva directa desde $1,500 MXN/noche. 13 suites boutique, 4 con spa privado a 5 min del Jardín de Edward James. Sin comisiones de intermediarios.',
     url: 'https://www.paraisoencantado.com/reservar',
     images: [
       {
@@ -37,9 +37,9 @@ const reservaSchema = {
     itemListElement: [
       {
         '@type': 'Offer',
-        name: 'Suite con Spa Privado — desde $1,900 MXN/noche',
+        name: 'Suite con Spa Privado — desde $2,300 MXN/noche',
         description: 'Suites Jungla, Flor de Lis 1 & 2 con piscina spa privada al aire libre. Vista a la selva y montaña.',
-        price: '1900',
+        price: '2300',
         priceCurrency: 'MXN',
         availability: 'https://schema.org/InStock',
         url: 'https://www.paraisoencantado.com/reservar',

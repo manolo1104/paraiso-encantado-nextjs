@@ -68,7 +68,7 @@ const restaurantSchema = {
   aggregateRating: {
     '@type': 'AggregateRating',
     ratingValue: 4.7,
-    reviewCount: 312,
+    reviewCount: 512,
     bestRating: 5,
     worstRating: 1,
   },
@@ -406,7 +406,7 @@ export default function RestaurantePage() {
             <div className={styles.ratingOverall}>
               <span className={styles.ratingStars}>★★★★★</span>
               <span className={styles.ratingNum}>4.7</span>
-              <span className={styles.ratingCount}>/ 312 reseñas en Google</span>
+              <span className={styles.ratingCount}>/ 512 reseñas en Google</span>
             </div>
           </div>
           <div className={styles.reviewsGrid}>

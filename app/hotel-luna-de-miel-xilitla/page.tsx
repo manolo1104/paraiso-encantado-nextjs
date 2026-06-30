@@ -37,7 +37,7 @@ const schema = {
       image: 'https://www.paraisoencantado.com/images/LINDAVISTA/PORTADA.jpg',
       telephone: '+524891007679',
       address: { '@type': 'PostalAddress', addressLocality: 'Xilitla', addressRegion: 'San Luis Potosí', addressCountry: 'MX' },
-      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.6, reviewCount: 519, bestRating: 5 },
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.5, reviewCount: 523, bestRating: 5 },
     },
     {
       '@type': 'BreadcrumbList',
@@ -63,7 +63,7 @@ const romanticSuites = suites.filter((s) =>
 );
 
 const REASONS = [
-  { icon: <Bath size={22} strokeWidth={1.5} />, title: 'Spa Privado en tu Suite', body: 'Cada suite tiene su propio spa o tina de hidromasaje — no compartes el agua con nadie. Completamente privado, a cualquier hora.' },
+  { icon: <Bath size={22} strokeWidth={1.5} />, title: 'Spa Privado en tu Suite', body: 'Nuestras suites con spa o tina de hidromasaje son completamente privadas — no compartes el agua con nadie. A cualquier hora.' },
   { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Selva y Silencio', body: 'Rodeados de vegetación tropical. Por las noches solo se escucha el río y los grillos. Sin ruido de tráfico, sin vecinos ruidosos.' },
   { icon: <MapPin size={22} strokeWidth={1.5} />, title: 'A 5 Min de Las Pozas', body: 'El jardín surrealista de Edward James a 5 minutos caminando. Un lugar mágico para vivir juntos — único en el mundo.' },
   { icon: <Utensils size={22} strokeWidth={1.5} />, title: 'Cenas en El Papán', body: 'Gastronomía huasteca auténtica a pasos de tu suite. Reserva una mesa privada con anticipación.' },
@@ -219,7 +219,7 @@ export default function LunaDePageMielPage() {
               <Link href="/reservar" className={styles.ctaPrimary}>Reservar Ahora</Link>
               <a href="https://wa.me/524891007679?text=Hola%2C%20queremos%20reservar%20para%20luna%20de%20miel" target="_blank" rel="noopener noreferrer" className={styles.ctaWa}>WhatsApp</a>
             </div>
-            <p className={styles.ctaNote}>Cancelación gratuita 48h · Reserva directa sin comisiones</p>
+            <p className={styles.ctaNote}>Cancelación flexible · Reserva directa sin comisiones</p>
           </div>
         </section>
 

@@ -13,13 +13,12 @@ interface Props {
 type GuestFilter = '' | '1-2' | '3-4' | '5-8';
 type SpaFilter = '' | 'spa' | 'no-spa';
 
-// Only Jungla, Flor de Liz 1 & 2 have a private spa pool.
-// LindaVista has a jacuzzi (hidromasaje) — different category.
-// Lajas and others have no spa/jacuzzi.
+// Suites con agua privada: Jungla, Flor de Liz 1 & 2 (piscina spa) + LindaVista (hidromasaje).
+// El resto no tiene spa ni hidromasaje.
 function hasSpa(s: Suite): boolean {
   return (
-    s.amenities.some(a => /piscina spa|spa privad/i.test(a)) ||
-    s.features.some(f => /piscina spa|spa privad/i.test(f))
+    s.amenities.some(a => /piscina spa|spa privad|hidromasaje/i.test(a)) ||
+    s.features.some(f => /piscina spa|spa privad|hidromasaje/i.test(f))
   );
 }
 
@@ -215,7 +214,7 @@ export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
               <span style={labelTextStyle}>Tipo</span>
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 <button onClick={() => setSpa('')} style={chipStyle(spa === '')}>Todas</button>
-                <button onClick={() => setSpa('spa')} style={chipStyle(spa === 'spa')} title="Con piscina spa privada (Jungla, Flor de Liz 1 & 2)">Con spa privado</button>
+                <button onClick={() => setSpa('spa')} style={chipStyle(spa === 'spa')} title="Con spa o tina de hidromasaje privada (Jungla, Flor de Liz 1 y 2, LindaVista)">Con spa/hidromasaje</button>
                 <button onClick={() => setSpa('no-spa')} style={chipStyle(spa === 'no-spa')}>Sin spa</button>
               </div>
             </div>

@@ -151,7 +151,7 @@ export default function HabitacionesClient({ groups, unavailableNames = [], chec
       <section className={styles.finalCta}>
         <FloatingLeaves />
         <h2>¿Lista tu <em>Escapada</em>?</h2>
-        <p>Confirmación instantánea · Cancelación gratuita hasta 48hrs antes</p>
+        <p>Confirmación instantánea · Reembolso 100% hasta 7 días antes</p>
         <a href={BOOKING_URL} className={styles.finalCtaBtn}>Reservar Ahora</a>
         <div className={styles.contactRow}>
           <a href="https://wa.me/524891007679" target="_blank" rel="noopener noreferrer">

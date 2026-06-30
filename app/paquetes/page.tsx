@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Paquetes Todo Incluido en Xilitla | Paraíso Encantado',
-    description: 'Hotel + desayunos huastecos + tours coordinados. Precio total desde $5,000 MXN por pareja. Reserva directo y ahorra hasta 15%.',
+    description: 'Hotel + desayunos huastecos + tours coordinados. Precio total desde $5,000 MXN por pareja. Reserva directo, sin comisiones de intermediarios.',
     url: 'https://www.paraisoencantado.com/paquetes',
     images: [{ url: 'https://www.paraisoencantado.com/images/FLOR DE LIS 1/PORTADA.jpg', alt: 'Suite Flor de Liz con spa privado — Paraíso Encantado', width: 1200, height: 630 }],
   },
@@ -207,7 +207,7 @@ const FAQ = [
   },
   {
     q: '¿Qué pasa si necesito cancelar?',
-    a: 'Política de cancelación gratuita hasta 48 horas antes de tu llegada, con reembolso del 100%. Más flexible que cualquier plataforma externa.',
+    a: 'Reembolso del 100% si cancelas hasta 7 días antes de tu llegada, y 50% hasta 3 días antes; con menos de 72 horas, solo cambio de fecha. Igual o más flexible que las plataformas externas.',
   },
 ];
 
@@ -242,7 +242,7 @@ export default function PaquetesPage() {
             <h1>Vacaciones<br /><em>sin sorpresas</em></h1>
             <p className={styles.heroSub}>
               Suite + desayunos huastecos + tours coordinados. Un solo precio, todo resuelto.
-              Reserva directo y ahorra hasta 15% vs. plataformas externas.
+              Reserva directo, sin comisiones de intermediarios.
             </p>
           </div>
         </section>
@@ -251,10 +251,10 @@ export default function PaquetesPage() {
         <div className={styles.trustBanner} role="list" aria-label="Garantías de reserva directa" data-reveal>
           <FloatingLeaves />
           <span role="listitem" className={styles.trustItem}>
-            <span className={styles.stars} aria-hidden="true">★★★★★</span> 4.6 · 519 reseñas Google
+            <span className={styles.stars} aria-hidden="true">★★★★★</span> 4.5 · 523 reseñas Google
           </span>
           <span className={styles.trustSep} aria-hidden="true" />
-          <span role="listitem" className={styles.trustItem}>Cancelación gratis 48 hrs</span>
+          <span role="listitem" className={styles.trustItem}>Reembolso hasta 7 días antes</span>
           <span className={styles.trustSep} aria-hidden="true" />
           <span role="listitem" className={styles.trustItem}>Precio final en MXN</span>
         </div>

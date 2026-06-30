@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.paraisoencantado.com'),
   title: 'Hotel Boutique en la Huasteca Potosina · Xilitla | Paraíso Encantado',
   description:
-    'Hotel boutique en Xilitla a 5 min del Jardín de Edward James. 13 suites con spa privado desde $1,500 MXN. Reserva directa · Cancelación gratuita 48h.',
+    'Hotel boutique en Xilitla a 5 min del Jardín de Edward James. 13 suites boutique, 4 con spa privado desde $1,500 MXN. Reserva directa · Cancelación flexible.',
   keywords: [
     'hotel xilitla', 'jardín edward james', 'las pozas xilitla',
     'huasteca potosina', 'hotel boutique', 'hotel paraíso encantado',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: 'Hotel Paraíso Encantado',
     title: 'Hotel Paraíso Encantado | Xilitla, Huasteca Potosina',
     description:
-      '13 suites con spa privado a 5 minutos caminando del Jardín de Edward James. Reserva directa sin comisiones.',
+      '13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín de Edward James. Reserva directa sin comisiones.',
     locale: 'es_MX',
     alternateLocale: ['en_US', 'en_GB'],
     type: 'website',

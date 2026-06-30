@@ -331,7 +331,7 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
           <p className={styles.reserveNote}>
             {selectedCheckin
               ? `${selectedCheckin} → ${selectedCheckout} · Confirmación instantánea`
-              : 'Confirmación instantánea · Cancela hasta 48hrs antes'
+              : 'Confirmación instantánea · Cancelación flexible'
             }
           </p>
 
@@ -356,7 +356,7 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
           <div className={styles.guarantees}>
             <span><CheckCircle size={13} strokeWidth={2} /> Reserva directa sin comisiones</span>
             <span><CheckCircle size={13} strokeWidth={2} /> Pago 100% seguro (Stripe)</span>
-            <span><CheckCircle size={13} strokeWidth={2} /> Cancelación gratis 48hrs</span>
+            <span><CheckCircle size={13} strokeWidth={2} /> Reembolso hasta 7 días antes</span>
           </div>
 
           <a
@@ -397,9 +397,9 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
               y confort en contacto con la naturaleza tropical de la sierra potosina.
             </p>
             <p>
-              <strong>¿Por qué reservar directamente?</strong> Al reservar en paraisoencantado.com ahorras hasta
-              un 15% vs. plataformas externas como Booking o Expedia, recibes confirmación instantánea y tienes
-              cancelación gratuita hasta 48 horas antes de tu llegada. Tu suite en Xilitla te espera.
+              <strong>¿Por qué reservar directamente?</strong> Al reservar en paraisoencantado.com no pagas
+              comisiones de intermediarios y ves las 13 suites completas, recibes confirmación instantánea y tienes
+              reembolso del 100% si cancelas hasta 7 días antes de tu llegada. Tu suite en Xilitla te espera.
             </p>
           </div>
         </div>

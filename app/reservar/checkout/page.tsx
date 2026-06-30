@@ -531,7 +531,7 @@ export default function CheckoutPage() {
 
           <div className={styles.summaryGuarantees}>
             <p><ShieldCheck size={13} strokeWidth={1.5} /> Confirmación instantánea por email</p>
-            <p><ShieldCheck size={13} strokeWidth={1.5} /> Cancelación gratuita hasta 48 hrs antes</p>
+            <p><ShieldCheck size={13} strokeWidth={1.5} /> Reembolso 100% hasta 7 días antes</p>
             {depositInfo?.isDeposit
               ? <p><ShieldCheck size={13} strokeWidth={1.5} /> Resto ({formatMXN(depositInfo.amountPending)}) se paga al llegar</p>
               : <p><ShieldCheck size={13} strokeWidth={1.5} /> Reserva directa sin comisiones</p>

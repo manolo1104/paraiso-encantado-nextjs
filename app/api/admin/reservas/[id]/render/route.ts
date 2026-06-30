@@ -32,19 +32,19 @@ function parsePaquetes(notas: string): { nombre: string; habitacion: string; noc
 }
 
 const SUITE_CATEGORY: Record<string, string> = {
-  'Suite Flor de Liz 1': 'Suite Plus · Spa privado',
-  'Suite Flor de Liz 2': 'Suite Plus · Spa privado',
-  'Suite LindaVista':    'Suite Master · Jacuzzi · Vista panorámica',
-  'Jungla':              'Suite Master · Spa privado · Selva',
-  'Suite Lajas':         'Suite Standard · Terraza con vista',
-  'Lirios 1':            'Habitación Estándar · Vista jardín',
-  'Lirios 2':            'Habitación Estándar Plus · Balcón',
-  'Orquídeas 2':         'Superior King · Vista piscina',
-  'Orquídeas Doble':     'Superior · Terraza piscina',
-  'Orquídeas 3':         'Superior King · Vista elevada',
-  'Bromelias':           'Estándar Plus · Acceso piscina',
-  'Helechos 1':          'Suite Familiar · 3 camas · hasta 6 personas',
-  'Helechos 2':          'Suite Familiar Plus · 4 camas · hasta 6 personas',
+  'Suite Flor de Liz 1': 'Vista a las Montañas · Spa privado',
+  'Suite Flor de Liz 2': 'Vista a las Montañas · Spa privado',
+  'Suite LindaVista':    'Vista a las Montañas · Tina de hidromasaje',
+  'Jungla':              'Vista a las Montañas · Spa privado',
+  'Suite Lajas':         'Vista a las Montañas · Suite amplia',
+  'Lirios 1':            'Vista a los Jardines',
+  'Lirios 2':            'Vista a los Jardines · Balcón privado',
+  'Orquídeas 2':         'Vista a la Piscina · Cama King',
+  'Orquídeas Doble':     'Vista a la Piscina',
+  'Orquídeas 3':         'Vista a la Piscina · Cama King',
+  'Bromelias':           'Vista a la Piscina · Planta baja',
+  'Helechos 1':          'Vista a la Piscina · Familiar (hasta 6)',
+  'Helechos 2':          'Vista a la Piscina · Familiar (hasta 8)',
 };
 
 

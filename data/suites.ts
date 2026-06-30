@@ -2,6 +2,11 @@
 // DATA DE HABITACIONES — Paraíso Encantado
 // Fuente: motor-de-reservas/public/hotel-paraiso-encantado-reservas.html
 // ============================================
+//
+// Categorías por VISTA (3 grupos). El `categoryGroup` define la vista y agrupa
+// las secciones; el `category` es el descriptor honesto del cuarto (chip) y el
+// `badge` resalta el distintivo (spa, hidromasaje, familiar, king…).
+// Mantener estos strings idénticos a VIEW_* en lib/booking.ts.
 
 export interface PriceTiers {
   2: number;
@@ -25,15 +30,19 @@ export interface Suite {
   featured?: boolean;
 }
 
+const VIEW_MONTANAS = 'Vista a las Montañas';
+const VIEW_JARDINES = 'Vista a los Jardines';
+const VIEW_PISCINA = 'Vista a la Piscina';
+
 export const suites: Suite[] = [
   {
     id: 'jungla',
     name: 'Jungla',
-    category: 'Suite Master',
-    categoryGroup: 'Suites con vista a las Montañas y a Xilitla',
+    category: 'Suite con spa privado',
+    categoryGroup: VIEW_MONTANAS,
     description: 'Santuario inmerso en la selva con piscina de inmersión privada y exclusividad total. Rodeada de vegetación exuberante y vistas panorámicas a las montañas de la Huasteca.',
-    price: 1900,
-    priceTiers: { 2: 1900, 3: 2400, 4: 2400 },
+    price: 2300,
+    priceTiers: { 2: 2300, 3: 2800, 4: 2800 },
     maxOccupancy: 4,
     features: [
       '1 Cama kingsize',
@@ -61,11 +70,11 @@ export const suites: Suite[] = [
   {
     id: 'lindavista',
     name: 'Suite LindaVista',
-    category: 'Suite Master',
-    categoryGroup: 'Suites con vista a las Montañas y a Xilitla',
+    category: 'Suite con hidromasaje',
+    categoryGroup: VIEW_MONTANAS,
     description: 'Inmersión total en el bosque con tina de hidromasaje y vistas ininterrumpidas desde las alturas. La favorita para aniversarios y lunas de miel.',
-    price: 1900,
-    priceTiers: { 2: 1900, 3: 2400, 4: 2400 },
+    price: 2500,
+    priceTiers: { 2: 2500, 3: 3000, 4: 3000 },
     maxOccupancy: 4,
     features: [
       '1 Cama kingsize',
@@ -91,11 +100,11 @@ export const suites: Suite[] = [
   {
     id: 'flor-de-liz-1',
     name: 'Suite Flor de Lis 1',
-    category: 'Suite Plus',
-    categoryGroup: 'Suites con vista a las Montañas y a Xilitla',
+    category: 'Suite con spa privado',
+    categoryGroup: VIEW_MONTANAS,
     description: 'Vistas panorámicas a la montaña y piscina spa personal al aire libre para detener el tiempo. Perfecta para quienes buscan privacidad y conexión con la naturaleza.',
-    price: 1900,
-    priceTiers: { 2: 1900, 3: 2400, 4: 2400 },
+    price: 2300,
+    priceTiers: { 2: 2300, 3: 2800, 4: 2800 },
     maxOccupancy: 4,
     features: [
       '2 Camas matrimoniales',
@@ -120,11 +129,11 @@ export const suites: Suite[] = [
   {
     id: 'flor-de-liz-2',
     name: 'Suite Flor de Lis 2',
-    category: 'Suite Plus',
-    categoryGroup: 'Suites con vista a las Montañas y a Xilitla',
+    category: 'Suite con spa privado',
+    categoryGroup: VIEW_MONTANAS,
     description: 'Relajación profunda con tu propia piscina spa y atardeceres incomparables sobre el pueblo de Xilitla.',
-    price: 1900,
-    priceTiers: { 2: 1900, 3: 2400, 4: 2400 },
+    price: 2300,
+    priceTiers: { 2: 2300, 3: 2800, 4: 2800 },
     maxOccupancy: 4,
     features: [
       '2 Camas matrimoniales',
@@ -149,8 +158,8 @@ export const suites: Suite[] = [
   {
     id: 'lajas',
     name: 'Suite Lajas',
-    category: 'Suite Standard',
-    categoryGroup: 'Suites con vista a las Montañas y a Xilitla',
+    category: 'Suite amplia',
+    categoryGroup: VIEW_MONTANAS,
     description: 'Amplitud elegante con sala de estar privada y terraza frente al majestuoso paisaje de Xilitla. La preferida de familias que necesitan espacio y privacidad.',
     price: 1900,
     priceTiers: { 2: 1900, 3: 2400, 4: 2400 },
@@ -177,8 +186,8 @@ export const suites: Suite[] = [
   {
     id: 'helechos-1',
     name: 'Helechos 1',
-    category: 'Suite Familiar',
-    categoryGroup: 'Suites Familiares',
+    category: 'Suite familiar',
+    categoryGroup: VIEW_PISCINA,
     description: 'Espacio perfecto para la familia con tres camas matrimoniales, acceso a piscina y todo el encanto del hotel boutique en la selva huasteca.',
     price: 1900,
     priceTiers: { 2: 1900, 3: 2400, 4: 2400 },
@@ -199,14 +208,14 @@ export const suites: Suite[] = [
       '/images/HELECHOS 1/Copia de DSC09517-HDR.jpg',
       '/images/HELECHOS 1/Copia de DSC09526-HDR.jpg',
     ],
-    badge: 'VISTA A LA PISCINA',
+    badge: 'FAMILIAR · HASTA 6',
     featured: false,
   },
   {
     id: 'helechos-2',
     name: 'Helechos 2',
-    category: 'Suite Familiar Plus',
-    categoryGroup: 'Suites Familiares',
+    category: 'Suite familiar',
+    categoryGroup: VIEW_PISCINA,
     description: 'El refugio ideal para grupos grandes: cuatro camas matrimoniales y el ambiente mágico de la Huasteca. Perfecta para familias numerosas.',
     price: 1900,
     priceTiers: { 2: 1900, 3: 2400, 4: 2400 },
@@ -225,14 +234,14 @@ export const suites: Suite[] = [
       '/images/HELECHOS 2/Copia de DSC09461-HDR.jpg',
       '/images/HELECHOS 2/Copia de DSC09556-HDR.jpg',
     ],
-    badge: 'VISTA A LA PISCINA',
+    badge: 'FAMILIAR · HASTA 8',
     featured: false,
   },
   {
     id: 'lirios-1',
     name: 'Lirios 1',
-    category: 'Standard',
-    categoryGroup: 'Habitaciones Estándar',
+    category: 'Habitación',
+    categoryGroup: VIEW_JARDINES,
     description: 'Desconexión total y descanso reparador rodeado de vegetación. Ideal para parejas o amigos que buscan naturaleza y tranquilidad.',
     price: 1500,
     priceTiers: { 2: 1500, 3: 1900, 4: 1900 },
@@ -257,8 +266,8 @@ export const suites: Suite[] = [
   {
     id: 'lirios-2',
     name: 'Lirios 2',
-    category: 'Standard Plus',
-    categoryGroup: 'Habitaciones Estándar',
+    category: 'Habitación',
+    categoryGroup: VIEW_JARDINES,
     description: 'Paz y silencio absolutos con balcón privado hacia los jardines. La opción romántica con el mejor balance precio-comodidad del hotel.',
     price: 1500,
     priceTiers: { 2: 1500, 3: 1900, 4: 1900 },
@@ -282,11 +291,11 @@ export const suites: Suite[] = [
   {
     id: 'orquideas-2',
     name: 'Orquídeas 2',
-    category: 'Superior King',
-    categoryGroup: 'Habitaciones King',
+    category: 'Habitación King',
+    categoryGroup: VIEW_PISCINA,
     description: 'Confort superior en cama King Size con perspectiva elevada de la selva. Diseñada exclusivamente para parejas que no quieren compartir espacio.',
-    price: 1500,
-    priceTiers: { 2: 1500 },
+    price: 1600,
+    priceTiers: { 2: 1600 },
     maxOccupancy: 2,
     features: [
       '1 Cama kingsize',
@@ -301,14 +310,14 @@ export const suites: Suite[] = [
       '/images/ORQUIDEAS 2/Copia de DSC09568-HDR.jpg',
       '/images/ORQUIDEAS 2/DSCF1607.jpg',
     ],
-    badge: 'KING BED',
+    badge: 'CAMA KING',
     featured: true,
   },
   {
     id: 'orquideas-doble',
     name: 'Orquídeas Doble',
-    category: 'Superior',
-    categoryGroup: 'Habitaciones Estándar',
+    category: 'Habitación',
+    categoryGroup: VIEW_PISCINA,
     description: 'Amplitud para cuatro personas con terraza y vistas a la piscina. Ideal para dos parejas o familia pequeña.',
     price: 1500,
     priceTiers: { 2: 1500, 3: 1900, 4: 1900 },
@@ -329,17 +338,17 @@ export const suites: Suite[] = [
       '/images/ORQUIDEAS DOBLE/Copia de DSCF1617.jpg',
       '/images/ORQUIDEAS DOBLE/DSCF1607.jpg',
     ],
-    badge: 'VISTA A LA SELVA',
+    badge: 'VISTA A LA PISCINA',
     featured: false,
   },
   {
     id: 'orquideas-3',
     name: 'Orquídeas 3',
-    category: 'Superior King',
-    categoryGroup: 'Habitaciones King',
+    category: 'Habitación King',
+    categoryGroup: VIEW_PISCINA,
     description: 'Vista elevada de la selva desde King Size, paz absoluta y acceso a piscina. Perfecta para parejas en escapada de descanso.',
-    price: 1500,
-    priceTiers: { 2: 1500 },
+    price: 1600,
+    priceTiers: { 2: 1600 },
     maxOccupancy: 2,
     features: [
       '1 Cama kingsize',
@@ -357,14 +366,14 @@ export const suites: Suite[] = [
       '/images/ORQUIDEAS 3/DSCF1607.jpg',
       '/images/ORQUIDEAS 3/DSCF1612.jpg',
     ],
-    badge: 'KING BED',
+    badge: 'CAMA KING',
     featured: false,
   },
   {
     id: 'bromelias',
     name: 'Bromelias',
-    category: 'Standard Plus',
-    categoryGroup: 'Habitaciones Estándar',
+    category: 'Habitación',
+    categoryGroup: VIEW_PISCINA,
     description: 'Diseño contemporáneo en planta baja con acceso fluido a la piscina. La opción más accesible del hotel sin sacrificar calidad ni encanto.',
     price: 1500,
     priceTiers: { 2: 1500, 3: 1900, 4: 1900 },

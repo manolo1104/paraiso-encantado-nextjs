@@ -149,7 +149,7 @@ export default function GruposEventosPage() {
           {[
             { num: '13', label: 'Suites disponibles' },
             { num: '60', label: 'Personas de hospedaje' },
-            { num: '4.6★', label: 'Google · 519 reseñas' },
+            { num: '4.5★', label: 'Google · 523 reseñas' },
             { num: '5 min', label: 'A Las Pozas' },
           ].map((s, i) => (
             <div

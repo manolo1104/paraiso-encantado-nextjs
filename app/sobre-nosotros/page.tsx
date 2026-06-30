@@ -8,7 +8,7 @@ import styles from './sobre-nosotros.module.css';
 export const metadata: Metadata = {
   title: 'Hotel Boutique Paraíso Encantado · Xilitla desde 2018 | Nuestra Historia',
   description:
-    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. Fundado en 2018. 13 suites con spa privado y restaurante de cocina huasteca auténtica.',
+    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. Fundado en 2018. 13 suites boutique, 4 con spa privado y restaurante de cocina huasteca auténtica.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/sobre-nosotros',
   },
@@ -45,7 +45,7 @@ const aboutSchema = {
       '@id': 'https://www.paraisoencantado.com/#organization',
       name: 'Hotel Paraíso Encantado',
       url: 'https://www.paraisoencantado.com',
-      description: '13 suites boutique con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina, México.',
+      description: '13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina, México.',
       telephone: '+524891007679',
       email: 'reservas@paraisoencantado.com',
       foundingDate: '2018',
@@ -70,13 +70,13 @@ const aboutSchema = {
       ],
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: 4.6,
-        reviewCount: 519,
+        ratingValue: 4.5,
+        reviewCount: 523,
         bestRating: 5,
       },
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
-        name: '13 suites boutique con spa privado en Xilitla',
+        name: '13 suites boutique, 4 con spa privado en Xilitla',
       },
     },
     {
@@ -153,7 +153,7 @@ const timeline = [
   { year: '2020', event: 'El Papán Huasteco', desc: 'Abre el restaurante con cocina auténtica de la Huasteca, ingredientes locales y tortillas hechas a mano.' },
   { year: '2022', event: '13 suites completas', desc: 'La última suite queda lista. 13 espacios únicos, cada uno con nombre e identidad propios.' },
   { year: '2023', event: 'Visita presidencial', desc: 'El hotel recibe a un mandatario en funciones — único hotel boutique de la región en lograrlo.' },
-  { year: '2024', event: '+500 reseñas', desc: 'Más de 500 reseñas verificadas con calificación de 4.6 estrellas en Google.' },
+  { year: '2024', event: '+500 reseñas', desc: 'Más de 500 reseñas verificadas con calificación de 4.5 estrellas en Google.' },
 ];
 
 // Reseñas emocionales de identidad
@@ -229,7 +229,7 @@ export default function SobreNosotrosPage() {
         '@context': 'https://schema.org',
         '@type': 'VideoObject',
         name: 'Hotel Paraíso Encantado — Tour Virtual por Xilitla y las Suites',
-        description: 'Recorre el Hotel Paraíso Encantado en Xilitla, Huasteca Potosina: las 13 suites boutique con spa privado, el jardín tropical, el restaurante El Papán Huasteco y Las Pozas de Edward James a 5 minutos.',
+        description: 'Recorre el Hotel Paraíso Encantado en Xilitla, Huasteca Potosina: las 13 suites boutique, 4 con spa privado, el jardín tropical, el restaurante El Papán Huasteco y Las Pozas de Edward James a 5 minutos.',
         thumbnailUrl: 'https://img.youtube.com/vi/hD7LbX9Xoqw/maxresdefault.jpg',
         uploadDate: '2024-06-01',
         duration: 'PT3M',
@@ -284,8 +284,8 @@ export default function SobreNosotrosPage() {
           <div className={styles.statsGrid}>
             {[
               { num: '13', label: 'Suites únicas' },
-              { num: '4.6★', label: 'Estrellas en Google' },
-              { num: '519+', label: 'Reseñas verificadas' },
+              { num: '4.5★', label: 'Estrellas en Google' },
+              { num: '523+', label: 'Reseñas verificadas' },
               { num: '5 min', label: 'A pie del Jardín de Edward James' },
               { num: '2018', label: 'Año de fundación' },
             ].map((s) => (
@@ -505,7 +505,7 @@ export default function SobreNosotrosPage() {
           </h2>
           <p className={styles.ctaDesc}>
             Una experiencia auténtica en la Huasteca Potosina te espera.
-            Reserva directo y ahorra hasta 15% vs. plataformas externas.
+            Reserva directo, sin comisiones de intermediarios.
           </p>
           <div className={styles.ctaButtons}>
             <a href={BOOKING_URL} className={styles.ctaBtn}>Reservar Suite</a>

@@ -21,13 +21,18 @@ export default function PoliticaCancelacion() {
         <p className={styles.subtitle}>Hotel Paraíso Encantado · Xilitla, San Luis Potosí</p>
 
         <section>
-          <h2>Cancelación Gratuita</h2>
-          <p>Las reservaciones pueden cancelarse sin cargo hasta <strong>48 horas antes</strong> de la fecha de llegada (check-in: 15:00 hrs hora local).</p>
+          <h2>Reembolso del 100%</h2>
+          <p>Las reservaciones canceladas con <strong>más de 7 días de anticipación</strong> a la fecha de llegada reciben un reembolso del <strong>100%</strong> (check-in: 15:00 hrs hora local).</p>
         </section>
 
         <section>
-          <h2>Cancelación con Cargo</h2>
-          <p>Las cancelaciones realizadas con menos de 48 horas de anticipación o la no presentación (no-show) implican un cargo equivalente a <strong>1 noche de alojamiento</strong> sobre la tarifa reservada.</p>
+          <h2>Reembolso del 50%</h2>
+          <p>Las cancelaciones realizadas <strong>entre 7 y 3 días antes</strong> del check-in reciben un reembolso del <strong>50%</strong> de la tarifa reservada.</p>
+        </section>
+
+        <section>
+          <h2>Sin Reembolso — Solo Cambio de Fecha</h2>
+          <p>Con <strong>menos de 72 horas (3 días)</strong> de anticipación o en caso de no presentación (no-show) no aplica reembolso. En su lugar puedes <strong>cambiar la fecha</strong> de tu reservación, sujeto a disponibilidad.</p>
         </section>
 
         <section>
