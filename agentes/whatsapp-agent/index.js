@@ -762,15 +762,20 @@ async function processConfirmarCommand(msg) {
       const rooms = Array.isArray(reservation.rooms) && reservation.rooms.length > 0
         ? reservation.rooms.map(r => `· ${r?.name || ''}${r?.guests ? ` (${r.guests}p)` : ''}`).join('\n')
         : `· ${reservation.room?.name || '—'}`;
+      const pendingTeam = Math.max(0, Number(reservation.totalPrice || 0) - paidAmount);
       const teamAlert =
         `🏨 *Nueva reserva confirmada*\n\n` +
         `👤 *${reservation.guestName || reservation.userName || 'Sin nombre'}*\n` +
+        `📱 wa.me/${String(reservation.userId || '').split('@')[0]}\n` +
         `🧾 Folio: ${reservation.folio}\n` +
         `📅 Check-in: ${reservation.checkin}\n` +
         `📅 Check-out: ${reservation.checkout}\n` +
+        `👥 Huéspedes: ${reservation.guests}\n` +
         `🛏️ Habitaciones:\n${rooms}\n` +
+        `${toursSection}` +
         `💰 Total: $${Number(reservation.totalPrice || 0).toLocaleString('es-MX')} MXN\n` +
-        `💳 Anticipo pagado: $${paidAmount.toLocaleString('es-MX')} MXN`;
+        `💳 Anticipo pagado: $${paidAmount.toLocaleString('es-MX')} MXN\n` +
+        `🔸 Resta por pagar: $${pendingTeam.toLocaleString('es-MX')} MXN`;
 
       const sendTeamAlert = async (to) => {
         try {
@@ -933,23 +938,40 @@ client.on('message', async (msg) => {
       markRecentBotOutgoing(msg.from);
       await safeReply(client, msg, chat, result.message);
 
-      // Si tiene reserva pendiente, reenviar comprobante al número del hotel para verificación
-      if (result.hasPendingReservation && process.env.HOTEL_WHATSAPP_NUMBER) {
-        const hotelNumber = process.env.HOTEL_WHATSAPP_NUMBER + '@c.us';
+      // Si tiene reserva pendiente, avisar al equipo (número del hotel + grupo Control Hotel)
+      if (result.hasPendingReservation) {
         const r = result.reservation;
         const toursInline = Array.isArray(r.tours) && r.tours.length > 0
           ? `\n*Tours:*\n${r.tours.map(t => `· ${t?.name || 'Tour'} (${t?.participants || 1} persona${Number(t?.participants || 1) === 1 ? '' : 's'})`).join('\n')}\n`
           : '';
-        markRecentBotOutgoing(hotelNumber);
-        await client.sendMessage(hotelNumber,
-          `🔔 *Comprobante de pago recibido*\n\n*Folio:* ${r.folio}\n*Huésped:* ${r.userName} (${r.userId.split('@')[0]})\n*Habitaciones:* ${(Array.isArray(r.rooms) && r.rooms.length > 0 ? r.rooms : [r.room]).map(x => x?.name || 'Suite').join(', ')}\n${toursInline}*Check-in:* ${r.checkin} | *Check-out:* ${r.checkout}\n*Huéspedes:* ${r.guests}\n*Total global:* $${r.totalPrice.toLocaleString('es-MX')} MXN\n\nVerifica el pago y confirma la reserva.`
-        );
-        // Reenviar la imagen al equipo
-        markRecentBotOutgoing(hotelNumber);
-        try {
-          await client.sendMessage(hotelNumber, mediaData);
-        } catch (fwdErr) {
-          console.warn('⚠️ No se pudo reenviar imagen al equipo:', String(fwdErr?.message || '').split('\n')[0]);
+        const paidProof = Number(r.depositAmount || 0);
+        const pendProof = Math.max(0, Number(r.totalPrice || 0) - paidProof);
+        const comprobanteAlert =
+          `🔔 *Comprobante de pago recibido*\n\n*Folio:* ${r.folio}\n*Huésped:* ${r.userName}\n📱 wa.me/${String(r.userId || '').split('@')[0]}\n*Habitaciones:* ${(Array.isArray(r.rooms) && r.rooms.length > 0 ? r.rooms : [r.room]).map(x => x?.name || 'Suite').join(', ')}\n${toursInline}*Check-in:* ${r.checkin} | *Check-out:* ${r.checkout}\n*Huéspedes:* ${r.guests}\n*Total:* $${Number(r.totalPrice || 0).toLocaleString('es-MX')} MXN\n*Anticipo:* $${paidProof.toLocaleString('es-MX')} MXN | *Resta:* $${pendProof.toLocaleString('es-MX')} MXN\n\nVerifica el pago y confirma con *confirmar ${r.folio}*.`;
+
+        // 1) Número del hotel (verificador): texto + imagen del comprobante
+        if (process.env.HOTEL_WHATSAPP_NUMBER) {
+          const hotelNumber = process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '') + '@c.us';
+          markRecentBotOutgoing(hotelNumber);
+          await client.sendMessage(hotelNumber, comprobanteAlert).catch(() => {});
+          markRecentBotOutgoing(hotelNumber);
+          try { await client.sendMessage(hotelNumber, mediaData); }
+          catch (fwdErr) { console.warn('⚠️ No se pudo reenviar imagen al equipo:', String(fwdErr?.message || '').split('\n')[0]); }
+        }
+
+        // 2) Grupo Control Hotel (visibilidad del equipo): solo texto (la imagen no se manda al grupo)
+        const sendComprobanteGroup = async (to) => {
+          try { markRecentBotOutgoing(to); await client.sendMessage(to, comprobanteAlert); }
+          catch (gErr) { console.warn('⚠️ No se pudo enviar comprobante al grupo Control Hotel:', String(gErr?.message || '').split('\n')[0]); }
+        };
+        if (CONTROL_HOTEL_GROUP_ID) {
+          await sendComprobanteGroup(CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`);
+        } else {
+          try {
+            const chats = await client.getChats();
+            const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
+            if (cg?.id?._serialized) await sendComprobanteGroup(cg.id._serialized);
+          } catch { /* ignore */ }
         }
       }
       return;
@@ -1100,8 +1122,11 @@ client.on('message', async (msg) => {
             const rooms = Array.isArray(pr?.rooms) && pr.rooms.length
               ? pr.rooms.map(r => `· ${r.name} (${r.guests} personas) — $${Number(r.price).toLocaleString('es-MX')} MXN`).join('\n')
               : '(ver folio)';
+            const toursLine = Array.isArray(pr?.tours) && pr.tours.length
+              ? `\n\n🌊 *Tours:*\n${pr.tours.map(t => `· ${t?.name || 'Tour'}${t?.participants ? ` (${t.participants} personas)` : ''}${t?.price ? ` — $${Number(t.price).toLocaleString('es-MX')} MXN` : ''}`).join('\n')}`
+              : '';
             const quoteAlert =
-              `📋 *Nueva cotización generada*\n\n👤 *${pending.userName || pr?.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n🧾 *Folio:* ${folio}\n📅 Check-in: ${pr?.checkin || '—'} | Check-out: ${pr?.checkout || '—'}\n🌙 Noches: ${pr?.nights || '—'}\n\n🏨 *Habitaciones:*\n${rooms}\n\n💰 *Total: $${Number(pr?.totalPrice || 0).toLocaleString('es-MX')} MXN*\n💳 Anticipo: $${Number(pr?.depositAmount || 0).toLocaleString('es-MX')} MXN`;
+              `📋 *Nueva cotización generada*\n\n👤 *${pending.userName || pr?.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n🧾 *Folio:* ${folio}\n📅 Check-in: ${pr?.checkin || '—'} | Check-out: ${pr?.checkout || '—'}\n🌙 Noches: ${pr?.nights || '—'}\n\n🏨 *Habitaciones:*\n${rooms}${toursLine}\n\n💰 *Total: $${Number(pr?.totalPrice || 0).toLocaleString('es-MX')} MXN*\n💳 Anticipo: $${Number(pr?.depositAmount || 0).toLocaleString('es-MX')} MXN`;
             const sendToControlHotel = async (to) => {
               try { markRecentBotOutgoing(to); await client.sendMessage(to, quoteAlert); } catch { /* ignore */ }
             };

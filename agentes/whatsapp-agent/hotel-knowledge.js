@@ -4,12 +4,12 @@
  */
 
 export const ROOMS = [
-  // ── Mountain View Suites ──
+  // ── Vista a las Montañas ──
   {
     id: 'suite-flor-de-liz-1',
     name: 'Suite Flor de Liz 1',
     backendName: 'Suite Flor de Liz 1',
-    category: 'Mountain View',
+    category: 'Vista a las Montañas',
     url: 'https://paraisoencantado.com/habitaciones/flor-de-liz-1',
     description: 'Vistas panorámicas a la montaña y piscina spa personal al aire libre para detener el tiempo.',
     beds: '2 camas matrimoniales',
@@ -21,7 +21,7 @@ export const ROOMS = [
     id: 'suite-flor-de-liz-2',
     name: 'Suite Flor de Liz 2',
     backendName: 'Suite Flor de Liz 2',
-    category: 'Mountain View',
+    category: 'Vista a las Montañas',
     url: 'https://paraisoencantado.com/habitaciones/flor-de-liz-2',
     description: 'Relajación profunda con tu propia piscina spa y atardeceres incomparables sobre el pueblo.',
     beds: '2 camas matrimoniales',
@@ -33,7 +33,7 @@ export const ROOMS = [
     id: 'suite-lindavista',
     name: 'Suite LindaVista',
     backendName: 'Suite LindaVista',
-    category: 'Mountain View',
+    category: 'Vista a las Montañas',
     url: 'https://paraisoencantado.com/habitaciones/lindavista',
     description: 'Inmersión total en el bosque con tina de hidromasaje y vistas ininterrumpidas desde las alturas.',
     beds: '1 cama matrimonial + 1 King Size',
@@ -45,7 +45,7 @@ export const ROOMS = [
     id: 'suite-lajas',
     name: 'Suite Lajas',
     backendName: 'Suite Lajas',
-    category: 'Mountain View',
+    category: 'Vista a las Montañas',
     url: 'https://paraisoencantado.com/habitaciones/lajas',
     description: 'Amplitud con sala de estar y terraza frente al majestuoso paisaje de Xilitla.',
     beds: '2 camas matrimoniales',
@@ -57,7 +57,7 @@ export const ROOMS = [
     id: 'jungla',
     name: 'Suite Jungla',
     backendName: 'Jungla',
-    category: 'Mountain View ⭐ Preferida',
+    category: 'Vista a las Montañas ⭐ Preferida',
     url: 'https://paraisoencantado.com/habitaciones/jungla',
     description: 'Un santuario inmerso en la selva con piscina de inmersión privada y exclusividad total. La más solicitada del hotel.',
     beds: '1 cama matrimonial + 1 King Size',
@@ -65,12 +65,12 @@ export const ROOMS = [
     highlights: ['Piscina de inmersión privada', 'Máxima privacidad', 'Vistas a Xilitla y montañas', 'La favorita de los huéspedes'],
     features: ['1 cama King Size + 1 cama matrimonial', 'Baño completo', 'Terraza privada con vistas a las montañas y a Xilitla', 'Piscina de spa al aire libre', 'Cajón de estacionamiento privado frente a la habitación', 'Aire acondicionado', 'WiFi Starlink']
   },
-  // ── Garden View ──
+  // ── Vista a los Jardines ──
   {
     id: 'lirios-1',
     name: 'Lirios 1',
     backendName: 'Lirios 1',
-    category: 'Garden View',
+    category: 'Vista a los Jardines',
     url: 'https://paraisoencantado.com/habitaciones/lirios-1',
     description: 'Desconexión total y descanso reparador en un espacio abrazado por la vegetación.',
     beds: '2 camas matrimoniales',
@@ -82,7 +82,7 @@ export const ROOMS = [
     id: 'lirios-2',
     name: 'Lirios 2',
     backendName: 'Lirios 2',
-    category: 'Garden View',
+    category: 'Vista a los Jardines',
     url: 'https://paraisoencantado.com/habitaciones/lirios-2',
     description: 'Un rincón de paz y silencio absoluto con balcón privado hacia los jardines.',
     beds: '2 camas matrimoniales',
@@ -90,12 +90,12 @@ export const ROOMS = [
     highlights: ['Balcón privado', 'Vistas al jardín', 'Silencio absoluto'],
     features: ['2 camas matrimoniales', 'Baño completo', 'Vistas a los jardines', 'Balcón privado con vistas', 'Acceso por escaleras (~30 escalones)', 'Aire acondicionado', 'WiFi Starlink']
   },
-  // ── Pool Facing ──
+  // ── Vista a la Piscina ──
   {
     id: 'orquideas-2',
     name: 'Orquídeas 2',
     backendName: 'Orquídeas 2',
-    category: 'Pool Facing',
+    category: 'Vista a la Piscina',
     url: 'https://paraisoencantado.com/habitaciones/orquideas-2',
     description: 'Confort superior en cama King Size con perspectiva elevada y vibrante de la selva.',
     beds: '1 cama King Size',
@@ -107,7 +107,7 @@ export const ROOMS = [
     id: 'orquideas-doble',
     name: 'Orquídeas Doble',
     backendName: 'Orquídeas Doble',
-    category: 'Pool Facing',
+    category: 'Vista a la Piscina',
     url: 'https://paraisoencantado.com/habitaciones/orquideas-doble',
     description: 'Sereno mirador con vistas panorámicas a la selva, la piscina y los jardines.',
     beds: '2 camas matrimoniales',
@@ -119,7 +119,7 @@ export const ROOMS = [
     id: 'bromelias',
     name: 'Bromelias 1',
     backendName: 'Bromelias',
-    category: 'Pool Facing',
+    category: 'Vista a la Piscina',
     url: 'https://paraisoencantado.com/habitaciones/bromelias',
     description: 'Diseño contemporáneo en planta baja con acceso fluido a la piscina y áreas de descanso.',
     beds: '2 camas matrimoniales',
@@ -131,7 +131,7 @@ export const ROOMS = [
     id: 'orquideas-3',
     name: 'Orquídeas 3',
     backendName: 'Orquídeas 3',
-    category: 'Pool Facing',
+    category: 'Vista a la Piscina',
     url: 'https://paraisoencantado.com/habitaciones/orquideas-3',
     description: '1 cama King Size, terraza común con vistas a la selva y alberca, y acceso directo a la piscina.',
     beds: '1 cama King Size',
@@ -139,12 +139,12 @@ export const ROOMS = [
     highlights: ['1 cama King Size', 'Terraza común con vistas a la selva y alberca', 'Acceso a piscina'],
     features: ['1 cama King Size', 'Baño completo', 'Terraza común con vistas a la selva y los jardines', 'Tercer piso (~20 escalones)', 'Aire acondicionado', 'WiFi Starlink']
   },
-  // ── Familiar ──
+  // ── Vista a la Piscina (Familiar) ──
   {
     id: 'helechos-1',
     name: 'Helechos I Familiar',
     backendName: 'Helechos 1',
-    category: 'Suite Familiar',
+    category: 'Vista a la Piscina · Familiar',
     url: 'https://paraisoencantado.com/habitaciones/helechos-1',
     description: 'El espacio perfecto para la familia, combinando comodidad compartida y acceso a la piscina.',
     beds: '3 camas matrimoniales',
@@ -156,7 +156,7 @@ export const ROOMS = [
     id: 'helechos-2',
     name: 'Helechos II Familiar',
     backendName: 'Helechos 2',
-    category: 'Suite Familiar',
+    category: 'Vista a la Piscina · Familiar',
     url: 'https://paraisoencantado.com/habitaciones/helechos-2',
     description: 'El refugio ideal para grupos, gran amplitud, convivencia y vistas a la naturaleza.',
     beds: '4 camas matrimoniales',
@@ -420,10 +420,10 @@ ${PAQUETES.map(p =>
 
 Reglas de paquetes:
 - Combinan *tours guiados + hospedaje* en el hotel; el precio es *por pareja (2 personas)*.
-- Precio *final cerrado* en MXN, sin cargos ocultos. NO se combinan con la promo 3x2 (la tercera noche gratis es solo para reservas de habitación suelta).
+- Precio *final cerrado* en MXN, sin cargos ocultos.
 - Son *personalizables*: fechas, tipo de suite (cubriendo la diferencia si es más cara), número de personas y tours adicionales. Si piden algo a la medida, toma los datos y ofrece cotización.
 - *Niños en paquetes:* menores de 5 años gratis; de 6 a 11 años pagan 50% del costo de adulto adicional. (Ojo: esta regla es distinta a la de habitación suelta, donde los menores de 6 no pagan.)
-- *Cancelación de paquetes:* gratis hasta *48 h antes* del check-in (reembolso 100%).
+- *Cancelación de paquetes:* 100% de reembolso hasta *7 días antes* del check-in; 50% hasta *3 días antes*; menos de 72 h o no-show, solo cambio de fecha.
 - Se reservan por aquí (WhatsApp) confirmando disponibilidad; el equipo manda el link de pago. NO uses create_reservation_quote para paquetes salvo que el huésped ya eligió suite y fechas concretas.
 
 ═══ INSTALACIONES ═══
@@ -495,16 +495,6 @@ Avisa siempre si el cliente menciona dificultad para caminar, adultos mayores, m
 - *~30 escalones:* Suite Flor de Liz 1, Suite Flor de Liz 2, Suite LindaVista, Suite Lajas, Lirios 1, Lirios 2
 Si el cliente necesita fácil acceso, recomienda *Bromelias 1* como primera opción.
 
-═══ PROMOCIÓN 3X2 — TERCERA NOCHE GRATIS ═══
-- *Reservando 2 noches, la 3ª noche es completamente gratis.* 🎉
-- Aplica para todas las suites y en cualquier fecha disponible.
-- El precio de la cotización es: precio de 2 noches (la 3ª no se cobra).
-- Si el cliente pregunta por la promo o menciona "3x2" / "tercera noche gratis" / "promoción":
-  · Confirma que sí aplica y genera la cotización por el precio de 2 noches únicamente.
-  · Ejemplo: Suite Jungla (2 personas) — 3 noches con promo = $1,900 × 2 = *$3,800 MXN* (la 3ª gratis).
-- En la cotización, menciona la promoción claramente: "✨ *Promo 3x2:* 3 noches por el precio de 2".
-- ⚠️ NO aplica para 1 noche sola ni para estancias de 4+ noches (solo estancias de exactamente 3 noches).
-
 ═══ POLÍTICAS ═══
 - Check-in: *3:00 PM* | Check-out: *12:00 PM* (anticipado/tardío sujeto a disponibilidad)
 - Niños: bienvenidos — *menores de 6 años sin cargo*
@@ -512,9 +502,8 @@ Si el cliente necesita fácil acceso, recomienda *Bromelias 1* como primera opci
 - Desayuno: no incluido — disponible en restaurante, *$100–$200 MXN por persona*
 - Política de cancelación:
   - Más de 7 días antes del check-in: reembolso del 100%
-  - Menos de 7 días antes del check-in: reembolso del 50%
-  - Menos de 3 días antes del check-in: sin reembolso
-  - Salidas anticipadas y cancelaciones de última hora: no reembolsables
+  - Entre 7 y 3 días antes del check-in: reembolso del 50%
+  - Menos de 72 horas (3 días) antes del check-in o no-show: sin reembolso; solo se permite cambio de fecha
 - Términos y condiciones: https://paraisoencantado.com/t%C3%A9rminos-y-condiciones
 - Pago: transferencia bancaria (reservas WhatsApp) o tarjeta de crédito/débito en paraisoencantadoxilitla.lat
 - Eventos privados: posible rentar el hotel completo (13 habitaciones) — sin costo extra por instalaciones
