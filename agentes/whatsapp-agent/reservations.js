@@ -6,7 +6,7 @@
  * - Notifica al equipo del hotel cuando llega un comprobante
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 
 // En local usa el archivo de la carpeta; en Railway apunta al disco persistente
 // (RESERVATIONS_FILE=/data/reservations.json) para no perder reservas al actualizar.
@@ -15,11 +15,21 @@ const FILE = process.env.RESERVATIONS_FILE || './reservations.json';
 function load() {
   if (!existsSync(FILE)) return [];
   try { return JSON.parse(readFileSync(FILE, 'utf-8')); }
-  catch { return []; }
+  catch (err) {
+    // Un archivo corrupto NO debe tratarse como "sin reservas": la siguiente save()
+    // lo sobreescribiría y se perderían todos los folios. Conservar evidencia.
+    console.error(`❌ reservations.json corrupto (${err.message}) — se respalda antes de continuar.`);
+    try { renameSync(FILE, `${FILE}.corrupt-${Date.now()}`); } catch { /* sin respaldo posible */ }
+    return [];
+  }
 }
 
 function save(data) {
-  writeFileSync(FILE, JSON.stringify(data, null, 2), 'utf-8');
+  // Escritura atómica: tmp + rename, para que un corte a media escritura
+  // (redeploy de Railway) no deje el archivo truncado.
+  const tmp = `${FILE}.tmp`;
+  writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
+  renameSync(tmp, FILE);
 }
 
 function normalizeText(value = '') {

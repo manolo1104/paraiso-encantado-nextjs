@@ -139,25 +139,22 @@ function isSpamOrBroadcast(message = '') {
   const text = String(message || '').trim();
   if (!text) return false;
 
-  // Patrones de spam común
-  const spamPatterns = [
-    // Muchos emojis decorativos
-    /✨.*✨/,
-    // Palabras clave de terceros
-    /TENEMOS DISPONIBILIDAD/i,
-    /COMISIONABLE/i,
-    /PROMOCIÓN/i,
-    /TODO EL DIA/i,
-    /OFERTA|OFERTA ESPECIAL/i,
-    // Formato típico de broadcast: muchos emojis + contenido largo
-    text.length > 500 && /🚙|🎫|✈|🏨|🛏/i.test(text),
-    // Patrones de mensaje masivo: formato de lista repetitivo
-    /(\d+\.\s+\w+[^\n]*\n){5,}/i
-  ];
+  // Frases de agencias/terceros — un cliente real no las usa
+  if (/COMISIONABLE/i.test(text)) return true;
+  if (/TENEMOS DISPONIBILIDAD/i.test(text)) return true;
 
-  return spamPatterns.some(pattern =>
-    typeof pattern === 'object' ? pattern.test(text) : pattern
-  );
+  // Gritos de broadcast: SOLO en mayúsculas. Un cliente que escribe
+  // "¿tienen alguna promoción?" u "¿sigue la oferta?" NO es spam.
+  if (/PROMOCI[ÓO]N|\bOFERTA\b|TODO EL D[ÍI]A/.test(text)) return true;
+
+  // Muchos emojis decorativos solo cuenta como spam en mensajes largos (flyers)
+  if (/✨.*✨/.test(text) && text.length > 200) return true;
+  if (text.length > 500 && /🚙|🎫|✈|🏨|🛏/i.test(text)) return true;
+
+  // Listas repetitivas tipo mensaje masivo
+  if (/(\d+\.\s+\w+[^\n]*\n){5,}/i.test(text)) return true;
+
+  return false;
 }
 
 function scheduleAvailabilityFollowup(client, chatId, userName = '', type = 'inquiry_no_response') {
@@ -639,10 +636,10 @@ async function processConfirmarCommand(msg) {
 
   // /continua +52XXXXXXXXXX — reactivar bot para ese número antes de que expire la hora
   if (/^\/(continua|reanudar|activar)\b/i.test(body)) {
-    const numMatch = body.match(/\+?1?52?(\d{10})/);
-    const rawMatch = body.match(/\+?(\d{10,13})/);
-    const digits = (numMatch?.[0] || rawMatch?.[0] || '').replace(/\D/g, '');
-    if (!digits) {
+    // Tomar los ÚLTIMOS 10 dígitos del número (funciona con 10 dígitos, 52…, 521… y +52)
+    const digitsAll = body.replace(/^\/(continua|reanudar|activar)\b/i, '').replace(/\D/g, '');
+    const digits = digitsAll.slice(-10);
+    if (digits.length < 10) {
       await msg.reply('Uso: /continua +52XXXXXXXXXX');
       return true;
     }
@@ -947,7 +944,7 @@ client.on('message', async (msg) => {
         const paidProof = Number(r.depositAmount || 0);
         const pendProof = Math.max(0, Number(r.totalPrice || 0) - paidProof);
         const comprobanteAlert =
-          `🔔 *Comprobante de pago recibido*\n\n*Folio:* ${r.folio}\n*Huésped:* ${r.userName}\n📱 wa.me/${String(r.userId || '').split('@')[0]}\n*Habitaciones:* ${(Array.isArray(r.rooms) && r.rooms.length > 0 ? r.rooms : [r.room]).map(x => x?.name || 'Suite').join(', ')}\n${toursInline}*Check-in:* ${r.checkin} | *Check-out:* ${r.checkout}\n*Huéspedes:* ${r.guests}\n*Total:* $${Number(r.totalPrice || 0).toLocaleString('es-MX')} MXN\n*Anticipo:* $${paidProof.toLocaleString('es-MX')} MXN | *Resta:* $${pendProof.toLocaleString('es-MX')} MXN\n\nVerifica el pago y confirma con *confirmar ${r.folio}*.`;
+          `🔔 *Comprobante de pago recibido*\n\n*Folio:* ${r.folio}\n*Huésped:* ${r.userName}\n📱 wa.me/${String(r.userId || '').split('@')[0]}\n*Habitaciones:* ${(Array.isArray(r.rooms) && r.rooms.length > 0 ? r.rooms : [r.room]).map(x => x?.name || 'Suite').join(', ')}\n${toursInline}*Check-in:* ${r.checkin} | *Check-out:* ${r.checkout}\n*Huéspedes:* ${r.guests}\n*Total:* $${Number(r.totalPrice || 0).toLocaleString('es-MX')} MXN\n*Anticipo:* $${paidProof.toLocaleString('es-MX')} MXN | *Resta:* $${pendProof.toLocaleString('es-MX')} MXN\n\nVerifica el pago y confirma con */confirmar ${r.folio}*.`;
 
         // 1) Número del hotel (verificador): texto + imagen del comprobante
         if (process.env.HOTEL_WHATSAPP_NUMBER) {

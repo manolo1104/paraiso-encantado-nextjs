@@ -5,7 +5,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
-import { HOTEL_SYSTEM_PROMPT, ROOMS, TOURS } from './hotel-knowledge.js';
+import { HOTEL_SYSTEM_PROMPT, ROOMS, TOURS, RESTAURANT_MENU } from './hotel-knowledge.js';
 import { createQuote, getByUser, getLocallyReservedBackendNames } from './reservations.js';
 import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservationByFolioFromSheet, findAlternativeDates } from './google-sheets.js';
 
@@ -53,7 +53,9 @@ function updateSession(userId, data) {
   Object.assign(s, data);
 }
 
-const HUMAN_REQUEST_REGEX = /\b(humano|asesor|agente|recepcion|recepción|gerente|manager|ejecutivo)\b|hablar con (alguien|una persona)|quiero hablar con|human support|real person/i;
+// Solo escalar cuando el cliente PIDE hablar con alguien — palabras sueltas como
+// "recepción" o "gerente" en preguntas normales ("¿la recepción abre 24 h?") NO escalan.
+const HUMAN_REQUEST_REGEX = /\b(humano|asesor)\b|\b(hablar|comun[ií]came|comunicarme|p[aá]same|transfi[eé]reme|con[eé]ctame|atienda)\b.{0,30}\b(persona|humano|recepci[oó]n|gerente|manager|ejecutivo|asesor|agente|equipo|alguien)\b|quiero hablar con|human support|real person/i;
 const ESCALATION_RESPONSE_REGEX = /te comunico con nuestro equipo|en breve te contactan|te contacta nuestro equipo|te atiende una persona/i;
 
 const TOUR_BOOKING_INTENT_REGEX = /\b(quiero|quisiera|me interesa|me gustar[íi]a|podemos|podría|puedo|reservar|contratar|apartar|tomar|agendar)\b.{0,40}\b(tour|tours|excursion|excursiones|recorrido|paquete)\b|\b(tour|tours)\b.{0,40}\b(reservar|contratar|apartar|pagar|agendar|incluir)\b/i;
@@ -84,6 +86,15 @@ function getRoomPricePerNight(room, guests) {
   return base + (g - 4) * extra;
 }
 
+// Carta individual del restaurante — respuesta oficial a preguntas de comida/menú
+// (el buffet grupal solo se ofrece a grupos de 20+; ver hotel-knowledge.js)
+function buildCartaMessage() {
+  const desayunos = RESTAURANT_MENU.desayunos.map(i => `${i.name} $${i.price}`).join(' · ');
+  const principales = RESTAURANT_MENU.principales.map(i => `${i.name} $${i.price}`).join(' · ');
+  const bebidas = RESTAURANT_MENU.bebidas.map(i => `${i.name} $${i.price}`).join(' · ');
+  return `Nuestro restaurante *El Papán Huasteco* (8:00 AM – 8:00 PM) 🍽️\n\n*Desayunos:* ${desayunos}\n*Platillos principales:* ${principales}\n*Bebidas:* ${bebidas}\n\nAbierto todos los días para huéspedes y público general. 🌿\n\n¿Te ayudo también con tu reserva de hospedaje?`;
+}
+
 function getDeterministicResponse(userText = '', session = {}) {
   const text = normalizeText(userText);
 
@@ -94,7 +105,7 @@ function getDeterministicResponse(userText = '', session = {}) {
   }
 
   // "mi reserva/reservación" — si hay folio activo en sesión, mostrar datos sin pedir folio
-  if ((text.includes('mi reserva') || text.includes('mi reservacion') || text.includes('mi reservación') || text.includes('detalles de mi reserva')) && !/wa-[a-z0-9]{4,}/i.test(userText)) {
+  if ((text.includes('mi reserva') || text.includes('mi reservacion') || text.includes('mi reservación') || text.includes('detalles de mi reserva')) && !text.includes('cancel') && !/wa-[a-z0-9]{4,}/i.test(userText)) {
     if (session.lastFolio && session.checkin && session.checkout) {
       return `Tu cotización activa:\n📋 *Folio:* ${session.lastFolio}\n📅 Check-in: ${session.checkin}\n📅 Check-out: ${session.checkout}\n\n¿Tienes alguna duda o ya enviaste el comprobante? 🌿`;
     }
@@ -108,11 +119,15 @@ function getDeterministicResponse(userText = '', session = {}) {
     return `Tenemos *dos formas fáciles de reservar*: 📱 *Opción 1 — Por WhatsApp:* cotización + pago por SPEI u OXXO. 🌐 *Opción 2 — Motor en línea:* ${urlMotor} (tarjeta, confirmación instantánea). ¿Me compartes tu *check-in y check-out* y cuántos huéspedes serían? 🌿📅`;
   }
 
+  // Grupo real: mención explícita de "grupo", 5+ personas, o 3+ habitaciones.
+  // (Antes cualquier "para 2 personas" caía aquí y secuestraba la consulta normal.)
+  const peopleNearMatch = text.match(/(\d{1,3})\s*personas/);
+  const roomsNearMatch = text.match(/(\d{1,3})\s*habitacion/);
   const looksGroupFlow =
     text.includes('grupo') ||
-    text.includes('somos ') ||
-    text.includes('personas') ||
-    text.includes('habitaciones');
+    (peopleNearMatch && Number(peopleNearMatch[1]) >= 5) ||
+    (roomsNearMatch && Number(roomsNearMatch[1]) >= 3) ||
+    (text.includes('somos ') && (parseFirstInteger(text) || 0) >= 5);
   if (looksGroupFlow && (text.includes('cotizacion') || text.includes('reservar') || text.includes('disponibilidad'))) {
     return '¡Claro! Para tu *reserva de grupo* te ayudo paso a paso. 🌿\n\n1) ¿Cuántas personas son en total?\n2) Compárteme *check-in y check-out* para revisar disponibilidad real.\n3) Te muestro las habitaciones libres y el catálogo de precios del hotel.\n4) Me compartes la distribución por habitación (cuántas personas en cada suite) y te genero *una sola cotización global*.';
   }
@@ -126,7 +141,8 @@ function getDeterministicResponse(userText = '', session = {}) {
   const hasCheckoutWord = text.includes('check-out') || text.includes('check out') || text.includes('salida');
 
   // Nunca afirmar disponibilidad con una sola fecha suelta.
-  if (asksAvailability && hasDateHint && !(hasCheckinWord && hasCheckoutWord)) {
+  // (Si el mensaje ya trae DOS fechas completas, dejar que Claude verifique con la herramienta.)
+  if (asksAvailability && hasDateHint && !(hasCheckinWord && hasCheckoutWord) && extractDates(text).length < 2) {
     return '¡Con gusto te lo confirmo! ✅ Para validar *disponibilidad real en ese momento* necesito ambas fechas: *check-in y check-out*.\n\nCompártemelas junto con el número de huéspedes y te digo exactamente qué suites están libres. 📅🏡';
   }
 
@@ -138,8 +154,8 @@ function getDeterministicResponse(userText = '', session = {}) {
 
   if (asksAboutFood && (text.includes('somos') || text.includes('personas'))) {
     const peopleCount = parseFirstInteger(text);
-    if ((text.includes('desayuno') || text.includes('buffet')) && peopleCount && peopleCount < 30) {
-      return 'El servicio grupal de desayunos está pensado para *30 personas o más*. 🍽️ Si son menos, nuestro equipo puede revisar opciones especiales para ustedes. 🤝';
+    if ((text.includes('desayuno') || text.includes('buffet')) && peopleCount && peopleCount >= 3 && peopleCount < 20) {
+      return `El servicio grupal de desayunos (buffet) aplica a partir de *20 personas*. 🍽️ Pero pueden desayunar sin problema en nuestro restaurante con la carta individual 👇\n\n${buildCartaMessage()}`;
     }
     if ((text.includes('cena') || text.includes('cenas')) && peopleCount && peopleCount >= 30) {
       return 'Para grupos de *30 personas o más* tenemos cenas como *Antojitos Mexicanos*, *Tacos de Cecina*, *Enchiladas Suizas*, *Enchiladas Huastecas* y *Ensalada Verde con Pollo*. 🍽️ Incluye aguas frescas, café y pan dulce, y se requiere *50% de anticipo* para asegurar el servicio. 📌';
@@ -147,8 +163,14 @@ function getDeterministicResponse(userText = '', session = {}) {
   }
 
   // Preguntas sobre precios del restaurante (individuales o sin cantidad específica)
+  // → siempre la carta individual; el buffet grupal (20+) lo maneja Claude con el prompt
   if (asksAboutFood && (text.includes('precio') || text.includes('cuanto') || text.includes('costo') || text.includes('tarifa') || text.includes('aproximado') || text.includes('cuestan'))) {
-    return 'Nuestro restaurante *El Papán Huasteco* (8:00 AM – 8:00 PM) 🍽️\n\n*Desayunos:*\n· Americano (huevos, frijoles, café) — *$160 MXN* por persona\n· Bufete (chilaquiles, guisos, tortillas del comal) — *$220 MXN* por persona\n· Huasteco (enchiladas, bocoles, tamales) — *$250 MXN* por persona\n\n*Comidas y cenas:* aprox. *$100–$250 MXN* por persona según el platillo. 🌿\n\n¿Te ayudo también con tu reserva de hospedaje?';
+    return buildCartaMessage();
+  }
+
+  // Solicitud directa del menú/carta del restaurante (sin palabras de precio)
+  if (text.includes('menu') || /\bcarta\b/.test(text) || ((text.includes('restaurante') || text.includes('platillo')) && (text.includes('tienen') || text.includes('hay') || text.includes('cual') || text.includes('que ')))) {
+    return buildCartaMessage();
   }
 
   if (text.includes('otra pagina vi la habitacion mas barata') || text.includes('me respetas ese precio') || text.includes('mas barata')) {
@@ -163,8 +185,9 @@ function getDeterministicResponse(userText = '', session = {}) {
   const mentionsSpecificRoom = /(jungla|lindavista|lajas|flor de liz|lirios|orquideas|bromelias|helechos|suite)/.test(text);
   const isPostConfirmationChange = text.includes('reserva confirmada') || text.includes('agregar 1 huesped') || text.includes('agregar un huesped') || text.includes('cambia el precio');
   const isExternalPriceDispute = text.includes('mas barata') || text.includes('respetas ese precio') || text.includes('otra pagina');
-  if (asksPrice && !mentionsSpecificRoom && !isPostConfirmationChange && !isExternalPriceDispute && !asksAboutFood) {
-    return 'Nuestras tarifas por noche 🌿\n\n🏔️ *Con vista a las montañas + spa privado:*\n$1,900 MXN (2 personas) · $2,400 MXN (3–4 personas)\n· Piscina spa o tina de hidromasaje privada\n· Terrazas con vista panorámica a Xilitla y la selva\n· Suite Jungla · Flor de Liz 1 & 2 · LindaVista · Lajas\n\n🌿 *Con vista a los jardines:*\n$1,500 MXN (2 personas) · $1,900 MXN (3–4 personas)\n· Balcón privado · jardines tropicales · tranquilidad\n· Lirios 1 & 2 · Orquídeas · Bromelias\n\n👨‍👩‍👧‍👦 *Suites Familiares (hasta 6–8 personas):*\n$1,900 MXN (2p) · $2,400 MXN (3–4p) · $2,700 MXN (5p) · $3,000 MXN (6p)\n· Helechos 1 & 2\n\nTodo incluye WiFi, AC y acceso a la alberca. Estamos a *5 min del Jardín de Edward James* 📍\n\n¿Para qué fechas y cuántos serían? Te reviso disponibilidad ahora 📅';
+  const asksAboutTourOrPackage = text.includes('tour') || text.includes('paquete') || text.includes('excursion');
+  if (asksPrice && !mentionsSpecificRoom && !isPostConfirmationChange && !isExternalPriceDispute && !asksAboutFood && !asksAboutTourOrPackage) {
+    return 'Nuestras tarifas por noche 🌿\n\n🏔️ *Con vista a las montañas + spa privado:*\n$1,900 MXN (2 personas) · $2,400 MXN (3–4 personas)\n· Piscina spa o tina de hidromasaje privada\n· Terrazas con vista panorámica a Xilitla y la selva\n· Suite Jungla · Flor de Liz 1 & 2 · LindaVista · Lajas\n\n🌿 *Con vista a los jardines:*\n$1,500 MXN (2 personas) · $1,900 MXN (3–4 personas)\n· Balcón privado · jardines tropicales · tranquilidad\n· Lirios 1 & 2 · Orquídeas · Bromelias\n\n👨‍👩‍👧‍👦 *Suites Familiares (hasta 6 personas):*\n$1,900 MXN (2p) · $2,400 MXN (3–4p) · $2,700 MXN (5p) · $3,000 MXN (6p)\n· Helechos 1 & 2\n\nTodo incluye WiFi, AC y acceso a la alberca. Estamos a *5 min del Jardín de Edward James* 📍\n\n¿Para qué fechas y cuántos serían? Te reviso disponibilidad ahora 📅';
   }
 
   if (text.includes('perrito') || text.includes('mascota') || text.includes('perro')) {
@@ -177,19 +200,21 @@ function getDeterministicResponse(userText = '', session = {}) {
     return 'Check-in: *3:00 PM* · Check-out: *12:00 PM* 📅\nLlegada anticipada sujeta a disponibilidad. ¿Tienes fechas en mente?';
   }
 
-  if (text.includes('desayuno incluido') || text.includes('incluye desayuno')) {
+  // Cubre "desayuno incluido", "¿está incluido el desayuno?", "¿incluye desayuno?"
+  if (text.includes('desayuno') && text.includes('inclu') && !text.includes('tour') && !text.includes('paquete')) {
     return 'El desayuno *no está incluido* en la tarifa de hospedaje. 🍳 Lo puedes tomar en nuestro restaurante *El Papán Huasteco* (8:00 AM – 8:00 PM) — aprox. $100–$200 MXN por persona. ¿Te ayudo con tu reserva?';
   }
 
-  if (text.includes('cancelacion') || text.includes('cancelación') || text.includes('puedo cancelar') || text.includes('politica')) {
-    return '📋 *Política de cancelación:*\n· +7 días antes: reembolso del *100%*\n· 3–7 días antes: reembolso del *50%*\n· Menos de 3 días: *sin reembolso*\n\n¿Tienes alguna duda adicional? 🌿';
+  const politicaOtraCosa = text.includes('nino') || text.includes('mascota') || text.includes('perro') || text.includes('fumar');
+  if (text.includes('cancelacion') || text.includes('cancelación') || text.includes('puedo cancelar') || (text.includes('politica') && !politicaOtraCosa)) {
+    return '📋 *Política de cancelación:*\n· +7 días antes: reembolso del *100%*\n· 3–7 días antes: reembolso del *50%*\n· Menos de 3 días o no-show: *sin reembolso* — solo *cambio de fecha*\n\n¿Tienes alguna duda adicional? 🌿';
   }
 
   if (text.includes('wifi') || text.includes('internet')) {
     return 'Sí, todas las suites tienen *WiFi Starlink* de alta velocidad incluido. 📶✨';
   }
 
-  if (text.includes('estacionamiento') || text.includes('estacion') || text.includes('puedo llegar en carro')) {
+  if (text.includes('estacionamiento') || text.includes('estacionar') || text.includes('parking') || text.includes('puedo llegar en carro')) {
     return 'Sí, contamos con *estacionamiento privado y seguro* incluido sin costo. 🚗🌿 ¿Te ayudo con tu reserva?';
   }
 
@@ -201,7 +226,7 @@ function getDeterministicResponse(userText = '', session = {}) {
     'lajas': '*Suite Lajas* — $1,900/noche (2 personas) · $2,400/noche (3–4 personas)\n✦ Sala de estar · terraza panorámica · 2 baños 🏡',
     'helechos': '*Helechos Familiar* — $1,900/noche (2p) · $2,400/noche (3–4p) · $2,700/noche (5p) · $3,000/noche (6p)\n✦ Hasta 6 personas · múltiples camas · ideal para familias 👨‍👩‍👧‍👦',
     'lirios': '*Lirios* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Vistas al jardín · balcón privado · tranquilidad 🌿',
-    'orquideas': '*Orquídeas* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Frente a la piscina · vista a la selva ✨',
+    'orquideas': '*Orquídeas 2 y 3* (cama King, solo 2 personas) — $1,500/noche\n*Orquídeas Doble* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Frente a la piscina · vista a la selva ✨',
     'bromelias': '*Bromelias* — $1,500/noche (2 personas) · $1,900/noche (3–4 personas)\n✦ Planta baja · acceso directo a piscina · fácil acceso 🏊',
   };
   if (asksPrice && !hasDateHint) {
@@ -235,7 +260,7 @@ function getDeterministicResponse(userText = '', session = {}) {
   // (evitar falsos positivos como "3. En YouTube" en formularios)
   const isNumberedListItem = /^\s*\d+[\.\)]\s/.test(userText); // ej: "3. En YouTube"
   const isShortVideoMention = text.length > 60 && !text.includes('video') && !text.includes('reel');
-  if (!isNumberedListItem && !isShortVideoMention && (text.includes('video') || text.includes('videos') || (text.includes('youtube') && text.length < 80) || text.includes('reel') || text.includes('reels'))) {
+  if (!isNumberedListItem && !isShortVideoMention && !text.includes('videollamada') && !text.includes('video llamada') && (text.includes('video') || text.includes('videos') || (text.includes('youtube') && text.length < 80) || text.includes('reel') || text.includes('reels'))) {
     const videoLinks = [
       '🎬 *AMLO en Paraíso Encantado:* https://www.youtube.com/watch?v=Y8h8CuTNLcA&t=1s',
       '🌺 *Brenda Catalán en Xilitla:* https://www.youtube.com/watch?v=v2cc-49uYEU&t=15s',
@@ -246,7 +271,9 @@ function getDeterministicResponse(userText = '', session = {}) {
     return `Aquí algunos videos del hotel 🎥\n\n${videoLinks.join('\n\n')}\n\n¿Alguna pregunta sobre las suites o fechas? 🌿`;
   }
 
-  if (text.includes('fotos') || text.includes('foto') || text.includes('imagenes') || text.includes('imagen') || text.includes('ver fotos')) {
+  // "foto"/"imagen" NO debe secuestrar mensajes sobre comprobantes de pago
+  const mentionsPaymentProof = text.includes('comprobante') || text.includes('transferencia') || text.includes('pago') || text.includes('deposito') || text.includes('ticket') || text.includes('recibo');
+  if (!mentionsPaymentProof && (text.includes('fotos') || text.includes('foto') || text.includes('imagenes') || text.includes('imagen') || text.includes('ver fotos'))) {
     const roomNames = ['flor de liz', 'lindavista', 'lajas', 'jungla', 'lirios', 'orquideas', 'helechos', 'bromelias'];
     if (roomNames.some(r => text.includes(r))) {
       const matched = ROOMS.find(r => normalizeText(r.name).includes(roomNames.find(rn => text.includes(rn))));
@@ -263,7 +290,7 @@ function getDeterministicResponse(userText = '', session = {}) {
     if (found.length >= 2) {
       const rooms = found.map(name => ROOMS.find(r => normalizeText(r.name).includes(name))).filter(Boolean);
       if (rooms.length >= 2) {
-        const comparison = rooms.map(r => `*${r.name}* (${r.category})\n"${r.description}"\n💰 $${r.price_2.toLocaleString('es-MX')} (2) / $${r.price_3_4.toLocaleString('es-MX')} (3-4)\n✨ ${r.highlights.join(' · ')}\n🔗 ${r.url}`).join('\n\n');
+        const comparison = rooms.map(r => `*${r.name}* (${r.category})\n"${r.description}"\n💰 $${r.price_2.toLocaleString('es-MX')} (2 personas)${r.price_3_4 ? ` / $${r.price_3_4.toLocaleString('es-MX')} (3-4)` : ' · solo 2 personas'}\n✨ ${r.highlights.join(' · ')}\n🔗 ${r.url}`).join('\n\n');
         return `Aquí está la comparación:\n\n${comparison}\n\n¿Cuál te atrae más? ✨`;
       }
     }
@@ -289,7 +316,8 @@ function extractDates(text = '') {
     if (!m) continue;
     const day = Number(m[1]);
     const month = Number(m[2]);
-    const year = Number(m[3] || nowYear);
+    let year = m[3] ? Number(m[3]) : nowYear;
+    if (year < 100) year += 2000; // "26" → 2026, no año 26
     if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
       out.push(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
     }
@@ -376,6 +404,12 @@ function normalizeText(value = '') {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
+}
+
+// Compara ids/nombres de habitaci\u00f3n tolerando guiones y el prefijo "suite"
+// (Claude a veces manda 'suite-jungla' aunque el id oficial sea 'jungla').
+function roomKeyNorm(value = '') {
+  return normalizeText(String(value).replace(/-/g, ' ')).replace(/^suite\s+/, '').trim();
 }
 
 function getMexicoCityNowData() {
@@ -706,9 +740,22 @@ async function executeTool(toolName, toolInput, userId, userName) {
 
     if (toolName === 'get_price') {
       const { room_id, checkin, checkout, guests = 2 } = toolInput;
-      const room = ROOMS.find(r => r.id === room_id || normalizeText(r.name) === normalizeText(room_id));
+      const room = ROOMS.find(r => r.id === room_id || roomKeyNorm(r.id) === roomKeyNorm(room_id) || roomKeyNorm(r.name) === roomKeyNorm(room_id));
+      if (!room) {
+        return {
+          error: 'room_not_found',
+          message: `No existe ninguna habitación "${room_id}". No inventes el precio: usa uno de estos IDs oficiales y vuelve a consultar.`,
+          valid_room_ids: ROOMS.map(r => r.id)
+        };
+      }
       const g = Number(guests);
-      const pricePerNight = room ? getRoomPricePerNight(room, g) : 1500;
+      if (g > room.max_occupancy) {
+        return {
+          error: 'exceeds_capacity',
+          message: `${room.name} admite máximo ${room.max_occupancy} personas (consultaste ${g}). Ofrece otra habitación o divide al grupo en más habitaciones.`
+        };
+      }
+      const pricePerNight = getRoomPricePerNight(room, g);
       const nights = checkin && checkout
         ? Math.max(1, Math.round((new Date(checkout) - new Date(checkin)) / 86400000))
         : 1;
@@ -753,6 +800,15 @@ async function executeTool(toolName, toolInput, userId, userName) {
       const checkin = (session.checkin && rawCheckin !== session.checkin) ? session.checkin : rawCheckin;
       const checkout = (session.checkout && rawCheckout !== session.checkout) ? session.checkout : rawCheckout;
 
+      // Noches SIEMPRE recalculadas de las fechas finales — el precio debe corresponder
+      // a las fechas que quedan guardadas, no al número de noches que diga Claude.
+      const nightsFromDates = (checkin && checkout)
+        ? Math.round((new Date(`${checkout}T12:00:00`) - new Date(`${checkin}T12:00:00`)) / 86400000)
+        : null;
+      const nightsFinal = (Number.isFinite(nightsFromDates) && nightsFromDates > 0)
+        ? nightsFromDates
+        : Math.max(1, Number(nights || 1));
+
       // Guardar datos del huésped en sesión (incluyendo folio cuando se cree)
       updateSession(userId, {
         checkin, checkout,
@@ -765,11 +821,13 @@ async function executeTool(toolName, toolInput, userId, userName) {
         // Buscar por id exacto o por nombre normalizado (ej: 'suite-jungla' → 'jungla')
         const known = ROOMS.find(k =>
           k.id === r.room_id ||
-          k.id === r.room_id?.replace(/^suite-/, '') ||
-          normalizeText(k.name) === normalizeText(r.room_name || '')
+          roomKeyNorm(k.id) === roomKeyNorm(r.room_id || '') ||
+          roomKeyNorm(k.name) === roomKeyNorm(r.room_id || '') ||
+          roomKeyNorm(k.name) === roomKeyNorm(r.room_name || '') ||
+          roomKeyNorm(k.id) === roomKeyNorm(r.room_name || '')
         );
         const g = Number(r.guests || 2);
-        const nightsNum = Number(nights || 1);
+        const nightsNum = nightsFinal;
         const pricePerNight = known ? getRoomPricePerNight(known, g) : null;
         // Sanity check: precio máximo razonable por habitación por estancia = $99,999
         const rawPrice = pricePerNight ? pricePerNight * nightsNum : Number(r.price || 0);
@@ -808,12 +866,12 @@ async function executeTool(toolName, toolInput, userId, userName) {
       const officialTotal = roomsTotal + toursTotal;
 
       // Anticipo: si Claude no lo envía, calcular 50% para estancias de 2+ noches
-      // (política del hotel); pago completo para 1 noche.
-      const nightsForDeposit = Number(nights || 1);
-      const defaultDeposit = nightsForDeposit >= 2 ? Math.round(officialTotal * 0.5) : officialTotal;
-      const depositFinal = (deposit_amount != null && Number(deposit_amount) > 0)
-        ? Number(deposit_amount)
-        : defaultDeposit;
+      // (política del hotel); pago completo para 1 noche. Nunca mayor al total.
+      const defaultDeposit = nightsFinal >= 2 ? Math.round(officialTotal * 0.5) : officialTotal;
+      const depositFinal = Math.min(
+        officialTotal,
+        (deposit_amount != null && Number(deposit_amount) > 0) ? Number(deposit_amount) : defaultDeposit
+      );
 
       const quote = createQuote({
         userId, userName,
@@ -822,7 +880,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
         howFound: how_found,
         rooms: resolvedRooms,
         tours: resolvedTours,
-        checkin, checkout, nights,
+        checkin, checkout, nights: nightsFinal,
         roomsTotal,
         toursTotal,
         totalPrice: officialTotal,
@@ -889,7 +947,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
               suite: suiteNames,
               checkin,
               checkout,
-              noches: Number(nights) || 2,
+              noches: nightsFinal,
               precioTotal: officialTotal,
               notas: `Cotización generada por WhatsApp · Folio WA: ${quote.folio}`,
             })
@@ -923,7 +981,11 @@ async function executeTool(toolName, toolInput, userId, userName) {
         ...quote,
         rooms: resolvedRooms,
         tours: resolvedTours,
-        temporaryBlock,
+        // Sin bloqueo confirmado NO entregar expiración/duración — Claude no debe
+        // decirle al cliente "queda bloqueada 3 horas" si el bloqueo falló.
+        temporaryBlock: blockConfirmed
+          ? temporaryBlock
+          : { ...temporaryBlock, success: false, expiresAt: null, durationMinutes: 0 },
         blockConfirmed,
         ...(blockConfirmed ? {} : {
           block_warning: 'No se pudo asegurar el bloqueo de la(s) suite(s). Aún no confirmes disponibilidad como garantizada: pide al cliente que espere validación del equipo antes de pagar.'

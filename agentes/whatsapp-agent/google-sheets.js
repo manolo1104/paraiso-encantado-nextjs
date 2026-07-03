@@ -170,16 +170,15 @@ function parseDateValue(value = '') {
   if (!raw) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
 
-  const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (slashMatch) {
-    const [, day, month, year] = slashMatch;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  }
-
-  const dashMatch = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if (dashMatch) {
-    const [, day, month, year] = dashMatch;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  // D/M/YYYY (formato MX). Si el "mes" es >12 y el "día" ≤12, era formato US (M/D) — corregir.
+  const dmyMatch = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (dmyMatch) {
+    let day = Number(dmyMatch[1]);
+    let month = Number(dmyMatch[2]);
+    const year = dmyMatch[3];
+    if (month > 12 && day <= 12) [day, month] = [month, day];
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
 
   const date = new Date(raw);
@@ -205,13 +204,16 @@ function isInactiveStatus(status = '') {
 function roomMatchesCell(room, cellValue = '') {
   const simplifyRoomText = (value = '') => {
     return normalizeText(value)
+      .replace(/\b\d+\s*personas?\b/g, ' ') // quitar sufijo "(2 personas)" — su número NO identifica la habitación
       .replace(/\bii\b/g, '2')
       .replace(/\biii\b/g, '3')
       .replace(/\bi\b/g, '1')
+      .replace(/\blis\b/g, 'liz') // "Flor de Lis" ≡ "Flor de Liz" (variante frecuente)
       .replace(/\b(suite|habitacion|habitaciones|familiar|room)\b/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   };
+  const squash = (s = '') => s.replace(/\s+/g, '');
 
   const cell = simplifyRoomText(cellValue);
   if (!cell) return false;
@@ -221,13 +223,28 @@ function roomMatchesCell(room, cellValue = '') {
     .map(simplifyRoomText)
     .filter(Boolean);
 
-  return candidates.some(candidate => {
-    if (cell.includes(candidate) || candidate.includes(cell)) return true;
+  const cellTokens = new Set(cell.split(' ').filter(Boolean));
+  const cellNumbers = [...cellTokens].filter(t => /^\d+$/.test(t));
 
-    const cellTokens = new Set(cell.split(' ').filter(Boolean));
-    const candidateTokens = candidate.split(' ').filter(Boolean);
-    const overlap = candidateTokens.filter(t => cellTokens.has(t)).length;
-    return overlap >= Math.min(2, candidateTokens.length);
+  return candidates.some(candidate => {
+    // Igualdad directa o sin espacios ("linda vista" ≡ "lindavista")
+    if (cell === candidate || squash(cell) === squash(candidate)) return true;
+
+    const candTokens = candidate.split(' ').filter(Boolean);
+    const candNumbers = candTokens.filter(t => /^\d+$/.test(t));
+
+    // El número identifica a las hermanas (Lirios 1 vs Lirios 2, Flor de Liz 1 vs 2):
+    // si ambos lados tienen número y no coincide, NO es la misma habitación.
+    if (candNumbers.length && cellNumbers.length && !candNumbers.every(n => cellNumbers.includes(n))) {
+      return false;
+    }
+
+    // Contención: una celda ambigua ("Lirios") bloquea a ambas hermanas — sesgo anti-sobreventa
+    if (cell.includes(candidate) || candidate.includes(cell)) return true;
+    if (squash(cell).includes(squash(candidate)) || squash(candidate).includes(squash(cell))) return true;
+
+    // Todos los tokens del candidato presentes en la celda
+    return candTokens.every(t => cellTokens.has(t));
   });
 }
 
@@ -374,7 +391,16 @@ function parseSheetReservations(values) {
     checkout: parseDateValue(row[checkoutIndex]),
     status: statusIndex >= 0 ? (row[statusIndex] || '') : '',
     folio: folioIndex >= 0 ? (row[folioIndex] || '') : ''
-  })).filter(item => item.room && item.checkin && item.checkout && !isInactiveStatus(item.status));
+  })).filter(item => {
+    const active = !isInactiveStatus(item.status);
+    const ok = item.room && item.checkin && item.checkout && active;
+    // Una reserva activa con fecha ilegible quedaría INVISIBLE para el bot (riesgo de
+    // sobreventa) — avisar en logs para que se corrija la celda en la hoja.
+    if (!ok && item.room && active && (!item.checkin || !item.checkout)) {
+      console.warn(`⚠️ Reserva ignorada por fecha ilegible — fila ${item.rowNumber} (${item.room}). Corrige la fecha en la hoja.`);
+    }
+    return ok;
+  });
 }
 
 function parseDisponibilidadBlocks(values) {
@@ -407,7 +433,7 @@ function parseDisponibilidadBlocks(values) {
         const checkin = day;
         const d = new Date(`${day}T00:00:00`);
         d.setDate(d.getDate() + 1);
-        const checkout = d.toISOString().slice(0, 10);
+        const checkout = ymdLocal(d);
 
         blocks.push({
           room: roomHeader,
@@ -519,8 +545,10 @@ export async function getUnavailableRoomsFromGoogleSheet({ checkin, checkout, re
   try {
     const dispValues = await getSheetValues(dispTab);
     tempBlocks = parseDisponibilidadBlocks(dispValues);
-  } catch {
-    // Tab no existe o no configurado — ignorar silenciosamente
+  } catch (dispErr) {
+    // Tab no existe o falló la lectura — seguir solo con Reservas, pero dejar rastro:
+    // si esto falla seguido, los estados RESERVADO de la matriz se están ignorando.
+    console.warn(`⚠️ No se pudo leer la pestaña "${dispTab}":`, String(dispErr?.message || dispErr).split('\n')[0]);
   }
 
   const allBlocks = [...reservations, ...tempBlocks];
@@ -557,6 +585,17 @@ export async function appendTempBlockToSheet({ room, checkin, checkout, folio, s
         headers = (data.values || [])[0] || [];
       }
     } catch { /* ignorar */ }
+
+    // Si la pestaña es formato MATRIZ (col Fecha + una columna por habitación),
+    // una fila estilo lista sería basura ilegible: no escribir nada y avisar.
+    // El bloqueo real lo maneja el backend (/api/create-temporary-block).
+    const fechaIdx = findHeaderIndex(headers, ['fecha', 'date', 'dia', 'día']);
+    if (fechaIdx >= 0 && headers.length >= 3) {
+      return {
+        success: false,
+        reason: 'La pestaña Disponibilidad es formato matriz — el bloqueo temporal se maneja solo vía backend.'
+      };
+    }
 
     let row;
     if (headers.length > 0) {
@@ -621,8 +660,14 @@ export async function getReservationByFolioFromSheet(folio) {
       return idx >= 0 ? (row[idx] || '') : '';
     };
 
-    const totalPrice  = Number(get(['total', 'monto'])) || 0;
-    const depositPaid = Number(get(['anticipo', 'deposito', 'pago recibido', 'pago'])) || totalPrice;
+    // Los montos pueden venir como "$4,500 MXN" — extraer solo el número
+    const moneyToNumber = (v) => {
+      const n = Number(String(v ?? '').replace(/[^\d.]/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    };
+    const totalPrice  = moneyToNumber(get(['total', 'monto']));
+    const depositRaw  = get(['anticipo', 'deposito', 'pago recibido', 'pago']);
+    const depositPaid = String(depositRaw).trim() ? moneyToNumber(depositRaw) : totalPrice;
     const pending     = Math.max(0, totalPrice - depositPaid);
 
     return {
@@ -658,6 +703,7 @@ export async function findAlternativeDates(requestedCheckin, requestedCheckout, 
 
     const nights = Math.max(1, Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24)));
     const alternatives = [];
+    const todayMx = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Mexico_City' });
 
     for (let dayOffset = -daysBuffer; dayOffset <= daysBuffer; dayOffset++) {
       if (dayOffset === 0) continue;
@@ -669,6 +715,9 @@ export async function findAlternativeDates(requestedCheckin, requestedCheckout, 
 
       const altCheckinStr = ymdLocal(altCheckin);
       const altCheckoutStr = ymdLocal(altCheckout);
+
+      // Nunca sugerir fechas de llegada en el pasado
+      if (altCheckinStr < todayMx) continue;
 
       try {
         const availability = await getUnavailableRoomsFromGoogleSheet({
@@ -711,12 +760,13 @@ export async function findAlternativeDates(requestedCheckin, requestedCheckout, 
       }
     }
 
+    const topAlternatives = alternatives.slice(0, 3);
     return {
-      success: alternatives.length > 0,
-      alternatives: alternatives.slice(0, 3),
+      success: topAlternatives.length > 0,
+      alternatives: topAlternatives,
       originalRequest: { checkin: requestedCheckin, checkout: requestedCheckout },
-      message: alternatives.length > 0
-        ? `Se encontraron ${alternatives.length} alternativas cercanas.`
+      message: topAlternatives.length > 0
+        ? `Se encontraron ${topAlternatives.length} alternativas cercanas.`
         : 'No se encontraron fechas cercanas con disponibilidad.'
     };
   } catch (err) {

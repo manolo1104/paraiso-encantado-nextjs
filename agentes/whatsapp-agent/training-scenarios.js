@@ -125,7 +125,7 @@ export const TRAINING_SCENARIOS = [
     steps: [
       {
         user: 'Somos 18 personas, ¿pueden darnos desayuno buffet?',
-        expectAll: ['30 personas o más|30 personas|mínimo 30', 'equipo|opciones|revisar'],
+        expectAll: ['20 personas|mínimo 20|a partir de 20', 'carta|restaurante|Papán'],
         forbid: ['\\*\\*']
       }
     ]
