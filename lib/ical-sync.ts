@@ -76,6 +76,15 @@ export async function runIcalSync(): Promise<{
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const text = await res.text();
+
+      // Validar que la respuesta sea REALMENTE un iCal antes de tocar los bloqueos.
+      // Si la OTA responde 200 con HTML (página de mantenimiento/login), un feed
+      // sin VCALENDAR daría 0 eventos y borraríamos todos los bloqueos de ese
+      // cuarto → sobreventa. En ese caso conservamos los bloqueos y marcamos error.
+      if (!/BEGIN:VCALENDAR/i.test(text)) {
+        throw new Error('Respuesta no es un iCal válido (sin VCALENDAR) — se conservan los bloqueos previos');
+      }
+
       const events = parseIcal(text);
 
       const dateRanges = events

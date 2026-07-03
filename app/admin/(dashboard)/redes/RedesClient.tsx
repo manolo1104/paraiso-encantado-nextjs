@@ -17,20 +17,26 @@ export default function RedesClient({ initialMetricas }: Props) {
   const [loading, setLoading] = useState(false);
 
   function set(k: string, v: string | number) { setForm(f => ({ ...f, [k]: v })); }
+  // Campo numérico: un input vacío da NaN con parseInt → se guardaba celda vacía.
+  function setNum(k: string, raw: string) { const n = parseInt(raw, 10); set(k, Number.isFinite(n) ? n : 0); }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     try {
-      await fetch('/api/admin/redes', {
+      const save = await fetch('/api/admin/redes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
+      if (!save.ok) { alert('No se pudieron guardar las métricas. Intenta de nuevo.'); return; }
       const res = await fetch('/api/admin/redes');
       if (res.ok) setMetricas(await res.json());
       setShowForm(false);
       setForm(EMPTY);
+    } catch {
+      alert('No se pudieron guardar las métricas. Revisa tu conexión.');
     } finally { setLoading(false); }
   }
 
@@ -54,11 +60,11 @@ export default function RedesClient({ initialMetricas }: Props) {
         <form onSubmit={handleSave} className={styles.formCard}>
           <h2 className={styles.formTitle}>Nuevas métricas de hoy</h2>
           <div className={styles.formGrid}>
-            <label className={styles.field}><span>IG — Seguidores</span><input type="number" min={0} value={form.ig_seguidores} onChange={e => set('ig_seguidores', parseInt(e.target.value))} /></label>
-            <label className={styles.field}><span>IG — Alcance semanal</span><input type="number" min={0} value={form.ig_alcance} onChange={e => set('ig_alcance', parseInt(e.target.value))} /></label>
-            <label className={styles.field}><span>IG — Interacciones</span><input type="number" min={0} value={form.ig_interacciones} onChange={e => set('ig_interacciones', parseInt(e.target.value))} /></label>
-            <label className={styles.field}><span>FB — Seguidores</span><input type="number" min={0} value={form.fb_seguidores} onChange={e => set('fb_seguidores', parseInt(e.target.value))} /></label>
-            <label className={styles.field}><span>FB — Alcance semanal</span><input type="number" min={0} value={form.fb_alcance} onChange={e => set('fb_alcance', parseInt(e.target.value))} /></label>
+            <label className={styles.field}><span>IG — Seguidores</span><input type="number" min={0} value={form.ig_seguidores} onChange={e => setNum('ig_seguidores', e.target.value)} /></label>
+            <label className={styles.field}><span>IG — Alcance semanal</span><input type="number" min={0} value={form.ig_alcance} onChange={e => setNum('ig_alcance', e.target.value)} /></label>
+            <label className={styles.field}><span>IG — Interacciones</span><input type="number" min={0} value={form.ig_interacciones} onChange={e => setNum('ig_interacciones', e.target.value)} /></label>
+            <label className={styles.field}><span>FB — Seguidores</span><input type="number" min={0} value={form.fb_seguidores} onChange={e => setNum('fb_seguidores', e.target.value)} /></label>
+            <label className={styles.field}><span>FB — Alcance semanal</span><input type="number" min={0} value={form.fb_alcance} onChange={e => setNum('fb_alcance', e.target.value)} /></label>
           </div>
           <label className={styles.field}><span>Notas (mejores posts, campañas…)</span><textarea rows={2} value={form.notas} onChange={e => set('notas', e.target.value)} /></label>
           <div className={styles.formActions}>

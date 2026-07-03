@@ -102,4 +102,4 @@ Domain verification file: `app/.well-known/apple-developer-merchantid-domain-ass
 
 ## Key environment variables
 
-`GOOGLE_SHEETS_CREDENTIALS` (JSON), `GOOGLE_SHEET_ID`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `JWT_SECRET`, `CRON_SECRET`, `ANTHROPIC_API_KEY`, `APPLE_PAY_DOMAIN_ASSOC` (optional, for Apple Pay domain verification).
+`GOOGLE_SHEETS_CREDENTIALS` (JSON), `GOOGLE_SHEET_ID`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `ADMIN_JWT_SECRET` (JWT del admin — NO `JWT_SECRET`), `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` (login admin), `AGENT_API_TOKEN` (bot WhatsApp), `CRON_SECRET`, `ANTHROPIC_API_KEY`, `APPLE_PAY_DOMAIN_ASSOC` (optional, for Apple Pay domain verification).

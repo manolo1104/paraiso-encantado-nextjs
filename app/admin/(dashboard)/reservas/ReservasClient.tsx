@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
@@ -58,6 +58,7 @@ function daysToArrival(checkin: string, today: string): number {
 }
 
 function DaysChip({ days }: { days: number }) {
+  if (!Number.isFinite(days)) return <span className={styles.daysChip} style={{ background: '#f9fafb', color: '#aaa' }}>—</span>;
   if (days < 0)  return <span className={styles.daysChip} style={{ background: '#f0f0f0', color: '#aaa' }}>Pasada</span>;
   if (days === 0) return <span className={styles.daysChip} style={{ background: '#e6f4e8', color: '#1a6b22', fontWeight: 700 }}>Hoy</span>;
   if (days === 1) return <span className={styles.daysChip} style={{ background: '#fff3d4', color: '#7a5a00', fontWeight: 700 }}>Mañana</span>;
@@ -86,9 +87,15 @@ export default function ReservasClient({ initialBookings }: Props) {
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   // Fecha de HOY en la zona horaria del hotel (no UTC). 'en-CA' da formato YYYY-MM-DD.
-  // Antes usaba toISOString() (UTC), que de noche en México adelantaba un día y
-  // desfasaba los estados operativos (Hoy/Mañana/En casa).
-  const today = useMemo(() => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }), []);
+  // En estado (no useMemo congelado): si se deja la pestaña abierta toda la noche,
+  // un temporizador la actualiza al cruzar la medianoche y los estados se recalculan.
+  const [today, setToday] = useState(() => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setToday(new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }));
+    }, 5 * 60 * 1000); // revisa cada 5 min
+    return () => clearInterval(id);
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();

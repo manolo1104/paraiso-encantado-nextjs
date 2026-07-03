@@ -51,6 +51,7 @@ function saveChatHistory(msgs: ChatMsg[]) {
 export default function InsightsClient() {
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -67,9 +68,13 @@ export default function InsightsClient() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await fetch('/api/admin/insights');
       if (res.ok) setData(await res.json());
+      else setLoadError(true);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -144,6 +149,17 @@ export default function InsightsClient() {
     } finally {
       setStreaming(false);
     }
+  }
+
+  if (!data && loadError) {
+    return (
+      <div className={styles.loadingWrap}>
+        <p>No se pudieron cargar los datos del hotel.</p>
+        <button onClick={load} style={{ marginTop: 12, padding: '8px 20px', borderRadius: 8, border: '1px solid #2d4a3e', background: '#2d4a3e', color: '#fff', cursor: 'pointer' }}>
+          Reintentar
+        </button>
+      </div>
+    );
   }
 
   if (loading || !data) {

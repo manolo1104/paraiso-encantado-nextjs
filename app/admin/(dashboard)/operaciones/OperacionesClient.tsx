@@ -37,17 +37,21 @@ function ChecklistModal({ suite, onClose, onSaved }: {
   function checkAll() { setChecked(new Set(items.map(i => i.id))); }
 
   async function handleSave(estado: 'COMPLETO' | 'INCOMPLETO') {
+    if (loading) return;
     setLoading(true);
     try {
       const completados = items.filter(i => checked.has(i.id)).map(i => i.label);
       const pendientes = items.filter(i => !checked.has(i.id)).map(i => i.label);
-      await fetch('/api/admin/operaciones/limpieza', {
+      const res = await fetch('/api/admin/operaciones/limpieza', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ suite, turno, personal, itemsCompletados: completados, itemsPendientes: pendientes, observaciones, estado }),
       });
+      if (!res.ok) { alert('No se pudo guardar el checklist. Intenta de nuevo.'); return; }
       onSaved();
       onClose();
+    } catch {
+      alert('No se pudo guardar el checklist. Revisa tu conexión.');
     } finally { setLoading(false); }
   }
 
@@ -108,13 +112,20 @@ function AddTaskModal({ onClose, onSaved, suites }: { onClose: () => void; onSav
   function set(k: string, v: string | number) { setForm(f => ({ ...f, [k]: v })); }
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-    await fetch('/api/admin/operaciones/mantenimiento', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    setLoading(false);
-    onSaved(); onClose();
+    try {
+      const res = await fetch('/api/admin/operaciones/mantenimiento', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) { alert('No se pudo agregar la tarea. Intenta de nuevo.'); return; }
+      onSaved(); onClose();
+    } catch {
+      alert('No se pudo agregar la tarea. Revisa tu conexión.');
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -175,14 +186,21 @@ export default function OperacionesClient({ initialCleaning, initialMaintenance,
   }, []);
 
   async function markDone(suite: string, tarea: string) {
-    const personal = prompt('¿Quién realizó el mantenimiento?') || '';
+    // Si el usuario cancela el diálogo (null), abortar: antes se marcaba la tarea
+    // como hecha igualmente aunque no se hubiera realizado.
+    const personal = prompt('¿Quién realizó el mantenimiento?');
+    if (personal === null) return;
     setLoading(true);
-    await fetch('/api/admin/operaciones/mantenimiento', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ suite, tarea, completadoPor: personal }),
-    });
-    await refreshMaintenance();
-    setLoading(false);
+    try {
+      const res = await fetch('/api/admin/operaciones/mantenimiento', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suite, tarea, completadoPor: personal }),
+      });
+      if (!res.ok) { alert('No se pudo registrar el mantenimiento. Intenta de nuevo.'); return; }
+      await refreshMaintenance();
+    } finally {
+      setLoading(false);
+    }
   }
 
   function getSuiteStatus(suite: string) {

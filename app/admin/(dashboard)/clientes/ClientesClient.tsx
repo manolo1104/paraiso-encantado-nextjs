@@ -3,13 +3,12 @@
 import { useState, useMemo } from 'react';
 import { Search, MessageSquare, X, Loader2, Send, Star, History, StickyNote } from 'lucide-react';
 import type { GuestProfile } from '@/lib/admin/sheets-admin';
+import { normalizeMxPhone } from '@/lib/phone';
 import styles from './clientes.module.css';
-
-const WA = '524891007679';
 
 interface Props { initialClientes: GuestProfile[] }
 
-function ClienteDrawer({ cliente, onClose }: { cliente: GuestProfile; onClose: () => void }) {
+function ClienteDrawer({ cliente, onClose, onNotasSaved }: { cliente: GuestProfile; onClose: () => void; onNotasSaved: (email: string, notas: string) => void }) {
   const [notas, setNotas] = useState(cliente.notas || '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -18,15 +17,20 @@ function ClienteDrawer({ cliente, onClose }: { cliente: GuestProfile; onClose: (
   const [activeTab, setActiveTab] = useState<'perfil' | 'historial' | 'notas'>('perfil');
 
   async function saveNotas() {
+    if (saving) return;
     setSaving(true);
     try {
-      await fetch('/api/admin/clientes', {
+      const res = await fetch('/api/admin/clientes', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cliente.email, notas }),
       });
+      if (!res.ok) { alert('No se pudo guardar la nota. Intenta de nuevo.'); return; }
+      onNotasSaved(cliente.email, notas); // refleja el cambio en la lista sin recargar
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch {
+      alert('No se pudo guardar la nota. Revisa tu conexión.');
     } finally { setSaving(false); }
   }
 
@@ -51,7 +55,8 @@ function ClienteDrawer({ cliente, onClose }: { cliente: GuestProfile; onClose: (
   }
 
   function openWA() {
-    const num = cliente.telefono?.replace(/\D/g, '') || WA;
+    const num = normalizeMxPhone(cliente.telefono);
+    if (!num) { alert('Este cliente no tiene un teléfono válido registrado.'); return; }
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(`Hola ${cliente.nombre.split(' ')[0]}, te contactamos desde Paraíso Encantado 🌿`)}`, '_blank');
   }
 
@@ -173,9 +178,16 @@ function ClienteDrawer({ cliente, onClose }: { cliente: GuestProfile; onClose: (
 }
 
 export default function ClientesClient({ initialClientes }: Props) {
-  const [clientes] = useState(initialClientes);
+  const [clientes, setClientes] = useState(initialClientes);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<GuestProfile | null>(null);
+
+  // Refleja una nota recién guardada en la lista y en el drawer, sin recargar
+  // la página (antes la nota desaparecía de la vista aunque sí se guardó).
+  function handleNotasSaved(email: string, notas: string) {
+    setClientes(prev => prev.map(c => c.email === email ? { ...c, notas } : c));
+    setSelected(prev => prev && prev.email === email ? { ...prev, notas } : prev);
+  }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -233,7 +245,7 @@ export default function ClientesClient({ initialClientes }: Props) {
         </table>
       </div>
 
-      {selected && <ClienteDrawer cliente={selected} onClose={() => setSelected(null)} />}
+      {selected && <ClienteDrawer cliente={selected} onClose={() => setSelected(null)} onNotasSaved={handleNotasSaved} />}
     </div>
   );
 }

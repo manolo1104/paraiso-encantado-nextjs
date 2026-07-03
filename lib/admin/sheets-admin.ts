@@ -147,7 +147,9 @@ export interface GuestProfile {
 
 function parseTotal(raw: string | number): number {
   if (typeof raw === 'number') return raw;
-  return parseInt(String(raw).replace(/[^0-9]/g, ''), 10) || 0;
+  // Preservar el punto decimal: "$8,555.50 MXN" → 8555.50 (antes daba 855550).
+  const n = parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : 0;
 }
 
 // ── RESERVAS ─────────────────────────────────────────────────────────────────
@@ -500,13 +502,15 @@ export async function buildCRM(bookings: AdminBooking[]): Promise<GuestProfile[]
       });
     }
     const g = map.get(key)!;
-    g.totalReservas++;
-    g.totalGastado += b.total;
-    if (!g.ultimaEstancia || b.checkin > g.ultimaEstancia) g.ultimaEstancia = b.checkin;
-    if (b.habitaciones && !g.suitesFavoritas.includes(b.habitaciones)) {
-      g.suitesFavoritas.push(b.habitaciones);
-    }
+    // Las reservas CANCELADAS no cuentan para gasto/estadías/ranking del CRM
+    // (antes inflaban "total gastado" y el estatus VIP, contradiciendo lealtad).
     if (b.estado !== 'CANCELADA') {
+      g.totalReservas++;
+      g.totalGastado += b.total;
+      if (!g.ultimaEstancia || b.checkin > g.ultimaEstancia) g.ultimaEstancia = b.checkin;
+      if (b.habitaciones && !g.suitesFavoritas.includes(b.habitaciones)) {
+        g.suitesFavoritas.push(b.habitaciones);
+      }
       g.historial.push({
         confirmacion: b.confirmacion,
         checkin: b.checkin,
@@ -755,12 +759,15 @@ export async function saveRedMetrica(data: Omit<RedMetrica, 'fecha'>): Promise<v
   const client = await getSheetsClient();
   if (!client) return;
   await ensureSheet(METRICAS_REDES_SHEET, ['Fecha','IG_Seguidores','IG_Alcance','IG_Interacciones','FB_Seguidores','FB_Alcance','Notas']);
-  const fecha = new Date().toLocaleDateString('es-MX');
+  // Fecha en hora de México (antes toLocaleDateString sin zona → saltaba de día
+  // tras las 6pm). RAW para que las notas de texto libre no se interpreten como
+  // fórmula si empiezan con "=".
+  const fecha = new Date().toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City' });
   await sheetsCall(() =>
     client.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: `${METRICAS_REDES_SHEET}!A:G`,
-      valueInputOption: 'USER_ENTERED',
+      valueInputOption: 'RAW',
       requestBody: {
         values: [[
           fecha, data.ig_seguidores, data.ig_alcance, data.ig_interacciones,
@@ -805,7 +812,9 @@ export async function getAllOTACalendars(): Promise<OTACalendar[]> {
         roomName: r[1] as string,
         platform: (r[2] || 'booking_com') as OTACalendar['platform'],
         icalUrl: r[3] || '',
-        active: r[4] !== 'false',
+        // Google Sheets con USER_ENTERED convierte 'false' → booleano y lo devuelve
+        // como 'FALSE'; comparar en minúsculas para que "pausar" sí funcione.
+        active: String(r[4] ?? '').toLowerCase() !== 'false',
         lastSync: r[5] || '',
         status: (r[6] || 'pending') as OTACalendar['status'],
         blocksFound: parseInt(r[7]) || 0,

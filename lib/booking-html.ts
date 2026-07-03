@@ -55,9 +55,24 @@ export interface BookingHtmlParams {
   compact?: boolean;      // elimina hero+imágenes → una sola página al imprimir
 }
 
+// Escapa datos que provienen del huésped (nombre, notas, nombres de suite).
+// Este HTML se abre con document.write en el mismo origen del admin, así que un
+// nombre con <script>/<img onerror> ejecutaría JS con la sesión del dueño (XSS).
+function esc(s: unknown): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export function buildBookingHtml(p: BookingHtmlParams): string {
   const anticipo = p.anticipo || 0;
   const restante = p.restante ?? (p.total - anticipo);
+  const cliente = esc(p.cliente);
+  const suites = p.suites.map(esc);
+  const notasClienteText = p.notasClienteText ? esc(p.notasClienteText) : p.notasClienteText;
 
   const TEMPLATE_CSS = `
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -186,8 +201,7 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
 @media print { body { background: #fff; padding: 0; } .wrap { box-shadow: none; max-width: 100%; } .upsell { margin: 0; } .social-block { margin: 0; } @page { size: letter; margin: 0.5in; } }
 `;
 
-  const suites = p.suites;
-  const tourItems = p.tourItems ?? [];
+  const tourItems = (p.tourItems ?? []).map(t => ({ ...t, nombre: esc(t.nombre) }));
   const toursTotal = tourItems.reduce((s, t) => s + t.precio * t.personas, 0);
 
   // Compact-mode CSS — se añade sólo cuando compact:true
@@ -292,7 +306,7 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
 
     <div class="greeting-block">
       <div class="gold-rule"></div>
-      <h2 class="greeting-name">Bienvenido/a, <em>${p.cliente}.</em></h2>
+      <h2 class="greeting-name">Bienvenido/a, <em>${cliente}.</em></h2>
       <p class="greeting-copy">Todo está listo. Tu reserva ha sido confirmada y el equipo de Paraíso Encantado ya prepara tu llegada. Pronto estarás despertando con el canto de las aves, rodeado de la selva surreal de Xilitla.</p>
     </div>
 
@@ -429,10 +443,10 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
       <a href="https://wa.me/524891007679" class="upsell-btn">Escribir<br>por WhatsApp</a>
     </div>
 
-    ${p.notasClienteText ? `
+    ${notasClienteText ? `
     <div style="padding:20px 0;border-top:1px solid #eae5d8">
       <p style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#9a9a82;margin-bottom:7px">Nota especial</p>
-      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a4e3c;line-height:1.7">${p.notasClienteText}</p>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#5a4e3c;line-height:1.7">${notasClienteText}</p>
     </div>` : ''}
 
   </div>

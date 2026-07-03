@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllQuotes, updateQuoteStatus, logAgentActivity } from '@/lib/admin/sheets-admin';
 import { buildQuoteEmailHtml } from '@/lib/email';
+import { clienteNota } from '@/lib/notas';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     checkout: quote.checkout,
     nights: quote.noches,
     total: quote.precioTotal,
-    notas: quote.notas || undefined,
+    // Solo la nota del cliente — nunca la interna ni los JSON técnicos
+    // (||INTERNO||, ||TOURS||, ||HABS||…) que iban en crudo al email.
+    notas: clienteNota(quote.notas) || undefined,
   });
 
   try {

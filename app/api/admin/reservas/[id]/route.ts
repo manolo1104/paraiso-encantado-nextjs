@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateBooking, cancelBooking, blockRooms, unblockRooms, getAllBookings } from '@/lib/admin/sheets-admin';
+import { checkAvailability } from '@/lib/sheets';
+import { splitRooms } from '@/lib/room-names';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,8 +31,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if ((roomsChanged || datesChanged) && oldRooms && oldCheckin && oldCheckout) {
     // 1. Liberar bloqueo anterior
     await unblockRooms(oldRooms, oldCheckin, oldCheckout);
-    // 2. Aplicar nuevo bloqueo
+
     if (newRooms && newCheckin && newCheckout) {
+      // 2. Verificar disponibilidad del nuevo rango ANTES de bloquear (excluyendo
+      //    esta misma reserva). Antes se bloqueaba a ciegas → sobreventa silenciosa.
+      const rooms = splitRooms(newRooms);
+      const avail = await checkAvailability(newCheckin, newCheckout, rooms, null, id);
+      if (avail.unavailableRooms.length > 0) {
+        // Rollback: restaurar el bloqueo anterior y no tocar la reserva.
+        await blockRooms(oldRooms, oldCheckin, oldCheckout);
+        return NextResponse.json(
+          { error: `${avail.unavailableRooms.join(', ')} no disponible(s) del ${newCheckin} al ${newCheckout}. La reserva no se modificó.` },
+          { status: 409 }
+        );
+      }
+      // 3. Aplicar nuevo bloqueo
       await blockRooms(newRooms, newCheckin, newCheckout);
     }
     console.log(`✅ Reasignación Disponibilidad: [${oldRooms}] → [${newRooms}]`);

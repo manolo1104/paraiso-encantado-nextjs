@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllBookings, createManualBooking } from '@/lib/admin/sheets-admin';
 import { checkAvailability } from '@/lib/sheets';
 import { checkAndEnrollLoyalty } from '@/lib/admin/loyalty';
+import { splitRooms } from '@/lib/room-names';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
@@ -27,14 +28,20 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
-    // Verificar disponibilidad en Google Sheets antes de crear
+    // Verificar disponibilidad antes de crear. El campo `habitacion` puede ser un
+    // CSV multi-cuarto ("Jungla, Suite Lajas"); hay que separarlo en nombres
+    // individuales o checkAvailability no encontraría match y saltaría el chequeo
+    // (bloqueos OTA/mantenimiento incluidos) → sobreventa.
     if (data.checkin && data.checkout && data.habitacion) {
-      const avail = await checkAvailability(data.checkin, data.checkout, [data.habitacion]);
-      if (avail.unavailableRooms.length > 0) {
-        return NextResponse.json(
-          { error: `${data.habitacion} no está disponible del ${data.checkin} al ${data.checkout}. Verifica el calendario.` },
-          { status: 409 }
-        );
+      const rooms = splitRooms(data.habitacion);
+      if (rooms.length > 0) {
+        const avail = await checkAvailability(data.checkin, data.checkout, rooms);
+        if (avail.unavailableRooms.length > 0) {
+          return NextResponse.json(
+            { error: `${avail.unavailableRooms.join(', ')} no disponible(s) del ${data.checkin} al ${data.checkout}. Verifica el calendario.` },
+            { status: 409 }
+          );
+        }
       }
     }
 

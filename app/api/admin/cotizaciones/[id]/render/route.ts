@@ -3,6 +3,8 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import { getAllQuotes } from '@/lib/admin/sheets-admin';
 import { BOOKING_ROOMS, getRoomBasePrice } from '@/lib/booking';
+import { parseNotas } from '@/lib/notas';
+import { mexicoTodayStr } from '@/lib/date-mx';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,8 +19,9 @@ function fmtDate(d: string): string {
 }
 
 function fmtToday(): string {
-  const dt = new Date();
-  return `${dt.getDate()} ${MONTHS_ES[dt.getMonth()]} ${dt.getFullYear()}`;
+  // Fecha de emisión en hora de México (antes UTC → PDF con la fecha de mañana
+  // tras las 6pm). fmtDate ya usa mediodía, así que es estable en cualquier zona.
+  return fmtDate(mexicoTodayStr());
 }
 
 function addDays(dateStr: string, days: number): string {
@@ -26,23 +29,6 @@ function addDays(dateStr: string, days: number): string {
   if (isNaN(dt.getTime())) return dateStr;
   dt.setDate(dt.getDate() + days);
   return `${dt.getDate()} ${MONTHS_ES[dt.getMonth()]} ${dt.getFullYear()}`;
-}
-
-// Parse tours from ||TOURS||[...] in notas
-function parseTours(notas: string): { nombre: string; personas: number; precio: number }[] {
-  const idx = notas.indexOf('||TOURS||');
-  if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + 9).split('||PAQUETES||')[0]); } catch { return []; }
-}
-function parsePaquetes(notas: string): { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[] {
-  const idx = notas.indexOf('||PAQUETES||');
-  if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + 12).split('||HABS||')[0]); } catch { return []; }
-}
-function parseHabs(notas: string): { suite: string; huespedes: number; precioOverride?: number }[] | null {
-  const idx = notas.indexOf('||HABS||');
-  if (idx === -1) return null;
-  try { return JSON.parse(notas.slice(idx + 8)); } catch { return null; }
 }
 
 // Category description per suite
@@ -86,11 +72,14 @@ export async function GET(
   // Parse rooms from suite string
   const roomNames = q.suite.split(',').map(r => r.replace(/\s*\([^)]*\)/g, '').trim()).filter(Boolean);
   const noches = q.noches || 1;
-  const tours = parseTours(q.notas || '');
-  const paquetes = parsePaquetes(q.notas || '');
+  // Parseo robusto y central de las notas (antes fallaba con ||HABS|| después
+  // de tours → el PDF omitía los tours pero seguía cobrándolos en el total).
+  const parsed = parseNotas(q.notas);
+  const tours = parsed.tours as { nombre: string; personas: number; precio: number }[];
+  const paquetes = parsed.paquetes as { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[];
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
-  const habsData = parseHabs(q.notas || '');
+  const habsData = (parsed.habs.length > 0 ? parsed.habs : null) as { suite: string; huespedes: number; precioOverride?: number }[] | null;
   const habsTotal = q.precioTotal - toursTotal - paquetesTotal;
   // Tarifa promedio: solo se usa como respaldo para cotizaciones viejas
   // que no guardan datos por habitación (||HABS||).
@@ -149,7 +138,9 @@ export async function GET(
   const data = {
     folio: q.id,
     fechaEmision: fmtToday(),
-    validoHasta: q.checkin ? addDays(q.checkin, 2) : addDays(new Date().toISOString().split('T')[0], 7),
+    // Válida 48 h desde la emisión (coincide con el email y WhatsApp). Antes era
+    // check-in + 2 días → una cotización para dentro de meses "no vencía nunca".
+    validoHasta: addDays(mexicoTodayStr(), 2),
     guest: {
       name:  q.cliente || '—',
       email: q.email   || '—',
@@ -179,9 +170,15 @@ export async function GET(
     return NextResponse.json({ error: 'Template no encontrado' }, { status: 500 });
   }
 
+  // Escapar `<` y `>` para que un dato del huésped con `</script>` no rompa el
+  // documento ni inyecte HTML (XSS). Usar función de reemplazo evita que `$&`/`$'`
+  // dentro del JSON se interpreten como referencias de captura.
+  const safeJson = JSON.stringify(data, null, 2)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e');
   html = html.replace(
     /<script type="application\/json" id="quote-data">[\s\S]*?<\/script>/,
-    `<script type="application/json" id="quote-data">${JSON.stringify(data, null, 2)}</script>`
+    () => `<script type="application/json" id="quote-data">${safeJson}</script>`
   );
 
   const download = new URL(_req.url).searchParams.get('download');

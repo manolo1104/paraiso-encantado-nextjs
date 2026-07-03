@@ -1,8 +1,21 @@
 import type { AdminBooking } from './sheets-admin';
+import { mexicoTodayStr, mexicoTodayParts } from '../date-mx';
 
 const TOTAL_SUITES = 13;
 const OTA_COMMISSION = 0.15; // 15% Booking.com / Airbnb
 
+// Cuántas habitaciones ocupa una reserva. El campo `habitaciones` es un CSV
+// ("Jungla (2 personas), Lirios 1 (2 personas)"); una reserva multi-cuarto
+// contaba como 1 sola suite ocupada y desinflaba la ocupación.
+function roomCount(b: AdminBooking): number {
+  if (!b.habitaciones) return 1;
+  const n = b.habitaciones.split(',').map(s => s.trim()).filter(Boolean).length;
+  return n > 0 ? n : 1;
+}
+
+// Formatea el día-calendario de una fecha anclada a medianoche UTC (así se
+// construyen `today` y los días del forecast). NO usar para "hoy" del reloj:
+// para eso está mexicoTodayStr(), que sí respeta la zona del hotel.
 function toDateStr(d: Date) {
   return d.toISOString().split('T')[0];
 }
@@ -15,7 +28,8 @@ function addDays(d: Date, n: number) {
 
 function parseTotal(raw: string | number): number {
   if (typeof raw === 'number') return raw;
-  return parseInt(String(raw).replace(/[^0-9]/g, ''), 10) || 0;
+  const n = parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : 0;
 }
 
 function isActive(b: AdminBooking): boolean {
@@ -83,12 +97,14 @@ export function calcInsights(
   bookings: AdminBooking[],
   agentMetrics: { tipo: string; fecha: string }[]
 ): InsightsData {
-  const now = new Date();
-  const todayStr = toDateStr(now);
+  const todayStr = mexicoTodayStr(); // "hoy" en hora del hotel, no UTC
   const today = new Date(todayStr + 'T00:00:00');
 
   // ── HOY ─────────────────────────────────────────────────────────────
-  const suitesOcupadasHoy = bookings.filter(b => bookingCoversDate(b, today)).length;
+  const suitesOcupadasHoy = Math.min(
+    TOTAL_SUITES,
+    bookings.filter(b => bookingCoversDate(b, today)).reduce((s, b) => s + roomCount(b), 0)
+  );
   const pctOcupacion = Math.round((suitesOcupadasHoy / TOTAL_SUITES) * 100);
 
   const checkins: TodayMovement[] = bookings
@@ -116,11 +132,10 @@ export function calcInsights(
     }));
 
   // ── MES ACTUAL ───────────────────────────────────────────────────────
-  const mesStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const mesEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const diasMes = mesEnd.getDate() === 1
-    ? new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-    : 30;
+  const { year: mxYear, month: mxMonth } = mexicoTodayParts();
+  const mesStart = new Date(mxYear, mxMonth, 1);
+  const mesEnd = new Date(mxYear, mxMonth + 1, 1);
+  const diasMes = new Date(mxYear, mxMonth + 1, 0).getDate();
 
   const bookingsMes = bookings.filter(b => {
     if (!b.checkin || !isActive(b)) return false;
@@ -129,7 +144,8 @@ export function calcInsights(
   });
 
   const ingresosMes = bookingsMes.reduce((s, b) => s + parseTotal(b.total), 0);
-  const nochesMes = bookingsMes.reduce((s, b) => s + (b.noches || calcNights(b)), 0);
+  // Noches-cuarto: noches × cuartos (una reserva de 3 suites × 2 noches = 6).
+  const nochesMes = bookingsMes.reduce((s, b) => s + (b.noches || calcNights(b)) * roomCount(b), 0);
   const nochesDisp = TOTAL_SUITES * diasMes;
   const ocupacionMes = nochesMes > 0 ? Math.round((nochesMes / nochesDisp) * 100) : 0;
   const adrMes = nochesMes > 0 ? Math.round(ingresosMes / nochesMes) : 0;
@@ -139,7 +155,10 @@ export function calcInsights(
   const DIAS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const forecast7dias: DayForecast[] = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(today, i);
-    const ocupadas = bookings.filter(b => bookingCoversDate(b, d)).length;
+    const ocupadas = Math.min(
+      TOTAL_SUITES,
+      bookings.filter(b => bookingCoversDate(b, d)).reduce((s, b) => s + roomCount(b), 0)
+    );
     return {
       fecha: toDateStr(d),
       label: i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : DIAS_ES[d.getDay()],
@@ -180,7 +199,7 @@ export function calcInsights(
     .map(([label, v]) => ({ label, ...v, color: ORIGIN_COLORS[label] }));
 
   // ── AHORRO OTAs (año corriente, reservas directas) ───────────────────
-  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const yearStart = new Date(mxYear, 0, 1);
   const bookingsYear = bookings.filter(b => {
     if (!b.checkin || !isActive(b)) return false;
     return new Date(b.checkin + 'T00:00:00') >= yearStart;

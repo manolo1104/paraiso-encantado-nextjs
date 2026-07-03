@@ -46,8 +46,10 @@ export async function GET(
     lines.push(`DTSTART;VALUE=DATE:${icalDate(b.checkin)}`);
     lines.push(`DTEND;VALUE=DATE:${icalDate(b.checkout)}`);
     lines.push(`SUMMARY:Reservado`);
-    lines.push(`DESCRIPTION:${escapeIcal(b.cliente || 'Huésped')}`);
+    // Feed PÚBLICO (lo consumen las OTAs sin token): NUNCA incluir el nombre del
+    // huésped ni datos personales — las OTAs solo necesitan las fechas para bloquear.
     lines.push(`STATUS:CONFIRMED`);
+    lines.push('TRANSP:OPAQUE');
     lines.push('END:VEVENT');
   }
 

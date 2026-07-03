@@ -7,6 +7,7 @@ import { BOOKING_ROOMS, getRoomBasePrice } from '@/lib/booking';
 import { TOURS_CATALOG, PAQUETES_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import type { TourItem } from '@/lib/booking-html';
 import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
+import { normalizeMxPhone } from '@/lib/phone';
 import styles from './Modal.module.css';
 
 const SUITES = [
@@ -62,7 +63,8 @@ function SuccessPanel({ data, onEdit, onClose }: {
       `💰 Total: $${data.total.toLocaleString('es-MX')} MXN\n\n` +
       `¡Te esperamos!`
     );
-    const tel = (data.telefono || '524891007679').replace(/\D/g, '');
+    const tel = normalizeMxPhone(data.telefono);
+    if (!tel) { alert('Esta reserva no tiene teléfono del huésped registrado.'); return; }
     window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
   }
 
@@ -138,7 +140,11 @@ interface Props {
 }
 
 export default function ReservationModal({ booking, defaultCheckin, defaultRoom, onClose, onSaved }: Props) {
-  const isEdit = !!booking;
+  // Folio de una reserva recién creada en este mismo modal: al pulsar "Editar"
+  // en el panel de éxito, el siguiente guardado debe ser PATCH (no crear otra).
+  const [savedConfirmacion, setSavedConfirmacion] = useState<string | null>(null);
+  const isEdit = !!booking || !!savedConfirmacion;
+  const editConfirmacion = booking?.confirmacion || savedConfirmacion;
 
   const [form, setForm] = useState({
     cliente: booking?.cliente || '',
@@ -376,6 +382,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return; // evita doble submit (doble clic / Enter+clic → reserva duplicada)
     if (!isEdit && availStatus === 'unavailable') {
       setError('Una o más habitaciones no están disponibles en esas fechas.');
       return;
@@ -387,7 +394,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       let notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
       if (tourItems.length > 0) notas += `${TOURS_SEP_LOCAL}${JSON.stringify(tourItems)}`;
       if (paqueteItems.length > 0) notas += `${PAQUETES_SEP_LOCAL}${JSON.stringify(paqueteItems)}`;
-      const url = isEdit ? `/api/admin/reservas/${booking!.confirmacion}` : '/api/admin/reservas';
+      const url = isEdit ? `/api/admin/reservas/${editConfirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
       const res = await fetch(url, {
         method,
@@ -400,6 +407,8 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       onSaved(); // refresh parent
 
       if (!isEdit && data.confirmacion) {
+        // Recordar el folio creado: si el usuario vuelve a "Editar", será PATCH.
+        setSavedConfirmacion(data.confirmacion);
         // Show success panel instead of closing
         setSuccessData({
           confirmacion: data.confirmacion,
@@ -448,7 +457,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
         <div className={styles.modal}>
           <SuccessPanel
             data={successData}
-            onEdit={() => setSuccessData(null)} // go back to form (will show as new, just informational)
+            onEdit={() => setSuccessData(null)} // vuelve al form ya en modo edición (PATCH sobre el folio creado)
             onClose={onClose}
           />
         </div>
@@ -477,7 +486,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       <div className={styles.modal}>
         <div className={styles.header}>
           <h2 className={styles.title}>{isEdit ? 'Editar Reserva' : 'Nueva Reserva'}</h2>
-          {isEdit && <span className={styles.confirmNum}>{booking.confirmacion}</span>}
+          {isEdit && editConfirmacion && <span className={styles.confirmNum}>{editConfirmacion}</span>}
           <button className={styles.closeBtn} onClick={onClose}><X size={18} /></button>
         </div>
 

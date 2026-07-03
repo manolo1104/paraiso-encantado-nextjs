@@ -77,7 +77,7 @@ export async function saveChecklistResult(data: Omit<ChecklistResult, 'fecha'>):
   await ensureTab(client, TAB_LIMPIEZA, ['Fecha','Suite','Turno','Personal','ItemsCompletados','ItemsPendientes','Observaciones','CompletadoEn','Estado']);
   await client.spreadsheets.values.append({
     spreadsheetId: SHEET_ID, range: `${TAB_LIMPIEZA}!A:I`,
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: 'RAW',
     requestBody: { values: [[
       todayMX(), data.suite, data.turno, data.personal,
       data.itemsCompletados.join('|'), data.itemsPendientes.join('|'),
@@ -147,7 +147,7 @@ async function seedMaintenanceTasks(client: NonNullable<Awaited<ReturnType<typeo
   ]);
   await client.spreadsheets.values.append({
     spreadsheetId: SHEET_ID, range: `${TAB_MANT}!A:G`,
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: 'RAW',
     requestBody: { values: rows },
   });
 }
@@ -163,7 +163,7 @@ export async function markMaintenanceDone(suite: string, tarea: string, completa
   const today = todayMX();
   await client.spreadsheets.values.update({
     spreadsheetId: SHEET_ID, range: `${TAB_MANT}!D${rowIdx + 1}:G${rowIdx + 1}`,
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: 'RAW',
     requestBody: { values: [[today, addDaysStr(today, freq), rows[rowIdx][5] || '', completadoPor]] },
   });
 }
@@ -175,7 +175,7 @@ export async function addMaintenanceTask(task: { suite: string; tarea: string; f
   const today = todayMX();
   await client.spreadsheets.values.append({
     spreadsheetId: SHEET_ID, range: `${TAB_MANT}!A:G`,
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: 'RAW',
     requestBody: { values: [[task.suite, task.tarea, task.frecuenciaDias, today, addDaysStr(today, task.frecuenciaDias), task.notas, task.responsable]] },
   });
 }

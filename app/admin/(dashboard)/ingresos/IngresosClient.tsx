@@ -31,6 +31,8 @@ function KPICard({ label, value, sub, delta }: { label: string; value: string; s
 const MXN = (v: number) => `$${v.toLocaleString('es-MX')}`;
 
 export default function IngresosClient({ kpis }: Props) {
+  // Año en curso en hora de México (la tarjeta mostraba el literal "{año}").
+  const añoActual = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }).slice(0, 4);
   return (
     <div>
       <div className={styles.pageHeader}>
@@ -45,7 +47,7 @@ export default function IngresosClient({ kpis }: Props) {
         <KPICard label="Ocupación del mes" value={`${kpis.mes.ocupacion}%`} delta={kpis.mes.deltaOcupacion} />
         <KPICard label="ADR (precio promedio/noche)" value={MXN(kpis.mes.adr)} sub="Average Daily Rate" />
         <KPICard label="RevPAR" value={MXN(kpis.mes.revpar)} sub="Revenue per Available Room" />
-        <KPICard label="Ingresos año {año}" value={MXN(kpis.año.ingresos)} sub={`${kpis.año.reservas} reservas totales`} />
+        <KPICard label={`Ingresos año ${añoActual}`} value={MXN(kpis.año.ingresos)} sub={`${kpis.año.reservas} reservas totales`} />
       </div>
 
       {/* Gráfica de ingresos por mes */}

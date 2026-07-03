@@ -1,10 +1,17 @@
 import type { AdminBooking } from './sheets-admin';
+import { mexicoTodayStr, mexicoTodayParts } from '../date-mx';
 
 const TOTAL_SUITES = 13;
 
-function parseTotal(raw: string | number): number {
-  if (typeof raw === 'number') return raw;
-  return parseInt(String(raw).replace(/[^0-9]/g, ''), 10) || 0;
+// Normaliza el nombre de suite: quita el sufijo "(2 personas)" y espacios.
+// Así "Jungla (2 personas)" y "Jungla (4 personas)" cuentan como la misma suite.
+function normSuite(name: string): string {
+  return name.replace(/\s*\([^)]*\)/g, '').trim();
+}
+
+function roomsOf(b: AdminBooking): string[] {
+  if (!b.habitaciones) return [];
+  return b.habitaciones.split(',').map(normSuite).filter(Boolean);
 }
 
 function daysInMonth(year: number, month: number) {
@@ -26,9 +33,18 @@ function calcNightsForBooking(b: AdminBooking): number {
   return 0;
 }
 
+// Noches-cuarto: noches × número de habitaciones de la reserva (para ocupación/ADR).
+function roomNightsForBooking(b: AdminBooking): number {
+  const rooms = Math.max(1, roomsOf(b).length);
+  return calcNightsForBooking(b) * rooms;
+}
+
 export function calcKPIs(bookings: AdminBooking[]) {
-  const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  // "Ahora" anclado al día-calendario de México (antes UTC → semana/mes se
+  // corrían de día la noche del último día del mes en hora del hotel).
+  const { year: mxY, month: mxM, day: mxD } = mexicoTodayParts();
+  const now = new Date(mxY, mxM, mxD);
+  const todayStr = mexicoTodayStr();
 
   // Semana actual
   const weekStart = new Date(now);
@@ -60,8 +76,8 @@ export function calcKPIs(bookings: AdminBooking[]) {
   const ingresosPrevMes = bookingsPrevMes.reduce((s, b) => s + b.total, 0);
   const ingresosYear = bookingsYear.reduce((s, b) => s + b.total, 0);
 
-  const nochesMes = bookingsMes.reduce((s, b) => s + calcNightsForBooking(b), 0);
-  const nochesPrevMes = bookingsPrevMes.reduce((s, b) => s + calcNightsForBooking(b), 0);
+  const nochesMes = bookingsMes.reduce((s, b) => s + roomNightsForBooking(b), 0);
+  const nochesPrevMes = bookingsPrevMes.reduce((s, b) => s + roomNightsForBooking(b), 0);
   const nochesDisponiblesMes = TOTAL_SUITES * diasMes;
 
   const ocupacionMes = nochesMes > 0 ? Math.round((nochesMes / nochesDisponiblesMes) * 100) : 0;
@@ -83,15 +99,22 @@ export function calcKPIs(bookings: AdminBooking[]) {
     });
   }
 
-  // Suites más vendidas
+  // Suites más vendidas — por suite individual normalizada, repartiendo las
+  // noches/ingresos de la reserva entre sus cuartos (antes agrupaba por el CSV
+  // crudo: "Jungla (2p)" y "Jungla, Lirios 1" salían como suites distintas).
   const suitesMap = new Map<string, { noches: number; ingresos: number }>();
   for (const b of bookingsYear) {
-    const key = b.habitaciones || 'Sin asignar';
-    const prev = suitesMap.get(key) || { noches: 0, ingresos: 0 };
-    suitesMap.set(key, {
-      noches: prev.noches + calcNightsForBooking(b),
-      ingresos: prev.ingresos + b.total,
-    });
+    const rooms = roomsOf(b);
+    const list = rooms.length > 0 ? rooms : ['Sin asignar'];
+    const nights = calcNightsForBooking(b);
+    const ingresoPorCuarto = b.total / list.length;
+    for (const suite of list) {
+      const prev = suitesMap.get(suite) || { noches: 0, ingresos: 0 };
+      suitesMap.set(suite, {
+        noches: prev.noches + nights,
+        ingresos: prev.ingresos + ingresoPorCuarto,
+      });
+    }
   }
   const suitesMasVendidas = Array.from(suitesMap.entries())
     .map(([suite, data]) => ({ suite, ...data }))

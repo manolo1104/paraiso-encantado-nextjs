@@ -247,9 +247,17 @@ export async function checkAvailability(
   checkin: string, checkout: string,
   rooms: (string | { name: string })[],
   sessionId: string | null = null,
+  excludeConfirmacion?: string,
 ): Promise<{ available: boolean; unavailableRooms: string[] }> {
   const client = await getSheetsClient();
-  if (!client || !process.env.GOOGLE_SHEET_ID) return { available: true, unavailableRooms: [] };
+  // Fail-OPEN solo si Google NO está configurado (entorno local sin hoja).
+  // Si SÍ está configurado pero el cliente falló (credenciales rotas/cuota),
+  // fail-CLOSED: mejor pedir reintento que vender un cuarto ocupado.
+  if (!process.env.GOOGLE_SHEET_ID) return { available: true, unavailableRooms: [] };
+  if (!client) {
+    console.error('❌ checkAvailability: Sheets configurado pero cliente nulo — fail-closed');
+    return { available: false, unavailableRooms: rooms.map(r => typeof r === 'string' ? r : r.name) };
+  }
   const sid = process.env.GOOGLE_SHEET_ID;
 
   try {
@@ -301,7 +309,7 @@ export async function checkAvailability(
 
     // Cross-check contra hoja Reservas (fuente de verdad real)
     // Captura reservas del admin y reservas web aunque Disponibilidad esté desincronizado
-    const reservasConflicts = await checkReservasForConflicts(checkin, checkout, normalizedRooms);
+    const reservasConflicts = await checkReservasForConflicts(checkin, checkout, normalizedRooms, excludeConfirmacion);
     for (const r of reservasConflicts) {
       if (!unavailableRooms.includes(r)) unavailableRooms.push(r);
     }
@@ -327,6 +335,7 @@ async function checkReservasForConflicts(
   checkin: string,
   checkout: string,
   rooms: { name: string }[],
+  excludeConfirmacion?: string,
 ): Promise<string[]> {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return [];
@@ -347,6 +356,9 @@ async function checkReservasForConflicts(
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (!row || row.length < 11) continue;
+
+      // Excluir la propia reserva (al editar sus fechas no debe chocar consigo misma)
+      if (excludeConfirmacion && String(row[1] ?? '').trim() === excludeConfirmacion) continue;
 
       const bCheckin  = String(row[6]  ?? '').trim();
       const bCheckout = String(row[7]  ?? '').trim();

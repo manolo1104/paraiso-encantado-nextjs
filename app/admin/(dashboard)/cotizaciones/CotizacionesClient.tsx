@@ -6,6 +6,7 @@ import { buildBookingHtml } from '@/lib/booking-html';
 import type { TourItem } from '@/lib/booking-html';
 import type { AdminQuote } from '@/lib/admin/sheets-admin';
 import { BOOKING_ROOMS } from '@/lib/booking';
+import { parseNotas, joinNotas as joinNotasCentral, clienteNota } from '@/lib/notas';
 import styles from './cotizaciones.module.css';
 
 // Fuente única de verdad: lib/booking.ts
@@ -39,18 +40,14 @@ export const PAQUETES_CATALOG: { nombre: string; habitacionDefault: string; noch
   { nombre: 'Paquete personalizado', habitacionDefault: 'Jungla',            noches: 2, personas: 2, precio: 0,     descripcion: '' },
 ];
 
-const PAQUETES_SEP = '||PAQUETES||';
+// Parsers delegados al helper central (lib/notas) — antes cortaban mal y
+// corrompían/perdían tours y habitaciones al editar.
 function parsePaquetes(notas: string): PaqueteItem[] {
-  const idx = notas.indexOf(PAQUETES_SEP);
-  if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + PAQUETES_SEP.length).split('||HABS||')[0]); } catch { return []; }
+  return parseNotas(notas).paquetes as unknown as PaqueteItem[];
 }
-
-const HABS_SEP = '||HABS||';
 function parseHabs(notas: string): HabItem[] | null {
-  const idx = notas.indexOf(HABS_SEP);
-  if (idx === -1) return null;
-  try { return JSON.parse(notas.slice(idx + HABS_SEP.length)); } catch { return null; }
+  const habs = parseNotas(notas).habs as unknown as HabItem[];
+  return habs.length > 0 ? habs : null;
 }
 function inferGuests(suite: string, ratePerNight: number): number {
   const room = BOOKING_ROOMS.find(r => r.name === suite);
@@ -77,11 +74,8 @@ export const TOURS_CATALOG: { nombre: string; precio: number }[] = [
   { nombre: 'Tour personalizado', precio: 0 },
 ];
 
-const TOURS_SEP = '||TOURS||';
 function parseTours(notas: string): TourItem[] {
-  const idx = notas.indexOf(TOURS_SEP);
-  if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + TOURS_SEP.length)); } catch { return []; }
+  return parseNotas(notas).tours as unknown as TourItem[];
 }
 function getHabsTotalQ(habs: HabItem[], noches: number): number {
   return habs.reduce((s, h) => s + getHabPrecioQ(h) * Math.max(noches, 1), 0);
@@ -136,17 +130,16 @@ function calcCancelDate(checkin: string): string {
   return `${d.getDate()} de ${months[d.getMonth()]} ${d.getFullYear()} a las 11:59 PM`;
 }
 
-const INTERNO_SEP = '||INTERNO||';
 function parseNotasCliente(notas: string): string {
-  const idx = notas.indexOf(INTERNO_SEP);
-  return idx === -1 ? notas.trim() : notas.slice(0, idx).trim();
+  return clienteNota(notas);
 }
 function joinNotas(cliente: string, interno: string, tours: TourItem[] = [], paquetes: PaqueteItem[] = [], habs: HabItem[] = []): string {
-  let base = interno.trim() ? `${cliente}${INTERNO_SEP}${interno}` : cliente;
-  if (tours.length > 0) base += `${TOURS_SEP}${JSON.stringify(tours)}`;
-  if (paquetes.length > 0) base += `${PAQUETES_SEP}${JSON.stringify(paquetes)}`;
-  if (habs.length > 0) base += `${HABS_SEP}${JSON.stringify(habs)}`;
-  return base;
+  return joinNotasCentral({
+    cliente, interno,
+    tours: tours as any,
+    paquetes: paquetes as any,
+    habs: habs as any,
+  });
 }
 
 const SUITE_IMAGES: Record<string, string> = {
@@ -548,20 +541,21 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
   const [precioManual, setPrecioManual] = useState<number | null>(quote.precioTotal || null);
   const [promoActiva, setPromoActiva] = useState(false);
   const [notasCliente, setNotasCliente] = useState(() => parseNotasCliente(quote.notas || ''));
-  const [notasInternas, setNotasInternas] = useState(() => {
-    const idx = (quote.notas || '').indexOf(INTERNO_SEP);
-    if (idx === -1) return '';
-    const after = quote.notas.slice(idx + INTERNO_SEP.length);
-    const toursIdx = after.indexOf(TOURS_SEP);
-    return toursIdx === -1 ? after.trim() : after.slice(0, toursIdx).trim();
-  });
+  // Nota interna limpia (antes cortaba solo en ||TOURS|| → arrastraba ||PAQUETES||/||HABS||)
+  const [notasInternas, setNotasInternas] = useState(() => parseNotas(quote.notas || '').interno);
   const [loading, setLoading] = useState(false);
 
-  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
-  function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); }
-  function removeHab(i: number) { setHabitaciones(h => h.filter((_, idx) => idx !== i)); setPromoActiva(false); }
+  function set(k: string, v: string) {
+    setForm(f => ({ ...f, [k]: v }));
+    // Cambiar las fechas debe recalcular el total (antes quedaba congelado al
+    // precio original aunque cambiaran las noches).
+    if (k === 'checkin' || k === 'checkout') { setPrecioManual(null); setPromoActiva(false); }
+  }
+  function addHab() { setHabitaciones(h => [...h, { suite: SUITES[3], huespedes: 2 }]); setPrecioManual(null); setPromoActiva(false); }
+  function removeHab(i: number) { setHabitaciones(h => h.filter((_, idx) => idx !== i)); setPrecioManual(null); setPromoActiva(false); }
   function updateHab(i: number, key: 'suite' | 'huespedes', val: string | number) {
     setHabitaciones(h => h.map((item, idx) => idx === i ? { ...item, [key]: val, precioOverride: undefined } : item));
+    setPrecioManual(null);
     setPromoActiva(false);
   }
   function updateHabPrecio(i: number, precio: number) {
@@ -612,10 +606,14 @@ function EditQuoteModal({ quote, onClose, onSaved }: {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-    const suite = habitaciones.map(h => h.suite).join(', ');
-    await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems, habitaciones) });
-    setLoading(false);
+    try {
+      const suite = habitaciones.map(h => h.suite).join(', ');
+      await onSaved(quote, { ...form, suite, noches, precioTotal, notas: joinNotas(notasCliente, notasInternas, tourItems, paqueteItems, habitaciones) });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -885,13 +883,18 @@ export default function CotizacionesClient({ initialQuotes }: Props) {
   }
 
   async function saveEdit(q: AdminQuote, changes: Partial<AdminQuote>) {
-    await fetch(`/api/admin/cotizaciones/${q.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(changes),
-    });
-    setEditQuote(null);
-    await refresh();
+    try {
+      const res = await fetch(`/api/admin/cotizaciones/${q.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(changes),
+      });
+      if (!res.ok) { alert('No se pudo guardar la cotización. Intenta de nuevo.'); return; }
+      setEditQuote(null);
+      await refresh();
+    } catch {
+      alert('No se pudo guardar la cotización. Revisa tu conexión.');
+    }
   }
 
   function openWhatsApp(q: AdminQuote) {

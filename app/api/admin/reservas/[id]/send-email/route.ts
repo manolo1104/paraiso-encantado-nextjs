@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBookings, logAgentActivity } from '@/lib/admin/sheets-admin';
 import { buildEmailHtml } from '@/lib/email';
+import { parseNotas, clienteNota } from '@/lib/notas';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
@@ -15,11 +16,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!b) return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 });
   if (!b.email || b.email === 'N/A') return NextResponse.json({ error: 'Sin email registrado' }, { status: 400 });
 
-  // Strip "(X personas)" suffix from room names stored by web flow
+  // Descontar tours/paquetes del total para el precio por habitación, y listarlos
+  // como renglones (antes el email inflaba el precio del cuarto y ocultaba el tour,
+  // sin cuadrar con el PDF).
+  const parsed = parseNotas(b.notas);
+  const tours = parsed.tours as { nombre: string; personas: number; precio: number }[];
+  const paquetes = parsed.paquetes as { nombre: string; noches: number; personas: number; precio: number }[];
+  const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
+  const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
+
   const rawRooms = b.habitaciones.split(',').map(s => s.trim()).filter(Boolean);
-  const toursTotal = 0; // reservas don't track per-tour prices separately here
-  const habsTotal = b.total;
-  const pricePerRoom = rawRooms.length > 0 ? Math.round(habsTotal / rawRooms.length) : b.total;
+  const habsTotal = b.total - toursTotal - paquetesTotal;
+  const pricePerRoom = rawRooms.length > 0 ? Math.round(habsTotal / rawRooms.length) : habsTotal;
 
   const rooms = rawRooms.map(raw => {
     const guestsMatch = raw.match(/\((\d+)\s*persona/i);
@@ -27,9 +35,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const name = raw.replace(/\s*\([^)]*\)/g, '').trim();
     return { name, guestCount, totalPrice: pricePerRoom };
   });
+  for (const t of tours) {
+    rooms.push({ name: `🗺 ${t.nombre}`, guestCount: t.personas, totalPrice: t.precio * t.personas });
+  }
+  for (const p of paquetes) {
+    rooms.push({ name: `🎁 ${p.nombre}`, guestCount: p.personas, totalPrice: p.precio });
+  }
 
-  // Extract client-visible notes (before ||INTERNO||)
-  const notasCliente = (b.notas || '').split('||INTERNO||')[0].split('||TOURS||')[0].split('||PAQUETES||')[0].trim();
+  // Solo la nota visible para el cliente (nunca ||INTERNO||/||HABS||/JSON técnicos)
+  const notasCliente = clienteNota(b.notas);
 
   const html = buildEmailHtml({
     customerName:       b.cliente,

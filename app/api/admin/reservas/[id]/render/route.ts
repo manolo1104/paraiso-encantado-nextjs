@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { getAllBookings } from '@/lib/admin/sheets-admin';
+import { parseNotas } from '@/lib/notas';
+import { mexicoTodayStr } from '@/lib/date-mx';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,19 +18,7 @@ function fmtDate(d: string): string {
 }
 
 function fmtToday(): string {
-  const dt = new Date();
-  return `${dt.getDate()} ${MONTHS_ES[dt.getMonth()]} ${dt.getFullYear()}`;
-}
-
-function parseTours(notas: string): { nombre: string; personas: number; precio: number }[] {
-  const idx = notas.indexOf('||TOURS||');
-  if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + 9).split('||PAQUETES||')[0]); } catch { return []; }
-}
-function parsePaquetes(notas: string): { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[] {
-  const idx = notas.indexOf('||PAQUETES||');
-  if (idx === -1) return [];
-  try { return JSON.parse(notas.slice(idx + 12)); } catch { return []; }
+  return fmtDate(mexicoTodayStr()); // emisión en hora de México (antes UTC)
 }
 
 const SUITE_CATEGORY: Record<string, string> = {
@@ -61,8 +51,9 @@ export async function GET(
   const noches = b.noches || 1;
   const anticipo = b.anticipo || 0;
   const balance  = b.total - anticipo;
-  const tours = parseTours(b.notas || '');
-  const paquetes = parsePaquetes(b.notas || '');
+  const parsed = parseNotas(b.notas);
+  const tours = parsed.tours as { nombre: string; personas: number; precio: number }[];
+  const paquetes = parsed.paquetes as { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[];
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
   const habsTotal = b.total - toursTotal - paquetesTotal;
@@ -140,9 +131,14 @@ export async function GET(
     return NextResponse.json({ error: 'Template no encontrado' }, { status: 500 });
   }
 
+  // Escapar `<`/`>` para que datos del huésped con `</script>` no rompan/inyecten
+  // el documento (XSS); función de reemplazo para no interpretar `$&` del JSON.
+  const safeJson = JSON.stringify(data, null, 2)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e');
   html = html.replace(
     /<script type="application\/json" id="booking-data">[\s\S]*?<\/script>/,
-    `<script type="application/json" id="booking-data">${JSON.stringify(data, null, 2)}</script>`
+    () => `<script type="application/json" id="booking-data">${safeJson}</script>`
   );
 
   const download = new URL(_req.url).searchParams.get('download');

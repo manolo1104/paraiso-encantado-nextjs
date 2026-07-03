@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRoomStatuses, setRoomStatus, getAllBookings } from '@/lib/admin/sheets-admin';
 import type { RoomStatusType } from '@/lib/admin/sheets-admin';
+import { mexicoTodayStr } from '@/lib/date-mx';
+import { roomKey, splitRooms } from '@/lib/room-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,23 +12,27 @@ export async function GET() {
     getAllBookings(),
   ]);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = mexicoTodayStr();
 
-  // Derive occupied rooms from active bookings (overrides stored status)
+  // Ocupación derivada de reservas activas — keyed por CADA cuarto normalizado,
+  // no por el CSV crudo (antes una reserva web "Jungla (2 personas)" o multi-cuarto
+  // nunca matcheaba el nombre limpio del panel → cuartos ocupados salían libres).
   const occupiedMap = new Map<string, { cliente: string; checkout: string; huespedes: number }>();
   for (const b of bookings) {
     if (b.estado === 'CANCELADA' || !b.checkin || !b.checkout) continue;
     if (b.checkin <= todayStr && b.checkout > todayStr) {
-      occupiedMap.set(b.habitaciones, {
-        cliente: b.cliente,
-        checkout: b.checkout,
-        huespedes: b.huespedes,
-      });
+      for (const room of splitRooms(b.habitaciones)) {
+        occupiedMap.set(roomKey(room), {
+          cliente: b.cliente,
+          checkout: b.checkout,
+          huespedes: b.huespedes,
+        });
+      }
     }
   }
 
   const result = statuses.map(s => {
-    const occupied = occupiedMap.get(s.suite);
+    const occupied = occupiedMap.get(roomKey(s.suite));
     if (occupied && s.estado !== 'MANTENIMIENTO' && s.estado !== 'LIMPIEZA') {
       return { ...s, estado: 'OCUPADA' as RoomStatusType, ocupadaPor: occupied };
     }

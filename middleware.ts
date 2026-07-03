@@ -16,6 +16,29 @@ function resolveAdminSecret(): Uint8Array {
 
 const ADMIN_SECRET = resolveAdminSecret();
 
+// Rutas admin que el agente de WhatsApp puede usar con x-agent-token.
+// El token de servicio NO da acceso al resto de la API admin (DELETE de
+// reservas, CRM, disponibilidad, etc.) — solo a lo que el bot necesita.
+const AGENT_ALLOWED: Array<{ method: string; pattern: RegExp }> = [
+  { method: 'GET', pattern: /^\/api\/admin\/bot-status$/ },
+  { method: 'GET', pattern: /^\/api\/admin\/guest-notes$/ },
+  { method: 'POST', pattern: /^\/api\/admin\/cotizaciones$/ },
+  { method: 'POST', pattern: /^\/api\/admin\/cotizaciones\/[^/]+\/send-email$/ },
+];
+
+// Comparación en tiempo constante (Edge no tiene node:crypto.timingSafeEqual).
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const ab = enc.encode(a);
+  const bb = enc.encode(b);
+  let diff = ab.length ^ bb.length;
+  const len = Math.max(ab.length, bb.length, 1);
+  for (let i = 0; i < len; i++) {
+    diff |= (ab[i % Math.max(ab.length, 1)] ?? 0) ^ (bb[i % Math.max(bb.length, 1)] ?? 0);
+  }
+  return diff === 0;
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -31,9 +54,13 @@ export async function middleware(req: NextRequest) {
     // sin sesión JWT (el agente no tiene cookie de navegador).
     const agentToken = process.env.AGENT_API_TOKEN;
     const presentedAgentToken = req.headers.get('x-agent-token');
-    const isAgent = Boolean(agentToken) && presentedAgentToken === agentToken;
+    const isAgent = Boolean(agentToken) &&
+      typeof presentedAgentToken === 'string' &&
+      timingSafeEqualStr(presentedAgentToken, agentToken as string);
+    const agentAllowed = isAgent &&
+      AGENT_ALLOWED.some(r => r.method === req.method && r.pattern.test(pathname));
 
-    if (!isAgent) {
+    if (!agentAllowed) {
       const token = req.cookies.get('admin_session')?.value;
       if (!token) {
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -69,6 +96,7 @@ export async function middleware(req: NextRequest) {
       maxAge: 60 * 60 * 24,
       httpOnly: true,
       sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
       path: '/',
     });
     res.headers.set('x-session-id', sid);

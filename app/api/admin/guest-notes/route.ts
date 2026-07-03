@@ -16,12 +16,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Find matching guest from bookings by phone
+    // Buscar huésped por email (exacto) o por teléfono. Para el teléfono se exigen
+    // al menos 10 dígitos y se comparan los últimos 10 completos: antes bastaba con
+    // que coincidieran los últimos 8 (o menos), y una consulta de 4-5 dígitos podía
+    // devolver el nombre y las notas privadas de OTRO cliente.
+    const phoneDigits = phone.length >= 10 ? phone.slice(-10) : '';
     const bookings = await getAllBookings();
     const match = bookings.find(b => {
-      const bPhone = b.telefono?.replace(/\D/g, '') || '';
-      if (phone && bPhone && bPhone.endsWith(phone.slice(-8))) return true;
       if (email && b.email?.toLowerCase() === email.toLowerCase()) return true;
+      const bPhone = b.telefono?.replace(/\D/g, '') || '';
+      if (phoneDigits && bPhone.length >= 10 && bPhone.slice(-10) === phoneDigits) return true;
       return false;
     });
 
