@@ -91,7 +91,7 @@ export async function runIcalSync(): Promise<{
         .filter(e => e.start && e.end)
         .map(e => ({ checkin: e.start, checkout: e.end }));
 
-      const blocked = await updateOTABlocks(cal.roomName, dateRanges);
+      const blocked = await updateOTABlocks(cal.roomName, dateRanges, cal.platform);
       await updateOTASyncResult(cal.id, 'ok', blocked);
       results.push({ id: cal.id, roomName: cal.roomName, platform: cal.platform, blocks: blocked });
     } catch (e: any) {

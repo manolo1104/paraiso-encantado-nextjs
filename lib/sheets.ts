@@ -232,7 +232,7 @@ export async function getFullyBookedDates(monthsAhead = 6): Promise<string[]> {
 
       const allUnavailable = roomCols.every(col => {
         const val = (row[col] || '').toUpperCase().trim();
-        return val === 'RESERVADO' || val === 'BLOQUEADO' || val === 'MANTENIMIENTO' || val === 'OTA';
+        return val === 'RESERVADO' || val === 'BLOQUEADO' || val === 'MANTENIMIENTO' || val.startsWith('OTA');
       });
       if (allUnavailable) fullyBooked.push(dateStr);
     }
@@ -294,7 +294,7 @@ export async function checkAvailability(
         });
         if (rowIdx > 0) {
           const status = (data[rowIdx][colIdx] || '').toUpperCase().trim();
-          if (status === 'RESERVADO' || status === 'BLOQUEADO' || status === 'MANTENIMIENTO' || status === 'OTA') {
+          if (status === 'RESERVADO' || status === 'BLOQUEADO' || status === 'MANTENIMIENTO' || status.startsWith('OTA')) {
             if (!unavailableRooms.includes(room.name)) unavailableRooms.push(room.name);
             break;
           }
@@ -588,12 +588,19 @@ export async function blockDates(
 export async function updateOTABlocks(
   roomName: string,
   dateRanges: Array<{ checkin: string; checkout: string }>,
+  platform?: 'booking_com' | 'expedia',
 ): Promise<number> {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return 0;
   const sid = process.env.GOOGLE_SHEET_ID;
   const normalizedRoom = normalizeRoomName(roomName);
   if (!ROOM_NAMES.includes(normalizedRoom)) return 0;
+
+  // Valor de celda que ESPECIFICA la OTA de origen (ej. "OTA (Expedia)"). Mantiene
+  // el prefijo "OTA" para que la detección de disponibilidad y el formato condicional
+  // morado sigan funcionando.
+  const otaLabel = platform === 'expedia' ? 'Expedia' : platform === 'booking_com' ? 'Booking' : '';
+  const otaCellValue = otaLabel ? `OTA (${otaLabel})` : 'OTA';
 
   try {
     const res = await sheetsCall(() =>
@@ -606,9 +613,9 @@ export async function updateOTABlocks(
     const colIdx = headers.findIndex(h => h === normalizedRoom);
     if (colIdx === -1) return 0;
 
-    // Clear existing OTA blocks for this room
+    // Clear existing OTA blocks for this room (cualquier "OTA (…)")
     for (let i = 1; i < data.length; i++) {
-      if ((data[i][colIdx] || '').toUpperCase() === 'OTA') {
+      if ((data[i][colIdx] || '').toUpperCase().startsWith('OTA')) {
         data[i][colIdx] = '';
       }
     }
@@ -629,8 +636,8 @@ export async function updateOTABlocks(
       }
       // Only mark OTA if not already a real reservation
       const current = (data[rowIdx][colIdx] || '').toUpperCase();
-      if (!current || current === 'OTA') {
-        data[rowIdx][colIdx] = 'OTA';
+      if (!current || current.startsWith('OTA')) {
+        data[rowIdx][colIdx] = otaCellValue;
         blocked++;
       }
     }
@@ -650,9 +657,70 @@ export async function updateOTABlocks(
         requestBody: { values: sorted },
       })
     );
+
+    // Pintar de morado en la propia hoja las celdas OTA (regla de formato condicional
+    // idempotente: se agrega una sola vez y se aplica sola en cada sync).
+    await ensureOTAConditionalFormat(client, sid).catch(err =>
+      console.warn('⚠️ No se pudo aplicar el formato morado OTA:', err?.message)
+    );
+
     return blocked;
   } catch (e: any) {
     console.error('❌ updateOTABlocks error:', e.message);
     return 0;
   }
+}
+
+/**
+ * Agrega (una sola vez) una regla de formato condicional a la hoja Disponibilidad:
+ * cualquier celda cuyo texto empiece con "OTA" se pinta de morado (#7C3AED), igual
+ * que el calendario del admin. Idempotente: si la regla ya existe, no hace nada.
+ */
+async function ensureOTAConditionalFormat(
+  client: NonNullable<Awaited<ReturnType<typeof getSheetsClient>>>,
+  sid: string,
+): Promise<void> {
+  const meta = await sheetsCall(() =>
+    client.spreadsheets.get({
+      spreadsheetId: sid,
+      fields: 'sheets(properties(sheetId,title),conditionalFormats)',
+    })
+  );
+  const sheet = (meta.data.sheets || []).find(
+    (s: any) => s.properties?.title === AVAILABILITY_SHEET
+  );
+  if (!sheet?.properties) return;
+  const sheetId = sheet.properties.sheetId;
+
+  const alreadyExists = (sheet.conditionalFormats || []).some((cf: any) => {
+    const cond = cf.booleanRule?.condition;
+    return cond?.type === 'TEXT_STARTS_WITH' &&
+      String(cond.values?.[0]?.userEnteredValue || '').toUpperCase() === 'OTA';
+  });
+  if (alreadyExists) return;
+
+  await sheetsCall(() =>
+    client.spreadsheets.batchUpdate({
+      spreadsheetId: sid,
+      requestBody: {
+        requests: [{
+          addConditionalFormatRule: {
+            index: 0,
+            rule: {
+              // Columnas B en adelante (todas las habitaciones), todas las filas.
+              ranges: [{ sheetId, startColumnIndex: 1 }],
+              booleanRule: {
+                condition: { type: 'TEXT_STARTS_WITH', values: [{ userEnteredValue: 'OTA' }] },
+                format: {
+                  backgroundColor: { red: 124 / 255, green: 58 / 255, blue: 237 / 255 }, // #7C3AED
+                  textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true },
+                },
+              },
+            },
+          },
+        }],
+      },
+    })
+  );
+  console.log('🎨 Regla de formato condicional morado para OTA agregada a Disponibilidad.');
 }

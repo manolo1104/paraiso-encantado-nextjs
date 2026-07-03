@@ -84,7 +84,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
 
     const roomSheet = sheetData[room] || {};
     const val = roomSheet[ds]?.toUpperCase();
-    if (val === 'OTA') return { status: 'ota' };
+    if (val?.startsWith('OTA')) return { status: 'ota' }; // "OTA" o "OTA (EXPEDIA)"
     if (val === 'BLOQUEADO' || val === 'MANTENIMIENTO') return { status: 'blocked' };
     if (val === 'RESERVADO') {
       // Reservado en sheets pero sin booking en admin — puede ser reserva pública

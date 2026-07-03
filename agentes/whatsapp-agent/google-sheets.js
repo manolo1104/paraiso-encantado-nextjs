@@ -413,7 +413,7 @@ function parseDisponibilidadBlocks(values) {
   const fechaIndex = findHeaderIndex(headers, ['fecha', 'date', 'dia', 'día']);
   const hasMatrixShape = fechaIndex >= 0 && headers.length >= 3;
   if (hasMatrixShape) {
-    const blockedKeywords = ['reserv', 'bloque', 'ocup', 'apart'];
+    const blockedKeywords = ['reserv', 'bloque', 'ocup', 'apart', 'ota'];
     const blocks = [];
 
     for (const row of values.slice(1)) {
