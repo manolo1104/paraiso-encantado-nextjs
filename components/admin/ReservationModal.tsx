@@ -7,6 +7,7 @@ import { BOOKING_ROOMS, getRoomBasePrice } from '@/lib/booking';
 import { TOURS_CATALOG, PAQUETES_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import type { TourItem } from '@/lib/booking-html';
 import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
+import { parseNotas, joinNotas } from '@/lib/notas';
 import { normalizeMxPhone } from '@/lib/phone';
 import styles from './Modal.module.css';
 
@@ -156,34 +157,22 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     total: booking?.total || 0,
   });
 
-  const INTERNO_SEP = '||INTERNO||';
-  const TOURS_SEP_LOCAL = '||TOURS||';
+  // Parseo/serialización SIEMPRE con lib/notas (única fuente de verdad). Los
+  // parsers a mano que había aquí cortaban mal: con paquetes pero sin tours,
+  // la nota del cliente/interna mostraba el JSON crudo y al guardar se
+  // corrompía la celda (y en la siguiente edición se perdían los paquetes).
   const rawNotas = booking?.notas || '';
-  const [notasCliente, setNotasCliente] = useState(() => {
-    const idx = rawNotas.indexOf(INTERNO_SEP);
-    return idx === -1 ? rawNotas.replace(/\|\|TOURS\|\|.*$/, '').trim() : rawNotas.slice(0, idx).trim();
-  });
-  const [notasInternas, setNotasInternas] = useState(() => {
-    const idx = rawNotas.indexOf(INTERNO_SEP);
-    if (idx === -1) return '';
-    const after = rawNotas.slice(idx + INTERNO_SEP.length);
-    const toursIdx = after.indexOf(TOURS_SEP_LOCAL);
-    return toursIdx === -1 ? after.trim() : after.slice(0, toursIdx).trim();
-  });
-  const PAQUETES_SEP_LOCAL = '||PAQUETES||';
-  const [tourItems, setTourItems] = useState<TourItem[]>(() => {
-    const idx = rawNotas.indexOf(TOURS_SEP_LOCAL);
-    if (idx === -1) return [];
-    try { return JSON.parse(rawNotas.slice(idx + TOURS_SEP_LOCAL.length).split(PAQUETES_SEP_LOCAL)[0]); } catch { return []; }
-  });
-  const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(() => {
-    const idx = rawNotas.indexOf(PAQUETES_SEP_LOCAL);
-    if (idx === -1) return [];
-    try { return JSON.parse(rawNotas.slice(idx + PAQUETES_SEP_LOCAL.length)); } catch { return []; }
-  });
+  const parsedNotas = parseNotas(rawNotas);
+  const [notasCliente, setNotasCliente] = useState(parsedNotas.cliente);
+  const [notasInternas, setNotasInternas] = useState(parsedNotas.interno);
+  const [tourItems, setTourItems] = useState<TourItem[]>(parsedNotas.tours as unknown as TourItem[]);
+  const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(parsedNotas.paquetes as unknown as PaqueteItem[]);
 
-  function addTourM() { setTourItems(t => [...t, { nombre: TOURS_CATALOG[0].nombre, personas: 2, precio: TOURS_CATALOG[0].precio }]); }
-  function removeTourM(i: number) { setTourItems(t => t.filter((_, idx) => idx !== i)); }
+  // Agregar/editar tours y paquetes recalcula el "Total a cobrar" (igual que
+  // cambiar habitaciones). Antes el total se quedaba solo con las habitaciones
+  // salvo que se pulsara "Usar calculado" → riesgo de cobrar de menos.
+  function addTourM() { setTourItems(t => [...t, { nombre: TOURS_CATALOG[0].nombre, personas: 2, precio: TOURS_CATALOG[0].precio }]); setTotalOverride(false); }
+  function removeTourM(i: number) { setTourItems(t => t.filter((_, idx) => idx !== i)); setTotalOverride(false); }
   function updateTourM(i: number, key: keyof TourItem, val: string | number) {
     setTourItems(t => t.map((item, idx) => {
       if (idx !== i) return item;
@@ -193,12 +182,14 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       }
       return { ...item, [key]: typeof val === 'string' ? parseInt(val) || 0 : val };
     }));
+    setTotalOverride(false);
   }
   function addPaqueteM() {
     const cat = PAQUETES_CATALOG[0];
     setPaqueteItems(p => [...p, { nombre: cat.nombre, habitacion: cat.habitacionDefault, noches: cat.noches, personas: cat.personas, precio: cat.precio }]);
+    setTotalOverride(false);
   }
-  function removePaqueteM(i: number) { setPaqueteItems(p => p.filter((_, idx) => idx !== i)); }
+  function removePaqueteM(i: number) { setPaqueteItems(p => p.filter((_, idx) => idx !== i)); setTotalOverride(false); }
   function updatePaqueteM(i: number, key: keyof PaqueteItem, val: string | number) {
     setPaqueteItems(p => p.map((item, idx) => {
       if (idx !== i) return item;
@@ -208,6 +199,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       }
       return { ...item, [key]: typeof val === 'string' ? (isNaN(Number(val)) ? val : Number(val)) : val };
     }));
+    setTotalOverride(false);
   }
 
   const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
@@ -318,14 +310,17 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     const { checkin, checkout } = form;
     if (checkin && checkout) {
       const n = Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000));
-      const precioAuto = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * n, 0);
+      // El auto-total incluye tours y paquetes (antes solo habitaciones).
+      const precioAuto = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * n, 0)
+        + tourItems.reduce((s, t) => s + t.precio * t.personas, 0)
+        + paqueteItems.reduce((s, p) => s + p.precio, 0);
       setForm(f => ({
         ...f,
         noches: n,
         total: totalOverride ? f.total : precioAuto,
       }));
     }
-  }, [form.checkin, form.checkout, habitaciones, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form.checkin, form.checkout, habitaciones, tourItems, paqueteItems, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!totalOverride) setRestanteOverride(null);
@@ -391,9 +386,12 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     setError('');
     try {
       const habitacion = habitaciones.map(h => h.suite).join(', ');
-      let notas = notasInternas.trim() ? `${notasCliente}${INTERNO_SEP}${notasInternas}` : notasCliente;
-      if (tourItems.length > 0) notas += `${TOURS_SEP_LOCAL}${JSON.stringify(tourItems)}`;
-      if (paqueteItems.length > 0) notas += `${PAQUETES_SEP_LOCAL}${JSON.stringify(paqueteItems)}`;
+      const notas = joinNotas({
+        cliente: notasCliente,
+        interno: notasInternas,
+        tours: tourItems as any,
+        paquetes: paqueteItems as any,
+      });
       const url = isEdit ? `/api/admin/reservas/${editConfirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
       const res = await fetch(url, {
