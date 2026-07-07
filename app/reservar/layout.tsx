@@ -37,9 +37,9 @@ const reservaSchema = {
     itemListElement: [
       {
         '@type': 'Offer',
-        name: 'Suite con Spa Privado — desde $2,300 MXN/noche',
+        name: 'Suite con Spa Privado — desde $2,000 MXN/noche',
         description: 'Suites Jungla, Flor de Lis 1 & 2 con piscina spa privada al aire libre. Vista a la selva y montaña.',
-        price: '2300',
+        price: '2000',
         priceCurrency: 'MXN',
         availability: 'https://schema.org/InStock',
         url: 'https://www.paraisoencantado.com/reservar',

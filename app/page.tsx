@@ -191,7 +191,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
       aggregateRating: roomRating(4.9, 48),
-      offers: roomOffer(2300, 'flor-de-lis-1'),
+      offers: roomOffer(2000, 'flor-de-lis-1'),
     },
     {
       '@type': 'HotelRoom',
@@ -212,7 +212,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
       aggregateRating: roomRating(4.8, 52),
-      offers: roomOffer(2300, 'flor-de-lis-2'),
+      offers: roomOffer(2000, 'flor-de-lis-2'),
     },
     {
       '@type': 'HotelRoom',
@@ -233,7 +233,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza privada con vista a la montaña', value: true },
       ],
       aggregateRating: roomRating(4.8, 31),
-      offers: roomOffer(2500, 'lindavista'),
+      offers: roomOffer(2000, 'lindavista'),
     },
     {
       '@type': 'HotelRoom',
@@ -254,7 +254,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza privada con vista a la selva', value: true },
       ],
       aggregateRating: roomRating(4.9, 67),
-      offers: roomOffer(2300, 'jungla'),
+      offers: roomOffer(2000, 'jungla'),
     },
     {
       '@type': 'HotelRoom',
@@ -335,7 +335,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista a piscina y selva', value: true },
       ],
       aggregateRating: roomRating(4.7, 35),
-      offers: roomOffer(1600, 'orquideas-2'),
+      offers: roomOffer(1500, 'orquideas-2'),
     },
     {
       '@type': 'HotelRoom',
@@ -375,7 +375,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista elevada a piscina', value: true },
       ],
       aggregateRating: roomRating(4.9, 39),
-      offers: roomOffer(1600, 'orquideas-3'),
+      offers: roomOffer(1500, 'orquideas-3'),
     },
     {
       '@type': 'HotelRoom',
