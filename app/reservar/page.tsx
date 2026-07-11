@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Baby, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle, Check, Ban } from 'lucide-react';
+import Link from 'next/link';
+import { Wifi, Bath, BedDouble, Sparkles, Droplets, Users, Baby, Plus, Minus, ChevronRight, X, Tag, ShieldCheck, CalendarDays, ChevronLeft, Info, AlertTriangle, Check, Ban, Star, Flame, Clock } from 'lucide-react';
 import {
   BOOKING_ROOMS,
   SUITE_ID_TO_ROOM_ID,
@@ -17,7 +18,7 @@ import {
   calcCartSubtotal,
   calcPromoDiscount,
   validatePromo,
-  VALID_PROMO_CODES,
+  calcDepositAmount,
   saveBookingState,
   formatMXN,
 } from '@/lib/booking';
@@ -25,9 +26,24 @@ import styles from './reservar.module.css';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
 import TrustBadgesReservar from '@/components/TrustBadgesReservar';
 import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
+import RecentBookingsLive, { LiveBookingItem } from '@/components/RecentBookingsLive';
+import { getQuoteForRoom, getStripQuotes } from '@/lib/review-quotes';
 import { trackEvent } from '@/lib/analytics';
 
 const API = '';
+const WA_NUMBER = '524891007679';
+
+// Formato corto para botones: "$2,000" (sin sufijo MXN)
+function fmtShort(n: number): string {
+  return `$${Math.round(n).toLocaleString('es-MX')}`;
+}
+
+// "9:42" para el cronómetro de apartado
+function fmtCountdown(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 // "Hoy" en la zona horaria del hotel (no UTC) — evita bloquear reservas del mismo día por la tarde
 function hotelToday(): string {
@@ -143,6 +159,16 @@ function RoomDrawer({
               {room.features.map(f => <li key={f}>{f}</li>)}
             </ul>
           </div>
+          {(() => {
+            const q = getQuoteForRoom(room.name, room.id);
+            return (
+              <blockquote className={styles.drawerQuote}>
+                <div className={styles.reviewStars} aria-label={`${q.rating} de 5 estrellas`}>{'★'.repeat(q.rating)}</div>
+                <p>“{q.text}”</p>
+                <footer>{q.name} · {q.location} · reseña de Google</footer>
+              </blockquote>
+            );
+          })()}
           <div className={styles.drawerPricing}>
             {searched && total !== null ? (
               <>
@@ -187,6 +213,7 @@ function ReservarPageInner() {
   const [searched, setSearched] = useState(false);
   const [searching, setSearching] = useState(false);
   const [unavailable, setUnavailable] = useState<string[]>([]);
+  const [availabilityDegraded, setAvailabilityDegraded] = useState(false);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [datesOverlapBlocked, setDatesOverlapBlocked] = useState(false);
   const [checkinError, setCheckinError] = useState('');
@@ -200,11 +227,101 @@ function ReservarPageInner() {
   const [promoCode, setPromoCode] = useState<PromoCode | null>(null);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
+  const [showPromoInput, setShowPromoInput] = useState(false);
 
   // ── UI ────────────────────────────────────────────────
   const [lightboxRoom, setLightboxRoom] = useState<BookingRoom | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [detailRoom, setDetailRoom] = useState<BookingRoom | null>(null);
+
+  // ── Apartado temporal REAL (cronómetro de 10 min) ─────
+  const holdSessionRef = useRef<string>('');
+  const holdHadRef = useRef(false);
+  const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null);
+  const [holdRemaining, setHoldRemaining] = useState<number | null>(null);
+  const [holdExpired, setHoldExpired] = useState(false);
+
+  // Sesión de apartado compartida con el checkout (misma llave en sessionStorage)
+  useEffect(() => {
+    const fresh = `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    try {
+      let s = sessionStorage.getItem('pe_hold_session');
+      if (!s) {
+        s = fresh;
+        sessionStorage.setItem('pe_hold_session', s);
+      }
+      holdSessionRef.current = s;
+    } catch {
+      holdSessionRef.current = fresh;
+    }
+  }, []);
+
+  async function renewHold(currentCart: CartItem[], ci: string, co: string) {
+    const sid = holdSessionRef.current;
+    if (!sid) return;
+    const roomNames = currentCart
+      .map(item => BOOKING_ROOMS.find(r => r.id === item.roomId)?.name)
+      .filter(Boolean);
+    try {
+      const res = await fetch(`${API}/api/renew-temporary-block`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames, sessionId: sid }),
+      });
+      const data = await res.json();
+      if (roomNames.length > 0 && data.expiresAt) {
+        setHoldExpiresAt(Date.parse(data.expiresAt));
+        setHoldExpired(false);
+        holdHadRef.current = true;
+      } else if (roomNames.length === 0) {
+        setHoldExpiresAt(null);
+        setHoldExpired(false);
+      }
+    } catch { /* sin apartado visible si falla — no bloquea la reserva */ }
+  }
+
+  // Renovar/liberar el apartado cuando cambia el carrito o las fechas (debounce)
+  useEffect(() => {
+    if (cart.length === 0) {
+      setHoldExpiresAt(null);
+      setHoldExpired(false);
+      if (holdHadRef.current) {
+        holdHadRef.current = false;
+        renewHold([], checkin, checkout);
+      }
+      return;
+    }
+    const t = setTimeout(() => renewHold(cart, checkin, checkout), 700);
+    return () => clearTimeout(t);
+  }, [cart, checkin, checkout]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Tic del cronómetro
+  useEffect(() => {
+    if (holdExpiresAt === null) {
+      setHoldRemaining(null);
+      return;
+    }
+    const tick = () => {
+      const rem = Math.max(0, Math.floor((holdExpiresAt - Date.now()) / 1000));
+      setHoldRemaining(rem);
+      if (rem <= 0) {
+        setHoldExpiresAt(null);
+        setHoldExpired(true);
+      }
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [holdExpiresAt]);
+
+  // ── Prueba social REAL (reservas anonimizadas + ocupación de la hoja) ──
+  const [socialProof, setSocialProof] = useState<{ count30d: number; recent: LiveBookingItem[]; occupancyPct: number | null } | null>(null);
+  useEffect(() => {
+    fetch(`${API}/api/social-proof`)
+      .then(r => r.json())
+      .then(d => setSocialProof({ count30d: d.count30d || 0, recent: d.recent || [], occupancyPct: d.occupancyPct ?? null }))
+      .catch(() => {});
+  }, []);
 
   const nights = calcNights(checkin, checkout);
   const today = hotelToday();
@@ -283,6 +400,13 @@ function ReservarPageInner() {
     setDatesOverlapBlocked(false);
   }, [checkin, checkout, blockedDates]);
 
+  // ── Señal para que el botón flotante de WhatsApp no tape la barra móvil ──
+  useEffect(() => {
+    if (cart.length > 0) document.body.dataset.peBookingBar = '1';
+    else delete document.body.dataset.peBookingBar;
+    return () => { delete document.body.dataset.peBookingBar; };
+  }, [cart.length]);
+
   // ── Analytics tracking ────────────────────────────────
   const startTime = useRef(Date.now());
   const cartAbandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -317,17 +441,27 @@ function ReservarPageInner() {
     setPromoCode(null);
     setPromoDiscount(0);
     setAutoSelectUnavailable(null);
+    setAvailabilityDegraded(false);
     let currentUnavailable: string[] = [];
     try {
       const roomNames = BOOKING_ROOMS.map(r => r.name);
-      const res = await fetch(`${API}/api/check-availability`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames }),
-      });
-      const data = await res.json();
-      currentUnavailable = data.unavailableRooms || [];
+      // Hasta 3 intentos: un timeout transitorio de Sheets NO debe mostrarse
+      // como "hotel lleno" — eso mata reservas reales.
+      let degraded = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await fetch(`${API}/api/check-availability`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames, sessionId: holdSessionRef.current || undefined }),
+        });
+        const data = await res.json();
+        currentUnavailable = data.unavailableRooms || [];
+        degraded = Boolean(data.degraded);
+        if (!degraded) break;
+        if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+      }
       setUnavailable(currentUnavailable);
+      setAvailabilityDegraded(degraded);
     } catch {
       setUnavailable([]);
     } finally {
@@ -455,19 +589,32 @@ function ReservarPageInner() {
   }
 
   // ── Promo ─────────────────────────────────────────────
-  function applyPromo() {
-    const code = promoInput.trim().toUpperCase();
+  function applyPromoCode(rawCode: string, source: 'input' | 'suggestion') {
+    const code = rawCode.trim().toUpperCase();
     const { valid, error } = validatePromo(code, nights, cart.length);
     if (!valid) { setPromoError(error!); return; }
     setPromoCode(code as PromoCode);
     setPromoError('');
     const disc = calcPromoDiscount(code as PromoCode, cart, checkin, checkout, nights);
     setPromoDiscount(disc);
+    trackEvent('PROMO_APPLIED', { code, source });
+  }
+
+  function applyPromo() {
+    applyPromoCode(promoInput, 'input');
   }
 
   // ── Totals ────────────────────────────────────────────
   const subtotal = calcCartSubtotal(cart, checkin, checkout);
   const total = Math.max(0, subtotal - promoDiscount);
+  // Mismo cálculo que el checkout: 50% hoy si son 2+ noches
+  const payToday = calcDepositAmount(total, nights);
+  const payLater = Math.max(0, total - payToday);
+  const isDeposit = nights >= 2 && cart.length > 0;
+  // Ahorro potencial si aplica la promo de 3ª noche gratis (para sugerirla con monto exacto)
+  const potential3xSaving = cart.length > 0 && nights === 3 && !promoCode
+    ? calcPromoDiscount('XILITLA3MX', cart, checkin, checkout, nights)
+    : 0;
 
   // ── Proceed to checkout ───────────────────────────────
   function goToCheckout() {
@@ -505,6 +652,26 @@ function ReservarPageInner() {
   const visibleRooms = BOOKING_ROOMS.filter(r => !r.disabled);
   const isUnavailable = (r: BookingRoom) => unavailable.includes(r.name);
   const inCart = (id: number) => cart.some(c => c.roomId === id);
+  // Urgencia honesta: cuántas habitaciones reales ya están agotadas en estas fechas
+  const unavailCount = visibleRooms.filter(r => unavailable.includes(r.name)).length;
+  const allUnavailable = searched && visibleRooms.length > 0 && unavailCount === visibleRooms.length;
+  // Disponibles primero; agotadas al final (orden estable dentro de cada grupo)
+  const sortedRooms = searched
+    ? [...visibleRooms].sort((a, b) => Number(isUnavailable(a)) - Number(isUnavailable(b)))
+    : visibleRooms;
+
+  // WhatsApp de rescate cuando no hay disponibilidad
+  const waFullMsg = `Hola, quiero reservar en Paraíso Encantado del ${checkin} al ${checkout} para ${adults} adulto${adults !== 1 ? 's' : ''}${children > 0 ? ` y ${children} menor${children !== 1 ? 'es' : ''}` : ''}, pero el sitio marca todo ocupado. ¿Tienen alguna opción o lista de espera?`;
+  const waFullHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waFullMsg)}`;
+
+  // Continuar desde la barra móvil: si hay advertencias, llevar al resumen para que se vean
+  function handleMobileContinue() {
+    if (!capacityOk || cartHasUnavailable) {
+      sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    goToCheckout();
+  }
 
   return (
     <main className={styles.main}>
@@ -518,6 +685,21 @@ function ReservarPageInner() {
 
       <CheckoutProgressBar currentStep={1} />
       <TrustBadgesReservar />
+
+      {socialProof !== null && (socialProof.count30d >= 5 || (socialProof.occupancyPct !== null && socialProof.occupancyPct >= 50)) && (
+        <div className={styles.demandStrip} role="status">
+          <Flame size={14} strokeWidth={2} />
+          <span>
+            {socialProof.occupancyPct !== null && socialProof.occupancyPct >= 50 && (
+              <><strong>{socialProof.occupancyPct}% de ocupación</strong> en los próximos 30 días — quedan pocas fechas</>
+            )}
+            {socialProof.occupancyPct !== null && socialProof.occupancyPct >= 50 && socialProof.count30d >= 5 && ' · '}
+            {socialProof.count30d >= 5 && (
+              <><strong>{socialProof.count30d} reservas confirmadas</strong> este mes</>
+            )}
+          </span>
+        </div>
+      )}
 
       {/* ── Checkin error ── */}
       {checkinError && (
@@ -637,7 +819,64 @@ function ReservarPageInner() {
             </div>
           )}
 
-          {visibleRooms.map(room => {
+          {availabilityDegraded && !searching && (
+            <div className={styles.degradedBanner} role="alert">
+              <AlertTriangle size={15} strokeWidth={2} />
+              <span>
+                No pudimos verificar la disponibilidad en este momento (no significa que estemos llenos).
+              </span>
+              <button className={styles.degradedRetry} onClick={handleSearch}>Reintentar</button>
+              <a
+                href={waFullHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.degradedWa}
+                onClick={() => trackEvent('WHATSAPP_CLICK', { action: 'availability_degraded', checkin, checkout })}
+              >
+                Reservar por WhatsApp
+              </a>
+            </div>
+          )}
+
+          {allUnavailable && !searching && !availabilityDegraded && (
+            <div className={styles.noAvailability}>
+              <h3>Estamos llenos en esas fechas</h3>
+              <p>
+                Las {visibleRooms.length} habitaciones ya están reservadas del{' '}
+                {new Date(`${checkin}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} al{' '}
+                {new Date(`${checkout}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}.
+                Prueba otras fechas, o escríbenos: a veces se libera espacio por cambios de última hora.
+              </p>
+              <div className={styles.noAvailActions}>
+                <a
+                  href={waFullHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.noAvailWa}
+                  onClick={() => trackEvent('WHATSAPP_CLICK', { action: 'no_availability', checkin, checkout })}
+                >
+                  Preguntar por WhatsApp
+                </a>
+                <button
+                  className={styles.noAvailDates}
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  Probar otras fechas
+                </button>
+              </div>
+            </div>
+          )}
+
+          {searched && !searching && !allUnavailable && !availabilityDegraded && unavailCount > 0 && (
+            <div className={styles.urgencyBanner} role="status">
+              <Flame size={15} strokeWidth={2} />
+              <span>
+                <strong>{unavailCount} de {visibleRooms.length} habitaciones</strong> ya están reservadas en tus fechas — asegura la tuya.
+              </span>
+            </div>
+          )}
+
+          {sortedRooms.map(room => {
             const unavail = isUnavailable(room);
             const added = inCart(room.id);
             const guestCount = getRoomGuests(room.id);
@@ -669,6 +908,9 @@ function ReservarPageInner() {
                     <span className={styles.categoryBadge}>{room.category}</span>
                     {room.occupancy === 'HIGH' && <span className={styles.hotBadge}>Alta demanda</span>}
                     {hasDiscount && <span className={styles.discountBadge}>−{discPct}%</span>}
+                    {searched && !unavail && (
+                      <span className={styles.lastOneBadge}>Solo queda 1 — suite única</span>
+                    )}
                   </div>
                   <button
                     className={styles.photoBtn}
@@ -760,6 +1002,26 @@ function ReservarPageInner() {
               </article>
             );
           })}
+
+          {/* ── Reseñas reales (de /reviews) ── */}
+          <div className={styles.reviewsStrip}>
+            <div className={styles.reviewsStripHeader}>
+              <span className={styles.ratingStars} aria-hidden="true">
+                <Star size={15} strokeWidth={0} fill="currentColor" />
+              </span>
+              <span><strong>4.5/5</strong> · 523 reseñas verificadas en Google</span>
+            </div>
+            <div className={styles.reviewsStripGrid}>
+              {getStripQuotes().map(q => (
+                <blockquote key={q.name} className={styles.reviewCard}>
+                  <div className={styles.reviewStars} aria-label={`${q.rating} de 5 estrellas`}>{'★'.repeat(q.rating)}</div>
+                  <p>“{q.text}”</p>
+                  <footer>{q.name} · {q.location} · Google</footer>
+                </blockquote>
+              ))}
+            </div>
+            <Link href="/reviews" className={styles.reviewsLink}>Leer las 523 reseñas →</Link>
+          </div>
         </div>
 
         {/* ── Cart sidebar ── */}
@@ -776,13 +1038,20 @@ function ReservarPageInner() {
                 {children > 0 && <div><span>Menores</span><strong>{children}</strong></div>}
               </div>
             ) : (
+              <p className={styles.sidebarEmpty}>Selecciona fechas para comenzar</p>
+            )}
+
+            {cart.length === 0 && (
               <>
-                <p className={styles.sidebarEmpty}>Selecciona fechas para comenzar</p>
                 <div className={styles.promoReminder}>
                   <Tag size={14} strokeWidth={1.5} />
                   <div>
                     <strong>3ª Noche Gratis</strong>
-                    <p>Reserva 3 noches con código <strong>XILITLA3MX</strong> y ahorra hasta {formatMXN(2400)} MXN</p>
+                    <p>
+                      {nights === 3
+                        ? <>Tus fechas califican: reserva ahora con el código <strong>XILITLA3MX</strong> y la 3ª noche es gratis.</>
+                        : <>Reserva 3 noches con el código <strong>XILITLA3MX</strong> y la 3ª noche es gratis (hasta {formatMXN(3000)}).</>}
+                    </p>
                   </div>
                 </div>
                 <div className={styles.depositNote}>
@@ -831,6 +1100,26 @@ function ReservarPageInner() {
               <p className={styles.sidebarEmpty}>Selecciona una habitación disponible</p>
             )}
 
+            {cart.length > 0 && !promoCode && nights === 3 && potential3xSaving > 0 && (
+              <div className={styles.promoSuggest}>
+                <Tag size={14} strokeWidth={1.5} />
+                <div className={styles.promoSuggestText}>
+                  <strong>Tu estancia califica: 3ª noche gratis</strong>
+                  <p>Aplica el código XILITLA3MX y ahorra {formatMXN(potential3xSaving)}.</p>
+                </div>
+                <button className={styles.promoSuggestBtn} onClick={() => applyPromoCode('XILITLA3MX', 'suggestion')}>
+                  Aplicar
+                </button>
+              </div>
+            )}
+
+            {cart.length > 0 && !promoCode && nights === 2 && (
+              <p className={styles.nightUpsell}>
+                <Tag size={12} strokeWidth={1.5} />
+                <span>Con 3 noches, la 3ª te sale <strong>gratis</strong> (código XILITLA3MX).</span>
+              </p>
+            )}
+
             {cart.length > 0 && (
               <div className={styles.promoBlock}>
                 {promoCode ? (
@@ -841,18 +1130,23 @@ function ReservarPageInner() {
                       <X size={12} />
                     </button>
                   </div>
-                ) : (
+                ) : showPromoInput ? (
                   <div className={styles.promoInput}>
                     <input
                       type="text"
                       placeholder="Código de descuento"
                       aria-label="Código de descuento"
                       value={promoInput}
+                      autoFocus
                       onChange={e => { setPromoInput(e.target.value); setPromoError(''); }}
                       onKeyDown={e => e.key === 'Enter' && applyPromo()}
                     />
                     <button onClick={applyPromo}>Aplicar</button>
                   </div>
+                ) : (
+                  <button className={styles.promoToggle} onClick={() => setShowPromoInput(true)}>
+                    ¿Tienes un código de descuento?
+                  </button>
                 )}
                 {promoError && <p className={styles.promoError} role="alert">{promoError}</p>}
               </div>
@@ -874,6 +1168,18 @@ function ReservarPageInner() {
                   <span>Total</span>
                   <span>{formatMXN(total)}</span>
                 </div>
+                {isDeposit && (
+                  <div className={styles.depositSplit}>
+                    <div className={`${styles.totalRow} ${styles.payTodayRow}`}>
+                      <span>Pagas hoy (50%)</span>
+                      <span>{formatMXN(payToday)}</span>
+                    </div>
+                    <div className={`${styles.totalRow} ${styles.payLaterRow}`}>
+                      <span>Al llegar al hotel</span>
+                      <span>{formatMXN(payLater)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -896,17 +1202,54 @@ function ReservarPageInner() {
               </div>
             )}
 
+            {holdRemaining !== null && cart.length > 0 && (
+              <div className={styles.holdChip} role="status">
+                <Clock size={14} strokeWidth={2} />
+                <span>Tu selección está <strong>apartada</strong> por <strong className={styles.holdTime}>{fmtCountdown(holdRemaining)}</strong> min</span>
+              </div>
+            )}
+
+            {holdExpired && cart.length > 0 && (
+              <div className={styles.holdExpiredNote} role="alert">
+                <AlertTriangle size={14} strokeWidth={2} />
+                <span>Tu apartado de 10 min expiró — la disponibilidad puede haber cambiado.</span>
+                <button onClick={() => renewHold(cart, checkin, checkout)}>Renovar apartado</button>
+              </div>
+            )}
+
             <button
               className={styles.checkoutBtn}
               disabled={cart.length === 0 || !checkin || !checkout || !capacityOk || cartHasUnavailable}
               onClick={goToCheckout}
             >
-              Continuar <ChevronRight size={16} strokeWidth={2} />
+              {cart.length === 0
+                ? 'Elige tu habitación'
+                : isDeposit
+                  ? `Continuar — ${fmtShort(payToday)} hoy`
+                  : `Continuar — ${fmtShort(total)}`}
+              {' '}<ChevronRight size={16} strokeWidth={2} />
             </button>
 
             <div className={styles.guarantees}>
               <span><ShieldCheck size={12} strokeWidth={1.5} /> Pago seguro con Stripe</span>
-              <span><ShieldCheck size={12} strokeWidth={1.5} /> Reembolso hasta 7 días antes</span>
+              <span><ShieldCheck size={12} strokeWidth={1.5} /> Reembolso 100% hasta 7 días antes</span>
+              <span><ShieldCheck size={12} strokeWidth={1.5} /> Precio final — sin cargos ocultos</span>
+            </div>
+
+            <div className={styles.socialProofLine}>
+              <span className={styles.ratingStars} aria-hidden="true">
+                <Star size={13} strokeWidth={0} fill="currentColor" />
+              </span>
+              <span><strong>4.5/5</strong> · 523 reseñas verificadas en Google</span>
+            </div>
+
+            <blockquote className={styles.sidebarQuote}>
+              <p>“{getStripQuotes()[0].text}”</p>
+              <footer>— {getStripQuotes()[0].name} · Google</footer>
+            </blockquote>
+
+            <div className={styles.payMethods} aria-label="Métodos de pago aceptados">
+              <span>Visa</span><span>Mastercard</span><span>Amex</span><span>Apple Pay</span><span>Google Pay</span>
             </div>
 
             {/* ── Incluido en tu reserva ── */}
@@ -978,16 +1321,26 @@ function ReservarPageInner() {
         </aside>
       </div>
 
-      {/* ── Sticky cart jump button ── */}
+      {/* ── Sticky mobile booking bar ── */}
       {cart.length > 0 && (
-        <button
-          className={styles.stickyCartBtn}
-          onClick={() => sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          aria-label="Ver carrito de reserva"
-        >
-          <ShieldCheck size={15} strokeWidth={2} />
-          Ver carrito ({cart.length})
-        </button>
+        <div className={styles.mobileBar}>
+          <button
+            className={styles.mobileBarInfo}
+            onClick={() => sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            aria-label="Ver resumen de tu reserva"
+          >
+            <span className={styles.mobileBarTotal}>{formatMXN(total)}</span>
+            <span className={styles.mobileBarSub}>
+              {holdRemaining !== null ? `Apartada ${fmtCountdown(holdRemaining)} · ` : ''}
+              {isDeposit
+                ? `hoy solo ${fmtShort(payToday)}`
+                : `${nights} noche${nights !== 1 ? 's' : ''} · ${cart.length} hab.`}
+            </span>
+          </button>
+          <button className={styles.mobileBarCta} onClick={handleMobileContinue}>
+            Continuar <ChevronRight size={16} strokeWidth={2} />
+          </button>
+        </div>
       )}
 
       {/* ── Room Detail Drawer ── */}
@@ -1018,6 +1371,7 @@ function ReservarPageInner() {
           <p className={styles.lbCaption}>{lightboxRoom.name} · {lightboxIdx + 1}/{lightboxRoom.images.length}</p>
         </div>
       )}
+      <RecentBookingsLive items={socialProof?.recent ?? []} />
       <WhatsAppRecoveryWidget />
     </main>
   );

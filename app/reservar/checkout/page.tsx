@@ -308,7 +308,17 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState('');
   const [paymentIntentId, setPaymentIntentId] = useState('');
   const [loadError, setLoadError] = useState('');
-  const [sessionId] = useState(() => `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+  // Reusar la sesión de apartado de /reservar (si existe) para que el bloqueo
+  // temporal creado allá y el de aquí sean el mismo y no se estorben.
+  const [sessionId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('pe_hold_session');
+        if (saved) return saved;
+      } catch { /* ignore */ }
+    }
+    return `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  });
 
   // Load state + create PaymentIntent
   useEffect(() => {
@@ -537,6 +547,13 @@ export default function CheckoutPage() {
               : <p><ShieldCheck size={13} strokeWidth={1.5} /> Reserva directa sin comisiones</p>
             }
           </div>
+
+          {/* Reseña real (de /reviews) — refuerzo de confianza en el pago */}
+          <blockquote className={styles.summaryReview}>
+            <div className={styles.summaryReviewStars} aria-label="5 de 5 estrellas">★★★★★</div>
+            <p>“El mejor hotel de Xilitla sin ninguna duda. Habitación impecable, restaurante excelente y ubicación perfecta.”</p>
+            <footer>Jorge Mendoza · Monterrey · Google — <strong>4.5/5</strong> · 523 reseñas</footer>
+          </blockquote>
         </aside>
       </div>
       <WhatsAppRecoveryWidget />

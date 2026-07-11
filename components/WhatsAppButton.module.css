@@ -45,3 +45,10 @@
     display: none;
   }
 }
+
+/* En /reservar móvil, la barra fija de reserva ocupa el fondo: subir el botón */
+@media (max-width: 800px) {
+  :global(body[data-pe-booking-bar='1']) .btn {
+    bottom: 92px;
+  }
+}

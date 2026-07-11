@@ -248,15 +248,17 @@ export async function checkAvailability(
   rooms: (string | { name: string })[],
   sessionId: string | null = null,
   excludeConfirmacion?: string,
-): Promise<{ available: boolean; unavailableRooms: string[] }> {
+): Promise<{ available: boolean; unavailableRooms: string[]; degraded?: boolean }> {
   const client = await getSheetsClient();
   // Fail-OPEN solo si Google NO está configurado (entorno local sin hoja).
   // Si SÍ está configurado pero el cliente falló (credenciales rotas/cuota),
   // fail-CLOSED: mejor pedir reintento que vender un cuarto ocupado.
+  // `degraded: true` = el resultado viene de un error, NO de disponibilidad real;
+  // permite a la UI distinguir "hotel lleno" de "no pudimos verificar".
   if (!process.env.GOOGLE_SHEET_ID) return { available: true, unavailableRooms: [] };
   if (!client) {
     console.error('❌ checkAvailability: Sheets configurado pero cliente nulo — fail-closed');
-    return { available: false, unavailableRooms: rooms.map(r => typeof r === 'string' ? r : r.name) };
+    return { available: false, unavailableRooms: rooms.map(r => typeof r === 'string' ? r : r.name), degraded: true };
   }
   const sid = process.env.GOOGLE_SHEET_ID;
 
@@ -321,7 +323,7 @@ export async function checkAvailability(
     // Sobrevender (doble reserva) es peor que pedir reintentar. Marcamos todas
     // las habitaciones solicitadas como no disponibles.
     const requested = rooms.map(r => typeof r === 'string' ? r : r.name);
-    return { available: false, unavailableRooms: requested };
+    return { available: false, unavailableRooms: requested, degraded: true };
   }
 }
 
@@ -457,6 +459,69 @@ export async function createTemporaryBlock(
     console.log(`✅ Bloqueo temporal creado: sesión ${sessionId}`);
   } catch (e: any) {
     console.error('❌ createTemporaryBlock error:', e.message);
+  }
+}
+
+/**
+ * Renueva el apartado de una sesión: purga sus filas anteriores (y de paso
+ * TODAS las filas ya expiradas de cualquier sesión) y escribe filas frescas
+ * con expiración a 10 min. Con rooms vacío solo libera. Devuelve la
+ * expiración ISO de las filas nuevas, o null si no se creó apartado.
+ */
+export async function renewTemporaryBlock(
+  checkin: string, checkout: string,
+  rooms: (string | { name: string })[], sessionId: string,
+): Promise<string | null> {
+  const client = await getSheetsClient();
+  if (!client || !process.env.GOOGLE_SHEET_ID) return null;
+  const sid = process.env.GOOGLE_SHEET_ID;
+  try {
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({
+        spreadsheetId: sid,
+        range: `${TEMP_BLOCKS_SHEET}!A:D`,
+      })
+    );
+    const data = res.data.values || [];
+    const now = new Date();
+    const kept = data.filter((row, i) => {
+      if (i === 0) return true;                 // encabezado
+      if (row[3] === sessionId) return false;   // filas viejas de esta sesión
+      const exp = new Date(row[2] || '');
+      return !isNaN(exp.getTime()) && exp > now; // purga expiradas
+    });
+
+    const normalizedRooms = rooms
+      .map(r => typeof r === 'string' ? { name: normalizeRoomName(r) } : { name: normalizeRoomName(r.name) })
+      .filter(r => ROOM_NAMES.includes(r.name));
+    const dateRange = getDateRange(checkin, checkout);
+    const expiration = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    for (const date of dateRange) {
+      for (const room of normalizedRooms) {
+        kept.push([date, room.name, expiration, sessionId]);
+      }
+    }
+
+    await sheetsCall(() =>
+      client.spreadsheets.values.clear({
+        spreadsheetId: sid,
+        range: `${TEMP_BLOCKS_SHEET}!A:D`,
+      })
+    );
+    if (kept.length > 0) {
+      await sheetsCall(() =>
+        client.spreadsheets.values.update({
+          spreadsheetId: sid,
+          range: `${TEMP_BLOCKS_SHEET}!A1`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: kept },
+        })
+      );
+    }
+    return normalizedRooms.length > 0 && dateRange.length > 0 ? expiration : null;
+  } catch (e: any) {
+    console.error('❌ renewTemporaryBlock error:', e.message);
+    return null;
   }
 }
 

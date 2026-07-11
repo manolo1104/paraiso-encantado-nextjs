@@ -432,6 +432,36 @@
 
 .summaryGuarantees svg { color: #3d7a34; flex-shrink: 0; }
 
+/* Reseña real en el resumen de pago */
+.summaryReview {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  background: #faf9f6;
+  border: 1px solid #ece6d8;
+  border-left: 3px solid #c9a97a;
+  border-radius: 10px;
+}
+.summaryReviewStars {
+  color: #c9a11a;
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+}
+.summaryReview p {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: #3a4a3a;
+  line-height: 1.5;
+  margin: 0 0 6px;
+}
+.summaryReview footer {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.68rem;
+  color: #7a8a7a;
+}
+.summaryReview footer strong { color: #4a5a4a; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; }

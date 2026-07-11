@@ -1361,39 +1361,538 @@
   .drawerFeatures { grid-template-columns: 1fr; }
 }
 
-/* ── Sticky cart jump button ── */
-.stickyCartBtn {
+/* ── Sticky mobile booking bar ── */
+.mobileBar {
   position: fixed;
-  bottom: 80px;
-  right: 24px;
-  z-index: 800;
-  display: flex;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  display: none;
   align-items: center;
-  gap: 7px;
+  gap: 12px;
+  background: #fffefb;
+  border-top: 1px solid #e8e2d6;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  box-shadow: 0 -6px 24px rgba(26, 46, 26, 0.14);
+  animation: barSlideUp 0.25s ease;
+}
+
+@keyframes barSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.mobileBarInfo {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.mobileBarTotal {
+  font-family: var(--font-cormorant), serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a2e1a;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.mobileBarSub {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #3d7a34;
+  white-space: nowrap;
+}
+
+.mobileBarCta {
   background: #1a2e1a;
   color: #e8dcc8;
   border: none;
-  border-radius: 50px;
-  padding: 11px 18px;
+  border-radius: 8px;
   font-family: var(--font-jost), sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 14px 22px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(26, 46, 26, 0.45);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s;
 }
-.stickyCartBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(26, 46, 26, 0.55);
+.mobileBarCta:hover { background: #2d5a27; }
+
+@media (max-width: 800px) {
+  .mobileBar { display: flex; }
+  .layout { padding-bottom: 140px; }
 }
 
-@media (max-width: 768px) {
-  .stickyCartBtn {
-    bottom: 80px;
-    right: 16px;
-    font-size: 0.78rem;
-    padding: 10px 14px;
-  }
+/* ── Demand strip (reservas reales últimos 30 días) ── */
+.demandStrip {
+  max-width: 1100px;
+  margin: -6px auto 14px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.8rem;
+  color: #7a4318;
+}
+.demandStrip svg { color: #a8542a; flex-shrink: 0; }
+.demandStrip strong { color: #8a4a1a; }
+
+@media (max-width: 800px) {
+  .demandStrip { padding: 0 16px; text-align: center; }
+}
+
+/* ── "Solo queda 1" badge (real: cada suite es única) ── */
+.lastOneBadge {
+  background: rgba(158, 42, 28, 0.92);
+  color: #fff;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* ── Degraded availability banner ── */
+.degradedBanner {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #fff8e6;
+  border: 1px solid #e8b84b;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  color: #7a5a00;
+}
+.degradedBanner svg { color: #c9860a; flex-shrink: 0; }
+.degradedBanner span { flex: 1; min-width: 200px; }
+
+.degradedRetry {
+  background: #1a2e1a;
+  color: #e8dcc8;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.degradedRetry:hover { background: #2d5a27; }
+
+.degradedWa {
+  display: inline-flex;
+  align-items: center;
+  background: #25d366;
+  color: #fff;
+  border-radius: 6px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.degradedWa:hover { background: #1fb958; }
+
+/* ── Urgency banner (honest scarcity) ── */
+.urgencyBanner {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #fff6ee;
+  border: 1px solid #eec9a8;
+  border-radius: 8px;
+  padding: 11px 16px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.82rem;
+  color: #7a4318;
+}
+.urgencyBanner svg { color: #a8542a; flex-shrink: 0; }
+.urgencyBanner strong { color: #8a4a1a; }
+
+/* ── No availability state ── */
+.noAvailability {
+  grid-column: 1 / -1;
+  background: #fff;
+  border: 1px solid #e8e2d6;
+  border-radius: 12px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.noAvailability h3 {
+  font-family: var(--font-cormorant), serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #1a2e1a;
+  margin: 0 0 8px;
+}
+
+.noAvailability p {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  color: #5a6b5a;
+  line-height: 1.55;
+  max-width: 480px;
+  margin: 0 auto 18px;
+}
+
+.noAvailActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.noAvailWa {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #25d366;
+  color: #fff;
+  border-radius: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 12px 20px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.noAvailWa:hover { background: #1fb958; }
+
+.noAvailDates {
+  background: none;
+  border: 1.5px solid #1a2e1a;
+  border-radius: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1a2e1a;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.noAvailDates:hover { background: #f0ece4; }
+
+/* ── Promo suggestion (one-click apply) ── */
+.promoSuggest {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #e8f5e8;
+  border: 1px solid #9fce9f;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.promoSuggest > svg { flex-shrink: 0; color: #2d5a27; }
+
+.promoSuggestText {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-jost), sans-serif;
+}
+.promoSuggestText strong {
+  display: block;
+  font-size: 0.78rem;
+  color: #1e3012;
+  line-height: 1.3;
+}
+.promoSuggestText p {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #3a5a3a;
+  line-height: 1.35;
+}
+
+.promoSuggestBtn {
+  background: #2d5a27;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.promoSuggestBtn:hover { background: #1e3012; }
+
+.nightUpsell {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: rgba(201,169,122,0.10);
+  border: 1px solid rgba(201,169,122,0.35);
+  border-radius: 6px;
+  padding: 8px 11px;
+  margin: 0;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  color: #4a5e4a;
+  line-height: 1.4;
+}
+.nightUpsell svg { flex-shrink: 0; margin-top: 2px; color: #c9a97a; }
+
+.promoToggle {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  color: #3d7a34;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.promoToggle:hover { color: #2d5a27; }
+
+/* ── Deposit split (pay today / pay later) ── */
+.depositSplit {
+  background: #f0faf0;
+  border: 1px solid #c8e4c8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.payTodayRow {
+  font-weight: 600;
+  color: #1e3012;
+}
+.payTodayRow span:last-child { color: #2d5a27; font-size: 0.95rem; }
+
+.payLaterRow {
+  font-size: 0.78rem;
+  color: #5a6b5a;
+}
+
+/* ── Hold countdown (apartado real de 10 min) ── */
+.holdChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0faf0;
+  border: 1px solid #9fce9f;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  color: #1e3012;
+}
+.holdChip svg { color: #2d5a27; flex-shrink: 0; }
+.holdTime {
+  font-variant-numeric: tabular-nums;
+  color: #2d5a27;
+  font-size: 0.88rem;
+}
+
+.holdExpiredNote {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #fff8e6;
+  border: 1px solid #e8b84b;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  color: #7a5a00;
+}
+.holdExpiredNote svg { color: #c9860a; flex-shrink: 0; }
+.holdExpiredNote span { flex: 1; min-width: 150px; }
+.holdExpiredNote button {
+  background: #1a2e1a;
+  color: #e8dcc8;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.holdExpiredNote button:hover { background: #2d5a27; }
+
+/* ── Reviews strip (reseñas reales de Google) ── */
+.reviewsStrip {
+  grid-column: 1 / -1;
+  background: #fff;
+  border: 1px solid #e8e2d6;
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-top: 8px;
+}
+
+.reviewsStripHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  color: #4a5a4a;
+  margin-bottom: 16px;
+}
+.reviewsStripHeader strong { color: #1a2e1a; }
+
+.reviewsStripGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.reviewCard {
+  background: #faf9f6;
+  border: 1px solid #ece6d8;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 0;
+}
+
+.reviewStars {
+  color: #c9a11a;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.reviewCard p {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.8rem;
+  color: #3a4a3a;
+  line-height: 1.55;
+  margin: 0 0 8px;
+}
+
+.reviewCard footer {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.7rem;
+  color: #7a8a7a;
+}
+
+.reviewsLink {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #3d7a34;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.reviewsLink:hover { color: #2d5a27; }
+
+@media (max-width: 800px) {
+  .reviewsStripGrid { grid-template-columns: 1fr; }
+}
+
+/* ── Sidebar mini quote ── */
+.sidebarQuote {
+  margin: 0;
+  padding: 10px 12px;
+  background: #faf9f6;
+  border-left: 2px solid #c9a97a;
+  border-radius: 0 8px 8px 0;
+}
+.sidebarQuote p {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #4a5a4a;
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+.sidebarQuote footer {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.68rem;
+  color: #7a8a7a;
+}
+
+/* ── Drawer quote (reseña de esta suite) ── */
+.drawerQuote {
+  margin: 0;
+  padding: 14px 16px;
+  background: #faf9f6;
+  border: 1px solid #ece6d8;
+  border-left: 3px solid #c9a97a;
+  border-radius: 10px;
+}
+.drawerQuote p {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #3a4a3a;
+  line-height: 1.55;
+  margin: 0 0 6px;
+}
+.drawerQuote footer {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  color: #7a8a7a;
+}
+
+/* ── Social proof + payment methods ── */
+.socialProofLine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.75rem;
+  color: #4a5a4a;
+  padding-top: 2px;
+}
+.socialProofLine strong { color: #1a2e1a; }
+.ratingStars { color: #c9a11a; display: flex; align-items: center; }
+
+.payMethods {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.payMethods span {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #6e6256;
+  background: #f5f2ea;
+  border: 1px solid #e8e2d6;
+  border-radius: 4px;
+  padding: 3px 8px;
 }
