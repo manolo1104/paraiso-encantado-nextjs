@@ -7,7 +7,7 @@ import { BOOKING_ROOMS, getRoomBasePrice } from '@/lib/booking';
 import { TOURS_CATALOG, PAQUETES_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import type { TourItem } from '@/lib/booking-html';
 import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
-import { parseNotas, joinNotas } from '@/lib/notas';
+import { parseNotas, joinNotas, type ExtraItem } from '@/lib/notas';
 import { normalizeMxPhone } from '@/lib/phone';
 import styles from './Modal.module.css';
 
@@ -168,6 +168,16 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const [tourItems, setTourItems] = useState<TourItem[]>(parsedNotas.tours as unknown as TourItem[]);
   const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(parsedNotas.paquetes as unknown as PaqueteItem[]);
 
+  // Extras: desayuno ($250 por persona/noche) y late check-out 2h ($250 por
+  // habitación/noche). Se guardan en la sección ||EXTRAS|| de las notas.
+  const initDesayuno = parsedNotas.extras.find(e => e.tipo === 'desayuno');
+  const initLate = parsedNotas.extras.find(e => e.tipo === 'late_checkout');
+  const [desayuno, setDesayuno] = useState<boolean>(!!initDesayuno);
+  const [desayunoPersonas, setDesayunoPersonas] = useState<number>(
+    initDesayuno ? Math.max(1, Math.round(initDesayuno.cantidad / Math.max(booking?.noches || 1, 1))) : 0
+  );
+  const [lateCheckout, setLateCheckout] = useState<boolean>(!!initLate);
+
   // Agregar/editar tours y paquetes recalcula el "Total a cobrar" (igual que
   // cambiar habitaciones). Antes el total se quedaba solo con las habitaciones
   // salvo que se pulsara "Usar calculado" → riesgo de cobrar de menos.
@@ -302,25 +312,43 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const habsCalculado = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * Math.max(form.noches, 1), 0);
   const toursCalculado = tourItems.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesCalculado = paqueteItems.reduce((s, p) => s + p.precio, 0);
-  const precioCalculado = habsCalculado + toursCalculado + paquetesCalculado;
+  const nochesQ = Math.max(form.noches, 1);
+  const desayunoTotal = desayuno ? 250 * Math.max(desayunoPersonas, 0) * nochesQ : 0;
+  const lateCheckoutTotal = lateCheckout ? 250 * habitaciones.length * nochesQ : 0;
+  const extrasCalculado = desayunoTotal + lateCheckoutTotal;
+  const precioCalculado = habsCalculado + toursCalculado + paquetesCalculado + extrasCalculado;
   const restante = restanteOverride ?? (form.total - anticipo);
+
+  function toggleDesayuno(on: boolean) {
+    setDesayuno(on);
+    // Al activar, si aún no hay número, arranca con los huéspedes de la reserva.
+    setDesayunoPersonas(p => (on && p <= 0) ? totalHuespedes : p);
+    setTotalOverride(false);
+  }
+  function toggleLateCheckout(on: boolean) {
+    setLateCheckout(on);
+    setTotalOverride(false);
+  }
 
   // Auto-calcular noches y precio (only when NOT editing)
   useEffect(() => {
     const { checkin, checkout } = form;
     if (checkin && checkout) {
       const n = Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000));
-      // El auto-total incluye tours y paquetes (antes solo habitaciones).
+      // El auto-total incluye tours, paquetes y extras (antes solo habitaciones).
+      const nq = Math.max(n, 1);
       const precioAuto = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * n, 0)
         + tourItems.reduce((s, t) => s + t.precio * t.personas, 0)
-        + paqueteItems.reduce((s, p) => s + p.precio, 0);
+        + paqueteItems.reduce((s, p) => s + p.precio, 0)
+        + (desayuno ? 250 * Math.max(desayunoPersonas, 0) * nq : 0)
+        + (lateCheckout ? 250 * habitaciones.length * nq : 0);
       setForm(f => ({
         ...f,
         noches: n,
         total: totalOverride ? f.total : precioAuto,
       }));
     }
-  }, [form.checkin, form.checkout, habitaciones, tourItems, paqueteItems, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form.checkin, form.checkout, habitaciones, tourItems, paqueteItems, desayuno, desayunoPersonas, lateCheckout, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!totalOverride) setRestanteOverride(null);
@@ -386,11 +414,29 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     setError('');
     try {
       const habitacion = habitaciones.map(h => h.suite).join(', ');
+      const nochesFinal = Math.max(form.noches, 1);
+      const extras: ExtraItem[] = [];
+      if (desayuno && desayunoPersonas > 0) {
+        extras.push({
+          tipo: 'desayuno', nombre: 'Desayuno',
+          cantidad: desayunoPersonas * nochesFinal, precioUnit: 250,
+          detalle: `${desayunoPersonas} persona${desayunoPersonas !== 1 ? 's' : ''} × ${nochesFinal} noche${nochesFinal !== 1 ? 's' : ''}`,
+        });
+      }
+      if (lateCheckout) {
+        const habs = habitaciones.length;
+        extras.push({
+          tipo: 'late_checkout', nombre: 'Late check-out (2h)',
+          cantidad: habs * nochesFinal, precioUnit: 250,
+          detalle: `${habs} habitación${habs !== 1 ? 'es' : ''} × ${nochesFinal} noche${nochesFinal !== 1 ? 's' : ''}`,
+        });
+      }
       const notas = joinNotas({
         cliente: notasCliente,
         interno: notasInternas,
         tours: tourItems as any,
         paquetes: paqueteItems as any,
+        extras,
       });
       const url = isEdit ? `/api/admin/reservas/${editConfirmacion}` : '/api/admin/reservas';
       const method = isEdit ? 'PATCH' : 'POST';
@@ -649,6 +695,44 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
             {paqueteItems.length > 0 && (
               <p className={styles.roomsTotal}>Paquetes: ${paquetesCalculado.toLocaleString('es-MX')} MXN</p>
             )}
+          </div>
+
+          {/* Extras: desayuno y late check-out */}
+          <div className={styles.roomsSection}>
+            <div className={styles.roomsSectionHeader}>
+              <span className={styles.roomsSectionLabel}>Extras</span>
+            </div>
+
+            <label className={styles.extraRow}>
+              <input type="checkbox" checked={desayuno} onChange={e => toggleDesayuno(e.target.checked)} />
+              <span className={styles.extraName}>
+                Desayuno <small>$250 por persona / noche</small>
+              </span>
+              {desayuno && (
+                <span className={styles.extraQty}>
+                  <input
+                    type="number" min={1} value={desayunoPersonas}
+                    onChange={e => { setDesayunoPersonas(parseInt(e.target.value) || 0); setTotalOverride(false); }}
+                    title="Número de personas con desayuno"
+                  />
+                  <span>pers. × {nochesQ}n</span>
+                </span>
+              )}
+              {desayuno && <span className={styles.extraTotal}>${desayunoTotal.toLocaleString('es-MX')}</span>}
+            </label>
+
+            <label className={styles.extraRow}>
+              <input type="checkbox" checked={lateCheckout} onChange={e => toggleLateCheckout(e.target.checked)} />
+              <span className={styles.extraName}>
+                Late check-out (2h) <small>$250 por habitación / noche</small>
+              </span>
+              {lateCheckout && (
+                <span className={styles.extraQty}>
+                  <span>{habitaciones.length} hab. × {nochesQ}n</span>
+                </span>
+              )}
+              {lateCheckout && <span className={styles.extraTotal}>${lateCheckoutTotal.toLocaleString('es-MX')}</span>}
+            </label>
           </div>
 
           {/* Calculador de precio */}

@@ -22,11 +22,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const parsed = parseNotas(b.notas);
   const tours = parsed.tours as { nombre: string; personas: number; precio: number }[];
   const paquetes = parsed.paquetes as { nombre: string; noches: number; personas: number; precio: number }[];
+  const extras = parsed.extras;
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
+  const extrasTotal = extras.reduce((s, e) => s + e.cantidad * e.precioUnit, 0);
 
   const rawRooms = b.habitaciones.split(',').map(s => s.trim()).filter(Boolean);
-  const habsTotal = b.total - toursTotal - paquetesTotal;
+  const habsTotal = b.total - toursTotal - paquetesTotal - extrasTotal;
   const pricePerRoom = rawRooms.length > 0 ? Math.round(habsTotal / rawRooms.length) : habsTotal;
 
   const rooms = rawRooms.map(raw => {
@@ -40,6 +42,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   for (const p of paquetes) {
     rooms.push({ name: `🎁 ${p.nombre}`, guestCount: p.personas, totalPrice: p.precio });
+  }
+  for (const e of extras) {
+    const perNight = Math.max(1, Math.round(e.cantidad / Math.max(b.noches, 1)));
+    rooms.push({ name: `${e.tipo === 'desayuno' ? '🍳' : '🕐'} ${e.nombre}`, guestCount: perNight, totalPrice: e.cantidad * e.precioUnit });
   }
 
   // Solo la nota visible para el cliente (nunca ||INTERNO||/||HABS||/JSON técnicos)

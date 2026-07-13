@@ -206,6 +206,157 @@
 
 .total { font-weight: 600; color: var(--forest); white-space: nowrap; }
 
+/* ── Huéspedes bajo la suite ──────────────────────────────────────────────── */
+.suiteGuests {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.72rem; color: var(--sage); margin-top: 3px;
+}
+
+/* ── Celda de pago (total / anticipo / pendiente apilados) ────────────────── */
+.pagoCell { white-space: nowrap; line-height: 1.35; }
+.pagoTotal { font-weight: 600; color: var(--forest); font-size: 0.9rem; }
+.pagoAnticipo { font-size: 0.72rem; color: var(--sage); margin: 1px 0; }
+.pagoPagado {
+  display: inline-block; font-size: 0.72rem; font-weight: 700;
+  background: #e6f4e8; color: #1a6b22;
+  padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+}
+.pagoFalta {
+  display: inline-block; font-size: 0.72rem; font-weight: 700;
+  background: #fff3d4; color: #7a5a00;
+  padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+}
+.pagoNeutral { font-size: 0.8rem; color: #bbb; }
+
+/* ── Resumen financiero (de un vistazo) ───────────────────────────────────── */
+.moneySummary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.moneyStat {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid var(--forest);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.moneyStatPaid { border-left-color: #2d7a34; }
+.moneyStatDue  { border-left-color: #c98a1a; }
+.moneyStatLabel {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--sage); font-weight: 500;
+}
+.moneyStatValue {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 1.5rem; font-weight: 400; line-height: 1; color: var(--ink);
+}
+.moneyStatPaid .moneyStatValue { color: #2d7a34; }
+.moneyStatDue .moneyStatValue  { color: #b5791a; }
+
+/* ── Botón WhatsApp en acciones ───────────────────────────────────────────── */
+.actionBtnWa {
+  background: #25D366; color: #fff; border: none; border-radius: 4px;
+  padding: 5px 7px; cursor: pointer; display: flex; align-items: center;
+}
+.actionBtnWa:hover { opacity: 0.85; }
+
+/* ── Desglose de pago en tarjeta móvil ────────────────────────────────────── */
+.mobilePago {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  font-size: 0.8rem; margin-bottom: 10px;
+}
+.mobilePagoTotal { font-weight: 600; color: var(--forest); }
+.mobilePagoAnticipo { color: var(--sage); font-size: 0.76rem; }
+.mobileCardBtnWa { background: #25D366; color: #fff; }
+.mobileCardBtnCobrar { background: #b5791a; color: #fff; }
+
+/* ── Indicadores de extras / notas ────────────────────────────────────────── */
+.reservaTags { display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; }
+.tagAddon {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.68rem; font-weight: 700;
+  background: #f3eafc; color: #6b3fa0;
+  padding: 2px 7px; border-radius: 10px; cursor: default;
+}
+.tagNote {
+  display: inline-flex; align-items: center;
+  font-size: 0.68rem; color: #8a6830;
+  background: #fdf6e8; padding: 3px 6px; border-radius: 10px; cursor: default;
+}
+
+/* ── Botón cobrar en acciones ─────────────────────────────────────────────── */
+.actionBtnCobrar {
+  background: #b5791a; color: #fff; border: none; border-radius: 4px;
+  padding: 5px 7px; cursor: pointer; display: flex; align-items: center;
+}
+.actionBtnCobrar:hover { opacity: 0.85; }
+
+/* ── Modal Registrar pago ─────────────────────────────────────────────────── */
+.cobrarOverlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(20, 25, 20, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.cobrarModal {
+  background: #fff; border-radius: 12px; width: 100%; max-width: 380px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25); overflow: hidden;
+}
+.cobrarHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--forest); color: var(--cream);
+}
+.cobrarTitle { font-size: 0.95rem; font-weight: 600; font-family: var(--font-jost), sans-serif; }
+.cobrarClose { background: none; border: none; color: var(--cream); cursor: pointer; display: flex; opacity: 0.85; }
+.cobrarClose:hover { opacity: 1; }
+.cobrarBody { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.cobrarClient { font-size: 0.82rem; color: var(--sage); margin-bottom: 2px; }
+.cobrarRow {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.88rem; color: var(--clay);
+}
+.cobrarRow strong { color: var(--ink); }
+.cobrarPend { color: #b5791a !important; }
+.cobrarField {
+  display: flex; flex-direction: column; gap: 5px; margin-top: 6px;
+  font-size: 0.72rem; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--clay);
+}
+.cobrarField input {
+  padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px;
+  font-size: 1.1rem; font-family: var(--font-jost), sans-serif; outline: none;
+}
+.cobrarField input:focus { border-color: var(--forest); }
+.cobrarTodo {
+  align-self: flex-start; background: none; border: none; padding: 0;
+  color: var(--forest); font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  text-decoration: underline; font-family: var(--font-jost), sans-serif;
+}
+.cobrarResult {
+  background: var(--parch); border-radius: 6px; padding: 10px 12px;
+  font-size: 0.82rem; color: var(--clay); line-height: 1.5;
+}
+.cobrarOk { color: #2d7a34 !important; }
+.cobrarError { color: #b91c1c; font-size: 0.8rem; margin: 0; }
+.cobrarActions { display: flex; gap: 8px; margin-top: 6px; }
+.cobrarCancel {
+  flex: 1; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px;
+  padding: 10px; font-size: 0.85rem; color: var(--clay); cursor: pointer;
+  font-family: var(--font-jost), sans-serif;
+}
+.cobrarCancel:hover { border-color: var(--forest); }
+.cobrarSave {
+  flex: 2; display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: #b5791a; color: #fff; border: none; border-radius: 6px;
+  padding: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-jost), sans-serif;
+}
+.cobrarSave:hover { background: #9c6614; }
+.cobrarSave:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .badge {
   font-size: 0.72rem;
   font-weight: 600;
@@ -308,6 +459,12 @@
     padding: 12px;
     font-size: 0.95rem;
   }
+
+  /* Resumen financiero: más compacto en móvil */
+  .moneySummary { gap: 8px; }
+  .moneyStat { padding: 10px 10px; }
+  .moneyStatLabel { font-size: 0.6rem; }
+  .moneyStatValue { font-size: 1.15rem; }
 }
 
 /* ── Vista Hoy ────────────────────────────────────────────────────────────── */

@@ -54,9 +54,11 @@ export async function GET(
   const parsed = parseNotas(b.notas);
   const tours = parsed.tours as { nombre: string; personas: number; precio: number }[];
   const paquetes = parsed.paquetes as { nombre: string; habitacion: string; noches: number; personas: number; precio: number }[];
+  const extras = parsed.extras;
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
-  const habsTotal = b.total - toursTotal - paquetesTotal;
+  const extrasTotal = extras.reduce((s, e) => s + e.cantidad * e.precioUnit, 0);
+  const habsTotal = b.total - toursTotal - paquetesTotal - extrasTotal;
 
   // Parse room names: "Jungla (2 personas)" → { name, guests }
   const rawRooms = b.habitaciones
@@ -94,6 +96,16 @@ export async function GET(
       name: `🎁 ${p.nombre}`,
       category: `Paquete · ${p.habitacion} · ${p.noches} noches · ${p.personas} persona${p.personas !== 1 ? 's' : ''}`,
       guests: p.personas, nights: p.noches, rate: Math.round(p.precio / p.noches), subtotal: p.precio,
+    });
+  }
+  // Add extras (desayuno / late check-out). perNight = unidades por noche → el
+  // renglón lee "perNight × noches × precioUnit = subtotal".
+  for (const e of extras) {
+    const perNight = Math.max(1, Math.round(e.cantidad / noches));
+    rooms.push({
+      name: `${e.tipo === 'desayuno' ? '🍳' : '🕐'} ${e.nombre}`,
+      category: e.detalle || 'Servicio adicional',
+      guests: perNight, nights: noches, rate: e.precioUnit, subtotal: e.cantidad * e.precioUnit,
     });
   }
 

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun } from 'lucide-react';
+import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun, MessageSquare, Users, Wallet, FileSpreadsheet, Gift, StickyNote, X } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
+import { normalizeMxPhone } from '@/lib/phone';
+import { parseNotas } from '@/lib/notas';
 import { printBookingPDF } from '../cotizaciones/CotizacionesClient';
 import styles from './reservas.module.css';
 
@@ -68,6 +70,136 @@ function DaysChip({ days }: { days: number }) {
   return <span className={styles.daysChip} style={{ background: '#f9fafb', color: '#888' }}>{days}d</span>;
 }
 
+// ── Pagos: total / anticipo / pendiente ──────────────────────────────────────
+// total = precio completo de la estancia (columna F)
+// anticipo = lo realmente cobrado / depósito (columna O)
+// pendiente = lo que falta por cobrar al huésped
+
+function pagoOf(b: AdminBooking) {
+  const total = b.total || 0;
+  const anticipo = b.anticipo || 0;
+  const pendiente = Math.max(0, total - anticipo);
+  const pagado = total > 0 && pendiente <= 0;
+  return { total, anticipo, pendiente, pagado };
+}
+
+const money = (n: number) => `$${Math.round(n).toLocaleString('es-MX')}`;
+
+function PagoChip({ total, pendiente, pagado }: { total: number; pendiente: number; pagado: boolean }) {
+  if (total <= 0) return <span className={styles.pagoNeutral}>—</span>;
+  if (pagado)     return <span className={styles.pagoPagado}>✓ Pagado</span>;
+  return <span className={styles.pagoFalta}>Falta {money(pendiente)}</span>;
+}
+
+// ── Indicadores: extras (tours/paquetes) y notas / peticiones ─────────────────
+
+function ReservaTags({ notas }: { notas: string }) {
+  const n = parseNotas(notas);
+  const addons = [
+    ...n.tours.map(t => (t as any).nombre),
+    ...n.paquetes.map(p => (p as any).nombre),
+    ...n.extras.map(e => e.nombre),
+  ].filter(Boolean) as string[];
+  const nota = n.cliente || n.interno;
+  if (addons.length === 0 && !nota) return null;
+  return (
+    <div className={styles.reservaTags}>
+      {addons.length > 0 && (
+        <span className={styles.tagAddon} title={`Extras: ${addons.join(', ')}`}>
+          <Gift size={11} /> {addons.length}
+        </span>
+      )}
+      {nota && (
+        <span className={styles.tagNote} title={`Petición: ${nota}`}>
+          <StickyNote size={11} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── Registrar pago / cobrar saldo ─────────────────────────────────────────────
+
+function CobrarModal({ booking, onClose, onSaved }: {
+  booking: AdminBooking; onClose: () => void; onSaved: () => void;
+}) {
+  const p = pagoOf(booking);
+  const [monto, setMonto] = useState(p.pendiente);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const nuevoAnticipo = Math.min(p.total, p.anticipo + (monto || 0));
+  const nuevoPendiente = Math.max(0, p.total - nuevoAnticipo);
+
+  async function submit() {
+    if (loading) return;
+    setLoading(true); setError('');
+    try {
+      const res = await fetch(`/api/admin/reservas/${booking.confirmacion}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anticipo: nuevoAnticipo }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'No se pudo registrar el pago');
+      }
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className={styles.cobrarOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={styles.cobrarModal}>
+        <div className={styles.cobrarHeader}>
+          <span className={styles.cobrarTitle}>Registrar pago</span>
+          <button className={styles.cobrarClose} onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className={styles.cobrarBody}>
+          <div className={styles.cobrarClient}>{booking.cliente} · {booking.confirmacion}</div>
+          <div className={styles.cobrarRow}><span>Total</span><strong>{money(p.total)}</strong></div>
+          <div className={styles.cobrarRow}><span>Ya cobrado</span><strong>{money(p.anticipo)}</strong></div>
+          <div className={styles.cobrarRow}><span>Pendiente</span><strong className={styles.cobrarPend}>{money(p.pendiente)}</strong></div>
+
+          <label className={styles.cobrarField}>
+            <span>Monto que se cobra ahora (MXN)</span>
+            <input
+              type="number" min={0} max={p.pendiente} value={monto}
+              autoFocus
+              onChange={e => setMonto(Math.max(0, parseInt(e.target.value) || 0))}
+            />
+          </label>
+          <button type="button" className={styles.cobrarTodo} onClick={() => setMonto(p.pendiente)}>
+            Cobrar todo el saldo ({money(p.pendiente)})
+          </button>
+
+          <div className={styles.cobrarResult}>
+            Quedará: cobrado <strong>{money(nuevoAnticipo)}</strong> · pendiente{' '}
+            <strong className={nuevoPendiente <= 0 ? styles.cobrarOk : styles.cobrarPend}>
+              {nuevoPendiente <= 0 ? '$0 (pagado)' : money(nuevoPendiente)}
+            </strong>
+          </div>
+
+          {error && <p className={styles.cobrarError}>{error}</p>}
+
+          <div className={styles.cobrarActions}>
+            <button type="button" className={styles.cobrarCancel} onClick={onClose}>Cancelar</button>
+            <button type="button" className={styles.cobrarSave} onClick={submit} disabled={loading || monto <= 0}>
+              {loading ? <Loader2 size={14} className={styles.spin} /> : <Wallet size={14} />}
+              Registrar pago
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 interface Props { initialBookings: AdminBooking[] }
@@ -77,12 +209,14 @@ export default function ReservasClient({ initialBookings }: Props) {
   const [search, setSearch] = useState('');
   const [suiteFilter, setSuiteFilter] = useState('');
   const [estadoFilter, setEstadoFilter] = useState('');
+  const [pagoFilter, setPagoFilter] = useState<'' | 'PENDIENTE' | 'PAGADO'>('');
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [vistaHoy, setVistaHoy] = useState(false);
   const [sortBy, setSortBy] = useState<'checkin' | 'reciente'>('checkin');
   const [modal, setModal] = useState<{ mode: 'new' | 'edit'; booking?: AdminBooking } | null>(null);
+  const [cobrar, setCobrar] = useState<AdminBooking | null>(null);
   const [loading, setLoading] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
@@ -114,6 +248,11 @@ export default function ReservasClient({ initialBookings }: Props) {
         const ops = getOpsState(b, today);
         if (ops !== estadoFilter) return false;
       }
+      if (pagoFilter) {
+        const { pagado } = pagoOf(b);
+        if (pagoFilter === 'PAGADO' && !pagado) return false;
+        if (pagoFilter === 'PENDIENTE' && (pagado || b.total <= 0)) return false;
+      }
       if (fechaDesde && b.checkin < fechaDesde) return false;
       if (fechaHasta && b.checkin > fechaHasta) return false;
       return true;
@@ -127,7 +266,7 @@ export default function ReservasClient({ initialBookings }: Props) {
       if (sortBy === 'reciente') return b.rowIndex - a.rowIndex; // más alto rowIndex = más reciente en Sheets
       return b.checkin.localeCompare(a.checkin);
     });
-  }, [bookings, search, suiteFilter, estadoFilter, fechaDesde, fechaHasta, vistaHoy, sortBy, today]);
+  }, [bookings, search, suiteFilter, estadoFilter, pagoFilter, fechaDesde, fechaHasta, vistaHoy, sortBy, today]);
 
   // Counters for "today" badge
   const todayCounts = useMemo(() => ({
@@ -136,10 +275,64 @@ export default function ReservasClient({ initialBookings }: Props) {
     enCasa:   bookings.filter(b => b.estado !== 'CANCELADA' && b.checkin < today && b.checkout > today).length,
   }), [bookings, today]);
 
-  const hasActiveFilters = suiteFilter || estadoFilter || fechaDesde || fechaHasta;
+  const hasActiveFilters = suiteFilter || estadoFilter || pagoFilter || fechaDesde || fechaHasta;
 
   function clearFilters() {
-    setSuiteFilter(''); setEstadoFilter(''); setFechaDesde(''); setFechaHasta('');
+    setSuiteFilter(''); setEstadoFilter(''); setPagoFilter(''); setFechaDesde(''); setFechaHasta('');
+  }
+
+  // Resumen financiero del conjunto visible (excluye canceladas): valor total,
+  // ya cobrado (anticipos) y lo que falta por cobrar. Es el "de un vistazo".
+  const resumen = useMemo(() => {
+    return filtered.reduce((acc, b) => {
+      if (getOpsState(b, today) === 'CANCELADA') return acc;
+      const { total, anticipo, pendiente } = pagoOf(b);
+      acc.total += total;
+      acc.cobrado += anticipo;
+      acc.pendiente += pendiente;
+      return acc;
+    }, { total: 0, cobrado: 0, pendiente: 0 });
+  }, [filtered, today]);
+
+  function openWhatsApp(e: React.MouseEvent, b: AdminBooking) {
+    e.stopPropagation();
+    const tel = normalizeMxPhone(b.telefono);
+    if (!tel) return alert('Esta reserva no tiene teléfono / WhatsApp registrado.');
+    const { pendiente, pagado } = pagoOf(b);
+    const saldo = pagado || pendiente <= 0 ? '' : `\n\nTe recordamos que tu saldo pendiente es de ${money(pendiente)} MXN.`;
+    const msg = encodeURIComponent(
+      `Hola ${b.cliente}, te saludamos de Paraíso Encantado sobre tu reserva ${b.confirmacion}.${saldo}`
+    );
+    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+  }
+
+  // Exporta las reservas actualmente visibles (con filtros) a CSV para Excel.
+  function exportCSV() {
+    const csvCell = (v: string | number) => {
+      const s = String(v ?? '');
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const headers = ['Confirmación', 'Cliente', 'Teléfono', 'Email', 'Suite', 'Huéspedes',
+      'Check-in', 'Check-out', 'Noches', 'Total', 'Anticipo', 'Pendiente', 'Estado', 'Cómo nos conoció'];
+    const rows = filtered.map(b => {
+      const ops = getOpsState(b, today);
+      const p = pagoOf(b);
+      const cancelada = ops === 'CANCELADA';
+      return [
+        b.confirmacion, b.cliente, b.telefono, b.email, b.habitaciones, b.huespedes,
+        b.checkin, b.checkout, b.noches, p.total, cancelada ? 0 : p.anticipo,
+        cancelada ? 0 : p.pendiente, OPS_LABEL[ops], b.comoNosConocio,
+      ];
+    });
+    const csv = [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
+    // BOM (﻿) para que Excel abra los acentos correctamente en UTF-8.
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reservas-${today}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function refresh() {
@@ -165,18 +358,13 @@ export default function ReservasClient({ initialBookings }: Props) {
     printBookingPDF(b);
   }
 
-  const totalIngresos = filtered.reduce((s, b) => {
-    const ops = getOpsState(b, today);
-    return ops === 'CANCELADA' ? s : s + b.total;
-  }, 0);
-
   return (
     <div>
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Reservas</h1>
           <p className={styles.pageSub}>
-            {filtered.length} reservas · ${totalIngresos.toLocaleString('es-MX')} MXN
+            {filtered.length} reservas
             {hasActiveFilters && <span className={styles.filterBadge}>Filtros activos</span>}
           </p>
         </div>
@@ -208,6 +396,10 @@ export default function ReservasClient({ initialBookings }: Props) {
           <button className={styles.iconBtn} onClick={refresh} disabled={loading} title="Actualizar">
             <RefreshCw size={16} className={loading ? styles.spin : ''} />
           </button>
+          <button className={styles.iconBtn} onClick={exportCSV} disabled={filtered.length === 0}
+            title="Exportar a Excel/CSV">
+            <FileSpreadsheet size={16} />
+          </button>
           <button
             className={`${styles.iconBtn} ${showFilters ? styles.iconBtnActive : ''}`}
             onClick={() => setShowFilters(s => !s)}
@@ -217,6 +409,22 @@ export default function ReservasClient({ initialBookings }: Props) {
           <button className={styles.primaryBtn} onClick={() => setModal({ mode: 'new' })}>
             <Plus size={16} /> Nueva reserva
           </button>
+        </div>
+      </div>
+
+      {/* Resumen financiero — de un vistazo (excluye canceladas) */}
+      <div className={styles.moneySummary}>
+        <div className={styles.moneyStat}>
+          <span className={styles.moneyStatLabel}>Valor total</span>
+          <span className={styles.moneyStatValue}>{money(resumen.total)}</span>
+        </div>
+        <div className={`${styles.moneyStat} ${styles.moneyStatPaid}`}>
+          <span className={styles.moneyStatLabel}>Cobrado (anticipos)</span>
+          <span className={styles.moneyStatValue}>{money(resumen.cobrado)}</span>
+        </div>
+        <div className={`${styles.moneyStat} ${styles.moneyStatDue}`}>
+          <span className={styles.moneyStatLabel}>Por cobrar</span>
+          <span className={styles.moneyStatValue}>{money(resumen.pendiente)}</span>
         </div>
       </div>
 
@@ -273,6 +481,14 @@ export default function ReservasClient({ initialBookings }: Props) {
               </select>
             </label>
             <label className={styles.filterField}>
+              <span>Estado de pago</span>
+              <select value={pagoFilter} onChange={e => setPagoFilter(e.target.value as '' | 'PENDIENTE' | 'PAGADO')}>
+                <option value="">Todos</option>
+                <option value="PENDIENTE">Con saldo pendiente</option>
+                <option value="PAGADO">Pagadas por completo</option>
+              </select>
+            </label>
+            <label className={styles.filterField}>
               <span>Check-in desde</span>
               <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
             </label>
@@ -309,13 +525,41 @@ export default function ReservasClient({ initialBookings }: Props) {
               {b.email && b.email !== 'N/A' && <div className={styles.mobileCardEmail}>{b.email}</div>}
               <div className={styles.mobileCardDates}>
                 Check-in: <strong>{b.checkin}</strong> → Check-out: <strong>{b.checkout}</strong> · {b.noches}n
+                {b.huespedes > 0 && <> · {b.huespedes} huésped{b.huespedes !== 1 ? 'es' : ''}</>}
               </div>
-              <div className={styles.mobileCardTotal}>${b.total.toLocaleString('es-MX')} MXN</div>
+              {(() => {
+                const p = pagoOf(b);
+                const cancelada = ops === 'CANCELADA';
+                return (
+                  <div className={styles.mobilePago}>
+                    <span className={styles.mobilePagoTotal} style={cancelada ? { textDecoration: 'line-through', color: '#aaa' } : undefined}>Total {money(p.total)}</span>
+                    {!cancelada && p.anticipo > 0 && <span className={styles.mobilePagoAnticipo}>· Anticipo {money(p.anticipo)}</span>}
+                    {!cancelada && (
+                      <span className={p.pagado ? styles.pagoPagado : styles.pagoFalta}>
+                        {p.total <= 0 ? '—' : p.pagado ? '✓ Pagado' : `Falta ${money(p.pendiente)}`}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+              <ReservaTags notas={b.notas} />
               <div className={styles.mobileCardActions}>
                 <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnPrimary}`}
                   onClick={() => setModal({ mode: 'edit', booking: b })}>
                   Ver / Editar
                 </button>
+                {ops !== 'CANCELADA' && pagoOf(b).pendiente > 0 && (
+                  <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnCobrar}`}
+                    onClick={e => { e.stopPropagation(); setCobrar(b); }}>
+                    <Wallet size={12} /> Cobrar
+                  </button>
+                )}
+                {b.telefono && b.telefono !== 'N/A' && (
+                  <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnWa}`}
+                    onClick={e => openWhatsApp(e, b)}>
+                    <MessageSquare size={12} /> WhatsApp
+                  </button>
+                )}
                 <button className={`${styles.mobileCardBtn} ${styles.mobileCardBtnSecondary}`}
                   onClick={e => sendEmail(e, b)} disabled={sendingId === b.confirmacion}>
                   {sendingId === b.confirmacion ? <Loader2 size={12} className={styles.spin} /> : null} Email
@@ -346,7 +590,7 @@ export default function ReservasClient({ initialBookings }: Props) {
               <th>Check-out</th>
               <th>Noches</th>
               <th>Días</th>
-              <th>Total</th>
+              <th>Pago</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -373,12 +617,30 @@ export default function ReservasClient({ initialBookings }: Props) {
                     <div className={styles.clienteName}>{b.cliente}</div>
                     {b.email && b.email !== 'N/A' && <div className={styles.clienteEmail}>{b.email}</div>}
                   </td>
-                  <td>{b.habitaciones}</td>
+                  <td>
+                    <div>{b.habitaciones}</div>
+                    {b.huespedes > 0 && (
+                      <div className={styles.suiteGuests}>
+                        <Users size={11} /> {b.huespedes} huésped{b.huespedes !== 1 ? 'es' : ''}
+                      </div>
+                    )}
+                    <ReservaTags notas={b.notas} />
+                  </td>
                   <td>{b.checkin}</td>
                   <td>{b.checkout}</td>
                   <td>{b.noches}</td>
                   <td><DaysChip days={days} /></td>
-                  <td className={styles.total}>${b.total.toLocaleString('es-MX')}</td>
+                  <td className={styles.pagoCell}>
+                    {(() => {
+                      const p = pagoOf(b);
+                      const cancelada = ops === 'CANCELADA';
+                      return <>
+                        <div className={styles.pagoTotal} style={cancelada ? { textDecoration: 'line-through', color: '#aaa' } : undefined}>{money(p.total)}</div>
+                        {!cancelada && p.anticipo > 0 && <div className={styles.pagoAnticipo}>Anticipo {money(p.anticipo)}</div>}
+                        {!cancelada && <PagoChip total={p.total} pendiente={p.pendiente} pagado={p.pagado} />}
+                      </>;
+                    })()}
+                  </td>
                   <td>
                     <span
                       className={styles.opsBadge}
@@ -389,6 +651,18 @@ export default function ReservasClient({ initialBookings }: Props) {
                   </td>
                   <td onClick={e => e.stopPropagation()}>
                     <div className={styles.rowActions}>
+                      {ops !== 'CANCELADA' && pagoOf(b).pendiente > 0 && (
+                        <button className={styles.actionBtnCobrar} onClick={e => { e.stopPropagation(); setCobrar(b); }}
+                          title="Registrar pago / cobrar saldo">
+                          <Wallet size={13} />
+                        </button>
+                      )}
+                      {b.telefono && b.telefono !== 'N/A' && (
+                        <button className={styles.actionBtnWa} onClick={e => openWhatsApp(e, b)}
+                          title="Escribir por WhatsApp">
+                          <MessageSquare size={13} />
+                        </button>
+                      )}
                       <button className={styles.actionBtn} onClick={e => sendEmail(e, b)}
                         disabled={sendingId === b.confirmacion} title="Enviar confirmación">
                         {sendingId === b.confirmacion ? <Loader2 size={13} className={styles.spin} /> : <Send size={13} />}
@@ -413,6 +687,14 @@ export default function ReservasClient({ initialBookings }: Props) {
         <ReservationModal
           booking={modal.mode === 'edit' ? modal.booking : undefined}
           onClose={() => setModal(null)}
+          onSaved={refresh}
+        />
+      )}
+
+      {cobrar && (
+        <CobrarModal
+          booking={cobrar}
+          onClose={() => setCobrar(null)}
           onSaved={refresh}
         />
       )}

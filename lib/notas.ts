@@ -16,21 +16,33 @@
 export interface QuoteTour { nombre?: string; precio?: number; personas?: number; [k: string]: unknown }
 export interface QuoteHab { suite?: string; personas?: number; precio?: number; noches?: number; [k: string]: unknown }
 
+// Add-ons de servicio con precio unitario (desayuno por persona/noche, late
+// check-out por habitación/noche). total del renglón = cantidad × precioUnit.
+export interface ExtraItem {
+  tipo: 'desayuno' | 'late_checkout';
+  nombre: string;
+  cantidad: number;     // person-noches (desayuno) o habitación-noches (late check-out)
+  precioUnit: number;   // MXN por unidad
+  detalle?: string;     // etiqueta legible p.ej. "2 personas × 3 noches"
+}
+
 export interface ParsedNotas {
   cliente: string;
   interno: string;
   tours: QuoteTour[];
   paquetes: QuoteTour[];
   habs: QuoteHab[];
+  extras: ExtraItem[];
 }
 
 const INTERNO = '||INTERNO||';
 const TOURS = '||TOURS||';
 const PAQUETES = '||PAQUETES||';
 const HABS = '||HABS||';
+const EXTRAS = '||EXTRAS||';
 
 // Orden en que aparecen los marcadores dentro de la cadena.
-const MARKERS = [INTERNO, TOURS, PAQUETES, HABS];
+const MARKERS = [INTERNO, TOURS, PAQUETES, HABS, EXTRAS];
 
 /** Devuelve el texto entre `marker` y el siguiente marcador (cualquiera). */
 function sectionAfter(raw: string, marker: string): string | null {
@@ -69,6 +81,7 @@ export function parseNotas(raw: string | null | undefined): ParsedNotas {
     tours: safeJson<QuoteTour>(sectionAfter(s, TOURS)),
     paquetes: safeJson<QuoteTour>(sectionAfter(s, PAQUETES)),
     habs: safeJson<QuoteHab>(sectionAfter(s, HABS)),
+    extras: safeJson<ExtraItem>(sectionAfter(s, EXTRAS)),
   };
 }
 
@@ -87,5 +100,6 @@ export function joinNotas(p: Partial<ParsedNotas>): string {
   if (p.tours && p.tours.length > 0) base += `${TOURS}${JSON.stringify(p.tours)}`;
   if (p.paquetes && p.paquetes.length > 0) base += `${PAQUETES}${JSON.stringify(p.paquetes)}`;
   if (p.habs && p.habs.length > 0) base += `${HABS}${JSON.stringify(p.habs)}`;
+  if (p.extras && p.extras.length > 0) base += `${EXTRAS}${JSON.stringify(p.extras)}`;
   return base;
 }
