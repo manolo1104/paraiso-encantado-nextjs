@@ -693,6 +693,107 @@ export async function getReservationByFolioFromSheet(folio) {
   }
 }
 
+// Busca reservas por NOMBRE del huésped (cuando el cliente no tiene su folio a la mano).
+// Coincide si TODOS los tokens del nombre buscado están en el nombre registrado
+// (ej. "manolo covarrubias" ⊆ "manolo covarrubias orduña"). Devuelve las más recientes.
+export async function getReservationsByNameFromSheet(name, { limit = 5 } = {}) {
+  if (!name || !String(name).trim()) return { found: false, matches: [], reason: 'Nombre no proporcionado.' };
+
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  const tab = process.env.GOOGLE_SHEET_TAB || 'Reservas';
+  if (!sheetId) return { found: false, matches: [], reason: 'Falta GOOGLE_SHEET_ID.' };
+
+  try {
+    const values = await getSheetValues(tab);
+    if (values.length === 0) return { found: false, matches: [], reason: 'Hoja sin datos.' };
+
+    const headers = values[0];
+    const nameIdx = findHeaderIndex(headers, ['cliente', 'huesped', 'nombre huesped', 'nombre del huesped', 'nombre']);
+    if (nameIdx < 0) return { found: false, matches: [], reason: 'No se encontró columna de nombre.' };
+    const statusIdx = findHeaderIndex(headers, ['estado', 'status', 'estatus']);
+
+    const queryTokens = normalizeText(name).split(/\s+/).filter(Boolean);
+    if (queryTokens.length === 0) return { found: false, matches: [], reason: 'Nombre vacío.' };
+
+    const moneyToNumber = (v) => {
+      const n = Number(String(v ?? '').replace(/[^\d.]/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    };
+    const get = (row, aliases) => {
+      const idx = findHeaderIndex(headers, aliases);
+      return idx >= 0 ? (row[idx] || '') : '';
+    };
+
+    const matches = [];
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      const cellName = normalizeText(row[nameIdx] || '');
+      if (!cellName) continue;
+      if (statusIdx >= 0 && isInactiveStatus(row[statusIdx] || '')) continue; // ignorar canceladas
+      const cellTokens = new Set(cellName.split(/\s+/).filter(Boolean));
+      if (!queryTokens.every(t => cellTokens.has(t))) continue;
+
+      const totalPrice = moneyToNumber(get(row, ['total', 'monto']));
+      const depositRaw = get(row, ['anticipo', 'deposito', 'pago recibido', 'pago']);
+      const depositPaid = String(depositRaw).trim() ? moneyToNumber(depositRaw) : totalPrice;
+      matches.push({
+        folio:        get(row, ['folio', 'confirmacion', 'confirmación', 'folio de wpp', 'numero de confirmacion']),
+        guestName:    row[nameIdx] || '',
+        phone:        get(row, ['telefono', 'whatsapp', 'celular']),
+        email:        get(row, ['email', 'correo', 'mail']),
+        checkin:      get(row, ['checkin', 'check-in', 'check in', 'entrada']),
+        checkout:     get(row, ['checkout', 'check-out', 'check out', 'salida']),
+        room:         get(row, ['habitacion', 'habitación', 'suite', 'room']),
+        totalPrice,
+        depositPaid,
+        pendingAmount: Math.max(0, totalPrice - depositPaid),
+        status:       statusIdx >= 0 ? (row[statusIdx] || '') : '',
+        createdAt:    get(row, ['fecha', 'fecha reserva']),
+      });
+    }
+
+    matches.reverse(); // filas nuevas al final → las más recientes primero
+    return { found: matches.length > 0, count: matches.length, matches: matches.slice(0, limit) };
+  } catch (err) {
+    return { found: false, matches: [], reason: err.message };
+  }
+}
+
+// Devuelve, para cada noche del rango [checkin, checkout), qué habitaciones (backendName)
+// están bloqueadas según Reservas + Disponibilidad. Una sola lectura de la hoja para todo
+// el rango — base del cálculo de propuesta con cambio de suite (split-stay).
+export async function getPerNightUnavailableFromSheet({ checkin, checkout, requestedRooms }) {
+  const values = await getSheetValues();
+  const reservations = parseSheetReservations(values);
+
+  const dispTab = process.env.GOOGLE_DISPONIBILIDAD_TAB || 'Disponibilidad';
+  let tempBlocks = [];
+  try {
+    tempBlocks = parseDisponibilidadBlocks(await getSheetValues(dispTab));
+  } catch (dispErr) {
+    console.warn(`⚠️ No se pudo leer la pestaña "${dispTab}" (por noche):`, String(dispErr?.message || dispErr).split('\n')[0]);
+  }
+  const allBlocks = [...reservations, ...tempBlocks];
+
+  const nights = [];
+  let cursor = new Date(`${checkin}T00:00:00`);
+  const end = new Date(`${checkout}T00:00:00`);
+  let guard = 0; // salvaguarda anti-bucle (máx 60 noches)
+  while (cursor < end && guard < 60) {
+    const dateStr = ymdLocal(cursor);
+    const next = new Date(cursor);
+    next.setDate(next.getDate() + 1);
+    const nextStr = ymdLocal(next);
+    const blockedBackendNames = (requestedRooms || [])
+      .filter(room => allBlocks.some(b => roomMatchesCell(room, b.room) && overlaps(dateStr, nextStr, b.checkin, b.checkout)))
+      .map(r => r.backendName);
+    nights.push({ date: dateStr, checkout: nextStr, blockedBackendNames });
+    cursor = next;
+    guard++;
+  }
+  return nights;
+}
+
 export async function findAlternativeDates(requestedCheckin, requestedCheckout, requestedRooms, daysBuffer = 5) {
   try {
     const checkinDate = new Date(`${requestedCheckin}T00:00:00`);

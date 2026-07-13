@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import Stripe from 'stripe';
 import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationByPaymentIntent } from '@/lib/sheets';
+import { notifyBotOfWebBooking } from '@/lib/notify-bot';
 import { buildEmailHtml } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
@@ -137,6 +138,26 @@ export async function POST(req: NextRequest) {
       } catch (e: any) {
         console.error('❌ Email exception:', e.message);
       }
+    }
+
+    // 9. Avisar al bot de WhatsApp para que publique la reserva en el grupo Control Hotel.
+    //    Best-effort: nunca bloquea ni rompe la confirmación al cliente.
+    try {
+      await notifyBotOfWebBooking({
+        confirmationNumber,
+        customerName,
+        customerPhone: customerPhone || '',
+        email,
+        checkin, checkout, nights, guests,
+        rooms: normalizedRooms.map((r: any) => ({ name: r.name, guestCount: r.guestCount })),
+        total: Math.round(stayTotal),
+        amountPaid: Math.round(depositPaid),
+        pending: Math.max(0, Math.round(pending)),
+        isDeposit: isDepositFinal,
+        paymentIntentId: pi.id,
+      });
+    } catch (e: any) {
+      console.warn('⚠️ Aviso al grupo (WhatsApp) omitido:', e?.message);
     }
 
     return NextResponse.json({ status: 'ok', confirmationNumber });

@@ -102,4 +102,4 @@ Domain verification file: `app/.well-known/apple-developer-merchantid-domain-ass
 
 ## Key environment variables
 
-`GOOGLE_SHEETS_CREDENTIALS` (JSON), `GOOGLE_SHEET_ID`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `ADMIN_JWT_SECRET` (JWT del admin — NO `JWT_SECRET`), `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` (login admin), `AGENT_API_TOKEN` (bot WhatsApp), `CRON_SECRET`, `ANTHROPIC_API_KEY`, `APPLE_PAY_DOMAIN_ASSOC` (optional, for Apple Pay domain verification).
+`GOOGLE_SHEETS_CREDENTIALS` (JSON), `GOOGLE_SHEET_ID`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `ADMIN_JWT_SECRET` (JWT del admin — NO `JWT_SECRET`), `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH` (login admin), `AGENT_API_TOKEN` (bot WhatsApp), `CRON_SECRET`, `ANTHROPIC_API_KEY`, `APPLE_PAY_DOMAIN_ASSOC` (optional, for Apple Pay domain verification), `BOT_NOTIFY_URL` (URL pública del bot WhatsApp, ej. `https://wpp-agent-production-5329.up.railway.app` — usada por `lib/notify-bot.ts` para avisar al grupo Control Hotel de reservas del motor web; si falta, el aviso es no-op silencioso).

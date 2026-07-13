@@ -18,6 +18,7 @@ import qrcode from 'qrcode-terminal';
 import { handleMessage, handlePaymentProof, getStats, addToHistory, getConversationSummary } from './claude-handler.js';
 import { confirmPayment, getByUser, getByFolio } from './reservations.js';
 import { appendConfirmedReservationToSheet, updateRoomStatusInDisponibilidad } from './google-sheets.js';
+import { formatWebBookingAlert } from './web-booking-notify.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1102,42 +1103,83 @@ client.on('message', async (msg) => {
 
         // Follow-ups de disponibilidad y cotización
         const textNorm = normalizeText(String(responseText || ''));
-        const quoteWasGenerated = /\bWA-[A-Z0-9]{4,}\b/i.test(String(responseText || '')) || hasRecentPendingQuote(finalMsg.from);
         const noAvailabilityFound =
           textNorm.includes('no hay disponibilidad') ||
           textNorm.includes('no tenemos disponibilidad') ||
           textNorm.includes('sin disponibilidad');
 
-        if (quoteWasGenerated) {
+        // ── Aviso al grupo Control Hotel SOLO cuando se creó una cotización REAL ──
+        // Señal confiable desde el handler (create_reservation_quote ejecutado con
+        // folio nuevo). Ya no se dispara por folios repetidos en el texto (confirmaciones,
+        // "mi folio es WA-...", etc.).
+        if (result?.quoteCreated && result?.quoteFolio) {
           scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'cart_abandoned');
-          // Alerta de cotización al grupo Control Hotel
-          const folioMatch = String(responseText || '').match(/\bWA-[A-Z0-9]+\b/i);
-          const folio = folioMatch?.[0];
-          if (folio) {
-            // Buscar por folio (robusto ante mismatch @lid/@c.us); respaldo: por usuario
-            const pr = getByFolio(folio) || getByUser(finalMsg.from);
-            const rooms = Array.isArray(pr?.rooms) && pr.rooms.length
-              ? pr.rooms.map(r => `· ${r.name} (${r.guests} personas) — $${Number(r.price).toLocaleString('es-MX')} MXN`).join('\n')
-              : '(ver folio)';
-            const toursLine = Array.isArray(pr?.tours) && pr.tours.length
-              ? `\n\n🌊 *Tours:*\n${pr.tours.map(t => `· ${t?.name || 'Tour'}${t?.participants ? ` (${t.participants} personas)` : ''}${t?.price ? ` — $${Number(t.price).toLocaleString('es-MX')} MXN` : ''}`).join('\n')}`
-              : '';
-            const quoteAlert =
-              `📋 *Nueva cotización generada*\n\n👤 *${pending.userName || pr?.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n🧾 *Folio:* ${folio}\n📅 Check-in: ${pr?.checkin || '—'} | Check-out: ${pr?.checkout || '—'}\n🌙 Noches: ${pr?.nights || '—'}\n\n🏨 *Habitaciones:*\n${rooms}${toursLine}\n\n💰 *Total: $${Number(pr?.totalPrice || 0).toLocaleString('es-MX')} MXN*\n💳 Anticipo: $${Number(pr?.depositAmount || 0).toLocaleString('es-MX')} MXN`;
-            const sendToControlHotel = async (to) => {
-              try { markRecentBotOutgoing(to); await client.sendMessage(to, quoteAlert); } catch { /* ignore */ }
-            };
-            if (CONTROL_HOTEL_GROUP_ID) {
-              await sendToControlHotel(CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`);
-            } else {
-              try {
-                const chats = await client.getChats();
-                const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
-                if (cg?.id?._serialized) await sendToControlHotel(cg.id._serialized);
-              } catch { /* ignore */ }
-            }
-            console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
+          const folio = result.quoteFolio;
+          // Buscar por folio (robusto ante mismatch @lid/@c.us); respaldo: por usuario
+          const pr = getByFolio(folio) || getByUser(finalMsg.from);
+
+          const phoneRaw = finalMsg.from.split('@')[0];
+          const clientName = pending.userName || pr?.userName || 'Sin nombre';
+          const email = pr?.guestEmail || '—';
+          const howFound = pr?.howFound || '—';
+          const overallCheckin = pr?.checkin || '—';
+          const overallCheckout = pr?.checkout || '—';
+          const guestsTotal = pr?.guests
+            || (Array.isArray(pr?.rooms) ? pr.rooms.reduce((s, r) => s + Number(r.guests || 0), 0) : '—');
+
+          // Estancia con cambio de suite: alguna habitación tiene fechas propias distintas al rango global
+          const prRooms = Array.isArray(pr?.rooms) ? pr.rooms : [];
+          const isSplitStay = prRooms.some(r =>
+            (r.checkin && r.checkin !== pr?.checkin) || (r.checkout && r.checkout !== pr?.checkout)
+          );
+
+          const roomsBlock = prRooms.length
+            ? prRooms.map(r => {
+                const dateTag = (isSplitStay && r.checkin && r.checkout) ? ` · 📅 ${r.checkin} → ${r.checkout}` : '';
+                return `· ${r.name} (${r.guests} personas)${dateTag} — $${Number(r.price).toLocaleString('es-MX')} MXN`;
+              }).join('\n')
+            : '(ver folio)';
+
+          const toursLine = Array.isArray(pr?.tours) && pr.tours.length
+            ? `\n\n🌊 *Tours:*\n${pr.tours.map(t => `· ${t?.name || 'Tour'}${t?.participants ? ` (${t.participants} personas)` : ''}${t?.price ? ` — $${Number(t.price).toLocaleString('es-MX')} MXN` : ''}`).join('\n')}`
+            : '';
+
+          const total = Number(pr?.totalPrice || 0);
+          const deposit = Number(pr?.depositAmount || 0);
+          const saldo = Math.max(0, total - deposit);
+
+          const quoteAlert =
+            `📋 *NUEVA COTIZACIÓN — WhatsApp*\n\n` +
+            `👤 *Cliente:* ${clientName}\n` +
+            `📱 *WhatsApp:* +${phoneRaw} · wa.me/${phoneRaw}\n` +
+            `📧 *Email:* ${email}\n` +
+            `🔎 *Nos encontró por:* ${howFound}\n\n` +
+            `🧾 *Folio:* ${folio}\n` +
+            `📅 *Check-in:* ${overallCheckin}  |  *Check-out:* ${overallCheckout}\n` +
+            `🌙 *Noches:* ${pr?.nights || '—'}  ·  👥 *Huéspedes:* ${guestsTotal}` +
+            (isSplitStay ? `\n⚠️ *Estancia con cambio de suite* (fechas por suite abajo)` : '') +
+            `\n\n🏨 *Habitaciones:*\n${roomsBlock}${toursLine}\n\n` +
+            `💰 *Total: $${total.toLocaleString('es-MX')} MXN*\n` +
+            `💳 *Anticipo: $${deposit.toLocaleString('es-MX')} MXN*\n` +
+            `🧮 *Saldo: $${saldo.toLocaleString('es-MX')} MXN*`;
+
+          const sendToControlHotel = async (to) => {
+            try { markRecentBotOutgoing(to); await client.sendMessage(to, quoteAlert); } catch { /* ignore */ }
+          };
+          if (CONTROL_HOTEL_GROUP_ID) {
+            await sendToControlHotel(CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`);
+          } else {
+            try {
+              const chats = await client.getChats();
+              const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
+              if (cg?.id?._serialized) await sendToControlHotel(cg.id._serialized);
+            } catch { /* ignore */ }
           }
+          console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
+        } else if (hasRecentPendingQuote(finalMsg.from)) {
+          // Ya tenía una cotización pendiente de antes y sigue activo: solo recordatorio
+          // al cliente (no se vuelve a avisar al grupo).
+          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'cart_abandoned');
         } else if (noAvailabilityFound) {
           scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'no_availability_found');
         } else if (looksAvailabilityRequest(combinedText || '')) {
@@ -1247,6 +1289,30 @@ function htmlShell(body) {
 </style></head><body><div class="card">${body}</div></body></html>`;
 }
 
+// Envía un mensaje al grupo Control Hotel (por env CONTROL_HOTEL_GROUP_ID o por nombre).
+// Devuelve true si se logró resolver el grupo y enviar.
+async function sendToControlHotelGroup(message) {
+  let groupId = '';
+  if (CONTROL_HOTEL_GROUP_ID) {
+    groupId = CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`;
+  } else {
+    try {
+      const chats = await client.getChats();
+      const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
+      if (cg?.id?._serialized) groupId = cg.id._serialized;
+    } catch (err) {
+      console.warn('⚠️ No se pudo resolver grupo Control Hotel:', String(err?.message || '').split('\n')[0]);
+    }
+  }
+  if (!groupId) return false;
+  markRecentBotOutgoing(groupId);
+  await client.sendMessage(groupId, message);
+  return true;
+}
+
+// Anti-duplicado: no publicar dos veces la misma reserva (misma sesión/pago).
+const notifiedWebBookings = new Set();
+
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -1255,6 +1321,67 @@ createServer(async (req, res) => {
       res.end(JSON.stringify({ status: waStatus }));
       return;
     }
+
+    // ── Endpoint interno: el sitio web avisa de una reserva nueva (motor web) ──
+    // El bot publica los detalles en el grupo Control Hotel. Auth por token compartido.
+    if (url.pathname === '/notify-booking') {
+      if (req.method !== 'POST') {
+        res.writeHead(405, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'method_not_allowed' }));
+        return;
+      }
+      const expected = process.env.AGENT_API_TOKEN || '';
+      const authHeader = String(req.headers['authorization'] || '');
+      const provided = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : String(req.headers['x-agent-token'] || '');
+      if (!expected || provided !== expected) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+        return;
+      }
+
+      let raw = '';
+      for await (const chunk of req) raw += chunk;
+      let payload;
+      try { payload = JSON.parse(raw || '{}'); } catch { payload = null; }
+      if (!payload || typeof payload !== 'object') {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'invalid_json' }));
+        return;
+      }
+
+      // Anti-duplicado por pago (o por folio si no hay pago).
+      const dedupeKey = payload.paymentIntentId || payload.confirmationNumber || '';
+      if (dedupeKey && notifiedWebBookings.has(dedupeKey)) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, duplicate: true }));
+        return;
+      }
+
+      // Si el bot no está vinculado/listo, no puede enviar: la reserva NO se pierde
+      // (el sitio ya la guardó y envió email); solo se omite el ping al grupo.
+      if (waStatus !== 'ready') {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'wa_not_ready', status: waStatus }));
+        return;
+      }
+
+      try {
+        const sent = await sendToControlHotelGroup(formatWebBookingAlert(payload));
+        if (sent && dedupeKey) {
+          notifiedWebBookings.add(dedupeKey);
+          if (notifiedWebBookings.size > 1000) notifiedWebBookings.clear(); // cota de memoria
+        }
+        console.log(`🌐 Aviso de reserva web ${payload.confirmationNumber || ''} → grupo: ${sent ? 'enviado' : 'grupo no resuelto'}`);
+        res.writeHead(sent ? 200 : 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: sent }));
+      } catch (e) {
+        console.warn('⚠️ Error enviando aviso de reserva web:', String(e?.message || e).split('\n')[0]);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: String(e?.message || e) }));
+      }
+      return;
+    }
+
     if (QR_TOKEN && url.searchParams.get('token') !== QR_TOKEN) {
       res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(htmlShell('<h1>🔒 Acceso restringido</h1><p>Agrega <b>?token=…</b> al final de la URL.</p>'));

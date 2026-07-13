@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationByPaymentIntent } from '@/lib/sheets';
 import { buildEmailHtml } from '@/lib/email';
+import { notifyBotOfWebBooking } from '@/lib/notify-bot';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -138,6 +139,26 @@ export async function POST(req: NextRequest) {
       } catch (e: any) {
         console.error('❌ webhook email error:', e.message);
       }
+    }
+
+    // Avisar al bot de WhatsApp para publicar la reserva en el grupo Control Hotel.
+    // Best-effort: no bloquea la respuesta al webhook de Stripe.
+    try {
+      await notifyBotOfWebBooking({
+        confirmationNumber,
+        customerName: name,
+        customerPhone: phone || '',
+        email,
+        checkin, checkout, nights, guests: adults + minors,
+        rooms: rooms.map(r => ({ name: r.name, guestCount: r.guestCount })),
+        total: Math.round(stayTotal),
+        amountPaid: Math.round(depositPaid),
+        pending: Math.max(0, Math.round(pending)),
+        isDeposit,
+        paymentIntentId: pi.id,
+      });
+    } catch (e: any) {
+      console.warn('⚠️ [webhook] Aviso al grupo (WhatsApp) omitido:', e?.message);
     }
 
     console.log(`✅ [webhook] Reserva recuperada y guardada: ${confirmationNumber} (${pi.id})`);

@@ -7,7 +7,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
 import { HOTEL_SYSTEM_PROMPT, ROOMS, TOURS, RESTAURANT_MENU } from './hotel-knowledge.js';
 import { createQuote, getByUser, getLocallyReservedBackendNames } from './reservations.js';
-import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservationByFolioFromSheet, findAlternativeDates } from './google-sheets.js';
+import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservationByFolioFromSheet, getReservationsByNameFromSheet, findAlternativeDates, getPerNightUnavailableFromSheet } from './google-sheets.js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const BOOKING_API = process.env.BOOKING_API_URL || 'https://paraisoencantado.com';
@@ -86,6 +86,114 @@ function getRoomPricePerNight(room, guests) {
   return base + (g - 4) * extra;
 }
 
+// ── Propuesta de estancia con cambio de suite (split-stay) ─────────────────
+// Preferencia para desempatar cuando dos suites cubren igual número de noches.
+function splitRoomRank(room) {
+  const id = String(room?.id || '');
+  if (id === 'suite-jungla' || /jungla/i.test(room?.name || '')) return 0;
+  if (id === 'suite-lindavista' || /lindavista/i.test(room?.name || '')) return 1;
+  return 2;
+}
+
+// Algoritmo PURO: dada la lista de noches y las suites libres por noche, arma segmentos
+// consecutivos MINIMIZANDO los cambios de suite (greedy "tramo más largo desde la izquierda",
+// que es óptimo en número de segmentos). No hace I/O — fácil de probar.
+export function buildSplitSegments(nights, freeRoomsPerNight, guests) {
+  const k = nights.length;
+  const g = Number(guests) || 2;
+  if (k === 0) return { feasible: false, reason: 'no_nights' };
+
+  const segments = [];
+  let i = 0;
+  let guard = 0;
+  while (i < k && guard < 200) {
+    guard++;
+    const free = freeRoomsPerNight[i] || [];
+    if (free.length === 0) {
+      return { feasible: false, reason: 'night_full', nightDate: nights[i].date };
+    }
+    // Elegir la suite libre desde i que se extienda MÁS noches consecutivas.
+    let best = null;
+    let bestEnd = i; // exclusivo
+    for (const room of free) {
+      let j = i;
+      while (j < k && (freeRoomsPerNight[j] || []).some(r => r.id === room.id)) j++;
+      const extension = j - i;
+      const bestExtension = bestEnd - i;
+      if (extension > bestExtension) {
+        best = room; bestEnd = j;
+      } else if (best && extension === bestExtension) {
+        // Desempate: primero suite recomendada, luego más barata.
+        if (splitRoomRank(room) < splitRoomRank(best)) best = room;
+        else if (splitRoomRank(room) === splitRoomRank(best) &&
+                 getRoomPricePerNight(room, g) < getRoomPricePerNight(best, g)) best = room;
+      }
+    }
+    if (!best) return { feasible: false, reason: 'no_room', nightDate: nights[i].date };
+
+    const nightsInSeg = bestEnd - i;
+    const perNight = getRoomPricePerNight(best, g);
+    segments.push({
+      room_id: best.id,
+      room_name: best.name,
+      guests: g,
+      checkin: nights[i].date,
+      checkout: nights[bestEnd - 1].checkout,
+      nights: nightsInSeg,
+      price_per_night: perNight,
+      subtotal: perNight * nightsInSeg
+    });
+    i = bestEnd;
+  }
+
+  const total = segments.reduce((s, seg) => s + seg.subtotal, 0);
+  return { feasible: true, guests: g, segments, changes: segments.length - 1, total_price: total };
+}
+
+// Calcula la propuesta split-stay para un rango sin una sola suite libre todas las noches.
+// Considera TODAS las suites con capacidad suficiente y combina las 3 fuentes de verdad
+// (Google Sheets + backend + reservas locales confirmadas), noche por noche.
+async function computeSplitStayProposal({ checkin, checkout, guests, allRooms }) {
+  const g = Number(guests) || 2;
+  const candidateRooms = (allRooms || []).filter(r => (r.max_occupancy || 2) >= g);
+  if (candidateRooms.length === 0) return { feasible: false, reason: 'no_capacity' };
+
+  let perNightSheet;
+  try {
+    perNightSheet = await getPerNightUnavailableFromSheet({ checkin, checkout, requestedRooms: candidateRooms });
+  } catch (err) {
+    console.warn('⚠️ Split-stay: no se pudo leer disponibilidad por noche:', err.message);
+    return { feasible: false, reason: 'sheet_error' };
+  }
+  if (!perNightSheet.length) return { feasible: false, reason: 'no_nights' };
+
+  const backendNamesAll = candidateRooms.map(r => r.backendName);
+  const perNightBlocked = await Promise.all(perNightSheet.map(async (night) => {
+    const blocked = new Set(night.blockedBackendNames);
+    // Backend (bloqueos temporales de otras cotizaciones en curso)
+    try {
+      const res = await fetch(`${BOOKING_API}/api/check-availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkin: night.date, checkout: night.checkout, rooms: backendNamesAll })
+      });
+      const data = await res.json();
+      for (const n of (data.unavailableRooms || [])) blocked.add(n);
+    } catch { /* la hoja ya cubre lo principal */ }
+    // Reservas WhatsApp confirmadas localmente
+    try {
+      for (const n of getLocallyReservedBackendNames({ checkin: night.date, checkout: night.checkout, requestedRooms: candidateRooms })) blocked.add(n);
+    } catch { /* ignore */ }
+    return blocked;
+  }));
+
+  const freeRoomsPerNight = perNightSheet.map((night, i) =>
+    candidateRooms.filter(r => !perNightBlocked[i].has(r.backendName))
+  );
+
+  return buildSplitSegments(perNightSheet, freeRoomsPerNight, g);
+}
+
 // Carta individual del restaurante — respuesta oficial a preguntas de comida/menú
 // (el buffet grupal solo se ofrece a grupos de 20+; ver hotel-knowledge.js)
 function buildCartaMessage() {
@@ -104,12 +212,16 @@ function getDeterministicResponse(userText = '', session = {}) {
     return 'Te comunico con nuestro equipo, en breve te contactan. 🤝📞';
   }
 
-  // "mi reserva/reservación" — si hay folio activo en sesión, mostrar datos sin pedir folio
-  if ((text.includes('mi reserva') || text.includes('mi reservacion') || text.includes('mi reservación') || text.includes('detalles de mi reserva')) && !text.includes('cancel') && !/wa-[a-z0-9]{4,}/i.test(userText)) {
+  // "mi reserva/reservación" — si hay folio activo en sesión, mostrar datos sin pedir folio.
+  // Si el cliente ya incluyó un identificador (folio WA-/PE- o "a nombre de ..."), NO
+  // cortamos aquí: dejamos que el modelo use lookup_reservation para buscarla.
+  const hasFolioLike = /\b(wa|pe)[- ]?[a-z0-9]{4,}\b/i.test(userText);
+  const hasNameIndicator = /\ba nombre de\b|\bnombre de la reserva|\bmi nombre es\b|\bse llama\b/i.test(text);
+  if ((text.includes('mi reserva') || text.includes('mi reservacion') || text.includes('mi reservación') || text.includes('detalles de mi reserva')) && !text.includes('cancel') && !hasFolioLike && !hasNameIndicator) {
     if (session.lastFolio && session.checkin && session.checkout) {
       return `Tu cotización activa:\n📋 *Folio:* ${session.lastFolio}\n📅 Check-in: ${session.checkin}\n📅 Check-out: ${session.checkout}\n\n¿Tienes alguna duda o ya enviaste el comprobante? 🌿`;
     }
-    return 'Para mostrarte los detalles de tu reserva necesito tu *número de folio* — formato *WA-XXXXXXXX*. 🧾📌';
+    return 'Para ver los detalles de tu reserva compárteme uno de estos datos: tu *folio de WhatsApp* (WA-XXXXXXXX), tu *número de confirmación de la página* (PE-XXXXXXXX) o el *nombre* de la reservación (ej. Manolo Covarrubias). 🧾📌';
   }
 
   if ((text.includes('quiero reservar') || text.includes('reservar por whatsapp')) && !text.includes('check-in') && !text.includes('check out')) {
@@ -518,6 +630,7 @@ const TOOLS = [
       properties: {
         checkin:  { type: 'string', description: 'Fecha de llegada YYYY-MM-DD' },
         checkout: { type: 'string', description: 'Fecha de salida YYYY-MM-DD' },
+        guests:   { type: 'number', description: 'Número de huéspedes (para filtrar por capacidad y calcular propuesta por noche si no hay una sola suite todas las noches). Default 2.' },
         room_ids: { type: 'array', items: { type: 'string' }, description: 'IDs a verificar. Vacío = todas.' }
       },
       required: ['checkin', 'checkout']
@@ -544,13 +657,13 @@ const TOOLS = [
   },
   {
     name: 'lookup_reservation',
-    description: 'Consulta los detalles de una reserva existente en Google Sheets usando el folio. SOLO usar cuando el cliente haya proporcionado explícitamente su folio (formato WA-XXXXXXXX). Nunca llamar sin que el cliente haya dado el folio primero.',
+    description: 'Consulta una reserva existente en Google Sheets. Úsala cuando el cliente ya tiene reserva y proporcionó un identificador: su FOLIO de WhatsApp (WA-XXXXXXXX), su NÚMERO DE CONFIRMACIÓN de la página (PE-XXXXXXXX) o el NOMBRE de la reservación (ej. Manolo Covarrubias). Pasa "folio" si dio un folio o confirmación (WA- o PE-), o "name" si solo dio un nombre. Nunca la llames sin que el cliente haya dado alguno de estos datos.',
     input_schema: {
       type: 'object',
       properties: {
-        folio: { type: 'string', description: 'Folio de reserva proporcionado por el cliente (ej. WA-MN8M9X77)' }
-      },
-      required: ['folio']
+        folio: { type: 'string', description: 'Folio de WhatsApp (WA-...) o número de confirmación de la página (PE-...) que dio el cliente' },
+        name:  { type: 'string', description: 'Nombre completo de la reservación, cuando el cliente no tiene su folio a la mano (ej. "Manolo Covarrubias")' }
+      }
     }
   },
   {
@@ -579,14 +692,16 @@ const TOOLS = [
         nights:      { type: 'number', description: 'Número de noches' },
         rooms: {
           type: 'array',
-          description: 'Lista de habitaciones a reservar (una o más). NUNCA llames esta herramienta varias veces para la misma reserva.',
+          description: 'Lista de habitaciones a reservar (una o más). NUNCA llames esta herramienta varias veces para la misma reserva. Para estancia con CAMBIO DE SUITE (split-stay), incluye cada suite con SUS propias fechas checkin/checkout (las noches que le tocan); usa exactamente los segmentos que devolvió split_stay.',
           items: {
             type: 'object',
             properties: {
               room_id:   { type: 'string', description: 'ID de la habitación' },
               room_name: { type: 'string', description: 'Nombre de la habitación' },
               guests:    { type: 'number', description: 'Huéspedes en esta habitación' },
-              price:     { type: 'number', description: 'Precio total de esta habitación (noches × tarifa oficial)' }
+              price:     { type: 'number', description: 'Precio total de esta habitación (noches × tarifa oficial)' },
+              checkin:   { type: 'string', description: 'YYYY-MM-DD — SOLO para split-stay: noche de entrada a ESTA suite. Omitir si toda la reserva usa el mismo rango.' },
+              checkout:  { type: 'string', description: 'YYYY-MM-DD — SOLO para split-stay: salida de ESTA suite. Omitir si toda la reserva usa el mismo rango.' }
             },
             required: ['room_id', 'room_name', 'guests', 'price']
           }
@@ -620,9 +735,10 @@ async function executeTool(toolName, toolInput, userId, userName) {
 
   try {
     if (toolName === 'check_availability') {
-      const { checkin, checkout, room_ids } = toolInput;
-      // Guardar fechas en sesión para que no se pierdan al truncar el historial
+      const { checkin, checkout, room_ids, guests: guestsIn } = toolInput;
+      // Guardar fechas (y huéspedes) en sesión para que no se pierdan al truncar el historial
       if (checkin && checkout) updateSession(userId, { checkin, checkout });
+      if (guestsIn) updateSession(userId, { guests: Number(guestsIn) });
       const rooms = (room_ids?.length > 0) ? room_ids : ROOMS.map(r => r.id);
       const requestedRooms = ROOMS.filter(r => rooms.includes(r.id));
       if (requestedRooms.length === 0) {
@@ -712,12 +828,38 @@ async function executeTool(toolName, toolInput, userId, userName) {
         .filter(r => unavailableNames.has(r.backendName))
         .map(r => ({ id: r.id, name: r.name, category: r.category, url: r.url }));
 
+      // Ninguna suite libre para TODO el rango. Antes de descartar, intentar cubrir la
+      // estancia completa con cambio(s) de suite (split-stay). Solo aplica si son 2+ noches.
+      const sessionForSplit = getSession(userId);
+      const guestsForSplit = Number(guestsIn || sessionForSplit.guests || 2);
+      const spanNights = (checkin && checkout)
+        ? Math.round((new Date(`${checkout}T12:00:00`) - new Date(`${checkin}T12:00:00`)) / 86400000)
+        : 0;
+
+      let splitStay = null;
+      if (spanNights >= 2 && spanNights <= 21) {
+        try {
+          const proposal = await computeSplitStayProposal({
+            checkin, checkout, guests: guestsForSplit, allRooms: ROOMS
+          });
+          // Solo ofrecer si es factible y realmente implica cambio(s) de suite (>=1).
+          if (proposal?.feasible && proposal.segments?.length > 1) {
+            splitStay = proposal;
+          }
+        } catch (splitErr) {
+          console.warn('⚠️ No se pudo calcular propuesta split-stay:', splitErr.message);
+        }
+      }
+
       const alternatives = await findAlternativeDates(checkin, checkout, requestedRooms, 5).catch(() => ({ alternatives: [] }));
 
       return {
         available: false,
-        message: 'No hay disponibilidad para las fechas solicitadas.',
+        message: splitStay
+          ? 'No hay una sola suite libre todas las noches, pero la estancia SÍ se puede cubrir con cambio de suite (ver split_stay).'
+          : 'No hay disponibilidad para las fechas solicitadas.',
         unavailable_rooms: unavailableRooms,
+        ...(splitStay ? { split_stay: splitStay } : {}),
         alternative_dates: alternatives?.alternatives || []
       };
     }
@@ -773,12 +915,41 @@ async function executeTool(toolName, toolInput, userId, userName) {
     }
 
     if (toolName === 'lookup_reservation') {
-      const { folio } = toolInput;
-      // Buscar primero en Google Sheets (fuente principal)
-      const sheetResult = await getReservationByFolioFromSheet(folio);
-      if (sheetResult.found) return sheetResult;
+      const { folio, name } = toolInput;
+      const hasFolio = folio && String(folio).trim();
+      const hasName = name && String(name).trim();
 
-      return { found: false, folio, message: 'No se encontró ninguna reserva con ese folio. Verifica que sea correcto.' };
+      // 1) Por folio / número de confirmación (WA-... o PE-... viven en la misma columna)
+      if (hasFolio) {
+        const sheetResult = await getReservationByFolioFromSheet(folio);
+        if (sheetResult.found) return sheetResult;
+        // Respaldo: si dio también nombre, intentar por nombre
+        if (hasName) {
+          const byName = await getReservationsByNameFromSheet(name);
+          if (byName.found) return { by: 'name', ...byName };
+        }
+        return {
+          found: false,
+          folio,
+          message: 'No encontré ninguna reserva con ese folio o número de confirmación. Verifica que sea correcto (WA-XXXXXXXX o PE-XXXXXXXX), o compárteme el nombre de la reservación.'
+        };
+      }
+
+      // 2) Por nombre de la reservación
+      if (hasName) {
+        const byName = await getReservationsByNameFromSheet(name);
+        if (byName.found) return { by: 'name', ...byName };
+        return {
+          found: false,
+          name,
+          message: `No encontré una reserva a nombre de "${name}". ¿Me confirmas el nombre tal como lo registraste al reservar, o me compartes tu folio (WA-XXXXXXXX) o número de confirmación de la página (PE-XXXXXXXX)?`
+        };
+      }
+
+      return {
+        found: false,
+        message: 'Para buscar tu reserva necesito uno de estos datos: tu folio de WhatsApp (WA-XXXXXXXX), tu número de confirmación de la página (PE-XXXXXXXX) o el nombre de la reservación.'
+      };
     }
 
     if (toolName === 'create_reservation_quote') {
@@ -816,7 +987,10 @@ async function executeTool(toolName, toolInput, userId, userName) {
         guestEmail: guest_email,
       });
 
-      // Normalizar rooms: mapear IDs a datos de ROOMS y calcular precio oficial
+      const isYmd = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ''));
+      // Normalizar rooms: mapear IDs a datos de ROOMS y calcular precio oficial.
+      // Soporta fechas por habitación (split-stay): si la habitación trae su propio
+      // checkin/checkout válido, se usa; si no, hereda el rango global de la reserva.
       const resolvedRooms = (inputRooms || []).map(r => {
         // Buscar por id exacto o por nombre normalizado (ej: 'suite-jungla' → 'jungla')
         const known = ROOMS.find(k =>
@@ -827,7 +1001,15 @@ async function executeTool(toolName, toolInput, userId, userName) {
           roomKeyNorm(k.id) === roomKeyNorm(r.room_name || '')
         );
         const g = Number(r.guests || 2);
-        const nightsNum = nightsFinal;
+        // Fechas por habitación (split-stay) o rango global de la reserva.
+        const roomCheckin = isYmd(r.checkin) ? r.checkin : checkin;
+        const roomCheckout = isYmd(r.checkout) ? r.checkout : checkout;
+        const roomNightsFromDates = (isYmd(roomCheckin) && isYmd(roomCheckout))
+          ? Math.round((new Date(`${roomCheckout}T12:00:00`) - new Date(`${roomCheckin}T12:00:00`)) / 86400000)
+          : null;
+        const nightsNum = (Number.isFinite(roomNightsFromDates) && roomNightsFromDates > 0)
+          ? roomNightsFromDates
+          : nightsFinal;
         const pricePerNight = known ? getRoomPricePerNight(known, g) : null;
         // Sanity check: precio máximo razonable por habitación por estancia = $99,999
         const rawPrice = pricePerNight ? pricePerNight * nightsNum : Number(r.price || 0);
@@ -837,6 +1019,9 @@ async function executeTool(toolName, toolInput, userId, userName) {
           name: known?.name || r.room_name,
           backendName: known?.backendName || r.room_name,
           guests: g,
+          checkin: roomCheckin,
+          checkout: roomCheckout,
+          nights: nightsNum,
           price: officialPrice
         };
       });
@@ -900,25 +1085,38 @@ async function executeTool(toolName, toolInput, userId, userName) {
         durationMinutes: 180
       };
 
-      try {
-        const blockRes = await fetch(`${BOOKING_API}/api/create-temporary-block`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkin, checkout, rooms: roomNamesForBackend, sessionId })
-        });
-        const blockData = await blockRes.json();
-        temporaryBlock = { ...temporaryBlock, success: Boolean(blockData?.success), message: blockData?.message || 'Bloqueo temporal procesado.' };
-      } catch (blockErr) {
-        console.warn('⚠️ No se pudo crear bloqueo temporal en backend:', blockErr.message);
+      // Backend: agrupar por rango de fechas (soporta split-stay: cada suite bloquea
+      // solo SUS noches). En una reserva normal hay un solo grupo = rango global.
+      const blockGroups = new Map(); // "checkin|checkout" -> [backendName]
+      for (const r of resolvedRooms) {
+        const key = `${r.checkin}|${r.checkout}`;
+        if (!blockGroups.has(key)) blockGroups.set(key, []);
+        blockGroups.get(key).push(r.backendName);
       }
+      let backendBlockOk = false;
+      for (const [key, names] of blockGroups) {
+        const [ci, co] = key.split('|');
+        try {
+          const blockRes = await fetch(`${BOOKING_API}/api/create-temporary-block`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checkin: ci, checkout: co, rooms: names, sessionId })
+          });
+          const blockData = await blockRes.json();
+          if (blockData?.success) backendBlockOk = true;
+        } catch (blockErr) {
+          console.warn('⚠️ No se pudo crear bloqueo temporal en backend:', blockErr.message);
+        }
+      }
+      temporaryBlock = { ...temporaryBlock, success: backendBlockOk, message: backendBlockOk ? 'Bloqueo temporal procesado.' : temporaryBlock.message };
 
-      // Registrar bloqueo de CADA habitación en pestaña Disponibilidad
+      // Registrar bloqueo de CADA habitación en pestaña Disponibilidad (con sus fechas)
       let sheetBlockOk = false;
       for (const r of resolvedRooms) {
         try {
-          const dispResult = await appendTempBlockToSheet({ room: r, checkin, checkout, folio: quote.folio, sessionId });
+          const dispResult = await appendTempBlockToSheet({ room: r, checkin: r.checkin, checkout: r.checkout, folio: quote.folio, sessionId });
           if (!dispResult.success) console.warn(`⚠️ Bloqueo Disponibilidad (${r.name}):`, dispResult.reason);
-          else { sheetBlockOk = true; console.log(`🔒 Bloqueo temporal: ${r.name} — ${quote.folio}`); }
+          else { sheetBlockOk = true; console.log(`🔒 Bloqueo temporal: ${r.name} (${r.checkin}→${r.checkout}) — ${quote.folio}`); }
         } catch (dispErr) {
           console.warn(`⚠️ Error bloqueo Disponibilidad (${r.name}):`, dispErr.message);
         }
@@ -1094,6 +1292,11 @@ export async function handleMessage(userId, userText, userName = '') {
   const MAX_TOOL_ITERATIONS = 6;
   let iterations = 0;
 
+  // Señal REAL de cotización: solo se marca cuando se ejecuta create_reservation_quote
+  // y devuelve un folio nuevo. Evita falsos positivos por folios repetidos en el texto
+  // (confirmaciones, "mi folio es WA-...", etc.).
+  let createdQuote = null;
+
   while (true) {
     iterations++;
     const safeMessages = sanitizeMessagesPayload(messages);
@@ -1114,18 +1317,22 @@ export async function handleMessage(userId, userText, userName = '') {
         if (partialText) {
           console.warn('⚠️ Claude: tool_use sin bloques; usando texto parcial como respuesta.');
           effectiveHistory.push({ role: 'assistant', content: partialText });
-          return { text: withDisclosure(partialText), requiresHumanIntervention: needsHumanIntervention(userText, partialText), requiresTourNotification: wantsTourBooking(userText, partialText) };
+          return { text: withDisclosure(partialText), requiresHumanIntervention: needsHumanIntervention(userText, partialText), requiresTourNotification: wantsTourBooking(userText, partialText), quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null };
         }
         console.warn('⚠️ Claude devolvió stop_reason=tool_use pero sin bloques tool_use; se omite ese turno.');
         const fallback = 'Hubo un problema temporal al procesar tu solicitud. ¿Me lo repites por favor? 🌿';
         effectiveHistory.push({ role: 'assistant', content: fallback });
-        return { text: withDisclosure(fallback), requiresHumanIntervention: false, requiresTourNotification: false };
+        return { text: withDisclosure(fallback), requiresHumanIntervention: false, requiresTourNotification: false, quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null };
       }
       messages.push({ role: 'assistant', content: response.content });
 
       const toolResults = [];
       for (const tb of toolUseBlocks) {
         const result = await executeTool(tb.name, tb.input, userId, userName);
+        // Registrar cotización realmente creada (folio nuevo, sin error).
+        if (tb.name === 'create_reservation_quote' && result && !result.error && result.folio) {
+          createdQuote = result;
+        }
         toolResults.push({ type: 'tool_result', tool_use_id: tb.id, content: JSON.stringify(result) });
       }
       if (toolResults.length > 0) {
@@ -1138,7 +1345,7 @@ export async function handleMessage(userId, userText, userName = '') {
         const partial = response.content.find(b => b.type === 'text')?.text?.trim()
           || 'Déjame confirmar unos detalles con el equipo y te respondo en breve. 🌿';
         effectiveHistory.push({ role: 'assistant', content: partial });
-        return { text: withDisclosure(partial), requiresHumanIntervention: true, requiresTourNotification: false };
+        return { text: withDisclosure(partial), requiresHumanIntervention: true, requiresTourNotification: false, quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null };
       }
 
       continue;
@@ -1157,7 +1364,9 @@ export async function handleMessage(userId, userText, userName = '') {
     return {
       text: withDisclosure(finalText),
       requiresHumanIntervention: needsHumanIntervention(userText, finalText),
-      requiresTourNotification: wantsTourBooking(userText, finalText)
+      requiresTourNotification: wantsTourBooking(userText, finalText),
+      quoteCreated: Boolean(createdQuote),
+      quoteFolio: createdQuote?.folio || null
     };
   }
 }
