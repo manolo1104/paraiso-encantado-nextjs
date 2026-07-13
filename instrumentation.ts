@@ -11,5 +11,10 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const { startIcalScheduler } = await import('@/lib/ical-scheduler');
     startIcalScheduler();
+
+    // Disparo diario de las secuencias de email (antes dependía de un cron
+    // externo de Railway que murió en silencio). Ver lib/email-scheduler.ts.
+    const { startEmailScheduler } = await import('@/lib/email-scheduler');
+    startEmailScheduler();
   }
 }
