@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSheetsClient, sheetsCall } from '@/lib/sheets';
+import { getSheetsClient, sheetsCall, withAvailabilityLock } from '@/lib/sheets';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +69,10 @@ export async function DELETE(req: NextRequest) {
   const client = await getSheetsClient();
   if (!client) return NextResponse.json({ error: 'Sin conexión Sheets' }, { status: 500 });
 
-  try {
+  // Bajo el mismo candado que el sync OTA: leer índice de fila + escribir la celda deben
+  // ser atómicos respecto a un re-orden concurrente de la hoja (si no, se escribe en la fila equivocada).
+  return withAvailabilityLock(async () => {
+   try {
     const res = await sheetsCall(() =>
       client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${AVAIL_SHEET}!A:Z` })
     );
@@ -101,16 +104,19 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Fecha no encontrada en la hoja de disponibilidad' }, { status: 404 });
-  } catch (e: any) {
+   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
-  }
+   }
+  });
 }
 
 async function setDateStatus(room: string, date: string, status: string): Promise<string | null> {
   const client = await getSheetsClient();
   if (!client) return 'Sin conexión Sheets';
 
-  try {
+  // Serializado con el sync OTA para que leer la fila y escribir la celda sea atómico.
+  return withAvailabilityLock(async () => {
+   try {
     const res = await sheetsCall(() =>
       client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${AVAIL_SHEET}!A:Z` })
     );
@@ -136,7 +142,8 @@ async function setDateStatus(room: string, date: string, status: string): Promis
     }
 
     return 'Fecha no encontrada en la hoja de disponibilidad (la hoja debe tener esa fecha en columna A)';
-  } catch (e: any) {
+   } catch (e: any) {
     return e.message;
-  }
+   }
+  });
 }

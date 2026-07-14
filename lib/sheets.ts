@@ -4,6 +4,25 @@ const SHEET_NAME = process.env.GOOGLE_SHEET_TAB || 'Reservas';
 const AVAILABILITY_SHEET = 'Disponibilidad';
 const TEMP_BLOCKS_SHEET = 'BloqueosTemporal';
 
+/**
+ * Candado en-proceso para SERIALIZAR toda escritura que reescribe la matriz
+ * `Disponibilidad` (sync OTA cada 15 min + reservas web `blockDates` + bloqueos
+ * manuales del admin). El servidor corre en Railway con UNA sola réplica
+ * (numReplicas=1), así que una cadena de promesas basta para que nunca haya dos
+ * operaciones leyendo/escribiendo la hoja a la vez.
+ *
+ * Sin esto, cada función hacía leer→clear(TODA la hoja)→reescribir; si dos corridas
+ * se traslapaban (había DOS disparadores del sync: scheduler interno + GitHub Actions),
+ * una leía la hoja durante la ventana vacía del `clear` de la otra y la reescribía a
+ * medias → se borraban BLOQUEADO/RESERVADO y solo sobrevivía lo último (OTA Expedia).
+ */
+let availabilityWriteChain: Promise<unknown> = Promise.resolve();
+export function withAvailabilityLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = availabilityWriteChain.then(fn, fn); // corre pase lo que pase con la anterior
+  availabilityWriteChain = run.then(() => {}, () => {}); // la cadena nunca se rompe por un error
+  return run as Promise<T>;
+}
+
 const ROOM_NAMES = [
   'Suite Flor de Liz 1', 'Suite Flor de Liz 2', 'Suite LindaVista', 'Jungla',
   'Suite Lajas', 'Lirios 1', 'Lirios 2', 'Orquídeas 2', 'Orquídeas Doble',
@@ -588,7 +607,8 @@ export async function blockDates(
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
   const sid = process.env.GOOGLE_SHEET_ID;
-  try {
+  return withAvailabilityLock(async () => {
+   try {
     const normalizedRooms = rooms
       .map(r => typeof r === 'string' ? { name: normalizeRoomName(r) } : { name: normalizeRoomName(r.name) })
       .filter(r => ROOM_NAMES.includes(r.name));
@@ -602,6 +622,7 @@ export async function blockDates(
     );
 
     let data: string[][] = res.data.values || [];
+    const prevRowCount = data.length; // filas que había ANTES de crecer (para limpiar sobrantes)
     const headers = data[0] || ['Fecha', ...ROOM_NAMES];
     if (data.length === 0) data = [headers];
 
@@ -625,12 +646,10 @@ export async function blockDates(
       new Date(a[0] || '1970-01-01').getTime() - new Date(b[0] || '1970-01-01').getTime()
     )];
 
-    await sheetsCall(() =>
-      client.spreadsheets.values.clear({
-        spreadsheetId: sid,
-        range: `${AVAILABILITY_SHEET}!A:Z`,
-      })
-    );
+    // Escribir SIN ventana vacía: sobrescribimos en sitio (update) y solo limpiamos las
+    // filas sobrantes si la hoja quedó más corta (aquí nunca encoge, pero es defensivo).
+    // Ya no usamos clear(A:Z) antes del update — esa ventana vacía era lo que otra
+    // corrida podía leer y reescribir a medias.
     await sheetsCall(() =>
       client.spreadsheets.values.update({
         spreadsheetId: sid,
@@ -639,10 +658,19 @@ export async function blockDates(
         requestBody: { values: sorted },
       })
     );
+    if (prevRowCount > sorted.length) {
+      await sheetsCall(() =>
+        client.spreadsheets.values.clear({
+          spreadsheetId: sid,
+          range: `${AVAILABILITY_SHEET}!A${sorted.length + 1}:Z${prevRowCount}`,
+        })
+      );
+    }
     console.log(`✅ Fechas bloqueadas: ${dateRange.length} noches`);
-  } catch (e: any) {
+   } catch (e: any) {
     console.error('❌ blockDates error:', e.message);
-  }
+   }
+  });
 }
 
 /**
@@ -667,11 +695,13 @@ export async function updateOTABlocks(
   const otaLabel = platform === 'expedia' ? 'Expedia' : platform === 'booking_com' ? 'Booking' : '';
   const otaCellValue = otaLabel ? `OTA (${otaLabel})` : 'OTA';
 
-  try {
+  return withAvailabilityLock(async () => {
+   try {
     const res = await sheetsCall(() =>
       client.spreadsheets.values.get({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })
     );
     let data: string[][] = res.data.values || [];
+    const prevRowCount = data.length; // filas que había ANTES de crecer (para limpiar sobrantes)
     const headers: string[] = data[0] || ['Fecha', ...ROOM_NAMES];
     if (data.length === 0) data = [headers];
 
@@ -711,9 +741,8 @@ export async function updateOTABlocks(
       new Date(a[0] || '1970-01-01').getTime() - new Date(b[0] || '1970-01-01').getTime()
     )];
 
-    await sheetsCall(() =>
-      client.spreadsheets.values.clear({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })
-    );
+    // Escribir SIN ventana vacía (ya no clear(A:Z) antes del update): sobrescribimos en
+    // sitio y solo limpiamos filas sobrantes si la hoja quedó más corta (defensivo).
     await sheetsCall(() =>
       client.spreadsheets.values.update({
         spreadsheetId: sid,
@@ -722,6 +751,14 @@ export async function updateOTABlocks(
         requestBody: { values: sorted },
       })
     );
+    if (prevRowCount > sorted.length) {
+      await sheetsCall(() =>
+        client.spreadsheets.values.clear({
+          spreadsheetId: sid,
+          range: `${AVAILABILITY_SHEET}!A${sorted.length + 1}:Z${prevRowCount}`,
+        })
+      );
+    }
 
     // Pintar de morado en la propia hoja las celdas OTA (regla de formato condicional
     // idempotente: se agrega una sola vez y se aplica sola en cada sync).
@@ -730,10 +767,11 @@ export async function updateOTABlocks(
     );
 
     return blocked;
-  } catch (e: any) {
+   } catch (e: any) {
     console.error('❌ updateOTABlocks error:', e.message);
     return 0;
-  }
+   }
+  });
 }
 
 /**

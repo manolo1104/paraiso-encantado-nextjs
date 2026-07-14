@@ -4,10 +4,13 @@ name: iCal OTA Sync
 # Llama al endpoint del cron en producción cada 15 minutos.
 # Requiere el secreto de repositorio CRON_SECRET (debe coincidir con el de Railway).
 
+# NOTA: el sync automático corre DENTRO del servidor (lib/ical-scheduler.ts, cada 15 min,
+# una sola réplica en Railway). Este workflow ya NO se dispara por horario para evitar un
+# SEGUNDO disparador que se traslapaba con el interno y borraba bloqueos de Disponibilidad.
+# Queda solo como respaldo MANUAL (Actions → Run workflow) por si el scheduler interno
+# estuviera caído. Si algún día se re-activa el horario, debe ser el ÚNICO disparador.
 on:
-  schedule:
-    - cron: '*/15 * * * *'   # cada 15 minutos
-  workflow_dispatch: {}        # permite ejecutarlo a mano desde la pestaña Actions
+  workflow_dispatch: {}        # solo manual, desde la pestaña Actions
 
 jobs:
   sync:

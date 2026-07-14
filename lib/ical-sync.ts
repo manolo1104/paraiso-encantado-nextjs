@@ -56,7 +56,30 @@ export interface IcalSyncResult {
   error?: string;
 }
 
+// Candado anti-traslape: evita que dos corridas del sync se pisen (scheduler interno
+// + cron de GitHub, o una corrida lenta que rebasa los 15 min). Ambos disparadores
+// llaman a esta misma función en el mismo proceso (una sola réplica en Railway).
+let syncInProgress = false;
+
 export async function runIcalSync(): Promise<{
+  synced: number;
+  results: IcalSyncResult[];
+  timestamp: string;
+  skipped?: boolean;
+}> {
+  if (syncInProgress) {
+    console.warn('[ical-sync] ya hay una sincronización en curso — se omite esta corrida.');
+    return { synced: 0, results: [], timestamp: new Date().toISOString(), skipped: true };
+  }
+  syncInProgress = true;
+  try {
+    return await runIcalSyncInner();
+  } finally {
+    syncInProgress = false;
+  }
+}
+
+async function runIcalSyncInner(): Promise<{
   synced: number;
   results: IcalSyncResult[];
   timestamp: string;
