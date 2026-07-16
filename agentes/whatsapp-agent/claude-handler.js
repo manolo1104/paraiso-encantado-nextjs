@@ -9,7 +9,11 @@ import { HOTEL_SYSTEM_PROMPT, ROOMS, TOURS, RESTAURANT_MENU } from './hotel-know
 import { createQuote, getByUser, getLocallyReservedBackendNames } from './reservations.js';
 import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservationByFolioFromSheet, getReservationsByNameFromSheet, findAlternativeDates, getPerNightUnavailableFromSheet } from './google-sheets.js';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  maxRetries: 4,    // reintentos ante 429/529/errores transitorios (default 2) — evita que un blip pase a "Tuve un problema técnico"
+  timeout: 60000,   // 60s por intento (default 10 min) para no colgar el manejador del mensaje
+});
 const BOOKING_API = process.env.BOOKING_API_URL || 'https://paraisoencantado.com';
 
 // Token de servicio para autenticar las llamadas del agente a las APIs admin del sitio.
@@ -576,7 +580,7 @@ function sanitizeHistoryForAnthropic(history = []) {
   return cleaned;
 }
 
-function sanitizeMessagesPayload(messages = []) {
+export function sanitizeMessagesPayload(messages = []) {
   const cleaned = [];
 
   for (const m of messages) {
@@ -615,6 +619,12 @@ function sanitizeMessagesPayload(messages = []) {
       merged.push({ ...m });
     }
   }
+
+  // Anthropic EXIGE que el primer mensaje sea de 'user' ("first message must use the
+  // 'user' role"). El recorte del historial por MAX_HISTORY (shift) puede dejar un
+  // 'assistant' al frente → error 400 → el bot respondía "Tuve un problema técnico".
+  // Esta es la ÚLTIMA compuerta antes de llamar a la API, así que aquí lo garantizamos.
+  while (merged.length && merged[0].role !== 'user') merged.shift();
 
   return merged;
 }
@@ -1302,7 +1312,7 @@ export async function handleMessage(userId, userText, userName = '') {
     const safeMessages = sanitizeMessagesPayload(messages);
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 3000, // subido de 1500: cotizaciones con varias suites/tours y el split-stay generan JSON de herramienta grande y se truncaban → respuesta vacía → "Hubo un problema temporal". El costo solo aplica a lo que realmente genera.
       system: systemBlocks,
       tools: cachedTools,
       messages: safeMessages
