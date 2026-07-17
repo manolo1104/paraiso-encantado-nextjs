@@ -52,13 +52,68 @@ export async function GET() {
   }
 }
 
-// POST { room, date } — manually block a date (sets 'BLOQUEADO')
+// POST { room, date, status? } — status 'BLOQUEADO' (default) bloquea manualmente.
+// status 'ABIERTO' libera una fecha ocupada por OTA: escribe un centinela que
+// SOBREVIVE al re-sync de 15 min (updateOTABlocks solo pisa celdas vacías o 'OTA…').
+// Los motores de disponibilidad (sitio y bot) tratan 'ABIERTO' como libre.
 export async function POST(req: NextRequest) {
-  const { room, date } = await req.json();
+  const { room, date, status } = await req.json();
   if (!room || !date) return NextResponse.json({ error: 'room y date requeridos' }, { status: 400 });
+
+  const target = String(status || 'BLOQUEADO').toUpperCase();
+  if (target === 'ABIERTO') {
+    const r = await overrideOtaToOpen(room, date);
+    if (r.status !== 200) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ ok: true });
+  }
+
   const err = await setDateStatus(room, date, 'BLOQUEADO');
   if (err) return NextResponse.json({ error: err }, { status: 400 });
   return NextResponse.json({ ok: true });
+}
+
+// Libera una fecha ocupada por OTA escribiendo el centinela 'ABIERTO'. Guarda:
+// SOLO opera sobre celdas cuyo valor empiece por 'OTA' (nunca sobre RESERVADO ni
+// bloqueos), para no pisar una reserva real por accidente.
+async function overrideOtaToOpen(room: string, date: string): Promise<{ status: number; error?: string }> {
+  const client = await getSheetsClient();
+  if (!client) return { status: 500, error: 'Sin conexión Sheets' };
+
+  return withAvailabilityLock(async () => {
+    try {
+      const res = await sheetsCall(() =>
+        client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${AVAIL_SHEET}!A:Z` })
+      );
+      const rows = res.data.values || [];
+      const headers: string[] = rows[0] || [];
+      const colIdx = headers.findIndex(h => h?.trim() === room);
+      if (colIdx === -1) return { status: 404, error: 'Habitación no encontrada en Disponibilidad' };
+
+      for (let r = 1; r < rows.length; r++) {
+        const rowDate = toISO(rows[r][0] || '');
+        if (rowDate !== date) continue;
+
+        const current = (rows[r][colIdx] || '').toUpperCase().trim();
+        if (!current.startsWith('OTA')) {
+          return { status: 409, error: 'Solo se puede liberar una fecha ocupada por OTA. Las reservas directas se gestionan desde el panel de reservas.' };
+        }
+
+        const col = String.fromCharCode(65 + colIdx);
+        await sheetsCall(() =>
+          client.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `${AVAIL_SHEET}!${col}${r + 1}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [['ABIERTO']] },
+          })
+        );
+        return { status: 200 };
+      }
+      return { status: 404, error: 'Fecha no encontrada en la hoja de disponibilidad' };
+    } catch (e: any) {
+      return { status: 500, error: e.message };
+    }
+  });
 }
 
 // DELETE { room, date } — unblock a manually blocked date (clears cell)
@@ -86,9 +141,12 @@ export async function DELETE(req: NextRequest) {
       if (rowDate !== date) continue;
 
       const current = (rows[r][colIdx] || '').toUpperCase().trim();
-      // Only clear BLOQUEADO — never clear RESERVADO (that's a real booking)
-      if (current !== 'BLOQUEADO') {
-        return NextResponse.json({ error: 'Solo se pueden desbloquear fechas bloqueadas manualmente (BLOQUEADO). Las reservas deben cancelarse desde el panel de reservas.' }, { status: 409 });
+      // Solo limpiar bloqueos MANUALES ('BLOQUEADO') o el centinela 'ABIERTO'
+      // (deshacer una liberación de OTA → el próximo sync vuelve a poner el bloqueo
+      // de OTA si sigue en el feed). NUNCA limpiar RESERVADO (reserva real) ni OTA
+      // directamente (para eso está "liberar").
+      if (current !== 'BLOQUEADO' && current !== 'ABIERTO') {
+        return NextResponse.json({ error: 'Solo se pueden desbloquear fechas bloqueadas manualmente (BLOQUEADO) o liberadas manualmente. Las reservas deben cancelarse desde el panel de reservas.' }, { status: 409 });
       }
 
       const col = String.fromCharCode(65 + colIdx);

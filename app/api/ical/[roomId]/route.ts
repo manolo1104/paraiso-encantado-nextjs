@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { slugToRoomName } from '@/lib/room-slugs';
 import { getAllBookings } from '@/lib/admin/sheets-admin';
+import { getRoomBlockedRanges } from '@/lib/sheets';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,14 @@ export async function GET(
     return new NextResponse('Room not found', { status: 404 });
   }
 
-  const bookings = await getAllBookings();
+  const [bookings, blockedRanges] = await Promise.all([
+    getAllBookings(),
+    // Bloqueos MANUALES / mantenimiento de la matriz Disponibilidad, para que
+    // cerrar una fecha en /calendario también llegue a Expedia/Booking. No incluye
+    // reservas directas (ya salen abajo), bloqueos de OTA (evita lazos) ni
+    // 'ABIERTO' (fecha liberada a mano).
+    getRoomBlockedRanges(roomName).catch(() => []),
+  ]);
   const roomBookings = bookings.filter(b => {
     if (b.estado === 'CANCELADA') return false;
     const habs = b.habitaciones.split(',').map(h => h.replace(/\s*\([^)]*\)/g, '').trim());
@@ -49,6 +57,20 @@ export async function GET(
     // Feed PÚBLICO (lo consumen las OTAs sin token): NUNCA incluir el nombre del
     // huésped ni datos personales — las OTAs solo necesitan las fechas para bloquear.
     lines.push(`STATUS:CONFIRMED`);
+    lines.push('TRANSP:OPAQUE');
+    lines.push('END:VEVENT');
+  }
+
+  // Bloqueos manuales / mantenimiento de la matriz Disponibilidad como eventos,
+  // para que las OTAs también dejen de vender esas fechas.
+  for (const r of blockedRanges) {
+    if (!r.checkin || !r.checkout) continue;
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:block-${icalDate(r.checkin)}-${roomId}@paraisoencantado.mx`);
+    lines.push(`DTSTART;VALUE=DATE:${icalDate(r.checkin)}`);
+    lines.push(`DTEND;VALUE=DATE:${icalDate(r.checkout)}`);
+    lines.push('SUMMARY:No disponible');
+    lines.push('STATUS:CONFIRMED');
     lines.push('TRANSP:OPAQUE');
     lines.push('END:VEVENT');
   }

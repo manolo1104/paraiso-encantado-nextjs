@@ -68,6 +68,17 @@
   gap: 16px;
 }
 
+/* Envuelve los campos para poder deshabilitarlos todos con [disabled] en modo
+   solo-lectura. display:contents evita que el fieldset altere el layout flex:
+   sus hijos siguen siendo ítems directos del .form (conservan el gap). */
+.lockFieldset {
+  display: contents;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
 .grid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;

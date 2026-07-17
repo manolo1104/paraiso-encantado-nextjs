@@ -9,6 +9,7 @@ import type { TourItem } from '@/lib/booking-html';
 import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import { parseNotas, joinNotas, type ExtraItem } from '@/lib/notas';
 import { normalizeMxPhone } from '@/lib/phone';
+import { splitRooms } from '@/lib/room-names';
 import styles from './Modal.module.css';
 
 const SUITES = [
@@ -147,6 +148,10 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const isEdit = !!booking || !!savedConfirmacion;
   const editConfirmacion = booking?.confirmacion || savedConfirmacion;
 
+  // Ver una reserva EXISTENTE arranca en solo-lectura: primero se ven los datos y
+  // solo se puede editar tras pulsar "Editar". Una reserva NUEVA arranca editable.
+  const [locked, setLocked] = useState(!!booking);
+
   const [form, setForm] = useState({
     cliente: booking?.cliente || '',
     telefono: booking?.telefono || '',
@@ -214,7 +219,11 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
 
   const [habitaciones, setHabitaciones] = useState<HabItem[]>(() => {
     if (booking?.habitaciones) {
-      const suiteList = booking.habitaciones.split(', ').filter(Boolean).map(s => s.trim());
+      // Canonicalizar los nombres (quita "(N personas)" y normaliza "Lis"/"Liz",
+      // acentos, prefijo "Suite"…) para que el <select> empate una opción real. Antes
+      // se usaba el string crudo → no matcheaba ninguna <option> y el navegador
+      // mostraba la primera (Flor de Liz 1) sin importar la habitación real.
+      const suiteList = splitRooms(booking.habitaciones);
       // Distribuye el total real de huéspedes entre las habitaciones (las reservas no
       // guardan el reparto por cuarto). Así el total no cambia al editar.
       const total = booking.huespedes || suiteList.length * 2;
@@ -529,12 +538,15 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h2 className={styles.title}>{isEdit ? 'Editar Reserva' : 'Nueva Reserva'}</h2>
+          <h2 className={styles.title}>{locked ? 'Detalle de la reserva' : (isEdit ? 'Editar Reserva' : 'Nueva Reserva')}</h2>
           {isEdit && editConfirmacion && <span className={styles.confirmNum}>{editConfirmacion}</span>}
           <button className={styles.closeBtn} onClick={onClose}><X size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* En solo-lectura, el fieldset deshabilita TODOS los campos/botones internos
+              de una sola vez. Las acciones (Editar/Guardar/Cerrar) van FUERA del fieldset. */}
+          <fieldset disabled={locked} className={styles.lockFieldset}>
           <div className={styles.grid2}>
             {/* Cliente con autocomplete */}
             <label className={styles.field} style={{ position: 'relative' }}>
@@ -602,7 +614,10 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
               <div key={i} className={styles.roomRow}>
                 <select className={styles.roomRowSelect} value={hab.suite}
                   onChange={e => updateHab(i, 'suite', e.target.value)}>
-                  {SUITES.map(s => <option key={s}>{s}</option>)}
+                  {/* Defensivo: si el nombre guardado no está en el catálogo (variante
+                      no prevista), agregarlo como opción para que el value SIEMPRE
+                      empate y nunca se muestre otra habitación por error. */}
+                  {(SUITES.includes(hab.suite) ? SUITES : [hab.suite, ...SUITES]).map(s => <option key={s}>{s}</option>)}
                 </select>
                 <select className={styles.roomRowSelect} value={hab.huespedes}
                   onChange={e => updateHab(i, 'huespedes', parseInt(e.target.value))}>
@@ -841,24 +856,36 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
               <textarea rows={2} value={notasInternas} onChange={e => setNotasInternas(e.target.value)} />
             </label>
           </div>
+          </fieldset>
 
           {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.actions}>
-            {isEdit && (
-              <button type="button" className={styles.dangerBtn} onClick={handleCancel} disabled={loading}>
-                Cancelar reserva
-              </button>
+            {locked ? (
+              <>
+                <button type="button" className={styles.secondaryBtn} onClick={onClose}>Cerrar</button>
+                <button type="button" className={styles.primaryBtn} onClick={() => setLocked(false)}>
+                  <Pencil size={16} /> Editar
+                </button>
+              </>
+            ) : (
+              <>
+                {isEdit && (
+                  <button type="button" className={styles.dangerBtn} onClick={handleCancel} disabled={loading}>
+                    Cancelar reserva
+                  </button>
+                )}
+                <button type="button" className={styles.secondaryBtn} onClick={onClose}>Cerrar</button>
+                <button
+                  type="submit"
+                  className={styles.primaryBtn}
+                  disabled={loading || (!isEdit && availStatus === 'unavailable')}
+                >
+                  {loading ? <Loader2 size={16} className={styles.spin} /> : null}
+                  {isEdit ? 'Guardar cambios' : 'Crear reserva'}
+                </button>
+              </>
             )}
-            <button type="button" className={styles.secondaryBtn} onClick={onClose}>Cerrar</button>
-            <button
-              type="submit"
-              className={styles.primaryBtn}
-              disabled={loading || (!isEdit && availStatus === 'unavailable')}
-            >
-              {loading ? <Loader2 size={16} className={styles.spin} /> : null}
-              {isEdit ? 'Guardar cambios' : 'Crear reserva'}
-            </button>
           </div>
         </form>
       </div>

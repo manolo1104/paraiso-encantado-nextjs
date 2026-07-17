@@ -262,6 +262,68 @@ export async function getFullyBookedDates(monthsAhead = 6): Promise<string[]> {
   }
 }
 
+// Rangos de fechas bloqueadas MANUALMENTE de una habitación (BLOQUEADO o
+// MANTENIMIENTO), para exportarlos en el feed iCal que consumen las OTAs. Así,
+// cerrar una fecha en el panel /calendario también le llega a Expedia/Booking.
+// A propósito NO exporta:
+//   - RESERVADO: las reservas directas ya se exportan desde la hoja Reservas.
+//   - OTA (…): reexportar a una OTA un bloqueo que vino de ella misma podría crear
+//     un lazo (bloqueo fantasma) con algunos gestores de canal. Los bloqueos de
+//     una OTA ya los conoce esa OTA; el cruce entre OTAs no se maneja por aquí.
+//   - 'ABIERTO': fecha liberada a mano → queda vendible.
+export async function getRoomBlockedRanges(
+  roomName: string,
+): Promise<Array<{ checkin: string; checkout: string }>> {
+  const client = await getSheetsClient();
+  if (!client || !process.env.GOOGLE_SHEET_ID) return [];
+  const sid = process.env.GOOGLE_SHEET_ID;
+  const normalized = normalizeRoomName(roomName);
+  try {
+    const res = await sheetsCall(() =>
+      client.spreadsheets.values.get({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })
+    );
+    const data = res.data.values || [];
+    if (data.length < 2) return [];
+    const headers = data[0];
+    const col = headers.findIndex((h: string) => h === normalized);
+    if (col === -1) return [];
+
+    const dates: string[] = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (!row?.[0]) continue;
+      let dateStr = String(row[0]).trim().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const d = new Date(String(row[0]).trim());
+        if (isNaN(d.getTime())) continue;
+        dateStr = ymd(d);
+      }
+      const val = (row[col] || '').toUpperCase().trim();
+      if (val === 'BLOQUEADO' || val === 'MANTENIMIENTO') {
+        dates.push(dateStr);
+      }
+    }
+    if (dates.length === 0) return [];
+
+    // Agrupar fechas consecutivas en rangos [checkin, checkout) (DTEND exclusivo en iCal).
+    dates.sort((a, b) => a.localeCompare(b));
+    const nextDay = (d: string) => { const dt = new Date(d + 'T00:00:00'); dt.setDate(dt.getDate() + 1); return ymd(dt); };
+    const ranges: Array<{ checkin: string; checkout: string }> = [];
+    let start = dates[0];
+    let prev = dates[0];
+    for (let i = 1; i < dates.length; i++) {
+      if (dates[i] === nextDay(prev)) { prev = dates[i]; continue; }
+      ranges.push({ checkin: start, checkout: nextDay(prev) });
+      start = dates[i]; prev = dates[i];
+    }
+    ranges.push({ checkin: start, checkout: nextDay(prev) });
+    return ranges;
+  } catch (e: any) {
+    console.error('❌ getRoomBlockedRanges error:', e.message);
+    return [];
+  }
+}
+
 export async function checkAvailability(
   checkin: string, checkout: string,
   rooms: (string | { name: string })[],
