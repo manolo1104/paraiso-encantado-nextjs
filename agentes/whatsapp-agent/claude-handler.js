@@ -559,6 +559,41 @@ function getMexicoCityNowData() {
   };
 }
 
+// Fecha de hoy del hotel (America/Mexico_City) como 'YYYY-MM-DD'.
+function mxTodayISO() {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Mexico_City' });
+}
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Si el cliente da un año ya pasado (típico typo: pide "julio 2025" en 2026), la
+// hoja no tiene esas filas y TODO saldría "disponible" (falso). Reencuadramos las
+// fechas al próximo año válido conservando la duración de la estancia, y marcamos
+// `corrected` para que el bot le confirme al cliente las fechas exactas que cotiza.
+export function rollDatesForwardIfPast(checkin, checkout) {
+  if (!ISO_DATE_RE.test(String(checkin || '')) || !ISO_DATE_RE.test(String(checkout || ''))) {
+    return { checkin, checkout, corrected: false, valid: false };
+  }
+  const today = mxTodayISO();
+  const nights = Math.round(
+    (new Date(`${checkout}T12:00:00`) - new Date(`${checkin}T12:00:00`)) / 86400000
+  );
+  if (nights <= 0) return { checkin, checkout, corrected: false, valid: false };
+  if (checkin >= today) return { checkin, checkout, corrected: false, valid: true };
+
+  const [, m, d] = checkin.split('-').map(Number);
+  const todayYear = Number(today.slice(0, 4));
+  let year = Number(checkin.slice(0, 4));
+  const build = (y) => `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  while (build(year) < today && year <= todayYear + 2) year++;
+
+  const ci = build(year);
+  const co = new Date(`${ci}T12:00:00`);
+  co.setDate(co.getDate() + nights);
+  const coISO = co.toISOString().slice(0, 10);
+  return { checkin: ci, checkout: coISO, corrected: ci !== checkin, valid: ci >= today };
+}
+
 function sanitizeHistoryForAnthropic(history = []) {
   const cleaned = [];
 
@@ -745,8 +780,15 @@ async function executeTool(toolName, toolInput, userId, userName) {
 
   try {
     if (toolName === 'check_availability') {
-      const { checkin, checkout, room_ids, guests: guestsIn } = toolInput;
-      // Guardar fechas (y huéspedes) en sesión para que no se pierdan al truncar el historial
+      const { checkin: rawCheckin, checkout: rawCheckout, room_ids, guests: guestsIn } = toolInput;
+      // Si el cliente dio un año ya pasado (typo típico: pide "julio 2025" estando en
+      // 2026), la hoja no tiene esas filas y TODO saldría "disponible" (falso positivo).
+      // Reencuadramos al próximo año válido y avisamos para que el bot confirme fechas.
+      const rolled = rollDatesForwardIfPast(rawCheckin, rawCheckout);
+      const checkin = rolled.checkin;
+      const checkout = rolled.checkout;
+      const datesCorrected = rolled.corrected;
+      // Guardar fechas CORREGIDAS (y huéspedes) en sesión para que no se pierdan al truncar el historial
       if (checkin && checkout) updateSession(userId, { checkin, checkout });
       if (guestsIn) updateSession(userId, { guests: Number(guestsIn) });
       const rooms = (room_ids?.length > 0) ? room_ids : ROOMS.map(r => r.id);
@@ -757,6 +799,8 @@ async function executeTool(toolName, toolInput, userId, userName) {
       const unavailableNames = new Set();
       const hasGoogleConfig = Boolean(process.env.GOOGLE_SHEETS_CREDENTIALS || (process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY));
       let sheetReadOk = false;
+      let dispReadOk = false; // ¿se pudo leer la matriz Disponibilidad (única fuente de OTA)?
+      let backendOk = false;  // ¿respondió el backend del sitio (que también ve OTA)?
 
       // 1) Verificar reservas directas en Google Sheets
       try {
@@ -766,6 +810,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
           requestedRooms
         });
         sheetReadOk = true;
+        dispReadOk = sheetResult.dispReadOk !== false;
         for (const room of sheetResult.unavailableRooms) {
           unavailableNames.add(room.backendName);
         }
@@ -789,6 +834,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
           body: JSON.stringify({ checkin, checkout, rooms: roomsToCheck })
         });
         const data = await res.json();
+        backendOk = res.ok;
         for (const backendRoom of (data.unavailableRooms || [])) {
           unavailableNames.add(backendRoom);
         }
@@ -819,11 +865,24 @@ async function executeTool(toolName, toolInput, userId, userName) {
         };
       }
 
+      // Los bloqueos de OTA (Expedia/Booking) viven SOLO en la matriz Disponibilidad.
+      // Si ni la lectura directa de esa matriz NI el backend del sitio la pudieron
+      // verificar, quedamos ciegos a OTA → nunca afirmar disponibilidad (fail-closed).
+      if (hasGoogleConfig && !dispReadOk && !backendOk) {
+        return {
+          available: false,
+          message: 'No pude verificar disponibilidad en tiempo real en este momento (bloqueos de OTA no confirmados). Intenta nuevamente en un minuto o pide apoyo del equipo humano.',
+          error: 'ota_source_unavailable'
+        };
+      }
+
       const available = requestedRooms.filter(r => !unavailableNames.has(r.backendName));
 
       if (available.length > 0) {
         return {
           available: true,
+          // Si corregimos un año pasado, el bot DEBE confirmarle al cliente estas fechas.
+          ...(datesCorrected ? { dates_corrected: true, checkin, checkout } : {}),
           available_rooms: available.map(r => ({
             id: r.id, name: r.name, category: r.category,
             url: r.url,
@@ -865,6 +924,7 @@ async function executeTool(toolName, toolInput, userId, userName) {
 
       return {
         available: false,
+        ...(datesCorrected ? { dates_corrected: true, checkin, checkout } : {}),
         message: splitStay
           ? 'No hay una sola suite libre todas las noches, pero la estancia SÍ se puede cubrir con cambio de suite (ver split_stay).'
           : 'No hay disponibilidad para las fechas solicitadas.',
@@ -1283,7 +1343,8 @@ export async function handleMessage(userId, userText, userName = '') {
   }
   if (session.guestName) sessionLines.push(`Nombre del huésped: ${session.guestName}.`);
   if (session.guestEmail) sessionLines.push(`Email del huésped: ${session.guestEmail}.`);
-  const dynamicContext = `Hoy es ${hoy}. Usa esta fecha como referencia para calcular disponibilidad, cancelaciones y plazos.${userName ? `\nEl huésped se llama *${userName}*.` : ''}${sessionLines.length ? '\n' + sessionLines.join('\n') : ''}`;
+  const dynamicContext = `Hoy es ${hoy}. Usa esta fecha como referencia para calcular disponibilidad, cancelaciones y plazos.
+⚠️ FECHAS: nunca cotices ni afirmes disponibilidad para fechas en el pasado. Si el cliente da un año que ya pasó (p. ej. pide "julio 2025" estando en un año posterior), es casi siempre un error de dedo: interprétalo como la próxima ocurrencia de esa fecha (el año en curso o el siguiente) y CONFIRMA con el cliente las fechas exactas antes de avanzar. Si check_availability devuelve \`dates_corrected: true\`, dile explícitamente al cliente las fechas corregidas (check-in y check-out) que estás cotizando.${userName ? `\nEl huésped se llama *${userName}*.` : ''}${sessionLines.length ? '\n' + sessionLines.join('\n') : ''}`;
 
   // El prompt estático se cachea (bloque 1); la fecha/nombre cambian pero son pequeños (bloque 2).
   const systemBlocks = [

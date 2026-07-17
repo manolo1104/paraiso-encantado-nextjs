@@ -539,15 +539,20 @@ export async function getUnavailableRoomsFromGoogleSheet({ checkin, checkout, re
   const values = await getSheetValues();
   const reservations = parseSheetReservations(values);
 
-  // También leer tab de Disponibilidad para bloqueos temporales
+  // También leer tab de Disponibilidad para bloqueos temporales y OTA.
+  // OJO: los bloqueos de OTA (Expedia/Booking) viven SOLO en esta matriz, no en
+  // Reservas. Si esta lectura falla, quedamos ciegos a OTA → devolvemos dispReadOk
+  // en false para que el llamador NO afirme disponibilidad a la ligera.
   const dispTab = process.env.GOOGLE_DISPONIBILIDAD_TAB || 'Disponibilidad';
   let tempBlocks = [];
+  let dispReadOk = false;
   try {
     const dispValues = await getSheetValues(dispTab);
     tempBlocks = parseDisponibilidadBlocks(dispValues);
+    dispReadOk = true;
   } catch (dispErr) {
     // Tab no existe o falló la lectura — seguir solo con Reservas, pero dejar rastro:
-    // si esto falla seguido, los estados RESERVADO de la matriz se están ignorando.
+    // si esto falla seguido, los estados RESERVADO/OTA de la matriz se están ignorando.
     console.warn(`⚠️ No se pudo leer la pestaña "${dispTab}":`, String(dispErr?.message || dispErr).split('\n')[0]);
   }
 
@@ -560,6 +565,7 @@ export async function getUnavailableRoomsFromGoogleSheet({ checkin, checkout, re
     source: 'google-sheets',
     totalRows: values.length,
     reservationsChecked: allBlocks.length,
+    dispReadOk,
     unavailableRooms
   };
 }
