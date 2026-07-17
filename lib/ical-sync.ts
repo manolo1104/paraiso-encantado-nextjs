@@ -6,10 +6,30 @@ import { updateOTABlocks } from '@/lib/sheets';
 function parseIcalDate(val: string): string {
   // Handles: 20260601 or 20260601T120000Z
   const clean = val.split('T')[0].replace(/\D/g, '');
-  if (clean.length >= 8) {
-    return `${clean.slice(0, 4)}-${clean.slice(4, 6)}-${clean.slice(6, 8)}`;
-  }
-  return '';
+  if (clean.length < 8) return '';
+  const y = Number(clean.slice(0, 4));
+  const m = Number(clean.slice(4, 6));
+  const d = Number(clean.slice(6, 8));
+  // Validar que sea una fecha REAL. Sin esto, un DTSTART/DTEND corrupto (ej.
+  // "20261305" o "00000000") producía un string que new Date() DESBORDABA a otra
+  // fecha válida (2026-13-05 → 2027-01-05) → rangos gigantes de celdas OTA.
+  if (y < 2020 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return '';
+  const iso = `${clean.slice(0, 4)}-${clean.slice(4, 6)}-${clean.slice(6, 8)}`;
+  const dt = new Date(`${iso}T00:00:00`);
+  if (isNaN(dt.getTime()) || dt.getFullYear() !== y || dt.getMonth() + 1 !== m || dt.getDate() !== d) return '';
+  return iso;
+}
+
+// Ningún evento iCal legítimo bloquea más de ~un horizonte de OTA (~13 meses) de
+// un solo jalón. Un evento más largo es casi seguro basura/parseo corrupto y, sin
+// tope, llenaría de morado años enteros de la hoja → se descarta.
+const MAX_EVENT_DAYS = 400;
+
+function eventDays(checkin: string, checkout: string): number {
+  const a = new Date(`${checkin}T00:00:00`).getTime();
+  const b = new Date(`${checkout}T00:00:00`).getTime();
+  if (isNaN(a) || isNaN(b)) return 0;
+  return Math.round((b - a) / 86400000);
 }
 
 interface IcalEvent {
@@ -17,7 +37,7 @@ interface IcalEvent {
   end: string;
 }
 
-function parseIcal(text: string): IcalEvent[] {
+export function parseIcal(text: string): IcalEvent[] {
   const events: IcalEvent[] = [];
   const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
 
@@ -112,7 +132,27 @@ async function runIcalSyncInner(): Promise<{
 
       const dateRanges = events
         .filter(e => e.start && e.end)
+        .filter(e => {
+          const days = eventDays(e.start, e.end);
+          if (days > MAX_EVENT_DAYS) {
+            console.warn(`[ical-sync] evento descartado por rango sospechoso (${days} días) [${cal.roomName}/${cal.platform}]: ${e.start} → ${e.end}`);
+            return false;
+          }
+          return days > 0; // descarta también DTEND <= DTSTART
+        })
         .map(e => ({ checkin: e.start, checkout: e.end }));
+
+      // Guarda anti-sobreventa: si el feed es VÁLIDO pero devuelve 0 eventos aunque
+      // el sync anterior había encontrado varios bloqueos, es casi seguro un glitch
+      // temporal de la OTA (no una cancelación masiva real). Borrar todo abriría el
+      // cuarto a sobreventa → conservamos los bloqueos previos y lo marcamos para
+      // revisión. (Un conteo bajo sí se deja limpiar: suele ser un bloqueo que venció.)
+      if (dateRanges.length === 0 && (cal.blocksFound || 0) >= 5) {
+        console.warn(`[ical-sync] feed VÁLIDO sin eventos pero antes tenía ${cal.blocksFound} bloqueos [${cal.roomName}/${cal.platform}] — se conservan (posible glitch de la OTA)`);
+        await updateOTASyncResult(cal.id, 'error', cal.blocksFound);
+        results.push({ id: cal.id, roomName: cal.roomName, platform: cal.platform, blocks: cal.blocksFound, error: 'feed vacío — bloqueos conservados (revisar en la OTA)' });
+        continue;
+      }
 
       const blocked = await updateOTABlocks(cal.roomName, dateRanges, cal.platform);
       await updateOTASyncResult(cal.id, 'ok', blocked);

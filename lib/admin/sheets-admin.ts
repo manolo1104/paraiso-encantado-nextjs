@@ -1,4 +1,4 @@
-import { getSheetsClient, sheetsCall } from '@/lib/sheets';
+import { getSheetsClient, sheetsCall, withAvailabilityLock } from '@/lib/sheets';
 export { getSheetsClient };
 
 const CONFIG_SHEET = 'Config';
@@ -283,41 +283,48 @@ export async function cancelBooking(rowIndex: number, habitaciones: string, chec
 async function updateSingleRoomAvailability(
   roomName: string, checkin: string, checkout: string, value: 'RESERVADO' | ''
 ) {
-  const client = await getSheetsClient();
-  if (!client) return;
-  try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${AVAILABILITY_SHEET}!A:Z` })
-    );
-    const data = res.data.values || [];
-    if (!data.length) return;
-    const headers = data[0];
-    const colIdx = headers.findIndex((h: string) => h === roomName.trim());
-    if (colIdx === -1) {
-      console.warn(`updateAvailability: columna "${roomName}" no encontrada en Disponibilidad`);
-      return;
-    }
-    const col = String.fromCharCode(65 + colIdx);
-    const start = new Date(checkin + 'T00:00:00');
-    const end   = new Date(checkout + 'T00:00:00');
-
-    for (let i = 1; i < data.length; i++) {
-      if (!data[i][0]) continue;
-      const rowDate = new Date(data[i][0].trim() + 'T00:00:00');
-      if (rowDate >= start && rowDate < end) {
-        await sheetsCall(() =>
-          client.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: `${AVAILABILITY_SHEET}!${col}${i + 1}`,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: { values: [[value]] },
-          })
-        );
+  // Bajo el MISMO candado que el sync OTA (withAvailabilityLock): el `get A:Z` +
+  // los updates por-fecha deben ser atómicos respecto a la reescritura de matriz
+  // del sync. Sin esto, el sync podía (a) pisar un RESERVADO recién escrito con su
+  // lectura vieja (lost-update → la reserva "desaparecía" y reaparecía como OTA), o
+  // (b) reordenar las filas entre el get y el update → escribir en la fecha equivocada.
+  return withAvailabilityLock(async () => {
+    const client = await getSheetsClient();
+    if (!client) return;
+    try {
+      const res = await sheetsCall(() =>
+        client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${AVAILABILITY_SHEET}!A:Z` })
+      );
+      const data = res.data.values || [];
+      if (!data.length) return;
+      const headers = data[0];
+      const colIdx = headers.findIndex((h: string) => h === roomName.trim());
+      if (colIdx === -1) {
+        console.warn(`updateAvailability: columna "${roomName}" no encontrada en Disponibilidad`);
+        return;
       }
+      const col = String.fromCharCode(65 + colIdx);
+      const start = new Date(checkin + 'T00:00:00');
+      const end   = new Date(checkout + 'T00:00:00');
+
+      for (let i = 1; i < data.length; i++) {
+        if (!data[i][0]) continue;
+        const rowDate = new Date(data[i][0].trim() + 'T00:00:00');
+        if (rowDate >= start && rowDate < end) {
+          await sheetsCall(() =>
+            client.spreadsheets.values.update({
+              spreadsheetId: SHEET_ID,
+              range: `${AVAILABILITY_SHEET}!${col}${i + 1}`,
+              valueInputOption: 'USER_ENTERED',
+              requestBody: { values: [[value]] },
+            })
+          );
+        }
+      }
+    } catch (e: any) {
+      console.error(`updateSingleRoomAvailability error (${roomName}):`, e.message);
     }
-  } catch (e: any) {
-    console.error(`updateSingleRoomAvailability error (${roomName}):`, e.message);
-  }
+  });
 }
 
 /**
