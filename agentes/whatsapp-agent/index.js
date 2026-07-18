@@ -200,7 +200,7 @@ async function safeReply(client, msg, chat, text) {
     // En algunos chats @lid, msg.reply puede fallar por resolución de LID.
     if (m.includes('No LID for user') || m.includes('LID')) {
       try {
-        await chat.sendMessage(text);
+        await (chat ? chat.sendMessage(text) : Promise.reject(new Error('no chat')));
         return;
       } catch {
         await client.sendMessage(msg.from, text);
@@ -208,7 +208,15 @@ async function safeReply(client, msg, chat, text) {
       }
     }
 
-    throw err;
+    // Último recurso ante CUALQUIER otro fallo de msg.reply (p.ej. el rechazo
+    // minificado "r" del store desincronizado): enviar directo por chatId, la
+    // vía más robusta. Solo si esto también falla, propagamos el error.
+    try {
+      await client.sendMessage(msg.from, text);
+      return;
+    } catch {
+      throw err;
+    }
   }
 }
 
@@ -874,19 +882,36 @@ client.on('message', async (msg) => {
   }
 
   // Grupos: solo responder si mencionan al bot (@)
-  const chat = await msg.getChat();
-  if (chat.isGroup) return; // Solo chats individuales por ahora
+  // BLINDAJE @lid: con la migración de WhatsApp a direccionamiento @lid, en los
+  // chats de prospectos nuevos msg.getChat()/msg.getContact() a veces revientan
+  // con un rechazo minificado ("r") por el store interno desincronizado. Antes
+  // eso tumbaba el mensaje ENTERO aquí mismo (antes de poder responder) → el
+  // cliente nunca recibía contestación. Ahora si fallan seguimos con defaults
+  // seguros (chat individual · contacto desconocido = SÍ responder) para no
+  // perder al prospecto; el envío ya tiene su propio fallback en safeReply().
+  let chat = null;
+  try {
+    chat = await msg.getChat();
+  } catch (e) {
+    console.warn(`⚠️ getChat falló (${String(e?.message || e).split('\n')[0]}) — asumo chat individual: ${msg.from}`);
+  }
+  if (chat && chat.isGroup) return; // Solo chats individuales por ahora
 
   // Solo atender números desconocidos (nuevos prospectos)
   // No intervenir en chats con contactos ya guardados en la agenda del teléfono,
   // EXCEPTO los números en ALWAYS_RESPOND_NUMBERS (comparación normalizada).
-  const contact = await msg.getContact();
+  let contact = null;
+  try {
+    contact = await msg.getContact();
+  } catch (e) {
+    console.warn(`⚠️ getContact falló (${String(e?.message || e).split('\n')[0]}) — asumo desconocido: ${msg.from}`);
+  }
   // En chats @lid el JID (msg.from) NO contiene el número real; usamos el número
   // resuelto del contacto para el match de ALWAYS_RESPOND.
   const contactNumber = String(contact?.number || contact?.id?.user || '');
   const alwaysRespond = isAlwaysRespond(msg.from) || isAlwaysRespond(contactNumber);
-  console.log(`🔍 DEBUG msg.from = "${msg.from}" | number = "${contactNumber}" | isMyContact = ${contact.isMyContact} | alwaysRespond = ${alwaysRespond}`);
-  if (contact.isMyContact && !alwaysRespond) {
+  console.log(`🔍 DEBUG msg.from = "${msg.from}" | number = "${contactNumber}" | isMyContact = ${contact?.isMyContact} | alwaysRespond = ${alwaysRespond}`);
+  if (contact?.isMyContact && !alwaysRespond) {
     // Registrar el mensaje pero no responder automáticamente
     if (msg.body?.trim()) addToHistory(msg.from, 'user', msg.body.trim());
     console.log(`📋 Contacto conocido ${contact.pushname || msg.from} — sin respuesta automática`);
@@ -906,7 +931,7 @@ client.on('message', async (msg) => {
     console.log(`⏸️  Mensaje guardado en historial (bot pausado): ${msg.from}`);
     return;
   }
-  const userName = contact.pushname || contact.name || '';
+  const userName = contact?.pushname || contact?.name || '';
 
   // Si el bot acaba de retomar la conversación tras intervención humana,
   // agregar nota de contexto para que Claude sepa lo que ocurrió
@@ -1239,9 +1264,14 @@ async function safeRestart(reason = '') {
 // acumulan varios en poco tiempo asumimos sesión rota y reiniciamos el cliente
 // solo (antes solo se logueaban y Camila quedaba muda hasta que un humano lo
 // notaba y reiniciaba a mano).
+// Nota: tras blindar getChat/getContact y safeReply (arriba), esos "r" ya se
+// capturan y NO llegan aquí, así que esto es solo una RED DE SEGURIDAD para una
+// sesión realmente muerta que gotee rechazos por otras vías. Ventana amplia
+// (los "r" llegan al ritmo del tráfico, ~pocos por hora) para no reiniciar por
+// transitorios aislados; en operación sana ocurren ~0.
 const brokenSessionHits = [];
-const BROKEN_WINDOW_MS = 2 * 60 * 1000; // ventana de 2 minutos
-const BROKEN_THRESHOLD = 5;             // 5 rechazos en la ventana ⇒ sesión rota
+const BROKEN_WINDOW_MS = 10 * 60 * 1000; // ventana de 10 minutos
+const BROKEN_THRESHOLD = 5;              // 5 rechazos no-Puppeteer en la ventana ⇒ reinicio
 
 process.on('unhandledRejection', (reason) => {
   const msg = String(reason?.message || reason || '');
