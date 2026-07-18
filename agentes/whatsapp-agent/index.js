@@ -1230,6 +1230,19 @@ async function safeRestart(reason = '') {
   }, 8000);
 }
 
+// Vigilante de "sesión de WhatsApp Web rota": cuando el store interno de
+// whatsapp-web.js se desincroniza (típicamente por un cambio de versión de
+// WhatsApp Web), la librería lanza una AVALANCHA de rechazos minificados
+// (p.ej. "r") que no coinciden con los patrones de Puppeteer de abajo, y en ese
+// estado los mensajes de clientes llegan corruptos y el bot deja de responder
+// sin caerse. En operación sana estos rechazos NO ocurren nunca, así que si se
+// acumulan varios en poco tiempo asumimos sesión rota y reiniciamos el cliente
+// solo (antes solo se logueaban y Camila quedaba muda hasta que un humano lo
+// notaba y reiniciaba a mano).
+const brokenSessionHits = [];
+const BROKEN_WINDOW_MS = 2 * 60 * 1000; // ventana de 2 minutos
+const BROKEN_THRESHOLD = 5;             // 5 rechazos en la ventana ⇒ sesión rota
+
 process.on('unhandledRejection', (reason) => {
   const msg = String(reason?.message || reason || '');
   if (
@@ -1240,8 +1253,19 @@ process.on('unhandledRejection', (reason) => {
     msg.includes('Session closed')
   ) {
     safeRestart(`Error de Puppeteer: ${msg.split('\n')[0]}`);
-  } else {
-    console.error('❌ Promesa rechazada no manejada:', msg.split('\n')[0]);
+    return;
+  }
+
+  console.error('❌ Promesa rechazada no manejada:', msg.split('\n')[0]);
+
+  const now = Date.now();
+  brokenSessionHits.push(now);
+  while (brokenSessionHits.length && now - brokenSessionHits[0] > BROKEN_WINDOW_MS) {
+    brokenSessionHits.shift();
+  }
+  if (brokenSessionHits.length >= BROKEN_THRESHOLD) {
+    brokenSessionHits.length = 0; // reset para no encadenar reinicios
+    safeRestart(`Sesión de WhatsApp Web parece rota (${BROKEN_THRESHOLD}+ rechazos en <2 min) — reinicio automático`);
   }
 });
 
