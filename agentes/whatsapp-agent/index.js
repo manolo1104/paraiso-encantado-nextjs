@@ -1466,6 +1466,15 @@ createServer(async (req, res) => {
         } catch (e) { out.groupsRaw_error = String(e?.message || e).split('\n')[0]; }
       }
 
+      // Verificar el CAMINO REAL de aviso (resolución + envío) tal como lo usa
+      // la cotización. Con CONTROL_HOTEL_GROUP_ID en env, resuelve sin getChats.
+      if (url.searchParams.get('realsend') === '1') {
+        try {
+          const ok = await sendToControlHotelGroup('🧪 Verificación del aviso automático al grupo (ignora este mensaje). Si ves esto, las cotizaciones ya llegan aquí.');
+          out.realSend = { delivered: ok, resolvedVia: CONTROL_HOTEL_GROUP_ID ? 'env' : 'getChats' };
+        } catch (e) { out.realSend = { error: String(e?.message || e).split('\n')[0] }; }
+      }
+
       // Envío de prueba a un JID EXPLÍCITO (etiquetado). Solo si se pasa sendjid.
       const sendJid = url.searchParams.get('sendjid');
       if (sendJid) {
