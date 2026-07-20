@@ -660,6 +660,11 @@ client.on('ready', () => {
   console.log('🤖  Claude AI listo para responder mensajes');
   console.log(`📊  API: ${process.env.BOOKING_API_URL || 'https://booking-paraisoencantado.up.railway.app'}`);
   console.log('═'.repeat(60) + '\n');
+  // Diagnóstico: qué versión de WhatsApp Web quedó cargada (confirma si el pin
+  // webVersionCache tomó efecto o si WhatsApp forzó una más nueva).
+  client.getWWebVersion()
+    .then(v => console.log(`🧩 WhatsApp Web cargado: ${v}`))
+    .catch(e => console.warn('🧩 No se pudo leer versión WhatsApp Web:', String(e?.message || e).split('\n')[0]));
 });
 
 client.on('disconnected', (reason) => {
@@ -1416,7 +1421,7 @@ createServer(async (req, res) => {
     //   del grupo, y prueba NO destructiva con getChatById (no envía nada).
     // Agregar &send=1 para intentar un envío real de prueba (mensaje etiquetado).
     if (url.pathname === '/debug/group') {
-      const expected = process.env.AGENT_API_TOKEN || '';
+      const expected = process.env.DEBUG_TOKEN || process.env.AGENT_API_TOKEN || '';
       const provided = url.searchParams.get('token') || '';
       if (!expected || provided !== expected) {
         res.writeHead(401, { 'Content-Type': 'application/json' });
