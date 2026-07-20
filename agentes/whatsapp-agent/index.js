@@ -865,7 +865,16 @@ client.on('message', async (msg) => {
     return;
   }
 
-  // Grupos: solo responder si mencionan al bot (@)
+  // Grupos: NO responder. El JID de un grupo SIEMPRE termina en @g.us (aunque el
+  // participante venga como @lid), así que se filtra por JID ANTES de getChat:
+  // getChat falla seguido bajo @lid y su default "asumo individual" dejaba pasar
+  // mensajes de grupo (bug reportado por Manolo 20 jul).
+  // (msg.author solo viene en mensajes de grupo — doble señal por robustez)
+  if (String(msg.from).endsWith('@g.us') || msg.author) {
+    console.log(`👥 Mensaje de grupo ignorado: ${msg.from}`);
+    return;
+  }
+
   // BLINDAJE @lid: con la migración de WhatsApp a direccionamiento @lid, en los
   // chats de prospectos nuevos msg.getChat()/msg.getContact() a veces revientan
   // con un rechazo minificado ("r") por el store interno desincronizado. Antes
@@ -879,7 +888,7 @@ client.on('message', async (msg) => {
   } catch (e) {
     console.warn(`⚠️ getChat falló (${String(e?.message || e).split('\n')[0]}) — asumo chat individual: ${msg.from}`);
   }
-  if (chat && chat.isGroup) return; // Solo chats individuales por ahora
+  if (chat && chat.isGroup) return; // Respaldo por si algún grupo no viniera como @g.us
 
   // Solo atender números desconocidos (nuevos prospectos)
   // No intervenir en chats con contactos ya guardados en la agenda del teléfono,
