@@ -1444,13 +1444,24 @@ createServer(async (req, res) => {
       if (url.searchParams.get('groups') === '1') {
         try {
           out.groupsRaw = await client.pupPage.evaluate(() => {
+            const info = { hasStore: typeof window.Store, hasChat: !!(window.Store && window.Store.Chat) };
             try {
-              const models = (window.Store && window.Store.Chat && window.Store.Chat.getModelsArray)
-                ? window.Store.Chat.getModelsArray() : [];
-              return models
-                .filter(c => c && c.id && (c.id.server === 'g.us' || (c.id._serialized || '').endsWith('@g.us')))
-                .map(c => ({ jid: c.id._serialized || (c.id.$1 || null), name: c.name || c.formattedTitle || null }));
-            } catch (e) { return { evalError: String(e && e.message || e) }; }
+              const S = window.Store || {};
+              const chatMod = S.Chat || {};
+              const models = typeof chatMod.getModelsArray === 'function' ? chatMod.getModelsArray()
+                : (Array.isArray(chatMod.models) ? chatMod.models : []);
+              info.totalChats = models.length;
+              const jidOf = (c) => {
+                const id = (c && c.id) || {};
+                return id._serialized || id.$1 || (id.user && id.server ? id.user + '@' + id.server : null) || null;
+              };
+              info.groups = models
+                .map(c => ({ jid: jidOf(c), server: (c && c.id && c.id.server) || null,
+                            name: (c && (c.name || c.formattedTitle || (c.groupMetadata && c.groupMetadata.subject))) || null,
+                            isGroup: c && c.isGroup }))
+                .filter(x => x.jid && (String(x.jid).endsWith('@g.us') || x.server === 'g.us' || x.isGroup));
+              return info;
+            } catch (e) { info.evalError = String(e && e.message || e); return info; }
           });
         } catch (e) { out.groupsRaw_error = String(e?.message || e).split('\n')[0]; }
       }
