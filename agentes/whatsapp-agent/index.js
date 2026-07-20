@@ -550,18 +550,11 @@ async function tagChatForHumanIntervention(client, chat, msg, userName, botText)
   if (process.env.HOTEL_WHATSAPP_NUMBER) recipients.add(`${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`);
   if (HUMAN_ESCALATION_ALERT_NUMBER) recipients.add(`${HUMAN_ESCALATION_ALERT_NUMBER}@c.us`);
 
-  if (CONTROL_HOTEL_GROUP_ID) {
-    recipients.add(CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`);
-  } else {
-    try {
-      const chats = await client.getChats();
-      const controlGroup = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
-      if (controlGroup?.id?._serialized) {
-        recipients.add(controlGroup.id._serialized);
-      }
-    } catch (groupErr) {
-      console.warn('⚠️ No se pudo resolver grupo Control Hotel:', String(groupErr?.message || '').split('\n')[0]);
-    }
+  try {
+    const gid = await resolveControlHotelGroupJid();
+    if (gid) recipients.add(gid);
+  } catch (groupErr) {
+    console.warn('⚠️ No se pudo resolver grupo Control Hotel:', String(groupErr?.message || '').split('\n')[0]);
   }
 
   for (const to of recipients) {
@@ -792,20 +785,11 @@ async function processConfirmarCommand(msg) {
         }
       };
 
-      if (CONTROL_HOTEL_GROUP_ID) {
-        const gid = CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`;
-        await sendTeamAlert(gid);
-      } else {
-        try {
-          const chats = await client.getChats();
-          const controlGroup = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
-          if (controlGroup?.id?._serialized) await sendTeamAlert(controlGroup.id._serialized);
-        } catch {}
-      }
+      const groupOkReserva = await sendToControlHotelGroup(teamAlert);
       if (process.env.HOTEL_WHATSAPP_NUMBER) {
         await sendTeamAlert(`${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`);
       }
-      console.log(`📣 Alerta de reserva ${reservation.folio} enviada al equipo`);
+      console.log(`📣 Alerta de reserva ${reservation.folio} → grupo: ${groupOkReserva ? 'enviada' : 'FALLÓ'} · número del hotel: ${process.env.HOTEL_WHATSAPP_NUMBER ? 'enviada' : 'sin configurar'}`);
     }
   } catch (cmdErr) {
     console.error('❌ Error en /reservar:', cmdErr.message);
@@ -983,19 +967,8 @@ client.on('message', async (msg) => {
         }
 
         // 2) Grupo Control Hotel (visibilidad del equipo): solo texto (la imagen no se manda al grupo)
-        const sendComprobanteGroup = async (to) => {
-          try { markRecentBotOutgoing(to); await client.sendMessage(to, comprobanteAlert); }
-          catch (gErr) { console.warn('⚠️ No se pudo enviar comprobante al grupo Control Hotel:', String(gErr?.message || '').split('\n')[0]); }
-        };
-        if (CONTROL_HOTEL_GROUP_ID) {
-          await sendComprobanteGroup(CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`);
-        } else {
-          try {
-            const chats = await client.getChats();
-            const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
-            if (cg?.id?._serialized) await sendComprobanteGroup(cg.id._serialized);
-          } catch { /* ignore */ }
-        }
+        const groupOkComprobante = await sendToControlHotelGroup(comprobanteAlert);
+        if (!groupOkComprobante) console.warn('⚠️ Aviso de comprobante NO llegó al grupo Control Hotel (el número del hotel sí lo recibió aparte)');
       }
       return;
     }
@@ -1188,19 +1161,20 @@ client.on('message', async (msg) => {
             `💳 *Anticipo: $${deposit.toLocaleString('es-MX')} MXN*\n` +
             `🧮 *Saldo: $${saldo.toLocaleString('es-MX')} MXN*`;
 
-          const sendToControlHotel = async (to) => {
-            try { markRecentBotOutgoing(to); await client.sendMessage(to, quoteAlert); } catch { /* ignore */ }
-          };
-          if (CONTROL_HOTEL_GROUP_ID) {
-            await sendToControlHotel(CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`);
-          } else {
+          const groupOk = await sendToControlHotelGroup(quoteAlert);
+          if (groupOk) {
+            console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
+          } else if (process.env.HOTEL_WHATSAPP_NUMBER) {
+            // Fallback: que el equipo se entere aunque el grupo falle.
+            const hotelJid = `${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`;
             try {
-              const chats = await client.getChats();
-              const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
-              if (cg?.id?._serialized) await sendToControlHotel(cg.id._serialized);
-            } catch { /* ignore */ }
+              markRecentBotOutgoing(hotelJid);
+              await client.sendMessage(hotelJid, quoteAlert);
+              console.log(`📋 Alerta de cotización ${folio} NO llegó al grupo — enviada al número del hotel (fallback)`);
+            } catch (fbErr) {
+              console.warn(`⚠️ Alerta de cotización ${folio} no llegó NI al grupo NI al número del hotel:`, String(fbErr?.message || fbErr).split('\n')[0]);
+            }
           }
-          console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
         } else if (hasRecentPendingQuote(finalMsg.from)) {
           // Ya tenía una cotización pendiente de antes y sigue activo: solo recordatorio
           // al cliente (no se vuelve a avisar al grupo).
@@ -1345,23 +1319,37 @@ function htmlShell(body) {
 
 // Envía un mensaje al grupo Control Hotel (por env CONTROL_HOTEL_GROUP_ID o por nombre).
 // Devuelve true si se logró resolver el grupo y enviar.
-async function sendToControlHotelGroup(message) {
-  let groupId = '';
+// Resuelve y cachea el JID del grupo (getChats es caro y bajo @lid a veces
+// falla con errores minificados — con cache solo se paga/arriesga una vez).
+let cachedControlGroupJid = '';
+async function resolveControlHotelGroupJid() {
   if (CONTROL_HOTEL_GROUP_ID) {
-    groupId = CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`;
-  } else {
+    return CONTROL_HOTEL_GROUP_ID.includes('@g.us') ? CONTROL_HOTEL_GROUP_ID : `${CONTROL_HOTEL_GROUP_ID}@g.us`;
+  }
+  if (cachedControlGroupJid) return cachedControlGroupJid;
+  const chats = await client.getChats();
+  const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
+  if (cg?.id?._serialized) cachedControlGroupJid = cg.id._serialized;
+  return cachedControlGroupJid;
+}
+
+// Devuelve true SOLO si el mensaje realmente salió al grupo; nunca lanza.
+async function sendToControlHotelGroup(message) {
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const chats = await client.getChats();
-      const cg = chats.find(c => c.isGroup && (c.name || '').trim().toLowerCase() === CONTROL_HOTEL_GROUP_NAME.trim().toLowerCase());
-      if (cg?.id?._serialized) groupId = cg.id._serialized;
+      const groupId = await resolveControlHotelGroupJid();
+      if (!groupId) throw new Error('grupo no resuelto (sin CONTROL_HOTEL_GROUP_ID y sin match por nombre)');
+      markRecentBotOutgoing(groupId);
+      await client.sendMessage(groupId, message);
+      return true;
     } catch (err) {
-      console.warn('⚠️ No se pudo resolver grupo Control Hotel:', String(err?.message || '').split('\n')[0]);
+      lastErr = err;
+      if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
     }
   }
-  if (!groupId) return false;
-  markRecentBotOutgoing(groupId);
-  await client.sendMessage(groupId, message);
-  return true;
+  console.warn('⚠️ Envío al grupo Control Hotel FALLÓ:', String(lastErr?.message || lastErr).split('\n')[0]);
+  return false;
 }
 
 // Anti-duplicado: no publicar dos veces la misma reserva (misma sesión/pago).
@@ -1425,7 +1413,7 @@ createServer(async (req, res) => {
           notifiedWebBookings.add(dedupeKey);
           if (notifiedWebBookings.size > 1000) notifiedWebBookings.clear(); // cota de memoria
         }
-        console.log(`🌐 Aviso de reserva web ${payload.confirmationNumber || ''} → grupo: ${sent ? 'enviado' : 'grupo no resuelto'}`);
+        console.log(`🌐 Aviso de reserva web ${payload.confirmationNumber || ''} → grupo: ${sent ? 'enviado' : 'NO enviado (ver warning previo)'}`);
         res.writeHead(sent ? 200 : 500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: sent }));
       } catch (e) {
