@@ -1442,12 +1442,25 @@ createServer(async (req, res) => {
       }
 
       try {
-        const sent = await sendToControlHotelGroup(formatWebBookingAlert(payload));
+        const alertText = formatWebBookingAlert(payload);
+        let sent = await sendToControlHotelGroup(alertText);
+        let via = 'grupo';
+        // Fallback: el envío a grupos está roto en wwebjs desde el cambio de
+        // WhatsApp Web de julio 2026 — que el aviso llegue al número del hotel.
+        if (!sent && process.env.HOTEL_WHATSAPP_NUMBER) {
+          const hotelJid = `${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`;
+          try {
+            markRecentBotOutgoing(hotelJid);
+            await sendMessageRobust(hotelJid, alertText);
+            sent = true;
+            via = 'número del hotel (fallback)';
+          } catch { /* sin más opciones */ }
+        }
         if (sent && dedupeKey) {
           notifiedWebBookings.add(dedupeKey);
           if (notifiedWebBookings.size > 1000) notifiedWebBookings.clear(); // cota de memoria
         }
-        console.log(`🌐 Aviso de reserva web ${payload.confirmationNumber || ''} → grupo: ${sent ? 'enviado' : 'NO enviado (ver warning previo)'}`);
+        console.log(`🌐 Aviso de reserva web ${payload.confirmationNumber || ''} → ${sent ? `enviado vía ${via}` : 'NO enviado (ver warning previo)'}`);
         res.writeHead(sent ? 200 : 500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: sent }));
       } catch (e) {
