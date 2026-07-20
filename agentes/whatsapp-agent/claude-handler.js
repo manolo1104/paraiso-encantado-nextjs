@@ -6,7 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
 import { HOTEL_SYSTEM_PROMPT, ROOMS, TOURS, RESTAURANT_MENU } from './hotel-knowledge.js';
-import { createQuote, getByUser, getLocallyReservedBackendNames } from './reservations.js';
+import { createQuote, getByUser, getByFolio, getLocallyReservedBackendNames } from './reservations.js';
 import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservationByFolioFromSheet, getReservationsByNameFromSheet, findAlternativeDates, getPerNightUnavailableFromSheet } from './google-sheets.js';
 
 const anthropic = new Anthropic({
@@ -1449,6 +1449,18 @@ export async function handleMessage(userId, userText, userName = '') {
       console.warn(`⚠️ stop_reason inesperado: ${response.stop_reason} — devolviendo texto disponible.`);
     }
     console.log(`🤖 → ${finalText.slice(0, 100)}...`);
+    // Detector de cotización fantasma: la respuesta menciona un folio pero la
+    // herramienta create_reservation_quote NUNCA corrió en esta interacción →
+    // no hay bloqueo de habitación, ni registro, ni aviso al grupo. (Pasó el
+    // 20 jul 2026: folio inventado WA-MC072026.)
+    if (!createdQuote && /\bWA-[A-Z0-9]{4,}\b/i.test(finalText)) {
+      const fake = finalText.match(/\bWA-[A-Z0-9]{4,}\b/i)?.[0];
+      let known = null;
+      try { known = getByFolio(fake); } catch { /* sin registro local */ }
+      if (!known) {
+        console.warn(`🚨 COTIZACIÓN FANTASMA: Camila mencionó el folio ${fake} SIN ejecutar create_reservation_quote (sin bloqueo, sin registro, sin aviso al grupo).`);
+      }
+    }
     return {
       text: withDisclosure(finalText),
       requiresHumanIntervention: needsHumanIntervention(userText, finalText),
