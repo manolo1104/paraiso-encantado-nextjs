@@ -1052,8 +1052,8 @@ client.on('message', async (msg) => {
       console.log(`⏱️  Mensajes agrupados (${pending.texts.length}): "${combinedText.slice(0, 80)}..."`);
     }
 
-    // Indicador de "escribiendo..."
-    await finalChat.sendStateTyping().catch(() => {});
+    // Indicador de "escribiendo..." (finalChat puede ser null si getChat falló en @lid)
+    await finalChat?.sendStateTyping?.().catch(() => {});
 
     try {
       const result = await handleMessage(finalMsg.from, finalContextBody, pending.userName);
