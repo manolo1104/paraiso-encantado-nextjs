@@ -174,7 +174,7 @@ function scheduleAvailabilityFollowup(client, chatId, userName = '', type = 'inq
     const reminder = schedule.message({ name: userName });
     try {
       markRecentBotOutgoing(chatId);
-      await client.sendMessage(chatId, reminder);
+      await sendMessageRobust(chatId, reminder);
       console.log(`⏰ Follow-up (${type}) enviado a ${chatId}`);
     } catch (err) {
       console.warn(`⚠️ No se pudo enviar follow-up (${type}) a ${chatId}:`, String(err?.message || '').split('\n')[0]);
@@ -186,6 +186,31 @@ function scheduleAvailabilityFollowup(client, chatId, userName = '', type = 'inq
 
 function isLidChatId(chatId = '') {
   return String(chatId).includes('@lid');
+}
+
+// Envío robusto a un JID arbitrario (grupo @g.us o número @c.us). Bajo la era
+// @lid, whatsapp-web.js 1.34.x falla seguido con client.sendMessage directo:
+// "r" (minificado) en grupos y "No LID for user" en @c.us. Escalera de intentos:
+// directo → vía objeto Chat (getChatById) → resolviendo el WID vigente con
+// getNumberId (solo números). Lanza el error original si nada funcionó.
+async function sendMessageRobust(to, content) {
+  try {
+    return await client.sendMessage(to, content);
+  } catch (firstErr) {
+    try {
+      const chatObj = await client.getChatById(to);
+      if (chatObj) return await chatObj.sendMessage(content);
+    } catch { /* siguiente intento */ }
+    if (String(to).endsWith('@c.us')) {
+      try {
+        const wid = await client.getNumberId(String(to).replace('@c.us', ''));
+        if (wid?._serialized && wid._serialized !== to) {
+          return await client.sendMessage(wid._serialized, content);
+        }
+      } catch { /* sin más intentos */ }
+    }
+    throw firstErr;
+  }
 }
 
 async function safeReply(client, msg, chat, text) {
@@ -560,7 +585,7 @@ async function tagChatForHumanIntervention(client, chat, msg, userName, botText)
   for (const to of recipients) {
     try {
       markRecentBotOutgoing(to);
-      await client.sendMessage(to, escalationMessage);
+      await sendMessageRobust(to, escalationMessage);
     } catch (sendErr) {
       console.warn(`⚠️ No se pudo enviar aviso de intervención a ${to}:`, String(sendErr?.message || '').split('\n')[0]);
     }
@@ -736,7 +761,7 @@ async function processConfirmarCommand(msg) {
     if (destination) {
       try {
         markRecentBotOutgoing(destination);
-        await client.sendMessage(destination, confirmationText);
+        await sendMessageRobust(destination, confirmationText);
         delivered = true;
         console.log(`✅ Confirmación enviada al huésped: ${destination}`);
       } catch (sendErr) {
@@ -779,7 +804,7 @@ async function processConfirmarCommand(msg) {
       const sendTeamAlert = async (to) => {
         try {
           markRecentBotOutgoing(to);
-          await client.sendMessage(to, teamAlert);
+          await sendMessageRobust(to, teamAlert);
         } catch (e) {
           console.warn(`⚠️ No se pudo enviar alerta de reserva a ${to}:`, String(e?.message || '').split('\n')[0]);
         }
@@ -969,9 +994,9 @@ client.on('message', async (msg) => {
         if (process.env.HOTEL_WHATSAPP_NUMBER) {
           const hotelNumber = process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '') + '@c.us';
           markRecentBotOutgoing(hotelNumber);
-          await client.sendMessage(hotelNumber, comprobanteAlert).catch(() => {});
+          await sendMessageRobust(hotelNumber, comprobanteAlert).catch(() => {});
           markRecentBotOutgoing(hotelNumber);
-          try { await client.sendMessage(hotelNumber, mediaData); }
+          try { await sendMessageRobust(hotelNumber, mediaData); }
           catch (fwdErr) { console.warn('⚠️ No se pudo reenviar imagen al equipo:', String(fwdErr?.message || '').split('\n')[0]); }
         }
 
@@ -1085,7 +1110,7 @@ client.on('message', async (msg) => {
           setTimeout(() => breakfastNotifiedChats.delete(finalMsg.from), 4 * 60 * 60 * 1000);
           try {
             markRecentBotOutgoing(`${BREAKFAST_AGENT_NUMBER}@c.us`);
-            await client.sendMessage(`${BREAKFAST_AGENT_NUMBER}@c.us`,
+            await sendMessageRobust(`${BREAKFAST_AGENT_NUMBER}@c.us`,
               `🍳 *Grupo interesado en desayunos*\n\n👤 *${pending.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n\nEstán preguntando por desayunos grupales en El Papán Huasteco. 🌿`
             );
           } catch (brkErr) {
@@ -1100,7 +1125,7 @@ client.on('message', async (msg) => {
           setTimeout(() => tourNotifiedChats.delete(finalMsg.from), 2 * 60 * 60 * 1000);
           try {
             markRecentBotOutgoing(`${TOUR_AGENT_NUMBER}@c.us`);
-            await client.sendMessage(`${TOUR_AGENT_NUMBER}@c.us`,
+            await sendMessageRobust(`${TOUR_AGENT_NUMBER}@c.us`,
               `🌊 *Cliente interesado en tours*\n\n👤 *${pending.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n\nHablando con el agente del hotel. Puedes tomar la conversación. 🌿`
             );
           } catch (tourErr) {
@@ -1178,7 +1203,7 @@ client.on('message', async (msg) => {
             const hotelJid = `${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`;
             try {
               markRecentBotOutgoing(hotelJid);
-              await client.sendMessage(hotelJid, quoteAlert);
+              await sendMessageRobust(hotelJid, quoteAlert);
               console.log(`📋 Alerta de cotización ${folio} NO llegó al grupo — enviada al número del hotel (fallback)`);
             } catch (fbErr) {
               console.warn(`⚠️ Alerta de cotización ${folio} no llegó NI al grupo NI al número del hotel:`, String(fbErr?.message || fbErr).split('\n')[0]);
@@ -1350,7 +1375,7 @@ async function sendToControlHotelGroup(message) {
       const groupId = await resolveControlHotelGroupJid();
       if (!groupId) throw new Error('grupo no resuelto (sin CONTROL_HOTEL_GROUP_ID y sin match por nombre)');
       markRecentBotOutgoing(groupId);
-      await client.sendMessage(groupId, message);
+      await sendMessageRobust(groupId, message);
       return true;
     } catch (err) {
       lastErr = err;
