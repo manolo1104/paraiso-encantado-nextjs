@@ -607,18 +607,16 @@ const client = new Client({
   // En local guarda la sesión en ./.wwebjs_auth; en Railway en el disco persistente
   // (WWEBJS_DATA_PATH=/data/wwebjs_auth) para no tener que reescanear el QR al actualizar.
   authStrategy: new LocalAuth({ clientId: 'paraiso-hotel', dataPath: process.env.WWEBJS_DATA_PATH || undefined }),
-  // WhatsApp Web FIJADO a una versión PRE-14-jul-2026: el cambio interno de
-  // mediados de julio (_serialized→$1) rompió el envío a GRUPOS en wwebjs
-  // (issues #201849/#3896) sin fix upstream aún. La 2.3000.1042620056-alpha
-  // (4 jul) EXPIRA el 2026-09-04 — antes de esa fecha hay que subir wwebjs
-  // (si ya trae el fix) o re-fijar a otra versión viva de wa-version.
-  // Override sin deploy: env WA_WEB_VERSION / WA_WEB_VERSION_URL.
-  webVersion: process.env.WA_WEB_VERSION || '2.3000.1042620056-alpha',
-  webVersionCache: {
-    type: 'remote',
-    remotePath: process.env.WA_WEB_VERSION_URL ||
-      'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1042620056-alpha.html'
-  },
+  // NOTA: intentamos fijar WhatsApp Web a una versión pre-14-jul (webVersionCache
+  // remoto) para el bug de grupos, pero WhatsApp fuerza la última igual (cargó
+  // 2.3000.1043487528) → el pin NO servía y agregaba una descarga al arranque.
+  // El envío a grupos se resolvió por otra vía (CONTROL_HOTEL_GROUP_ID directo,
+  // sin getChats). Se puede re-forzar con env WA_WEB_VERSION(_URL) si algún día
+  // sirve, pero por defecto usamos el cache local (arranque más simple/estable).
+  ...(process.env.WA_WEB_VERSION_URL ? {
+    webVersion: process.env.WA_WEB_VERSION,
+    webVersionCache: { type: 'remote', remotePath: process.env.WA_WEB_VERSION_URL }
+  } : {}),
   puppeteer: {
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     args: [
