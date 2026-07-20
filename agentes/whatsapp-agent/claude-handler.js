@@ -564,6 +564,21 @@ function mxTodayISO() {
   return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Mexico_City' });
 }
 
+// Calendario de los próximos N días (zona MX) con día de semana + fecha ISO.
+// El modelo es malo calculando "este viernes" a partir de solo la fecha de hoy;
+// con la tabla ya resuelta, traducir fechas relativas es una consulta, no aritmética.
+function buildUpcomingCalendarLine(days = 14) {
+  const tz = 'America/Mexico_City';
+  const parts = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(Date.now() + i * 86400000);
+    const iso = d.toLocaleDateString('sv-SE', { timeZone: tz });
+    const wd = d.toLocaleDateString('es-MX', { weekday: 'long', timeZone: tz });
+    parts.push(`${wd} = ${iso}${i === 0 ? ' (HOY)' : ''}`);
+  }
+  return parts.join(' · ');
+}
+
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // Si el cliente da un año ya pasado (típico typo: pide "julio 2025" en 2026), la
@@ -1343,7 +1358,9 @@ export async function handleMessage(userId, userText, userName = '') {
   }
   if (session.guestName) sessionLines.push(`Nombre del huésped: ${session.guestName}.`);
   if (session.guestEmail) sessionLines.push(`Email del huésped: ${session.guestEmail}.`);
-  const dynamicContext = `Hoy es ${hoy}. Usa esta fecha como referencia para calcular disponibilidad, cancelaciones y plazos.
+  const dynamicContext = `Hoy es ${hoy} (${mxTodayISO()}). Usa esta fecha como referencia para calcular disponibilidad, cancelaciones y plazos.
+📅 CALENDARIO PRÓXIMOS 14 DÍAS (día de semana = fecha exacta): ${buildUpcomingCalendarLine()}
+⚠️ FECHAS RELATIVAS: cuando el cliente diga "hoy", "mañana", "este viernes", "el próximo sábado", etc., NO calcules el día tú: búscalo en el calendario de arriba y usa esa fecha exacta. Al confirmar o cotizar menciona SIEMPRE día de semana + número + mes (p. ej. "viernes 24 de julio") y verifica que coincidan con el calendario.
 ⚠️ FECHAS: nunca cotices ni afirmes disponibilidad para fechas en el pasado. Si el cliente da un año que ya pasó (p. ej. pide "julio 2025" estando en un año posterior), es casi siempre un error de dedo: interprétalo como la próxima ocurrencia de esa fecha (el año en curso o el siguiente) y CONFIRMA con el cliente las fechas exactas antes de avanzar. Si check_availability devuelve \`dates_corrected: true\`, dile explícitamente al cliente las fechas corregidas (check-in y check-out) que estás cotizando.${userName ? `\nEl huésped se llama *${userName}*.` : ''}${sessionLines.length ? '\n' + sessionLines.join('\n') : ''}`;
 
   // El prompt estático se cachea (bloque 1); la fecha/nombre cambian pero son pequeños (bloque 2).
