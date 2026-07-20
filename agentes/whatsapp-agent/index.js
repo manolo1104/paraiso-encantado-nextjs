@@ -1410,6 +1410,45 @@ createServer(async (req, res) => {
       return;
     }
 
+    // ── Diagnóstico de envío a grupos (auth por AGENT_API_TOKEN) ──
+    // Investiga por qué el aviso al grupo Control Hotel falla con "r".
+    // GET /debug/group?token=... → versión de WhatsApp Web cargada, resolución
+    //   del grupo, y prueba NO destructiva con getChatById (no envía nada).
+    // Agregar &send=1 para intentar un envío real de prueba (mensaje etiquetado).
+    if (url.pathname === '/debug/group') {
+      const expected = process.env.AGENT_API_TOKEN || '';
+      const provided = url.searchParams.get('token') || '';
+      if (!expected || provided !== expected) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+        return;
+      }
+      const out = { waStatus, controlHotelGroupIdEnv: CONTROL_HOTEL_GROUP_ID || null };
+      try { out.wwebVersion = await client.getWWebVersion(); } catch (e) { out.wwebVersion_error = String(e?.message || e).split('\n')[0]; }
+      try {
+        const gid = await resolveControlHotelGroupJid();
+        out.resolvedGroupJid = gid || null;
+        if (gid) {
+          try {
+            const chat = await client.getChatById(gid);
+            out.getChatById_ok = Boolean(chat);
+            out.getChatById_isGroup = chat?.isGroup ?? null;
+            out.getChatById_name = chat?.name ?? null;
+          } catch (e) { out.getChatById_error = String(e?.message || e).split('\n')[0]; }
+        }
+      } catch (e) { out.resolve_error = String(e?.message || e).split('\n')[0]; }
+      if (url.searchParams.get('send') === '1') {
+        const stamp = url.searchParams.get('tag') || 'sin-tag';
+        try {
+          const sent = await sendToControlHotelGroup(`🧪 Prueba de sistema (${stamp}) — ignora este mensaje. Verificando avisos automáticos al grupo.`);
+          out.testSend_delivered = sent;
+        } catch (e) { out.testSend_error = String(e?.message || e).split('\n')[0]; }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(out, null, 2));
+      return;
+    }
+
     // ── Endpoint interno: el sitio web avisa de una reserva nueva (motor web) ──
     // El bot publica los detalles en el grupo Control Hotel. Auth por token compartido.
     if (url.pathname === '/notify-booking') {
