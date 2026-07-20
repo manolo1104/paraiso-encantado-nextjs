@@ -63,6 +63,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     paymentIntentId:    b.paymentId || 'MANUAL',
     anticipo:           b.anticipo || 0,
     notas:              notasCliente,
+    promoCode:          b.promoCode || undefined,
+    promoDiscount:      b.promoDiscount || undefined,
   });
 
   try {

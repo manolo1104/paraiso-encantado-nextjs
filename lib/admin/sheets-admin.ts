@@ -104,6 +104,8 @@ export interface AdminBooking {
   estado: 'CONFIRMADA' | 'CANCELADA' | 'MANUAL';
   comoNosConocio: string;
   anticipo: number;
+  promoCode: string;
+  promoDiscount: number;
 }
 
 export interface AdminQuote {
@@ -159,7 +161,7 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
   if (!client) return [];
   try {
     const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${RESERVAS_SHEET}!A:O` })
+      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${RESERVAS_SHEET}!A:Q` })
     );
     const rows = res.data.values || [];
     if (rows.length < 2) return [];
@@ -181,6 +183,8 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
       paymentId: row[12] || '',
       comoNosConocio: row[13] || '',
       anticipo: parseTotal(row[14] || '0'),
+      promoCode: row[15] || '',
+      promoDiscount: parseTotal(row[16] || '0'),
       estado: row[12] === 'CANCELADA' ? 'CANCELADA'
             : row[12] === 'MANUAL' ? 'MANUAL'
             : 'CONFIRMADA',

@@ -226,6 +226,8 @@ export function buildEmailHtml(data: {
   isDeposit?: boolean;
   anticipo?: number;
   notas?: string;
+  promoCode?: string;
+  promoDiscount?: number;
 }): string {
   const base = 'https://www.paraisoencantado.com';
 
@@ -245,6 +247,8 @@ export function buildEmailHtml(data: {
     : `${totalGuests} huésped${totalGuests === 1 ? '' : 'es'}`;
   const nights = data.nights || 0;
   const notasCliente = (data.notas || '').trim();
+  const promoDiscount = Number(data.promoDiscount || 0);
+  const promoCode = (data.promoCode || '').trim();
 
   const roomsRows = (data.rooms || []).map(room => `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;">
@@ -390,6 +394,18 @@ export function buildEmailHtml(data: {
                     </p>
                   </td>
                 </tr>
+                ${promoDiscount > 0 ? `
+                <tr><td colspan="2" style="padding-top:14px;border-top:1px solid rgba(201,185,154,0.25);">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#c9b99a;">✓ Descuento aplicado${promoCode ? ` &middot; <span style="letter-spacing:1px;">${promoCode}</span>` : ''}</p></td>
+                      <td style="text-align:right;"><p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;font-weight:500;color:#7ecf86;">−$${promoDiscount.toLocaleString('es-MX')} MXN</p></td>
+                    </tr>
+                    <tr>
+                      <td colspan="2"><p style="margin:4px 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;color:#a09080;font-style:italic;">El total mostrado ya incluye tu descuento.</p></td>
+                    </tr>
+                  </table>
+                </td></tr>` : ''}
                 ${(data.anticipo || 0) > 0 ? `
                 <tr><td colspan="2" style="padding-top:14px;border-top:1px solid rgba(201,185,154,0.25);">
                   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">

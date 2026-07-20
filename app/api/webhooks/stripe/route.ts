@@ -107,6 +107,8 @@ export async function POST(req: NextRequest) {
       },
       rooms,
       how_did_you_hear: '',
+      promo_code: md.promoCode || '',
+      promo_discount: Number(md.promoDiscount) || 0,
       created_at: new Date().toISOString(),
     });
 
@@ -134,6 +136,8 @@ export async function POST(req: NextRequest) {
             nights, guests: adults + minors, adults, minors,
             rooms, total: stayTotal, amountPaid: depositPaid,
             amountPending: pending, isDeposit,
+            promoCode: md.promoCode || undefined,
+            promoDiscount: Number(md.promoDiscount) || undefined,
           }),
         });
       } catch (e: any) {

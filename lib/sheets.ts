@@ -153,12 +153,13 @@ export async function addBookingToSheet(bookingData: any) {
   try {
     const { confirmation_number, customer_name, customer_phone, email, total,
             payment_intent_id, booking_details, rooms, how_did_you_hear, created_at,
-            anticipo } = bookingData;
+            anticipo, promo_code, promo_discount } = bookingData;
 
     const roomsStr = (rooms || []).map((r: any) => `${r.name} (${r.guestCount} personas)`).join(', ') || 'Estándar';
     const ts = new Date(created_at || new Date()).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
 
     // Columna O = anticipo (lo realmente cobrado ahora). 0 si no se especifica.
+    // Columna P = código de descuento aplicado; Q = monto descontado (MXN).
     const row = [
       ts, confirmation_number, customer_name, customer_phone || 'N/A', email,
       `$${Number(total).toLocaleString('es-MX')} MXN`,
@@ -166,12 +167,13 @@ export async function addBookingToSheet(bookingData: any) {
       booking_details?.nights || 'N/A', booking_details?.guests || 'N/A',
       roomsStr, booking_details?.notes || '', payment_intent_id || 'N/A',
       how_did_you_hear || '', Number(anticipo) || 0,
+      promo_code || '', Number(promo_discount) || 0,
     ];
 
     await sheetsCall(() =>
       client.spreadsheets.values.append({
         spreadsheetId: sid,
-        range: `${SHEET_NAME}!A:O`,
+        range: `${SHEET_NAME}!A:Q`,
         valueInputOption: 'USER_ENTERED',
         requestBody: { values: [row] },
       })

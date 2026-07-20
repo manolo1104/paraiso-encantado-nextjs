@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
         pending: String(pending),
         isDeposit: String(isDeposit),
         promoCode: appliedPromo || '',
+        promoDiscount: String(Math.round(discount)),
         checkin: String(checkin),
         checkout: String(checkout),
         nights: String(nights),

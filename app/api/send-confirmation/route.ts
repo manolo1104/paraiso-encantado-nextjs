@@ -80,6 +80,8 @@ export async function POST(req: NextRequest) {
       },
       rooms: normalizedRooms,
       how_did_you_hear: howDidYouHear || '',
+      promo_code: md.promoCode || '',
+      promo_discount: Number(md.promoDiscount) || 0,
       created_at: new Date().toISOString(),
     };
 
@@ -115,6 +117,9 @@ export async function POST(req: NextRequest) {
           amountPaid: depositPaid,
           amountPending: pending,
           isDeposit: isDepositFinal,
+          notas: notes || undefined,
+          promoCode: md.promoCode || undefined,
+          promoDiscount: Number(md.promoDiscount) || undefined,
         });
 
         const from    = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
