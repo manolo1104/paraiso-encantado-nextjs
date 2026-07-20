@@ -1430,24 +1430,40 @@ createServer(async (req, res) => {
       }
       const out = { waStatus, controlHotelGroupIdEnv: CONTROL_HOTEL_GROUP_ID || null };
       try { out.wwebVersion = await client.getWWebVersion(); } catch (e) { out.wwebVersion_error = String(e?.message || e).split('\n')[0]; }
-      try {
-        const gid = await resolveControlHotelGroupJid();
-        out.resolvedGroupJid = gid || null;
-        if (gid) {
-          try {
-            const chat = await client.getChatById(gid);
-            out.getChatById_ok = Boolean(chat);
-            out.getChatById_isGroup = chat?.isGroup ?? null;
-            out.getChatById_name = chat?.name ?? null;
-          } catch (e) { out.getChatById_error = String(e?.message || e).split('\n')[0]; }
-        }
-      } catch (e) { out.resolve_error = String(e?.message || e).split('\n')[0]; }
-      if (url.searchParams.get('send') === '1') {
-        const stamp = url.searchParams.get('tag') || 'sin-tag';
+
+      // Probar getChatById directo sobre un JID conocido (bypass de getChats).
+      const probeJid = url.searchParams.get('probe');
+      if (probeJid) {
         try {
-          const sent = await sendToControlHotelGroup(`🧪 Prueba de sistema (${stamp}) — ignora este mensaje. Verificando avisos automáticos al grupo.`);
-          out.testSend_delivered = sent;
-        } catch (e) { out.testSend_error = String(e?.message || e).split('\n')[0]; }
+          const chat = await client.getChatById(probeJid);
+          out.probe = { jid: probeJid, ok: Boolean(chat), isGroup: chat?.isGroup ?? null, name: chat?.name ?? null };
+        } catch (e) { out.probe = { jid: probeJid, error: String(e?.message || e).split('\n')[0] }; }
+      }
+
+      // Sondear los grupos vía el store interno sin getChats (que revienta con "r").
+      if (url.searchParams.get('groups') === '1') {
+        try {
+          out.groupsRaw = await client.pupPage.evaluate(() => {
+            try {
+              const models = (window.Store && window.Store.Chat && window.Store.Chat.getModelsArray)
+                ? window.Store.Chat.getModelsArray() : [];
+              return models
+                .filter(c => c && c.id && (c.id.server === 'g.us' || (c.id._serialized || '').endsWith('@g.us')))
+                .map(c => ({ jid: c.id._serialized || (c.id.$1 || null), name: c.name || c.formattedTitle || null }));
+            } catch (e) { return { evalError: String(e && e.message || e) }; }
+          });
+        } catch (e) { out.groupsRaw_error = String(e?.message || e).split('\n')[0]; }
+      }
+
+      // Envío de prueba a un JID EXPLÍCITO (etiquetado). Solo si se pasa sendjid.
+      const sendJid = url.searchParams.get('sendjid');
+      if (sendJid) {
+        const stamp = url.searchParams.get('tag') || 'sin-tag';
+        const testMsg = `🧪 Prueba de sistema (${stamp}) — ignora este mensaje. Verificando avisos automáticos al grupo.`;
+        try {
+          await sendMessageRobust(sendJid, testMsg);
+          out.testSend = { jid: sendJid, delivered: true };
+        } catch (e) { out.testSend = { jid: sendJid, error: String(e?.message || e).split('\n')[0] }; }
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(out, null, 2));
