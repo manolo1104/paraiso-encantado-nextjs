@@ -115,6 +115,24 @@ function hasRecentPendingQuote(chatId, maxAgeMs = 24 * 60 * 60 * 1000) {
   return (Date.now() - createdTs) <= maxAgeMs;
 }
 
+// ¿El cliente ya tiene una reserva pagada/confirmada? Entonces NO tiene sentido
+// mandarle recordatorios de "¿aún quieres reservar?" (reporte 4.4).
+function hasConfirmedOrPaidReservation(chatId) {
+  const r = getByUser(chatId);
+  return Boolean(r && (r.status === 'RESERVADO' || r.status === 'CONFIRMADA'));
+}
+
+// Registro (en memoria) de comprobantes de pago recibidos, para frenar los follow-ups
+// aunque el equipo aún no haya corrido /confirmar (el status sigue en PENDIENTE_PAGO
+// hasta que un humano verifica el pago). Sin esto, un cliente que YA mandó su
+// comprobante seguía recibiendo "¿aún quieres reservar?".
+const paymentProofAtByChat = new Map();
+function recordPaymentProof(chatId) { if (chatId) paymentProofAtByChat.set(chatId, Date.now()); }
+function hasRecentPaymentProof(chatId, maxAgeMs = 48 * 60 * 60 * 1000) {
+  const ts = paymentProofAtByChat.get(chatId) || 0;
+  return ts > 0 && (Date.now() - ts) <= maxAgeMs;
+}
+
 function looksAvailabilityRequest(userText = '') {
   const text = normalizeText(userText);
   const availabilityIntent =
@@ -168,6 +186,8 @@ function scheduleAvailabilityFollowup(client, chatId, userName = '', type = 'inq
     availabilityFollowupTimers.delete(chatId);
 
     if (hasNewMessagesSince(chatId, scheduledAt)) return;
+    if (hasConfirmedOrPaidReservation(chatId)) return; // ya reservó/confirmó → no molestar
+    if (hasRecentPaymentProof(chatId)) return;          // ya mandó comprobante → no molestar
     if (hasRecentPendingQuote(chatId) && type !== 'cart_abandoned') return;
     if (checkBotPause(chatId).paused) return;
 
@@ -787,6 +807,10 @@ async function processConfirmarCommand(msg) {
       return true;
     }
 
+    // Reserva confirmada → cancelar cualquier recordatorio pendiente del huésped
+    // (ya no debe recibir "¿aún quieres reservar?", reporte 4.4).
+    if (reservation.userId) clearAvailabilityFollowup(reservation.userId);
+
     let sheetResult = null;
     try {
       sheetResult = await appendConfirmedReservationToSheet(reservation);
@@ -1067,6 +1091,10 @@ client.on('message', async (msg) => {
 
       // Si tiene reserva pendiente, avisar al equipo (número del hotel + grupo Control Hotel)
       if (result.hasPendingReservation) {
+        // Ya mandó su comprobante → cancelar cualquier recordatorio pendiente y no
+        // volver a mandarle "¿aún quieres reservar?" (reporte 4.4).
+        recordPaymentProof(msg.from);
+        clearAvailabilityFollowup(msg.from);
         const r = result.reservation;
         const toursInline = Array.isArray(r.tours) && r.tours.length > 0
           ? `\n*Tours:*\n${r.tours.map(t => `· ${t?.name || 'Tour'} (${t?.participants || 1} persona${Number(t?.participants || 1) === 1 ? '' : 's'})`).join('\n')}\n`
@@ -1308,7 +1336,7 @@ client.on('message', async (msg) => {
     } catch (err) {
       console.error('❌ Error procesando mensaje:', err);
       try {
-        await safeReply(client, finalMsg, finalChat, 'Tuve un problema técnico. Por favor escríbeme de nuevo o contáctanos al *489 100 7679*. 🙏');
+        await safeReply(client, finalMsg, finalChat, 'Disculpa, tuve un problemita para procesar tu último mensaje. 🙏 Ya le avisé al equipo del hotel y en un momento te atiende una persona. 🌿');
       } catch { /* ignore */ }
       // Avisar al grupo Control Hotel para que un humano tome la conversación —
       // así una caída del cerebro (como la del 22-27 jul 2026) NO vuelve a pasar

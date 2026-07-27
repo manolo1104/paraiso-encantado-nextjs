@@ -1135,13 +1135,27 @@ async function executeTool(toolName, toolInput, userId, userName) {
       const toursTotal = resolvedTours.reduce((sum, t) => sum + t.price, 0);
       const officialTotal = roomsTotal + toursTotal;
 
-      // Anticipo: si Claude no lo envía, calcular 50% para estancias de 2+ noches
-      // (política del hotel); pago completo para 1 noche. Nunca mayor al total.
-      const defaultDeposit = nightsFinal >= 2 ? Math.round(officialTotal * 0.5) : officialTotal;
-      const depositFinal = Math.min(
-        officialTotal,
-        (deposit_amount != null && Number(deposit_amount) > 0) ? Number(deposit_amount) : defaultDeposit
-      );
+      // Anticipo — SIEMPRE calculado por regla fija del hotel; NUNCA se confía en el
+      // número crudo del modelo (evita errores de dinero como cobrar $2,400 en vez de
+      // $3,000 en una reserva de $6,000). El modelo solo señala la INTENCIÓN:
+      //   · Grupo (8+ habitaciones): anticipo fijo de $5,000 MXN para apartar.
+      //   · 1 noche: siempre 100% del total.
+      //   · 2+ noches: 100% si el cliente paga completo (deposit_amount omitido, según
+      //     el contrato del schema: "Omitir si es pago completo"), o 50% si eligió
+      //     anticipo (deposit_amount presente) — pero el MONTO lo fija la regla, no el modelo.
+      const GROUP_MIN_ROOMS = 8;
+      const GROUP_DEPOSIT = 5000;
+      let depositFinal;
+      if (resolvedRooms.length >= GROUP_MIN_ROOMS) {
+        depositFinal = GROUP_DEPOSIT;                       // grupo = $5,000 fijo
+      } else if (nightsFinal < 2) {
+        depositFinal = officialTotal;                       // 1 noche = 100%
+      } else if (deposit_amount == null) {
+        depositFinal = officialTotal;                       // omitido = pago completo
+      } else {
+        depositFinal = Math.round(officialTotal * 0.5);     // presente = anticipo 50% (recalculado)
+      }
+      depositFinal = Math.min(officialTotal, depositFinal); // nunca mayor al total
 
       const quote = createQuote({
         userId, userName,
