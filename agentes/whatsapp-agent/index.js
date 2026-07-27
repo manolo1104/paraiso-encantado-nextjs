@@ -663,7 +663,78 @@ client.on('ready', () => {
   client.getWWebVersion()
     .then(v => console.log(`🧩 WhatsApp Web cargado: ${v}`))
     .catch(e => console.warn('🧩 No se pudo leer versión WhatsApp Web:', String(e?.message || e).split('\n')[0]));
+  // Verificar que el "cerebro" (Anthropic) responde AL ARRANCAR. Si la cuenta está
+  // deshabilitada / sin crédito / la key es inválida, avisamos al grupo de inmediato
+  // en vez de enterarnos días después por mensajes sin responder (incidente 22-27 jul 2026).
+  pingAnthropicHealth().catch(() => {});
 });
+
+// ── Vigilancia del "cerebro" de Camila (anti-caída silenciosa) ───────────
+// Traduce el error crudo de la API a un aviso claro para el equipo del hotel.
+function summarizeBotError(err) {
+  const raw = String(err?.message || err || '').split('\n')[0];
+  if (/organization has been disabled|account.*disabled/i.test(raw)) return 'La cuenta de Anthropic (cerebro de Camila) está DESHABILITADA — revisar billing / poner una API key de otra cuenta.';
+  if (/credit balance is too low|insufficient|quota|billing/i.test(raw)) return 'Falta crédito/saldo en la cuenta de Anthropic — revisar billing.';
+  if (/api.?key.*invalid|invalid.*api.?key|invalid x-api-key|authentication|unauthorized|401/i.test(raw)) return 'La API key de Anthropic es inválida o fue revocada — revisar ANTHROPIC_API_KEY.';
+  if (/rate.?limit|429/i.test(raw)) return 'Límite de velocidad de la API (429) — suele ser temporal.';
+  if (/overloaded|529|5\d\d/i.test(raw)) return 'La API de Anthropic tuvo un error temporal del servidor.';
+  if (/timeout|ETIMEDOUT|ECONNRESET|fetch failed|network|ENOTFOUND/i.test(raw)) return 'Problema de red al llamar a la API — suele ser temporal.';
+  return raw.slice(0, 160) || 'Error desconocido al llamar a la IA.';
+}
+
+// Avisa al grupo Control Hotel que Camila no pudo responder, para que un humano
+// tome la conversación. Con freno anti-spam: máx. 1 aviso cada 10 min (en una caída
+// entran muchos mensajes; no queremos inundar el grupo).
+let lastBotFailureAlertAt = 0;
+const BOT_FAILURE_ALERT_COOLDOWN_MS = 10 * 60 * 1000;
+async function notifyControlOfBotFailure(msg, userName, err) {
+  const now = Date.now();
+  if (now - lastBotFailureAlertAt < BOT_FAILURE_ALERT_COOLDOWN_MS) return; // ya avisamos hace poco
+  lastBotFailureAlertAt = now;
+  const from = msg?.from || '';
+  const phoneRaw = from.split('@')[0];
+  const contactLine = from.endsWith('@c.us') && phoneRaw ? ` (wa.me/${phoneRaw})` : '';
+  const who = userName || 'un cliente';
+  const alert =
+    `⚠️ *Camila no pudo responder*\n\n` +
+    `No logré contestarle a *${who}*${contactLine}.\n` +
+    `🔎 Motivo: ${summarizeBotError(err)}\n\n` +
+    `👉 *Contéstale tú mientras se resuelve, por favor.*\n` +
+    `_(Este aviso se repite máx. 1 vez cada 10 min para no saturar el grupo.)_`;
+  try { await sendToControlHotelGroup(alert); }
+  catch (e) { console.warn('⚠️ No se pudo avisar al grupo de la falla de Camila:', String(e?.message || e).split('\n')[0]); }
+}
+
+// Micro-llamada a Anthropic para confirmar que la key/cuenta sirve. Si no, avisa al grupo.
+async function pingAnthropicHealth() {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1, messages: [{ role: 'user', content: 'ping' }] }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (res.ok) {
+      console.log('🧠 Anthropic OK — el cerebro de Camila responde.');
+      return;
+    }
+    let detail = `HTTP ${res.status}`;
+    try { const j = await res.json(); detail = j?.error?.message || detail; } catch { /* cuerpo no-JSON */ }
+    console.error('🧠❌ Anthropic NO responde al arrancar:', detail);
+    await sendToControlHotelGroup(
+      `🚨 *Camila arrancó pero su cerebro (IA) está caído*\n\n` +
+      `🔎 Motivo: ${summarizeBotError({ message: detail })}\n\n` +
+      `⚠️ Mientras no se resuelva, Camila NO podrá responder a los clientes. Revisa la cuenta de Anthropic (billing / API key) o pon la key de otra cuenta.`
+    ).catch(() => {});
+  } catch (e) {
+    // Un fallo de red puntual al arrancar no amerita alarma (evita falsos positivos).
+    console.warn('🧠 No se pudo verificar Anthropic al arrancar (¿red?):', String(e?.message || e).split('\n')[0]);
+  }
+}
 
 client.on('disconnected', (reason) => {
   console.warn('⚠️  WhatsApp desconectado:', reason);
@@ -1239,6 +1310,10 @@ client.on('message', async (msg) => {
       try {
         await safeReply(client, finalMsg, finalChat, 'Tuve un problema técnico. Por favor escríbeme de nuevo o contáctanos al *489 100 7679*. 🙏');
       } catch { /* ignore */ }
+      // Avisar al grupo Control Hotel para que un humano tome la conversación —
+      // así una caída del cerebro (como la del 22-27 jul 2026) NO vuelve a pasar
+      // inadvertida durante días. Fire-and-forget y nunca rompe (freno anti-spam interno).
+      notifyControlOfBotFailure(finalMsg, pending.userName, err).catch(() => {});
     }
   }, MESSAGE_WAIT_MS);
 
