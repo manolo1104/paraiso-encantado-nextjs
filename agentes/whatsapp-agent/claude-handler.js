@@ -6,7 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
 import { HOTEL_SYSTEM_PROMPT, ROOMS, TOURS, RESTAURANT_MENU } from './hotel-knowledge.js';
-import { createQuote, getByUser, getByFolio, getLocallyReservedBackendNames } from './reservations.js';
+import { createQuote, getByUser, getByFolio, getLocallyReservedBackendNames, markPaymentProofReceived } from './reservations.js';
 import { getUnavailableRoomsFromGoogleSheet, appendTempBlockToSheet, getReservationByFolioFromSheet, getReservationsByNameFromSheet, findAlternativeDates, getPerNightUnavailableFromSheet } from './google-sheets.js';
 
 const anthropic = new Anthropic({
@@ -55,6 +55,46 @@ function getSession(userId) {
 function updateSession(userId, data) {
   const s = getSession(userId);
   Object.assign(s, data);
+}
+
+// ── Máquina de estados de la conversación (reporte P1: "memoria de estado") ──
+// Deriva la etapa REAL del cliente del dato duro (reserva en reservations.json +
+// sesión), NO de que el modelo la adivine. Se inyecta al prompt dinámico para que
+// Camila deje de tratar a un cliente que ya cotizó/pagó/reservó como si fuera nuevo,
+// y deje de re-preguntar datos que ya dio (hallazgos 4.1, 4.4 y parte de 4.5).
+function deriveConversationStage(userId) {
+  const r = getByUser(userId);
+  const s = getSession(userId);
+  if (r) {
+    if (r.status === 'RESERVADO' || r.status === 'CONFIRMADA') return { stage: 'reserva_confirmada', r };
+    if (r.status === 'PENDIENTE_PAGO') {
+      return { stage: r.proofReceivedAt ? 'pago_en_verificacion' : 'cotizacion_pendiente_pago', r };
+    }
+  }
+  if (s.checkin && s.checkout) return { stage: 'cotizando', r: null };
+  return { stage: 'nuevo', r: null };
+}
+
+// Traduce la etapa a una instrucción clara para el prompt (bloque dinámico, no cacheado).
+function buildStageLine(userId) {
+  const { stage, r } = deriveConversationStage(userId);
+  const money = (n) => `$${Number(n || 0).toLocaleString('es-MX')} MXN`;
+  const roomsTxt = r && Array.isArray(r.rooms) && r.rooms.length
+    ? r.rooms.map(x => x?.name).filter(Boolean).join(', ')
+    : (r?.room?.name || '');
+  const meta = r ? `folio ${r.folio}${roomsTxt ? `, ${roomsTxt}` : ''}${r.checkin && r.checkout ? `, ${r.checkin} → ${r.checkout}` : ''}` : '';
+  switch (stage) {
+    case 'reserva_confirmada':
+      return `\n🔑 ESTADO DEL CLIENTE = *RESERVA CONFIRMADA* (${meta}). NO le ofrezcas cotizar ni le preguntes si quiere reservar — YA reservó. Ayúdale con lo de después: llegada/check-in, cómo llegar, tours, restaurante y servicios. Si quiere modificar la reserva (fechas o personas), dile que lo ves con el equipo.`;
+    case 'pago_en_verificacion':
+      return `\n🔑 ESTADO DEL CLIENTE = *PAGO EN VERIFICACIÓN* (${meta}). YA envió su comprobante y el equipo lo está verificando. NO le pidas pagar otra vez ni le preguntes si quiere reservar. Confírmale que su pago está en revisión y que en breve recibe la confirmación; puedes resolver dudas de su estancia.`;
+    case 'cotizacion_pendiente_pago':
+      return `\n🔑 ESTADO DEL CLIENTE = *COTIZACIÓN ESPERANDO PAGO* (${meta}, total ${money(r.totalPrice)}, anticipo ${money(r.depositAmount)}). Ya tiene su cotización; NO la generes de nuevo desde cero ni vuelvas a pedir fechas/personas que ya dio. Ayúdale a completar el pago o resuelve dudas. Genera cotización NUEVA solo si cambia fechas, suite o número de personas.`;
+    case 'cotizando':
+      return `\n🔑 ESTADO DEL CLIENTE = *EN COTIZACIÓN* (ya dio fechas). NO vuelvas a preguntar lo que ya tienes; continúa desde donde iban.`;
+    default:
+      return '';
+  }
 }
 
 // Solo escalar cuando el cliente PIDE hablar con alguien — palabras sueltas como
@@ -1375,7 +1415,7 @@ export async function handleMessage(userId, userText, userName = '') {
   const dynamicContext = `Hoy es ${hoy} (${mxTodayISO()}). Usa esta fecha como referencia para calcular disponibilidad, cancelaciones y plazos.
 📅 CALENDARIO PRÓXIMOS 14 DÍAS (día de semana = fecha exacta): ${buildUpcomingCalendarLine()}
 ⚠️ FECHAS RELATIVAS: cuando el cliente diga "hoy", "mañana", "este viernes", "el próximo sábado", etc., NO calcules el día tú: búscalo en el calendario de arriba y usa esa fecha exacta. Al confirmar o cotizar menciona SIEMPRE día de semana + número + mes (p. ej. "viernes 24 de julio") y verifica que coincidan con el calendario.
-⚠️ FECHAS: nunca cotices ni afirmes disponibilidad para fechas en el pasado. Si el cliente da un año que ya pasó (p. ej. pide "julio 2025" estando en un año posterior), es casi siempre un error de dedo: interprétalo como la próxima ocurrencia de esa fecha (el año en curso o el siguiente) y CONFIRMA con el cliente las fechas exactas antes de avanzar. Si check_availability devuelve \`dates_corrected: true\`, dile explícitamente al cliente las fechas corregidas (check-in y check-out) que estás cotizando.${userName ? `\nEl huésped se llama *${userName}*.` : ''}${sessionLines.length ? '\n' + sessionLines.join('\n') : ''}`;
+⚠️ FECHAS: nunca cotices ni afirmes disponibilidad para fechas en el pasado. Si el cliente da un año que ya pasó (p. ej. pide "julio 2025" estando en un año posterior), es casi siempre un error de dedo: interprétalo como la próxima ocurrencia de esa fecha (el año en curso o el siguiente) y CONFIRMA con el cliente las fechas exactas antes de avanzar. Si check_availability devuelve \`dates_corrected: true\`, dile explícitamente al cliente las fechas corregidas (check-in y check-out) que estás cotizando.${userName ? `\nEl huésped se llama *${userName}*.` : ''}${sessionLines.length ? '\n' + sessionLines.join('\n') : ''}${buildStageLine(userId)}`;
 
   // El prompt estático se cachea (bloque 1); la fecha/nombre cambian pero son pequeños (bloque 2).
   const systemBlocks = [
@@ -1403,7 +1443,7 @@ export async function handleMessage(userId, userText, userName = '') {
     iterations++;
     const safeMessages = sanitizeMessagesPayload(messages);
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-5', // Sonnet 5: mejor razonamiento (menos errores de contexto/cálculo del reporte). Antes claude-haiku-4-5.
       max_tokens: 3000, // subido de 1500: cotizaciones con varias suites/tours y el split-stay generan JSON de herramienta grande y se truncaban → respuesta vacía → "Hubo un problema temporal". El costo solo aplica a lo que realmente genera.
       system: systemBlocks,
       tools: cachedTools,
@@ -1505,6 +1545,9 @@ export async function handlePaymentProof(userId, userName, caption = '') {
 
   if (pending && pending.status === 'PENDIENTE_PAGO') {
     console.log(`💳 Comprobante recibido para folio ${pending.folio} de ${userName}`);
+    // Marcar el comprobante para que la máquina de estados pase a "pago en verificación"
+    // y Camila no le vuelva a pedir pagar mientras el equipo confirma.
+    markPaymentProofReceived(userId);
     
     const roomLines = (Array.isArray(pending.rooms) && pending.rooms.length > 0
       ? pending.rooms

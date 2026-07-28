@@ -127,6 +127,22 @@ export function confirmPayment(folio) {
   return res;
 }
 
+// ── Marcar que llegó el comprobante (pago en verificación por el equipo) ────
+// El status sigue en PENDIENTE_PAGO hasta que un humano corre /confirmar, así que
+// guardamos aparte cuándo llegó el comprobante para que la máquina de estados sepa
+// que el cliente YA pagó y no lo vuelva a mandar a pagar.
+export function markPaymentProofReceived(userId) {
+  const reservations = load();
+  const res = reservations
+    .filter(r => r.userId === userId && r.status === 'PENDIENTE_PAGO')
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+  if (res) {
+    res.proofReceivedAt = new Date().toISOString();
+    save(reservations);
+  }
+  return res || null;
+}
+
 export function getLocallyReservedBackendNames({ checkin, checkout, requestedRooms = [] }) {
   if (!checkin || !checkout || !requestedRooms.length) return [];
 

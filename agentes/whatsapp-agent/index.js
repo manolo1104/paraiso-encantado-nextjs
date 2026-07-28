@@ -43,10 +43,11 @@ const hydratedChats = new Set(); // chatId ya inicializado con historial previo
 const sentPriceImageByChat = new Map(); // chatId -> timestamp
 
 // ── Debounce: espera a que la persona termine de escribir antes de responder ──
-// Si llegan varios mensajes seguidos en menos de MESSAGE_WAIT_MS ms, los agrupa
-// en uno solo para que Claude tenga el contexto completo de lo que quiso decir.
+// El timer se REINICIA con cada mensaje nuevo, así que Camila espera hasta que haya
+// MESSAGE_WAIT_MS ms de silencio y ENTONCES arma UNA sola respuesta con todo lo que
+// el cliente escribió (ej. "Hola" + "quiero info" + "de la jungla" + "para el sábado").
 const pendingByChat = new Map(); // chatId → { texts: [], timer, chat, lastMsg, userName, contextBody }
-const MESSAGE_WAIT_MS = Number(process.env.MESSAGE_DEBOUNCE_MS || 2500); // 2.5 s por defecto
+const MESSAGE_WAIT_MS = Number(process.env.MESSAGE_DEBOUNCE_MS || 8000); // 8 s de silencio por defecto (ajustable por env)
 
 // ── Pausa manual del bot (humano tomó la conversación) ────
 const pausedChats = new Map(); // chatId → { expiresAt, startedAt }
@@ -735,7 +736,7 @@ async function pingAnthropicHealth() {
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
       },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1, messages: [{ role: 'user', content: 'ping' }] }),
+      body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 1, messages: [{ role: 'user', content: 'ping' }] }),
       signal: AbortSignal.timeout(15000),
     });
     if (res.ok) {
