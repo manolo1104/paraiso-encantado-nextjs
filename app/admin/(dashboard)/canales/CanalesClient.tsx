@@ -6,9 +6,10 @@ import { ROOM_SLUG_MAP, roomNameToSlug } from '@/lib/room-slugs';
 const ALL_ROOMS = Object.values(ROOM_SLUG_MAP);
 
 type Platform = 'booking_com' | 'expedia';
+// Expedia DESACTIVADO: se dejó de enlazar/sincronizar por iCal con Expedia.
+// Se quita de la lista para que no aparezca como columna ni se pueda agregar.
 const PLATFORMS: { value: Platform; label: string }[] = [
   { value: 'booking_com', label: 'Booking.com' },
-  { value: 'expedia',     label: 'Expedia' },
 ];
 
 interface OTACalendar {
@@ -173,7 +174,7 @@ export default function CanalesClient() {
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Canales OTA</h1>
           <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
-            Sincronización iCal con Booking.com y Expedia cada 15 minutos
+            Sincronización iCal con Booking.com cada 15 minutos
           </p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>

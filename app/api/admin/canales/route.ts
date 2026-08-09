@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
     if (!roomName || !platform || !icalUrl) {
       return NextResponse.json({ error: 'Faltan campos (habitación, plataforma o URL).' }, { status: 400 });
     }
+    // Expedia DESACTIVADO: ya no se enlaza ni sincroniza por iCal con Expedia.
+    if (platform === 'expedia') {
+      return NextResponse.json({ error: 'La sincronización con Expedia está desactivada.' }, { status: 400 });
+    }
     // saveOTACalendar confirma la escritura con la respuesta de Sheets y lanza error si falla.
     const finalId = id || randomUUID();
     await saveOTACalendar({ id: finalId, roomName, platform, icalUrl, active });

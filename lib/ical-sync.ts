@@ -105,7 +105,12 @@ async function runIcalSyncInner(): Promise<{
   timestamp: string;
 }> {
   const calendars = await getAllOTACalendars();
-  const active = calendars.filter(c => c.active && c.icalUrl);
+  // Expedia DESACTIVADO: se dejó de enlazar/sincronizar por iCal con Expedia
+  // (decisión del dueño). Se filtra aquí para que, aunque queden filas de
+  // Expedia en la hoja OTA_Calendars, NUNCA se vuelvan a jalar sus calendarios.
+  // Los bloqueos que Expedia ya había escrito se CONSERVAN a propósito (pueden
+  // ser reservas reales de Expedia; borrarlas abriría esas fechas → sobreventa).
+  const active = calendars.filter(c => c.active && c.icalUrl && c.platform !== 'expedia');
 
   const results: IcalSyncResult[] = [];
 
