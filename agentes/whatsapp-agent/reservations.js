@@ -190,6 +190,8 @@ export function getByUser(userId) {
 
 export function getByFolio(folio) {
   if (!folio) return null;
-  const f = String(folio).trim().toUpperCase();
-  return load().find(r => String(r.folio || '').toUpperCase() === f) || null;
+  // Comparar sin separadores: el cliente teclea el folio con o sin guión.
+  const norm = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const f = norm(folio);
+  return load().find(r => norm(r.folio) === f) || null;
 }

@@ -19,7 +19,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Zona horaria del hotel. Sin esto el contenedor corre en UTC y despues de las 18:00
+# hora MX el servidor ya esta en el dia siguiente: "para hoy" se calculaba manana.
+RUN apk add --no-cache tzdata
+ENV NODE_ENV=production \
+    TZ=America/Mexico_City
 
 # Copiar dependencias de builder
 COPY package*.json ./

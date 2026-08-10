@@ -15,7 +15,7 @@ import 'dotenv/config';
 import pkg from 'whatsapp-web.js';
 const { Client, LocalAuth, MessageMedia } = pkg;
 import qrcode from 'qrcode-terminal';
-import { handleMessage, handlePaymentProof, getStats, addToHistory, getConversationSummary } from './claude-handler.js';
+import { handleMessage, handlePaymentProof, getStats, addToHistory, getConversationSummary, clearHistory } from './claude-handler.js';
 import { confirmPayment, getByUser, getByFolio } from './reservations.js';
 import { appendConfirmedReservationToSheet, updateRoomStatusInDisponibilidad } from './google-sheets.js';
 import { formatWebBookingAlert } from './web-booking-notify.js';
@@ -63,6 +63,22 @@ let botReplyInProgress = 0;
 const recentBotOutgoingByChat = new Map(); // chatId -> expiresAt
 const availabilityFollowupTimers = new Map(); // chatId -> { timeoutId, type, scheduledAt }
 const lastIncomingAtByChat = new Map(); // chatId -> timestamp último mensaje del huésped
+const processedMessageIds = new Map(); // id de mensaje -> timestamp (anti-duplicados)
+
+// Limpieza periódica: sin esto los Map crecen para siempre (la memoria del bot subió
+// de 40 a 89 conversaciones en 7 días sin una sola bajada).
+setInterval(() => {
+  const now = Date.now();
+  const DIEZ_MIN = 10 * 60 * 1000;
+  for (const [k, t] of processedMessageIds) if (now - t > DIEZ_MIN) processedMessageIds.delete(k);
+  const DOS_DIAS = 48 * 60 * 60 * 1000;
+  for (const [chatId, t] of lastIncomingAtByChat) {
+    if (now - t > DOS_DIAS) {
+      lastIncomingAtByChat.delete(chatId);
+      clearHistory(chatId); // libera el historial de conversación en claude-handler
+    }
+  }
+}, 10 * 60 * 1000).unref?.();
 
 const FOLLOWUP_SCHEDULES = {
   no_availability_found: {
@@ -570,8 +586,13 @@ async function tagChatForHumanIntervention(client, chat, msg, userName, botText)
 
   const tagName = 'REQUIERE_INTERVENCION_HUMANA';
 
-  // 1) Intentar etiqueta real de WhatsApp (si hay label ID configurada)
-  if (process.env.HUMAN_INTERVENTION_LABEL_ID && typeof chat.changeLabels === 'function') {
+  // 1) Intentar etiqueta real de WhatsApp (si hay label ID configurada).
+  // `chat` puede venir NULL cuando getChat() falló por el direccionamiento @lid. Antes
+  // se leía chat.changeLabels directo y el TypeError tumbaba la función ENTERA: el bot
+  // le decía al cliente "te comunico con el equipo" y el aviso del paso 2 nunca salía.
+  if (!chat) {
+    console.warn(`⚠️ Sin objeto chat (getChat falló) para ${chatId} — no se puede etiquetar; el aviso al equipo sí continúa.`);
+  } else if (process.env.HUMAN_INTERVENTION_LABEL_ID && typeof chat.changeLabels === 'function') {
     const labelId = Number(process.env.HUMAN_INTERVENTION_LABEL_ID);
     if (!Number.isNaN(labelId)) {
       try {
@@ -970,6 +991,18 @@ client.on('message_create', async (msg) => {
 // ── Manejo de mensajes entrantes ──────────────────────────
 
 client.on('message', async (msg) => {
+  // whatsapp-web.js reemite el mismo mensaje cuando el store se resincroniza: en la
+  // semana del 3-8 ago hubo 53 casos (hasta un quíntuple). Cada repetición gastaba
+  // tokens y arriesgaba contestarle dos veces al cliente. Se procesa solo la 1ª vez.
+  const msgKey = msg.id?._serialized || msg.id?.id;
+  if (msgKey) {
+    if (processedMessageIds.has(msgKey)) {
+      console.log(`🔁 Mensaje duplicado ignorado (${msgKey})`);
+      return;
+    }
+    processedMessageIds.set(msgKey, Date.now());
+  }
+
   lastIncomingAtByChat.set(msg.from, Date.now());
 
   // Ignorar totalmente mensajes del número bloqueado
@@ -1308,7 +1341,12 @@ client.on('message', async (msg) => {
             `\n\n🏨 *Habitaciones:*\n${roomsBlock}${toursLine}\n\n` +
             `💰 *Total: $${total.toLocaleString('es-MX')} MXN*\n` +
             `💳 *Anticipo: $${deposit.toLocaleString('es-MX')} MXN*\n` +
-            `🧮 *Saldo: $${saldo.toLocaleString('es-MX')} MXN*`;
+            `🧮 *Saldo: $${saldo.toLocaleString('es-MX')} MXN*` +
+            // Sin bloqueo confirmado la suite NO está apartada: cualquiera puede
+            // reservarla por el motor web o una OTA mientras el cliente decide.
+            (result?.quoteBlockConfirmed === false
+              ? `\n\n🚨 *SIN BLOQUEO CONFIRMADO* — la(s) suite(s) NO quedaron apartadas.\n👉 Validen disponibilidad a mano ANTES de aceptar el pago.`
+              : '');
 
           const groupOk = await sendToControlHotelGroup(quoteAlert);
           if (groupOk) {

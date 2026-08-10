@@ -14,7 +14,17 @@ const anthropic = new Anthropic({
   maxRetries: 4,    // reintentos ante 429/529/errores transitorios (default 2) — evita que un blip pase a "Tuve un problema técnico"
   timeout: 60000,   // 60s por intento (default 10 min) para no colgar el manejador del mensaje
 });
-const BOOKING_API = process.env.BOOKING_API_URL || 'https://paraisoencantado.com';
+// ⚠️ SIEMPRE con "www". El apex (paraisoencantado.com) responde 301 hacia www, y en un
+// 301 el fetch convierte el POST en GET y tira el cuerpo → la ruta contesta 405 sin
+// cuerpo → `res.json()` revienta con "Unexpected end of JSON input". Eso rompía TODAS
+// las llamadas del bot al backend (disponibilidad, bloqueos temporales, cotizaciones).
+// Normalizamos aquí para que un BOOKING_API_URL mal puesto en Railway no lo repita.
+function normalizeBookingApi(raw) {
+  const base = String(raw || '').trim().replace(/\/+$/, '');
+  if (!base) return 'https://www.paraisoencantado.com';
+  return base.replace(/^https?:\/\/paraisoencantado\.com/i, 'https://www.paraisoencantado.com');
+}
+const BOOKING_API = normalizeBookingApi(process.env.BOOKING_API_URL);
 
 // Token de servicio para autenticar las llamadas del agente a las APIs admin del sitio.
 // El middleware del sitio exige JWT en /api/admin/*; con este header el agente se
@@ -873,8 +883,8 @@ async function executeTool(toolName, toolInput, userId, userName) {
         console.warn('⚠️ No se pudo leer Google Sheets:', sheetErr.message);
         if (hasGoogleConfig) {
           return {
-            available: false,
-            message: 'No pude verificar disponibilidad en tiempo real en este momento. Intenta nuevamente en un minuto o pide apoyo del equipo humano.',
+            verification_failed: true,
+            message: 'NO SE PUDO VERIFICAR la disponibilidad (falla técnica al leer la fuente). Esto NO significa que no haya lugar. No afirmes ni niegues disponibilidad: avisa que estás validando y pasa el caso al equipo humano.',
             error: 'google_sheets_unavailable'
           };
         }
@@ -886,12 +896,21 @@ async function executeTool(toolName, toolInput, userId, userName) {
         const res = await fetch(`${BOOKING_API}/api/check-availability`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkin, checkout, rooms: roomsToCheck })
+          body: JSON.stringify({ checkin, checkout, rooms: roomsToCheck }),
+          signal: AbortSignal.timeout(15000)
         });
-        const data = await res.json();
-        backendOk = res.ok;
-        for (const backendRoom of (data.unavailableRooms || [])) {
-          unavailableNames.add(backendRoom);
+        // Nunca hacer .json() a ciegas: un 405/502 llega con cuerpo vacío y el throw
+        // ocultaba el status real detrás de "Unexpected end of JSON input".
+        if (!res.ok) {
+          const body = await res.text().catch(() => '');
+          console.warn(`⚠️ Backend de disponibilidad respondió ${res.status} (${res.url}) — ${body.slice(0, 200) || 'sin cuerpo'}`);
+        } else {
+          const data = await res.json();
+          // `degraded` = el backend tampoco pudo leer su fuente; no cuenta como verificado.
+          backendOk = data?.degraded !== true;
+          for (const backendRoom of (data.unavailableRooms || [])) {
+            unavailableNames.add(backendRoom);
+          }
         }
       } catch (backendErr) {
         console.warn('⚠️ No se pudo consultar backend de disponibilidad:', backendErr.message);
@@ -914,8 +933,8 @@ async function executeTool(toolName, toolInput, userId, userName) {
       // Si hay configuración de Google y no se pudo leer, nunca afirmar disponibilidad
       if (hasGoogleConfig && !sheetReadOk) {
         return {
-          available: false,
-          message: 'No pude verificar disponibilidad en tiempo real en este momento. Intenta nuevamente en un minuto o pide apoyo del equipo humano.',
+          verification_failed: true,
+          message: 'NO SE PUDO VERIFICAR la disponibilidad (falla técnica al leer la fuente). Esto NO significa que no haya lugar. No afirmes ni niegues disponibilidad: avisa que estás validando y pasa el caso al equipo humano.',
           error: 'google_sheets_unavailable'
         };
       }
@@ -925,8 +944,8 @@ async function executeTool(toolName, toolInput, userId, userName) {
       // verificar, quedamos ciegos a OTA → nunca afirmar disponibilidad (fail-closed).
       if (hasGoogleConfig && !dispReadOk && !backendOk) {
         return {
-          available: false,
-          message: 'No pude verificar disponibilidad en tiempo real en este momento (bloqueos de OTA no confirmados). Intenta nuevamente en un minuto o pide apoyo del equipo humano.',
+          verification_failed: true,
+          message: 'NO SE PUDO VERIFICAR la disponibilidad (los bloqueos de OTA no se pudieron confirmar). Esto NO significa que no haya lugar. No afirmes ni niegues disponibilidad: avisa que estás validando y pasa el caso al equipo humano.',
           error: 'ota_source_unavailable'
         };
       }
@@ -1438,6 +1457,7 @@ export async function handleMessage(userId, userText, userName = '') {
   // y devuelve un folio nuevo. Evita falsos positivos por folios repetidos en el texto
   // (confirmaciones, "mi folio es WA-...", etc.).
   let createdQuote = null;
+  let toolNeedsHuman = false; // alguna herramienta no pudo verificar → escalar sí o sí
 
   while (true) {
     iterations++;
@@ -1459,12 +1479,12 @@ export async function handleMessage(userId, userText, userName = '') {
         if (partialText) {
           console.warn('⚠️ Claude: tool_use sin bloques; usando texto parcial como respuesta.');
           effectiveHistory.push({ role: 'assistant', content: partialText });
-          return { text: withDisclosure(partialText), requiresHumanIntervention: needsHumanIntervention(userText, partialText), requiresTourNotification: wantsTourBooking(userText, partialText), quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null };
+          return { text: withDisclosure(partialText), requiresHumanIntervention: toolNeedsHuman || needsHumanIntervention(userText, partialText), requiresTourNotification: wantsTourBooking(userText, partialText), quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null, quoteBlockConfirmed: createdQuote ? createdQuote.blockConfirmed !== false : null };
         }
         console.warn('⚠️ Claude devolvió stop_reason=tool_use pero sin bloques tool_use; se omite ese turno.');
         const fallback = 'Hubo un problema temporal al procesar tu solicitud. ¿Me lo repites por favor? 🌿';
         effectiveHistory.push({ role: 'assistant', content: fallback });
-        return { text: withDisclosure(fallback), requiresHumanIntervention: false, requiresTourNotification: false, quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null };
+        return { text: withDisclosure(fallback), requiresHumanIntervention: false, requiresTourNotification: false, quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null, quoteBlockConfirmed: createdQuote ? createdQuote.blockConfirmed !== false : null };
       }
       messages.push({ role: 'assistant', content: response.content });
 
@@ -1474,6 +1494,11 @@ export async function handleMessage(userId, userText, userName = '') {
         // Registrar cotización realmente creada (folio nuevo, sin error).
         if (tb.name === 'create_reservation_quote' && result && !result.error && result.folio) {
           createdQuote = result;
+        }
+        // Una herramienta que no pudo verificar (o una cotización que salió sin bloqueo)
+        // siempre pasa a manos humanas: el cliente no se queda con una respuesta a ciegas.
+        if (result && (result.verification_failed || result.blockConfirmed === false)) {
+          toolNeedsHuman = true;
         }
         toolResults.push({ type: 'tool_result', tool_use_id: tb.id, content: JSON.stringify(result) });
       }
@@ -1487,7 +1512,7 @@ export async function handleMessage(userId, userText, userName = '') {
         const partial = response.content.find(b => b.type === 'text')?.text?.trim()
           || 'Déjame confirmar unos detalles con el equipo y te respondo en breve. 🌿';
         effectiveHistory.push({ role: 'assistant', content: partial });
-        return { text: withDisclosure(partial), requiresHumanIntervention: true, requiresTourNotification: false, quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null };
+        return { text: withDisclosure(partial), requiresHumanIntervention: true, requiresTourNotification: false, quoteCreated: Boolean(createdQuote), quoteFolio: createdQuote?.folio || null, quoteBlockConfirmed: createdQuote ? createdQuote.blockConfirmed !== false : null };
       }
 
       continue;
@@ -1507,8 +1532,12 @@ export async function handleMessage(userId, userText, userName = '') {
     // herramienta create_reservation_quote NUNCA corrió en esta interacción →
     // no hay bloqueo de habitación, ni registro, ni aviso al grupo. (Pasó el
     // 20 jul 2026: folio inventado WA-MC072026.)
-    if (!createdQuote && /\bWA-[A-Z0-9]{4,}\b/i.test(finalText)) {
-      const fake = finalText.match(/\bWA-[A-Z0-9]{4,}\b/i)?.[0];
+    // El placeholder literal "WA-XXXXXXXX" (con el que Camila le PIDE el folio al
+    // cliente) no es una cotización inventada — excluirlo o la alerta se vuelve ruido.
+    const folioMatches = (finalText.match(/\bWA-[A-Z0-9]{4,}\b/gi) || [])
+      .filter(f => !/^WA-X+$/i.test(f));
+    if (!createdQuote && folioMatches.length > 0) {
+      const fake = folioMatches[0];
       let known = null;
       try { known = getByFolio(fake); } catch { /* sin registro local */ }
       if (!known) {
@@ -1517,10 +1546,10 @@ export async function handleMessage(userId, userText, userName = '') {
     }
     return {
       text: withDisclosure(finalText),
-      requiresHumanIntervention: needsHumanIntervention(userText, finalText),
+      requiresHumanIntervention: toolNeedsHuman || needsHumanIntervention(userText, finalText),
       requiresTourNotification: wantsTourBooking(userText, finalText),
       quoteCreated: Boolean(createdQuote),
-      quoteFolio: createdQuote?.folio || null
+      quoteFolio: createdQuote?.folio || null, quoteBlockConfirmed: createdQuote ? createdQuote.blockConfirmed !== false : null
     };
   }
 }

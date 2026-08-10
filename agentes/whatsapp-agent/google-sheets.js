@@ -22,6 +22,14 @@ function normalizeText(value = '') {
     .trim();
 }
 
+// Los folios se comparan SIN separadores. El motor web guarda "PEMLSWK595" (sin guión)
+// pero al cliente le decimos el formato "PE-XXXXXXXX", así que lo teclea con guión; y el
+// admin genera "PE-M-XXXX" (con guiones). normalizeText convertía el guión en espacio
+// → "pe mlswk595" ≠ "pemlswk595" y la reserva "no existía". (Caso real: 8 ago 2026.)
+function normalizeFolio(value = '') {
+  return String(value).toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 function parseGoogleCredentials() {
   const raw = process.env.GOOGLE_SHEETS_CREDENTIALS;
   if (raw) {
@@ -654,8 +662,8 @@ export async function getReservationByFolioFromSheet(folio) {
     const folioIdx = findHeaderIndex(headers, ['folio', 'confirmacion', 'confirmación', 'folio de wpp', 'numero de confirmacion']);
     if (folioIdx < 0) return { found: false, reason: 'No se encontró columna de folio.' };
 
-    const folioNorm = normalizeText(folio);
-    const rowIndex = values.findIndex((row, i) => i > 0 && normalizeText(row[folioIdx] || '') === folioNorm);
+    const folioNorm = normalizeFolio(folio);
+    const rowIndex = values.findIndex((row, i) => i > 0 && normalizeFolio(row[folioIdx] || '') === folioNorm);
     if (rowIndex < 0) return { found: false, folio };
 
     const row = values[rowIndex];
