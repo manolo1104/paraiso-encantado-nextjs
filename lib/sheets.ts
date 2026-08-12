@@ -3,6 +3,9 @@ import { google } from 'googleapis';
 const SHEET_NAME = process.env.GOOGLE_SHEET_TAB || 'Reservas';
 const AVAILABILITY_SHEET = 'Disponibilidad';
 const TEMP_BLOCKS_SHEET = 'BloqueosTemporal';
+// Minutos que dura el apartado temporal. Debe coincidir con lo que ve el
+// huésped en el cronómetro de /reservar (se envía al cliente en la respuesta).
+export const HOLD_MINUTES = 10;
 
 /**
  * Candado en-proceso para SERIALIZAR toda escritura que reescribe la matriz
@@ -20,6 +23,19 @@ let availabilityWriteChain: Promise<unknown> = Promise.resolve();
 export function withAvailabilityLock<T>(fn: () => Promise<T>): Promise<T> {
   const run = availabilityWriteChain.then(fn, fn); // corre pase lo que pase con la anterior
   availabilityWriteChain = run.then(() => {}, () => {}); // la cadena nunca se rompe por un error
+  return run as Promise<T>;
+}
+
+/**
+ * Mismo candado, para la hoja `BloqueosTemporal`: renovar y liberar apartados
+ * también reescriben la hoja entera. Dos visitantes moviendo su carrito a la vez
+ * se borraban el apartado uno al otro (la lectura de uno ocurría antes de la
+ * escritura del otro) → dos personas podían pagar la misma suite.
+ */
+let tempBlockWriteChain: Promise<unknown> = Promise.resolve();
+function withTempBlockLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = tempBlockWriteChain.then(fn, fn);
+  tempBlockWriteChain = run.then(() => {}, () => {});
   return run as Promise<T>;
 }
 
@@ -146,6 +162,16 @@ function ymd(d: Date): string {
 
 // ── Reservas ──────────────────────────────────────────────────
 
+/**
+ * Google Sheets interpreta como FÓRMULA cualquier celda que empiece con = + - @.
+ * Un teléfono escrito "+52 444…" se guardaba como `#ERROR!` y el hotel perdía el
+ * contacto del huésped. El apóstrofo inicial fuerza texto y no se ve en la celda.
+ */
+function asText(v: unknown): string {
+  const s = String(v ?? '');
+  return /^[=+\-@]/.test(s) ? `'${s}` : s;
+}
+
 export async function addBookingToSheet(bookingData: any) {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
@@ -161,11 +187,11 @@ export async function addBookingToSheet(bookingData: any) {
     // Columna O = anticipo (lo realmente cobrado ahora). 0 si no se especifica.
     // Columna P = código de descuento aplicado; Q = monto descontado (MXN).
     const row = [
-      ts, confirmation_number, customer_name, customer_phone || 'N/A', email,
+      ts, confirmation_number, asText(customer_name), asText(customer_phone || 'N/A'), asText(email),
       `$${Number(total).toLocaleString('es-MX')} MXN`,
       booking_details?.checkin || 'N/A', booking_details?.checkout || 'N/A',
       booking_details?.nights || 'N/A', booking_details?.guests || 'N/A',
-      roomsStr, booking_details?.notes || '', payment_intent_id || 'N/A',
+      roomsStr, asText(booking_details?.notes || ''), payment_intent_id || 'N/A',
       how_did_you_hear || '', Number(anticipo) || 0,
       promo_code || '', Number(promo_discount) || 0,
     ];
@@ -264,66 +290,13 @@ export async function getFullyBookedDates(monthsAhead = 6): Promise<string[]> {
   }
 }
 
-// Rangos de fechas bloqueadas MANUALMENTE de una habitación (BLOQUEADO o
-// MANTENIMIENTO), para exportarlos en el feed iCal que consumen las OTAs. Así,
-// cerrar una fecha en el panel /calendario también le llega a Expedia/Booking.
-// A propósito NO exporta:
-//   - RESERVADO: las reservas directas ya se exportan desde la hoja Reservas.
-//   - OTA (…): reexportar a una OTA un bloqueo que vino de ella misma podría crear
-//     un lazo (bloqueo fantasma) con algunos gestores de canal. Los bloqueos de
-//     una OTA ya los conoce esa OTA; el cruce entre OTAs no se maneja por aquí.
-//   - 'ABIERTO': fecha liberada a mano → queda vendible.
-export async function getRoomBlockedRanges(
-  roomName: string,
-): Promise<Array<{ checkin: string; checkout: string }>> {
-  const client = await getSheetsClient();
-  if (!client || !process.env.GOOGLE_SHEET_ID) return [];
-  const sid = process.env.GOOGLE_SHEET_ID;
-  const normalized = normalizeRoomName(roomName);
-  try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })
-    );
-    const data = res.data.values || [];
-    if (data.length < 2) return [];
-    const headers = data[0];
-    const col = headers.findIndex((h: string) => h === normalized);
-    if (col === -1) return [];
+export type UnavailableReason = 'reservado' | 'bloqueado' | 'mantenimiento' | 'ota' | 'apartado';
 
-    const dates: string[] = [];
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      if (!row?.[0]) continue;
-      let dateStr = String(row[0]).trim().slice(0, 10);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        const d = new Date(String(row[0]).trim());
-        if (isNaN(d.getTime())) continue;
-        dateStr = ymd(d);
-      }
-      const val = (row[col] || '').toUpperCase().trim();
-      if (val === 'BLOQUEADO' || val === 'MANTENIMIENTO') {
-        dates.push(dateStr);
-      }
-    }
-    if (dates.length === 0) return [];
-
-    // Agrupar fechas consecutivas en rangos [checkin, checkout) (DTEND exclusivo en iCal).
-    dates.sort((a, b) => a.localeCompare(b));
-    const nextDay = (d: string) => { const dt = new Date(d + 'T00:00:00'); dt.setDate(dt.getDate() + 1); return ymd(dt); };
-    const ranges: Array<{ checkin: string; checkout: string }> = [];
-    let start = dates[0];
-    let prev = dates[0];
-    for (let i = 1; i < dates.length; i++) {
-      if (dates[i] === nextDay(prev)) { prev = dates[i]; continue; }
-      ranges.push({ checkin: start, checkout: nextDay(prev) });
-      start = dates[i]; prev = dates[i];
-    }
-    ranges.push({ checkin: start, checkout: nextDay(prev) });
-    return ranges;
-  } catch (e: any) {
-    console.error('❌ getRoomBlockedRanges error:', e.message);
-    return [];
-  }
+function statusToReason(status: string): UnavailableReason {
+  if (status.startsWith('OTA')) return 'ota';
+  if (status === 'MANTENIMIENTO') return 'mantenimiento';
+  if (status === 'BLOQUEADO') return 'bloqueado';
+  return 'reservado';
 }
 
 export async function checkAvailability(
@@ -331,7 +304,14 @@ export async function checkAvailability(
   rooms: (string | { name: string })[],
   sessionId: string | null = null,
   excludeConfirmacion?: string,
-): Promise<{ available: boolean; unavailableRooms: string[]; degraded?: boolean }> {
+): Promise<{
+  available: boolean;
+  unavailableRooms: string[];
+  /** Primera noche en conflicto por suite — para poder decirle al huésped
+   *  "no disponible la noche del 15" en vez de un genérico "no disponible". */
+  unavailableDetail?: { room: string; date: string; reason: UnavailableReason }[];
+  degraded?: boolean;
+}> {
   const client = await getSheetsClient();
   // Fail-OPEN solo si Google NO está configurado (entorno local sin hoja).
   // Si SÍ está configurado pero el cliente falló (credenciales rotas/cuota),
@@ -365,6 +345,11 @@ export async function checkAvailability(
 
     const headers = data[0];
     const unavailableRooms: string[] = [];
+    const detail: { room: string; date: string; reason: UnavailableReason }[] = [];
+    const markUnavailable = (room: string, date: string, reason: UnavailableReason) => {
+      if (!unavailableRooms.includes(room)) unavailableRooms.push(room);
+      if (!detail.find(d => d.room === room)) detail.push({ room, date, reason });
+    };
 
     for (const room of activeRooms) {
       const colIdx = headers.findIndex((h: string) => h === room.name);
@@ -380,7 +365,7 @@ export async function checkAvailability(
         if (rowIdx > 0) {
           const status = (data[rowIdx][colIdx] || '').toUpperCase().trim();
           if (status === 'RESERVADO' || status === 'BLOQUEADO' || status === 'MANTENIMIENTO' || status.startsWith('OTA')) {
-            if (!unavailableRooms.includes(room.name)) unavailableRooms.push(room.name);
+            markUnavailable(room.name, date, statusToReason(status));
             break;
           }
         }
@@ -388,18 +373,14 @@ export async function checkAvailability(
     }
 
     const tempBlocked = await checkTemporaryBlocks(dateRange, normalizedRooms, sessionId);
-    for (const r of tempBlocked) {
-      if (!unavailableRooms.includes(r)) unavailableRooms.push(r);
-    }
+    for (const b of tempBlocked) markUnavailable(b.room, b.date, 'apartado');
 
     // Cross-check contra hoja Reservas (fuente de verdad real)
     // Captura reservas del admin y reservas web aunque Disponibilidad esté desincronizado
     const reservasConflicts = await checkReservasForConflicts(checkin, checkout, normalizedRooms, excludeConfirmacion);
-    for (const r of reservasConflicts) {
-      if (!unavailableRooms.includes(r)) unavailableRooms.push(r);
-    }
+    for (const c of reservasConflicts) markUnavailable(c.room, c.date, 'reservado');
 
-    return { available: unavailableRooms.length === 0, unavailableRooms };
+    return { available: unavailableRooms.length === 0, unavailableRooms, unavailableDetail: detail };
   } catch (e: any) {
     console.error('❌ checkAvailability error:', e.message);
     // FAIL-CLOSED: ante error/timeout de Sheets NO afirmamos disponibilidad.
@@ -421,7 +402,7 @@ async function checkReservasForConflicts(
   checkout: string,
   rooms: { name: string }[],
   excludeConfirmacion?: string,
-): Promise<string[]> {
+): Promise<{ room: string; date: string }[]> {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return [];
   const sid = process.env.GOOGLE_SHEET_ID;
@@ -436,7 +417,7 @@ async function checkReservasForConflicts(
     const data = res.data.values || [];
     if (data.length < 2) return [];
 
-    const conflicting: string[] = [];
+    const conflicting: { room: string; date: string }[] = [];
 
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
@@ -468,8 +449,9 @@ async function checkReservasForConflicts(
         const match = roomsInBooking.some(
           (r) => r === normalizedReq || r.includes(normalizedReq) || normalizedReq.includes(r)
         );
-        if (match && !conflicting.includes(room.name)) {
-          conflicting.push(room.name);
+        if (match && !conflicting.find(c => c.room === room.name)) {
+          // Primera noche en conflicto: la más tardía entre los dos check-ins
+          conflicting.push({ room: room.name, date: bCheckin > checkin ? bCheckin : checkin });
         }
       }
     }
@@ -481,9 +463,48 @@ async function checkReservasForConflicts(
   }
 }
 
+// La hoja BloqueosTemporal NO siempre tuvo encabezado: durante meses la primera
+// fila fue un apartado real. Asumirla como encabezado hacía que ese apartado
+// (a) nunca bloqueara a nadie —riesgo de sobreventa— y (b) nunca se purgara.
+// Por eso una fila es "de datos" si su columna A es una fecha YYYY-MM-DD, no por
+// su posición.
+const TEMP_BLOCKS_HEADER = ['Fecha', 'Habitación', 'Expira', 'Sesión'];
+
+function isTempBlockRow(row: unknown): row is string[] {
+  return Array.isArray(row) && /^\d{4}-\d{2}-\d{2}/.test(String(row[0] ?? '').trim());
+}
+
+/**
+ * Reescribe la hoja de apartados con `rows` (más el encabezado) SIN dejarla
+ * vacía en ningún instante: primero sobrescribe desde A1 y sólo después limpia
+ * la cola sobrante. Con clear() antes del update había una ventana de 1-3 s en
+ * la que cualquier consulta de disponibilidad no veía ningún apartado.
+ */
+async function rewriteTempBlocks(
+  client: any, sid: string, rows: string[][], prevRowCount: number,
+) {
+  const values = [TEMP_BLOCKS_HEADER, ...rows];
+  await sheetsCall(() =>
+    client.spreadsheets.values.update({
+      spreadsheetId: sid,
+      range: `${TEMP_BLOCKS_SHEET}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values },
+    })
+  );
+  if (prevRowCount > values.length) {
+    await sheetsCall(() =>
+      client.spreadsheets.values.clear({
+        spreadsheetId: sid,
+        range: `${TEMP_BLOCKS_SHEET}!A${values.length + 1}:D${prevRowCount}`,
+      })
+    );
+  }
+}
+
 async function checkTemporaryBlocks(
   dates: string[], rooms: { name: string }[], excludeSessionId: string | null,
-): Promise<string[]> {
+): Promise<{ room: string; date: string }[]> {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return [];
   const sid = process.env.GOOGLE_SHEET_ID;
@@ -496,53 +517,34 @@ async function checkTemporaryBlocks(
     );
     const data = res.data.values || [];
     const now = new Date();
-    const blockedRooms: string[] = [];
+    const blocked: { room: string; date: string }[] = [];
 
-    for (let i = 1; i < data.length; i++) {
-      const [date, roomName, expiration, sessionId] = data[i];
+    for (const row of data) {
+      if (!isTempBlockRow(row)) continue;              // encabezado o fila basura
+      const [date, roomName, expiration, sessionId] = row;
       if (excludeSessionId && sessionId === excludeSessionId) continue;
-      if (new Date(expiration) > now && dates.includes(date)) {
-        if (rooms.find(r => r.name === roomName) && !blockedRooms.includes(roomName)) {
-          blockedRooms.push(roomName);
-        }
+      const exp = new Date(expiration);
+      if (isNaN(exp.getTime()) || exp <= now) continue; // apartado vencido
+      if (!dates.includes(date)) continue;
+      if (rooms.find(r => r.name === roomName) && !blocked.find(b => b.room === roomName)) {
+        blocked.push({ room: roomName, date });
       }
     }
-    return blockedRooms;
+    return blocked;
   } catch { return []; }
 }
 
+/**
+ * Crea el apartado de 10 min de una sesión. Delega en renewTemporaryBlock para
+ * que (a) siempre exista encabezado, (b) no se dupliquen filas si la sesión ya
+ * tenía apartado de /reservar y (c) se purguen de paso los apartados vencidos.
+ * Devuelve la expiración ISO, o null si no se creó.
+ */
 export async function createTemporaryBlock(
   checkin: string, checkout: string,
   rooms: (string | { name: string })[], sessionId: string,
-) {
-  const client = await getSheetsClient();
-  if (!client || !process.env.GOOGLE_SHEET_ID) return;
-  const sid = process.env.GOOGLE_SHEET_ID;
-  try {
-    const normalizedRooms = rooms
-      .map(r => typeof r === 'string' ? { name: normalizeRoomName(r) } : { name: normalizeRoomName(r.name) })
-      .filter(r => ROOM_NAMES.includes(r.name));
-
-    const dateRange = getDateRange(checkin, checkout);
-    const expiration = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    const rows: string[][] = [];
-    for (const date of dateRange) {
-      for (const room of normalizedRooms) {
-        rows.push([date, room.name, expiration, sessionId]);
-      }
-    }
-    await sheetsCall(() =>
-      client.spreadsheets.values.append({
-        spreadsheetId: sid,
-        range: `${TEMP_BLOCKS_SHEET}!A:D`,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: { values: rows },
-      })
-    );
-    console.log(`✅ Bloqueo temporal creado: sesión ${sessionId}`);
-  } catch (e: any) {
-    console.error('❌ createTemporaryBlock error:', e.message);
-  }
+): Promise<string | null> {
+  return renewTemporaryBlock(checkin, checkout, rooms, sessionId);
 }
 
 /**
@@ -558,6 +560,7 @@ export async function renewTemporaryBlock(
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return null;
   const sid = process.env.GOOGLE_SHEET_ID;
+  return withTempBlockLock(async () => {
   try {
     const res = await sheetsCall(() =>
       client.spreadsheets.values.get({
@@ -567,8 +570,8 @@ export async function renewTemporaryBlock(
     );
     const data = res.data.values || [];
     const now = new Date();
-    const kept = data.filter((row, i) => {
-      if (i === 0) return true;                 // encabezado
+    const kept = data.filter(row => {
+      if (!isTempBlockRow(row)) return false;   // encabezado o basura: se reescribe
       if (row[3] === sessionId) return false;   // filas viejas de esta sesión
       const exp = new Date(row[2] || '');
       return !isNaN(exp.getTime()) && exp > now; // purga expiradas
@@ -578,40 +581,27 @@ export async function renewTemporaryBlock(
       .map(r => typeof r === 'string' ? { name: normalizeRoomName(r) } : { name: normalizeRoomName(r.name) })
       .filter(r => ROOM_NAMES.includes(r.name));
     const dateRange = getDateRange(checkin, checkout);
-    const expiration = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const expiration = new Date(Date.now() + HOLD_MINUTES * 60 * 1000).toISOString();
     for (const date of dateRange) {
       for (const room of normalizedRooms) {
         kept.push([date, room.name, expiration, sessionId]);
       }
     }
 
-    await sheetsCall(() =>
-      client.spreadsheets.values.clear({
-        spreadsheetId: sid,
-        range: `${TEMP_BLOCKS_SHEET}!A:D`,
-      })
-    );
-    if (kept.length > 0) {
-      await sheetsCall(() =>
-        client.spreadsheets.values.update({
-          spreadsheetId: sid,
-          range: `${TEMP_BLOCKS_SHEET}!A1`,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: { values: kept },
-        })
-      );
-    }
+    await rewriteTempBlocks(client, sid, kept, data.length);
     return normalizedRooms.length > 0 && dateRange.length > 0 ? expiration : null;
   } catch (e: any) {
     console.error('❌ renewTemporaryBlock error:', e.message);
     return null;
   }
+  });
 }
 
 export async function removeTemporaryBlock(sessionId: string) {
   const client = await getSheetsClient();
   if (!client || !process.env.GOOGLE_SHEET_ID) return;
   const sid = process.env.GOOGLE_SHEET_ID;
+  return withTempBlockLock(async () => {
   try {
     const res = await sheetsCall(() =>
       client.spreadsheets.values.get({
@@ -620,28 +610,20 @@ export async function removeTemporaryBlock(sessionId: string) {
       })
     );
     const data = res.data.values || [];
-    const filtered = data.filter((row, i) => i === 0 || row[3] !== sessionId);
+    const now = new Date();
+    const kept = data.filter(row => {
+      if (!isTempBlockRow(row)) return false;
+      if (row[3] === sessionId) return false;
+      const exp = new Date(row[2] || '');
+      return !isNaN(exp.getTime()) && exp > now; // de paso, purga vencidos
+    });
 
-    await sheetsCall(() =>
-      client.spreadsheets.values.clear({
-        spreadsheetId: sid,
-        range: `${TEMP_BLOCKS_SHEET}!A:D`,
-      })
-    );
-    if (filtered.length > 0) {
-      await sheetsCall(() =>
-        client.spreadsheets.values.update({
-          spreadsheetId: sid,
-          range: `${TEMP_BLOCKS_SHEET}!A1`,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: { values: filtered },
-        })
-      );
-    }
+    await rewriteTempBlocks(client, sid, kept, data.length);
     console.log(`✅ Bloqueo temporal removido: sesión ${sessionId}`);
   } catch (e: any) {
     console.error('❌ removeTemporaryBlock error:', e.message);
   }
+  });
 }
 
 export async function addLead(email: string) {
@@ -733,107 +715,6 @@ export async function blockDates(
     console.log(`✅ Fechas bloqueadas: ${dateRange.length} noches`);
    } catch (e: any) {
     console.error('❌ blockDates error:', e.message);
-   }
-  });
-}
-
-/**
- * Replaces all OTA blocks for a room with the new set of date ranges.
- * Clears previous OTA values for that room, then writes new ones.
- * This way, OTA cancellations are automatically removed on the next sync.
- */
-export async function updateOTABlocks(
-  roomName: string,
-  dateRanges: Array<{ checkin: string; checkout: string }>,
-  platform?: 'booking_com' | 'expedia',
-): Promise<number> {
-  const client = await getSheetsClient();
-  if (!client || !process.env.GOOGLE_SHEET_ID) return 0;
-  const sid = process.env.GOOGLE_SHEET_ID;
-  const normalizedRoom = normalizeRoomName(roomName);
-  if (!ROOM_NAMES.includes(normalizedRoom)) return 0;
-
-  // Valor de celda que ESPECIFICA la OTA de origen (ej. "OTA (Expedia)"). Mantiene
-  // el prefijo "OTA" para que la detección de disponibilidad y el formato condicional
-  // morado sigan funcionando.
-  const otaLabel = platform === 'expedia' ? 'Expedia' : platform === 'booking_com' ? 'Booking' : '';
-  const otaCellValue = otaLabel ? `OTA (${otaLabel})` : 'OTA';
-
-  return withAvailabilityLock(async () => {
-   try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })
-    );
-    let data: string[][] = res.data.values || [];
-    const prevRowCount = data.length; // filas que había ANTES de crecer (para limpiar sobrantes)
-    const headers: string[] = data[0] || ['Fecha', ...ROOM_NAMES];
-    if (data.length === 0) data = [headers];
-
-    const colIdx = headers.findIndex(h => h === normalizedRoom);
-    if (colIdx === -1) return 0;
-
-    // Clear existing OTA blocks for this room (cualquier "OTA (…)")
-    for (let i = 1; i < data.length; i++) {
-      if ((data[i][colIdx] || '').toUpperCase().startsWith('OTA')) {
-        data[i][colIdx] = '';
-      }
-    }
-
-    // Compute all dates to block
-    const newDates = new Set<string>();
-    for (const { checkin, checkout } of dateRanges) {
-      for (const d of getDateRange(checkin, checkout)) newDates.add(d);
-    }
-
-    // Write new OTA blocks
-    let blocked = 0;
-    for (const date of newDates) {
-      let rowIdx = data.findIndex(row => row[0] === date);
-      if (rowIdx === -1) {
-        data.push([date, ...Array(ROOM_NAMES.length).fill('')]);
-        rowIdx = data.length - 1;
-      }
-      // Only mark OTA if not already a real reservation
-      const current = (data[rowIdx][colIdx] || '').toUpperCase();
-      if (!current || current.startsWith('OTA')) {
-        data[rowIdx][colIdx] = otaCellValue;
-        blocked++;
-      }
-    }
-
-    const sorted = [headers, ...data.slice(1).sort((a, b) =>
-      new Date(a[0] || '1970-01-01').getTime() - new Date(b[0] || '1970-01-01').getTime()
-    )];
-
-    // Escribir SIN ventana vacía (ya no clear(A:Z) antes del update): sobrescribimos en
-    // sitio y solo limpiamos filas sobrantes si la hoja quedó más corta (defensivo).
-    await sheetsCall(() =>
-      client.spreadsheets.values.update({
-        spreadsheetId: sid,
-        range: `${AVAILABILITY_SHEET}!A1`,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: { values: sorted },
-      })
-    );
-    if (prevRowCount > sorted.length) {
-      await sheetsCall(() =>
-        client.spreadsheets.values.clear({
-          spreadsheetId: sid,
-          range: `${AVAILABILITY_SHEET}!A${sorted.length + 1}:Z${prevRowCount}`,
-        })
-      );
-    }
-
-    // Pintar de morado en la propia hoja las celdas OTA (regla de formato condicional
-    // idempotente: se agrega una sola vez y se aplica sola en cada sync).
-    await ensureOTAConditionalFormat(client, sid).catch(err =>
-      console.warn('⚠️ No se pudo aplicar el formato morado OTA:', err?.message)
-    );
-
-    return blocked;
-   } catch (e: any) {
-    console.error('❌ updateOTABlocks error:', e.message);
-    return 0;
    }
   });
 }

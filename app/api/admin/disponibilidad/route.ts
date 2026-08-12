@@ -53,9 +53,12 @@ export async function GET() {
 }
 
 // POST { room, date, status? } — status 'BLOQUEADO' (default) bloquea manualmente.
-// status 'ABIERTO' libera una fecha ocupada por OTA: escribe un centinela que
-// SOBREVIVE al re-sync de 15 min (updateOTABlocks solo pisa celdas vacías o 'OTA…').
-// Los motores de disponibilidad (sitio y bot) tratan 'ABIERTO' como libre.
+// status 'ABIERTO' libera una fecha ocupada por OTA (los motores de disponibilidad,
+// sitio y bot, tratan 'ABIERTO' como libre).
+// status 'OTA' deshace esa liberación y devuelve la celda a ocupada.
+//
+// Ya no existe sincronización iCal: los valores 'OTA (…)' que quedan en la hoja son
+// reservas reales importadas en su momento y ahora se administran a mano desde aquí.
 export async function POST(req: NextRequest) {
   const { room, date, status } = await req.json();
   if (!room || !date) return NextResponse.json({ error: 'room y date requeridos' }, { status: 400 });
@@ -63,6 +66,11 @@ export async function POST(req: NextRequest) {
   const target = String(status || 'BLOQUEADO').toUpperCase();
   if (target === 'ABIERTO') {
     const r = await overrideOtaToOpen(room, date);
+    if (r.status !== 200) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ ok: true });
+  }
+  if (target === 'OTA') {
+    const r = await restoreOtaBlock(room, date);
     if (r.status !== 200) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ ok: true });
   }
@@ -116,6 +124,51 @@ async function overrideOtaToOpen(room: string, date: string): Promise<{ status: 
   });
 }
 
+// Deshace una liberación: la celda vuelve de 'ABIERTO' a ocupada por OTA.
+// Antes esto se hacía borrando la celda y esperando a que el sync de 15 min
+// repintara el bloqueo. Sin sync iCal, borrarla dejaría la fecha VENDIBLE aunque
+// siga ocupada en la OTA → sobreventa. Por eso ahora se reescribe el valor.
+async function restoreOtaBlock(room: string, date: string): Promise<{ status: number; error?: string }> {
+  const client = await getSheetsClient();
+  if (!client) return { status: 500, error: 'Sin conexión Sheets' };
+
+  return withAvailabilityLock(async () => {
+    try {
+      const res = await sheetsCall(() =>
+        client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${AVAIL_SHEET}!A:Z` })
+      );
+      const rows = res.data.values || [];
+      const headers: string[] = rows[0] || [];
+      const colIdx = headers.findIndex(h => h?.trim() === room);
+      if (colIdx === -1) return { status: 404, error: 'Habitación no encontrada en Disponibilidad' };
+
+      for (let r = 1; r < rows.length; r++) {
+        const rowDate = toISO(rows[r][0] || '');
+        if (rowDate !== date) continue;
+
+        const current = (rows[r][colIdx] || '').toUpperCase().trim();
+        if (current !== 'ABIERTO') {
+          return { status: 409, error: 'Solo se puede restaurar una fecha que hayas liberado antes.' };
+        }
+
+        const col = String.fromCharCode(65 + colIdx);
+        await sheetsCall(() =>
+          client.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `${AVAIL_SHEET}!${col}${r + 1}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [['OTA (Expedia)']] },
+          })
+        );
+        return { status: 200 };
+      }
+      return { status: 404, error: 'Fecha no encontrada en la hoja de disponibilidad' };
+    } catch (e: any) {
+      return { status: 500, error: e.message };
+    }
+  });
+}
+
 // DELETE { room, date } — unblock a manually blocked date (clears cell)
 export async function DELETE(req: NextRequest) {
   const { room, date } = await req.json();
@@ -141,10 +194,9 @@ export async function DELETE(req: NextRequest) {
       if (rowDate !== date) continue;
 
       const current = (rows[r][colIdx] || '').toUpperCase().trim();
-      // Solo limpiar bloqueos MANUALES ('BLOQUEADO') o el centinela 'ABIERTO'
-      // (deshacer una liberación de OTA → el próximo sync vuelve a poner el bloqueo
-      // de OTA si sigue en el feed). NUNCA limpiar RESERVADO (reserva real) ni OTA
-      // directamente (para eso está "liberar").
+      // Solo limpiar bloqueos MANUALES ('BLOQUEADO') o el centinela 'ABIERTO'.
+      // NUNCA limpiar RESERVADO (reserva real) ni OTA directamente (para eso está
+      // "liberar"; y para volver a ocuparla, POST con status 'OTA').
       if (current !== 'BLOQUEADO' && current !== 'ABIERTO') {
         return NextResponse.json({ error: 'Solo se pueden desbloquear fechas bloqueadas manualmente (BLOQUEADO) o liberadas manualmente. Las reservas deben cancelarse desde el panel de reservas.' }, { status: 409 });
       }

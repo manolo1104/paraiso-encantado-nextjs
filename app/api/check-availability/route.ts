@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       available: result.available,
       unavailableRooms: result.unavailableRooms,
+      unavailableDetail: result.unavailableDetail ?? [],
       degraded: result.degraded ?? false,
       message: result.degraded
         ? 'No se pudo verificar la disponibilidad — reintenta'

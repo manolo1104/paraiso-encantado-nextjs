@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { renewTemporaryBlock } from '@/lib/sheets';
+import { renewTemporaryBlock, HOLD_MINUTES } from '@/lib/sheets';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'rooms inválido' }, { status: 400 });
     }
     const expiresAt = await renewTemporaryBlock(checkin || '', checkout || '', rooms, sessionId);
-    return NextResponse.json({ success: true, expiresAt });
+    // `expiresInSeconds` es la fuente de verdad para el cronómetro del huésped:
+    // una hora absoluta se comparaba contra el reloj del celular, y un reloj
+    // adelantado hacía que el apartado naciera ya "expirado".
+    return NextResponse.json({
+      success: true,
+      expiresAt,
+      expiresInSeconds: expiresAt ? HOLD_MINUTES * 60 : null,
+    });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

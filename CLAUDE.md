@@ -27,11 +27,40 @@ No test suite — verify changes by running `npx tsc --noEmit` and testing in th
 - `calcRoomStayTotal` — iterates night-by-night applying per-night prices
 - `BookingState` — persisted to `sessionStorage` under key `pe_booking_state`; this is how `/reservar` passes data to `/reservar/checkout`
 
-### Reservation flow (3 pages)
+### Reservation flow (4 pages)
 
-1. `/reservar` (`app/reservar/page.tsx`) — date/guest search → room selection → cart → proceed to checkout
-2. `/reservar/checkout` (`app/reservar/checkout/page.tsx`) — Stripe payment with `automatic_payment_methods` enabled (Apple Pay, Google Pay auto-surfaced on compatible devices). Guest info form.
-3. `/reservar/confirmacion` — reads `pe_booking_state` + `pe_confirmation_number` from sessionStorage
+1. `/reservar` (`app/reservar/page.tsx`) — date/guest search → room selection → cart. Supports `?rooms=13:4,7:2` to rebuild a cart (recovery email link).
+2. `/reservar/checkout` (`app/reservar/checkout/page.tsx`) — **guest info only** (name/email/phone). On submit, POSTs `/api/guest-info`, which writes the half-finished booking to the `ReservasIncompletas` sheet tab. Saves `pe_guest_info` to sessionStorage.
+3. `/reservar/pago` (`app/reservar/pago/page.tsx`) — Stripe payment with `automatic_payment_methods` enabled (Apple Pay, Google Pay auto-surfaced on compatible devices). Renews the temp hold every 5 min while open.
+4. `/reservar/confirmacion` — reads `pe_booking_state` + `pe_confirmation_number` from sessionStorage
+
+Payment is deliberately AFTER contact capture: a booking that dies in the payment step is a
+named lead, not an anonymous cart, and `/api/cron/recuperacion` can email it back.
+Both payment paths (`/api/send-confirmation` and the Stripe webhook) call
+`markIncompleteAsBooked` so nobody who already paid gets a recovery email.
+
+The temporary hold (10 min, `BloqueosTemporal`) is shared across all three steps via the session
+id in `lib/hold-session.ts` — the availability engine excludes a visitor's own hold, so this id
+must stay stable or the guest sees their own suite as taken.
+
+### Abandoned bookings (recovery)
+
+`lib/abandoned.ts` — sheet tab `ReservasIncompletas`, one row per hold session (upsert).
+`/api/cron/recuperacion` sends reminder 1 at +60 min and reminder 2 at +24 h, never past 5 days
+and never for a checkin already in the past; columns `Recordatorio1/2` are the dedup.
+`lib/recovery-scheduler.ts` triggers it every 30 min in-process (same reason as the email scheduler).
+Emails: `lib/email-recovery.ts`. No discounts on purpose.
+
+**Writes to Sheets use `USER_ENTERED`**, so any guest text starting with `= + - @` (typically a
+phone like `+52…`) is parsed as a formula and lands as `#ERROR!`. Guest fields go through
+`asText()` in `lib/sheets.ts`; `lib/abandoned.ts` uses `RAW` instead.
+
+### Channel manager / iCal: REMOVED
+
+There is no iCal import or export any more (deleted Aug 2026 — the hotel left Expedia). The
+`OTA (…)` values still in the `Disponibilidad` sheet are real past OTA reservations and are now
+managed by hand from `/admin/calendario`: "liberar" writes the `ABIERTO` sentinel, "restaurar"
+writes `OTA (Expedia)` back. Do not re-add a sync without deciding what happens to those cells.
 
 ### Database: Google Sheets via singleton
 

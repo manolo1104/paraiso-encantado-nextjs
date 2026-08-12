@@ -1,326 +1,46 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+/**
+ * PASO 2 de la reserva — datos del huésped.
+ *
+ * El pago vive en /reservar/pago (paso 3). Están separados a propósito: al
+ * terminar este paso ya tenemos nombre, correo y teléfono, así que una reserva
+ * que se cae en el pago deja de ser un carrito anónimo y se puede recuperar por
+ * correo (ver /api/guest-info y /api/cron/recuperacion).
+ */
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { ShieldCheck, Lock, ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, ShieldCheck } from 'lucide-react';
 import {
   loadBookingState,
   BookingState,
   BOOKING_ROOMS,
-  calcRoomStayTotal,
   calcCartSubtotal,
   calcDepositAmount,
-  formatMXN,
 } from '@/lib/booking';
 import styles from './checkout.module.css';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
+import BookingSummary from '@/components/BookingSummary';
 import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
 import { trackEvent } from '@/lib/analytics';
+import { getHoldSessionId } from '@/lib/hold-session';
+import { loadGuestInfo, saveGuestInfo } from '@/lib/guest-info';
 
 const API = '';
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
-  'pk_live_51TBljS2NTr97DEMsM069f4O7Zp5uHM2L4HkJZrButJxsHmcluZNR0OQ2qfpX9EFhoXBRW2AY2ADs2bbLin4kszJ900HuSVXYz0'
-);
 
-// ── Inner form (needs Stripe context) ────────────────────
-function CheckoutForm({
-  booking,
-  paymentIntentId,
-  sessionId,
-  onSuccess,
-}: {
-  booking: BookingState;
-  paymentIntentId: string;
-  sessionId: string;
-  onSuccess: (cn: string) => void;
-}) {
-  const stripe = useStripe();
-  const elements = useElements();
+export default function GuestInfoPage() {
+  const router = useRouter();
+  const [booking, setBooking] = useState<BookingState | null>(null);
+  const [sessionId] = useState(() => getHoldSessionId());
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [howDidYouHear, setHowDidYouHear] = useState('');
-  const [paying, setPaying] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const subtotal = calcCartSubtotal(booking.cart, booking.checkin, booking.checkout);
-  const total = Math.max(0, subtotal - booking.promoDiscount);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-    if (!name.trim() || !email.trim() || !phone.trim()) {
-      setError('Por favor completa nombre, correo y teléfono.');
-      return;
-    }
-    setPaying(true);
-    setError('');
-
-    // Confirm payment with Stripe Elements
-    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      redirect: 'if_required',
-      confirmParams: {
-        return_url: 'https://www.paraisoencantado.com/reservar/confirmacion',
-        payment_method_data: {
-          billing_details: { name, email, phone },
-        },
-      },
-    });
-
-    if (stripeError) {
-      setError(stripeError.message ?? 'Error procesando el pago. Intenta de nuevo.');
-      setPaying(false);
-      return;
-    }
-
-    if (paymentIntent?.status === 'succeeded') {
-      // Notify backend: save booking + send email + block dates
-      const rooms = booking.cart.map(item => {
-        const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-        const totalPrice = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout);
-        return { name: room.name, guestCount: item.guestCount, totalPrice };
-      });
-
-      try {
-        const res = await fetch(`${API}/api/send-confirmation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            customerName: name,
-            customerPhone: phone,
-            notes,
-            howDidYouHear,
-            total,
-            amountPaid: booking.amountPaid,
-            amountPending: booking.amountPending,
-            isDeposit: booking.isDeposit,
-            paymentIntentId,
-            sessionId,
-            bookingDetails: {
-              checkin: booking.checkin,
-              checkout: booking.checkout,
-              checkin_date: booking.checkin,
-              checkout_date: booking.checkout,
-              nights: booking.nights,
-              adults: booking.adults,
-              minors: booking.children,
-              guests: booking.adults + booking.children,
-              notes,
-            },
-            rooms,
-          }),
-        });
-        // El pago YA tuvo éxito. Si la confirmación se guardó usamos su folio real;
-        // si la API falla, el webhook de Stripe registra la reserva como red de
-        // seguridad. Seguimos mostrando éxito a propósito: cobrar y luego decir
-        // "error" haría que el cliente intente pagar otra vez (doble cargo).
-        const data = res.ok ? await res.json().catch(() => ({})) : {};
-        onSuccess(data.confirmationNumber || 'PE-OK');
-      } catch {
-        // Pago exitoso pero sin respuesta (pestaña cerrada/sin red): el webhook lo recupera.
-        onSuccess('PE-OK');
-      }
-    } else {
-      setError('El pago no fue procesado. Intenta de nuevo.');
-      setPaying(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <h2 className={styles.formTitle}>Datos del Huésped</h2>
-
-      <div className={styles.formGrid}>
-        <label className={styles.formLabel}>
-          <span>Nombre completo *</span>
-          <input
-            type="text"
-            className={styles.formInput}
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Tu nombre"
-            required
-            autoComplete="name"
-          />
-        </label>
-
-        <label className={styles.formLabel}>
-          <span>Correo electrónico *</span>
-          <input
-            type="email"
-            className={styles.formInput}
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="tu@correo.com"
-            required
-            autoComplete="email"
-          />
-        </label>
-
-        <label className={styles.formLabel}>
-          <span>Teléfono / WhatsApp *</span>
-          <input
-            type="tel"
-            className={styles.formInput}
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            placeholder="+52 489 100 7679"
-            required
-            autoComplete="tel"
-          />
-        </label>
-
-        <label className={styles.formLabel}>
-          <span>¿Cómo nos conociste?</span>
-          <select
-            className={styles.formInput}
-            value={howDidYouHear}
-            onChange={e => setHowDidYouHear(e.target.value)}
-          >
-            <option value="">Selecciona una opción</option>
-            <option value="google_busqueda">Google Búsqueda</option>
-            <option value="google_maps">Google Maps</option>
-            <option value="chatgpt_ia">ChatGPT / IA (Gemini, Perplexity, etc.)</option>
-            <option value="instagram">Instagram</option>
-            <option value="facebook">Facebook</option>
-            <option value="tiktok">TikTok</option>
-            <option value="recomendacion">Recomendación</option>
-            <option value="booking">Booking.com</option>
-            <option value="otro">Otro</option>
-          </select>
-        </label>
-      </div>
-
-      <label className={styles.formLabel} style={{ marginTop: 8 }}>
-        <span>Peticiones especiales (opcional)</span>
-        <textarea
-          className={`${styles.formInput} ${styles.formTextarea}`}
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          placeholder="Alergias, celebraciones, llegada tardía…"
-          rows={3}
-        />
-      </label>
-
-      {/* Stripe payment element */}
-      <div className={styles.paymentSection}>
-        <h2 className={styles.formTitle}>
-          <Lock size={15} strokeWidth={1.5} /> Información de Pago
-        </h2>
-        <div className={styles.stripeWrap}>
-          <PaymentElement
-            options={{
-              // 'auto' muestra Apple Pay / Google Pay como botones prominentes
-              // cuando el dispositivo los soporta (Safari en iOS/Mac con Apple Pay activo)
-              layout: { type: 'accordion', defaultCollapsed: false },
-              wallets: { applePay: 'auto', googlePay: 'auto' },
-              fields: { billingDetails: { name: 'never', email: 'never', phone: 'never' } },
-            }}
-          />
-        </div>
-      </div>
-
-      {error && <p className={styles.errorMsg}>{error}</p>}
-
-      <button type="submit" className={styles.payBtn} disabled={paying || !stripe || !elements}>
-        {paying ? (
-          <span>Procesando…</span>
-        ) : (
-          <>
-            <Lock size={15} strokeWidth={2} />
-            {booking.isDeposit
-              ? `Pagar ${formatMXN(booking.amountPaid ?? total)} — Depósito 50%`
-              : `Pagar ${formatMXN(total)} — Confirmar Reserva`}
-          </>
-        )}
-      </button>
-      {booking.isDeposit && (
-        <p className={styles.depositNote}>
-          Pagas ahora el 50% ({formatMXN(booking.amountPaid ?? 0)}). El resto ({formatMXN(booking.amountPending ?? 0)}) se liquida al llegar.
-        </p>
-      )}
-
-      <p className={styles.secureNote}>
-        <ShieldCheck size={12} strokeWidth={1.5} /> Pago cifrado con Stripe. Nunca almacenamos datos de tarjeta.
-      </p>
-
-      {/* ── Alternativa: OXXO / Transferencia vía WhatsApp ── */}
-      <div className={styles.altPayDivider}>
-        <span>¿Prefieres otra forma de pago?</span>
-      </div>
-      <button
-        type="button"
-        className={styles.whatsappPayBtn}
-        onClick={() => {
-          const rooms = booking.cart.map(item => {
-            const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-            const roomTotal = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout);
-            return `• ${room.name} (${item.guestCount} persona${item.guestCount > 1 ? 's' : ''}) — ${formatMXN(roomTotal)}`;
-          }).join('\n');
-
-          const msg = [
-            '¡Hola! Quiero reservar en Paraíso Encantado y pagar por OXXO o transferencia.',
-            '',
-            `*Nombre:* ${name || '(pendiente)'}`,
-            `*Correo:* ${email || '(pendiente)'}`,
-            `*Tel:* ${phone || '(pendiente)'}`,
-            '',
-            `*Check-in:* ${booking.checkin}`,
-            `*Check-out:* ${booking.checkout}`,
-            `*Noches:* ${booking.nights}`,
-            `*Adultos:* ${booking.adults}`,
-            '',
-            '*Habitaciones:*',
-            rooms,
-            '',
-            `*Total estadía:* ${formatMXN(total)}`,
-            booking.promoDiscount > 0 ? `*Descuento aplicado:* −${formatMXN(booking.promoDiscount)} (${booking.promoCode})` : '',
-            notes ? `*Peticiones especiales:* ${notes}` : '',
-          ].filter(Boolean).join('\n');
-
-          window.open(`https://wa.me/524891007679?text=${encodeURIComponent(msg)}`, '_blank');
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-        Pagar por OXXO o Transferencia Bancaria
-      </button>
-      <p className={styles.whatsappPayNote}>
-        Te enviaremos los datos de pago por WhatsApp. Un coordinador te confirmará la reserva en menos de 1 hora.
-      </p>
-    </form>
-  );
-}
-
-// ── Page shell ────────────────────────────────────────────
-export default function CheckoutPage() {
-  const router = useRouter();
-  const [booking, setBooking] = useState<BookingState | null>(null);
-  const [clientSecret, setClientSecret] = useState('');
-  const [paymentIntentId, setPaymentIntentId] = useState('');
-  const [loadError, setLoadError] = useState('');
-  // Reusar la sesión de apartado de /reservar (si existe) para que el bloqueo
-  // temporal creado allá y el de aquí sean el mismo y no se estorben.
-  const [sessionId] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = sessionStorage.getItem('pe_hold_session');
-        if (saved) return saved;
-      } catch { /* ignore */ }
-    }
-    return `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-  });
-
-  // Load state + create PaymentIntent
   useEffect(() => {
     const state = loadBookingState();
     if (!state || state.cart.length === 0 || !state.checkin) {
@@ -330,116 +50,80 @@ export default function CheckoutPage() {
     const subtotal = calcCartSubtotal(state.cart, state.checkin, state.checkout);
     const total = Math.max(0, subtotal - state.promoDiscount);
     const deposit = calcDepositAmount(total, state.nights);
-    const pending = total - deposit;
-    const isDeposit = state.nights >= 2;
-
-    // Persist deposit info into booking state
-    const stateWithDeposit: BookingState = {
+    setBooking({
       ...state,
       amountTotal: total,
       amountPaid: deposit,
-      amountPending: pending,
-      isDeposit,
-    };
-    setBooking(stateWithDeposit);
+      amountPending: total - deposit,
+      isDeposit: state.nights >= 2,
+    });
 
-    // Create temporary block
+    // Recuperar datos ya escritos (si volvió desde el paso de pago)
+    const saved = loadGuestInfo();
+    if (saved) {
+      setName(saved.name); setEmail(saved.email); setPhone(saved.phone);
+      setNotes(saved.notes); setHowDidYouHear(saved.howDidYouHear);
+    }
+
+    // Mantener apartada la suite mientras llena sus datos
     const roomNames = state.cart.map(item => BOOKING_ROOMS.find(r => r.id === item.roomId)!.name);
-    fetch(`${API}/api/create-temporary-block`, {
+    fetch(`${API}/api/renew-temporary-block`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checkin: state.checkin, checkout: state.checkout, rooms: roomNames, sessionId }),
     }).catch(() => {});
 
-    // Create payment intent — el SERVIDOR recalcula el precio desde el carrito.
-    // No enviamos el monto: solo el carrito y la promo, para que no se pueda manipular.
-    fetch(`${API}/api/create-payment-intent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cart: state.cart,
-        checkin: state.checkin,
-        checkout: state.checkout,
-        promoCode: state.promoCode,
-        bookingDetails: {
-          checkin: state.checkin,
-          checkout: state.checkout,
-          nights: state.nights,
-          adults: state.adults,
-          children: state.children,
-          guests: state.adults + state.children,
-        },
-      }),
-    })
-      .then(r => r.json())
-      .then(d => {
-        if (d.clientSecret) {
-          setClientSecret(d.clientSecret);
-          setPaymentIntentId(d.paymentIntentId);
-        } else {
-          setLoadError('No se pudo iniciar el pago. Intenta de nuevo.');
-        }
-      })
-      .catch(() => setLoadError('Error de conexión. Verifica tu internet e intenta de nuevo.'));
-
     trackEvent('CHECKOUT_STEP_2', { rooms: state.cart.length, checkin: state.checkin, checkout: state.checkout });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // CART_ABANDON: si el usuario llega a checkout pero no completa el pago en 180s
-    const startTime = Date.now();
-    const abandonTimer = setTimeout(() => {
-      trackEvent('CART_ABANDON', {
-        step: 'checkout',
-        timeOnPage: Math.round((Date.now() - startTime) / 1000),
-        checkin: state.checkin,
-        checkout: state.checkout,
-        guests: state.adults,
-      });
-    }, 180_000);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!booking) return;
+    if (!name.trim() || !email.trim() || !phone.trim()) {
+      setError('Por favor completa nombre, correo y teléfono.');
+      return;
+    }
+    if (!email.includes('@')) {
+      setError('Revisa tu correo — ahí te llega la confirmación.');
+      return;
+    }
+    setSaving(true);
+    setError('');
 
-    // Cleanup: remove block + cancel abandon timer if user leaves
-    return () => {
-      clearTimeout(abandonTimer);
-      fetch(`${API}/api/remove-temporary-block`, {
+    const info = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      notes: notes.trim(),
+      howDidYouHear,
+    };
+    saveGuestInfo(info);
+
+    // Guardar la reserva incompleta para poder recuperarla si no paga.
+    // Si falla (Sheets caído), NO bloqueamos el avance al pago: cobrar es
+    // prioritario sobre poder mandar un correo de recuperación.
+    try {
+      await fetch(`${API}/api/guest-info`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
-      }).catch(() => {});
-    };
-  }, []);
+        body: JSON.stringify({
+          ...info,
+          sessionId,
+          cart: booking.cart,
+          checkin: booking.checkin,
+          checkout: booking.checkout,
+          promoCode: booking.promoCode,
+          adults: booking.adults,
+          children: booking.children,
+        }),
+      });
+    } catch { /* seguimos al pago igual */ }
 
-  function handleSuccess(confirmationNumber: string) {
-    trackEvent('BOOKING_SUCCESS', { confirmationNumber });
-    sessionStorage.setItem('pe_confirmation_number', confirmationNumber);
-    if (booking) {
-      sessionStorage.setItem('pe_booking_for_confirm', JSON.stringify(booking));
-    }
-    router.push('/reservar/confirmacion');
+    trackEvent('GUEST_INFO_SUBMITTED', { checkin: booking.checkin, nights: booking.nights });
+    router.push('/reservar/pago');
   }
 
-  // Expose deposit info to CheckoutForm via context alternative
-  const depositInfo = booking ? {
-    isDeposit: booking.isDeposit ?? false,
-    amountPaid: booking.amountPaid ?? 0,
-    amountPending: booking.amountPending ?? 0,
-    amountTotal: booking.amountTotal ?? 0,
-  } : null;
-
   if (!booking) return null;
-
-  const subtotal = calcCartSubtotal(booking.cart, booking.checkin, booking.checkout);
-  const total = Math.max(0, subtotal - booking.promoDiscount);
-
-  const stripeAppearance = {
-    theme: 'stripe' as const,
-    variables: {
-      colorPrimary: '#1a2e1a',
-      colorBackground: '#ffffff',
-      colorText: '#1a2e1a',
-      colorDanger: '#8a1a1a',
-      fontFamily: 'Jost, sans-serif',
-      borderRadius: '6px',
-    },
-  };
 
   return (
     <main className={styles.main}>
@@ -448,113 +132,100 @@ export default function CheckoutPage() {
         <button className={styles.backBtn} onClick={() => router.push('/reservar')}>
           <ChevronLeft size={15} strokeWidth={2} /> Volver
         </button>
-        <span className={styles.topTitle}>Confirmar Reserva</span>
+        <span className={styles.topTitle}>Tus Datos</span>
         <span className={styles.topSecure}><Lock size={12} strokeWidth={1.5} /> Pago Seguro</span>
       </div>
 
       <div className={styles.layout}>
-        {/* ── Left: form ── */}
         <div className={styles.formCol}>
-          {loadError && (
-            <div className={styles.loadError}>{loadError}</div>
-          )}
-          {!loadError && !clientSecret && (
-            <div className={styles.loading}>
-              <div className={styles.spinner} />
-              <p>Preparando formulario de pago…</p>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <h2 className={styles.formTitle}>Datos del Huésped</h2>
+
+            <div className={styles.formGrid}>
+              <label className={styles.formLabel}>
+                <span>Nombre completo *</span>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Tu nombre"
+                  required
+                  autoComplete="name"
+                />
+              </label>
+
+              <label className={styles.formLabel}>
+                <span>Correo electrónico *</span>
+                <input
+                  type="email"
+                  className={styles.formInput}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="tu@correo.com"
+                  required
+                  autoComplete="email"
+                />
+              </label>
+
+              <label className={styles.formLabel}>
+                <span>Teléfono / WhatsApp *</span>
+                <input
+                  type="tel"
+                  className={styles.formInput}
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="+52 489 100 7679"
+                  required
+                  autoComplete="tel"
+                />
+              </label>
+
+              <label className={styles.formLabel}>
+                <span>¿Cómo nos conociste?</span>
+                <select
+                  className={styles.formInput}
+                  value={howDidYouHear}
+                  onChange={e => setHowDidYouHear(e.target.value)}
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="google_busqueda">Google Búsqueda</option>
+                  <option value="google_maps">Google Maps</option>
+                  <option value="chatgpt_ia">ChatGPT / IA (Gemini, Perplexity, etc.)</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="recomendacion">Recomendación</option>
+                  <option value="booking">Booking.com</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </label>
             </div>
-          )}
-          {clientSecret && (
-            <Elements
-              stripe={stripePromise}
-              options={{ clientSecret, appearance: stripeAppearance, locale: 'es' }}
-            >
-              <CheckoutForm
-                booking={booking}
-                paymentIntentId={paymentIntentId}
-                sessionId={sessionId}
-                onSuccess={handleSuccess}
+
+            <label className={styles.formLabel} style={{ marginTop: 8 }}>
+              <span>Peticiones especiales (opcional)</span>
+              <textarea
+                className={`${styles.formInput} ${styles.formTextarea}`}
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Alergias, celebraciones, llegada tardía…"
+                rows={3}
               />
-            </Elements>
-          )}
+            </label>
+
+            {error && <p className={styles.errorMsg}>{error}</p>}
+
+            <button type="submit" className={styles.payBtn} disabled={saving}>
+              {saving ? <span>Guardando…</span> : (<>Continuar al pago <ChevronRight size={16} strokeWidth={2} /></>)}
+            </button>
+
+            <p className={styles.secureNote}>
+              <ShieldCheck size={12} strokeWidth={1.5} /> Todavía no se te cobra nada. En el siguiente paso eliges cómo pagar.
+            </p>
+          </form>
         </div>
 
-        {/* ── Right: summary ── */}
-        <aside className={styles.summary}>
-          <h2 className={styles.summaryTitle}>Resumen</h2>
-
-          <div className={styles.summaryDates}>
-            <div><span>Check-in</span><strong>{new Date(`${booking.checkin}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}</strong></div>
-            <div><span>Check-out</span><strong>{new Date(`${booking.checkout}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}</strong></div>
-            <div><span>Noches</span><strong>{booking.nights}</strong></div>
-            <div><span>Adultos</span><strong>{booking.adults}</strong></div>
-            {booking.children > 0 && <div><span>Menores</span><strong>{booking.children}</strong></div>}
-          </div>
-
-          <div className={styles.summaryRooms}>
-            {booking.cart.map(item => {
-              const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-              const roomTotal = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout);
-              return (
-                <div key={item.roomId} className={styles.summaryRoom}>
-                  <div className={styles.summaryRoomImg}>
-                    <Image src={room.image} alt={room.name} fill sizes="80px" className={styles.summaryRoomImgEl} />
-                  </div>
-                  <div className={styles.summaryRoomInfo}>
-                    <span className={styles.summaryRoomName}>{room.name}</span>
-                    <span className={styles.summaryRoomDetail}>{item.guestCount} adulto{item.guestCount > 1 ? 's' : ''} · {booking.nights} noche{booking.nights > 1 ? 's' : ''}</span>
-                    <span className={styles.summaryRoomPrice}>{formatMXN(roomTotal)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className={styles.summaryTotals}>
-            <div className={styles.summaryRow}>
-              <span>Subtotal</span>
-              <span>{formatMXN(subtotal)}</span>
-            </div>
-            {booking.promoDiscount > 0 && (
-              <div className={`${styles.summaryRow} ${styles.summaryDiscount}`}>
-                <span>Descuento ({booking.promoCode})</span>
-                <span>−{formatMXN(booking.promoDiscount)}</span>
-              </div>
-            )}
-            <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
-              <span>Total estadía</span>
-              <span>{formatMXN(total)}</span>
-            </div>
-            {depositInfo?.isDeposit && (
-              <>
-                <div className={`${styles.summaryRow} ${styles.summaryDeposit}`}>
-                  <span>Pagas ahora (50%)</span>
-                  <span>{formatMXN(depositInfo.amountPaid)}</span>
-                </div>
-                <div className={`${styles.summaryRow} ${styles.summaryPending}`}>
-                  <span>Resto al check-in</span>
-                  <span>{formatMXN(depositInfo.amountPending)}</span>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className={styles.summaryGuarantees}>
-            <p><ShieldCheck size={13} strokeWidth={1.5} /> Confirmación instantánea por email</p>
-            <p><ShieldCheck size={13} strokeWidth={1.5} /> Reembolso 100% hasta 7 días antes</p>
-            {depositInfo?.isDeposit
-              ? <p><ShieldCheck size={13} strokeWidth={1.5} /> Resto ({formatMXN(depositInfo.amountPending)}) se paga al llegar</p>
-              : <p><ShieldCheck size={13} strokeWidth={1.5} /> Reserva directa sin comisiones</p>
-            }
-          </div>
-
-          {/* Reseña real (de /reviews) — refuerzo de confianza en el pago */}
-          <blockquote className={styles.summaryReview}>
-            <div className={styles.summaryReviewStars} aria-label="5 de 5 estrellas">★★★★★</div>
-            <p>“El mejor hotel de Xilitla sin ninguna duda. Habitación impecable, restaurante excelente y ubicación perfecta.”</p>
-            <footer>Jorge Mendoza · Monterrey · Google — <strong>4.5/5</strong> · 523 reseñas</footer>
-          </blockquote>
-        </aside>
+        <BookingSummary booking={booking} />
       </div>
       <WhatsAppRecoveryWidget />
     </main>

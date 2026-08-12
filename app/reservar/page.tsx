@@ -29,6 +29,7 @@ import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
 import RecentBookingsLive, { LiveBookingItem } from '@/components/RecentBookingsLive';
 import { getQuoteForRoom, getStripQuotes } from '@/lib/review-quotes';
 import { trackEvent } from '@/lib/analytics';
+import { getHoldSessionId } from '@/lib/hold-session';
 
 const API = '';
 const WA_NUMBER = '524891007679';
@@ -43,6 +44,16 @@ function fmtCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// Por qué una suite no está disponible, y desde qué noche (viene del motor)
+type UnavailableDetail = { room: string; date: string; reason: string };
+
+// "2026-08-15" → "sáb 15 de ago"
+function fmtNight(date: string): string {
+  const d = new Date(date + 'T12:00:00');
+  if (isNaN(d.getTime())) return date;
+  return d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 // "Hoy" en la zona horaria del hotel (no UTC) — evita bloquear reservas del mismo día por la tarde
@@ -213,6 +224,7 @@ function ReservarPageInner() {
   const [searched, setSearched] = useState(false);
   const [searching, setSearching] = useState(false);
   const [unavailable, setUnavailable] = useState<string[]>([]);
+  const [unavailableDetail, setUnavailableDetail] = useState<UnavailableDetail[]>([]);
   const [availabilityDegraded, setAvailabilityDegraded] = useState(false);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [datesOverlapBlocked, setDatesOverlapBlocked] = useState(false);
@@ -241,23 +253,14 @@ function ReservarPageInner() {
   const [holdRemaining, setHoldRemaining] = useState<number | null>(null);
   const [holdExpired, setHoldExpired] = useState(false);
 
-  // Sesión de apartado compartida con el checkout (misma llave en sessionStorage)
+  // Sesión de apartado compartida con el checkout (ver lib/hold-session.ts)
   useEffect(() => {
-    const fresh = `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    try {
-      let s = sessionStorage.getItem('pe_hold_session');
-      if (!s) {
-        s = fresh;
-        sessionStorage.setItem('pe_hold_session', s);
-      }
-      holdSessionRef.current = s;
-    } catch {
-      holdSessionRef.current = fresh;
-    }
+    holdSessionRef.current = getHoldSessionId();
   }, []);
 
   async function renewHold(currentCart: CartItem[], ci: string, co: string) {
-    const sid = holdSessionRef.current;
+    const sid = holdSessionRef.current || getHoldSessionId();
+    holdSessionRef.current = sid;
     if (!sid) return;
     const roomNames = currentCart
       .map(item => BOOKING_ROOMS.find(r => r.id === item.roomId)?.name)
@@ -269,8 +272,11 @@ function ReservarPageInner() {
         body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames, sessionId: sid }),
       });
       const data = await res.json();
-      if (roomNames.length > 0 && data.expiresAt) {
-        setHoldExpiresAt(Date.parse(data.expiresAt));
+      if (roomNames.length > 0 && data.expiresInSeconds) {
+        // El vencimiento se ancla al reloj DEL VISITANTE, no al del servidor:
+        // con una hora absoluta, un celular con el reloj adelantado veía el
+        // apartado nacer expirado (o con la mitad del tiempo).
+        setHoldExpiresAt(Date.now() + Number(data.expiresInSeconds) * 1000);
         setHoldExpired(false);
         holdHadRef.current = true;
       } else if (roomNames.length === 0) {
@@ -278,6 +284,26 @@ function ReservarPageInner() {
         setHoldExpired(false);
       }
     } catch { /* sin apartado visible si falla — no bloquea la reserva */ }
+  }
+
+  /**
+   * Libera el apartado YA (sin debounce). Se llama al cambiar fechas: si el
+   * apartado de las fechas viejas sigue vivo cuando el huésped vuelve a buscar,
+   * su propia suite le puede aparecer ocupada.
+   */
+  function releaseHoldNow() {
+    const sid = holdSessionRef.current || getHoldSessionId();
+    holdSessionRef.current = sid;
+    setHoldExpiresAt(null);
+    setHoldExpired(false);
+    if (!sid || !holdHadRef.current) return;
+    holdHadRef.current = false;
+    fetch(`${API}/api/renew-temporary-block`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ checkin: '', checkout: '', rooms: [], sessionId: sid }),
+      keepalive: true,
+    }).catch(() => {});
   }
 
   // Renovar/liberar el apartado cuando cambia el carrito o las fechas (debounce)
@@ -314,6 +340,28 @@ function ReservarPageInner() {
     return () => clearInterval(iv);
   }, [holdExpiresAt]);
 
+  // Latido: mientras el huésped siga en la pestaña con suites en el carrito, el
+  // apartado se renueva solo. Sin esto, elegir habitación y tomarse 10 min para
+  // decidir terminaba en un aviso rojo de "expiró" sin que nada se hubiera perdido.
+  useEffect(() => {
+    if (cart.length === 0) return;
+    const iv = setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      const rem = holdExpiresAt === null ? 0 : holdExpiresAt - Date.now();
+      if (rem < 3 * 60 * 1000) renewHold(cart, checkin, checkout);
+    }, 30_000);
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      const rem = holdExpiresAt === null ? 0 : holdExpiresAt - Date.now();
+      if (rem < 3 * 60 * 1000) renewHold(cart, checkin, checkout);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(iv);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [cart, checkin, checkout, holdExpiresAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Prueba social REAL (reservas anonimizadas + ocupación de la hoja) ──
   const [socialProof, setSocialProof] = useState<{ count30d: number; recent: LiveBookingItem[]; occupancyPct: number | null } | null>(null);
   useEffect(() => {
@@ -337,6 +385,9 @@ function ReservarPageInner() {
 
   // Suite a agregar automáticamente al carrito después de la búsqueda
   const pendingAutoSelectId = useRef<number | null>(null);
+  // Carrito completo a restaurar (enlace "Terminar mi reserva" del correo de
+  // recuperación): `?rooms=12:4,7:2` → habitación 12 con 4 personas, 7 con 2.
+  const pendingRestoreCart = useRef<CartItem[] | null>(null);
 
   // ── Pre-fill + auto-search from URL params ────────────
   useEffect(() => {
@@ -371,6 +422,22 @@ function ReservarPageInner() {
     // Si viene con suiteId + autoselect, preparar auto-agregar al carrito
     if (autoselect && suiteSlug && SUITE_ID_TO_ROOM_ID[suiteSlug]) {
       pendingAutoSelectId.current = SUITE_ID_TO_ROOM_ID[suiteSlug];
+    }
+
+    // Restaurar el carrito completo desde el correo de recuperación
+    const roomsParam = searchParams.get('rooms');
+    if (roomsParam) {
+      const restored: CartItem[] = [];
+      for (const part of roomsParam.split(',').slice(0, 13)) {
+        const [rawId, rawGuests] = part.split(':');
+        const room = BOOKING_ROOMS.find(r => r.id === Number(rawId));
+        if (!room || restored.some(c => c.roomId === room.id)) continue;
+        restored.push({
+          roomId: room.id,
+          guestCount: Math.max(1, Math.min(Number(rawGuests) || 1, room.maxGuests)),
+        });
+      }
+      if (restored.length > 0) pendingRestoreCart.current = restored;
     }
 
     // Auto-buscar si hay fechas válidas
@@ -442,7 +509,9 @@ function ReservarPageInner() {
     setPromoDiscount(0);
     setAutoSelectUnavailable(null);
     setAvailabilityDegraded(false);
+    setUnavailableDetail([]);
     let currentUnavailable: string[] = [];
+    let currentDetail: UnavailableDetail[] = [];
     try {
       const roomNames = BOOKING_ROOMS.map(r => r.name);
       // Hasta 3 intentos: un timeout transitorio de Sheets NO debe mostrarse
@@ -456,14 +525,17 @@ function ReservarPageInner() {
         });
         const data = await res.json();
         currentUnavailable = data.unavailableRooms || [];
+        currentDetail = data.unavailableDetail || [];
         degraded = Boolean(data.degraded);
         if (!degraded) break;
         if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
       }
       setUnavailable(currentUnavailable);
+      setUnavailableDetail(degraded ? [] : currentDetail);
       setAvailabilityDegraded(degraded);
     } catch {
       setUnavailable([]);
+      setUnavailableDetail([]);
     } finally {
       setSearching(false);
       setSearched(true);
@@ -471,6 +543,28 @@ function ReservarPageInner() {
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 150);
+      // Restaurar el carrito del correo de recuperación (solo lo que siga libre)
+      if (pendingRestoreCart.current) {
+        const wanted = pendingRestoreCart.current;
+        pendingRestoreCart.current = null;
+        const stillFree = wanted.filter(item => {
+          const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
+          return room && !currentUnavailable.includes(room.name);
+        });
+        if (stillFree.length > 0) {
+          setCart(stillFree);
+          trackEvent('CART_RESTORED', { rooms: stillFree.length, source: 'email_recuperacion' });
+          setTimeout(() => {
+            sidebarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 400);
+        }
+        if (stillFree.length < wanted.length) {
+          const lost = wanted.find(item => !stillFree.some(s => s.roomId === item.roomId));
+          const lostRoom = lost && BOOKING_ROOMS.find(r => r.id === lost.roomId);
+          if (lostRoom) setAutoSelectUnavailable(lostRoom.name);
+        }
+      }
+
       // Auto-agregar suite al carrito si viene de una página de habitación
       if (pendingAutoSelectId.current !== null) {
         const roomId = pendingAutoSelectId.current;
@@ -530,8 +624,10 @@ function ReservarPageInner() {
       newCo = next;
     }
     saveDatesToSession(v, newCo, adults);
+    releaseHoldNow();
     setSearched(false);
     setUnavailable([]);
+    setUnavailableDetail([]);
     setCart([]);
     setPromoCode(null);
     setPromoDiscount(0);
@@ -540,8 +636,10 @@ function ReservarPageInner() {
   function handleCheckoutChange(v: string) {
     setCheckout(v);
     saveDatesToSession(checkin, v, adults);
+    releaseHoldNow();
     setSearched(false);
     setUnavailable([]);
+    setUnavailableDetail([]);
     setCart([]);
     setPromoCode(null);
     setPromoDiscount(0);
@@ -646,6 +744,13 @@ function ReservarPageInner() {
     const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
     return room && unavailable.includes(room.name);
   });
+  // Qué noche exacta choca, para explicárselo al huésped en vez de un "no disponible" seco
+  const unavailableCartDetail = cart
+    .map(item => {
+      const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
+      return room ? unavailableDetail.find(d => d.room === room.name) : undefined;
+    })
+    .filter((d): d is UnavailableDetail => Boolean(d));
   const capacityOk = cart.length === 0 || cartCapacity >= totalGuests;
 
   // ── Room grid helpers ─────────────────────────────────
@@ -919,12 +1024,17 @@ function ReservarPageInner() {
                   >
                     Ver fotos ({room.images.length})
                   </button>
-                  {unavail && (
-                    <div className={styles.unavailOverlay}>
-                      <span><Ban size={14} strokeWidth={2} /> No disponible</span>
-                      <span className={styles.unavailSub}>Agotada en estas fechas</span>
-                    </div>
-                  )}
+                  {unavail && (() => {
+                    const d = unavailableDetail.find(x => x.room === room.name);
+                    return (
+                      <div className={styles.unavailOverlay}>
+                        <span><Ban size={14} strokeWidth={2} /> No disponible</span>
+                        <span className={styles.unavailSub}>
+                          {d ? `Ocupada desde la noche del ${fmtNight(d.date)}` : 'Agotada en estas fechas'}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   {added && <div className={styles.addedOverlay}><span><Check size={14} strokeWidth={2} /> Agregada al carrito</span></div>}
                   {!unavail && !added && totalGuests > room.maxGuests && (
                     <div className={styles.overCapacityBadge}>
@@ -1197,7 +1307,18 @@ function ReservarPageInner() {
               <div className={styles.capacityWarning} role="alert">
                 <AlertTriangle size={14} strokeWidth={2} />
                 <span>
-                  Una o más habitaciones del carrito no están disponibles para estas fechas. Cámbialas o elige otras fechas.
+                  {unavailableCartDetail.length > 0 ? (
+                    <>
+                      {unavailableCartDetail.map(d => (
+                        <span key={d.room}>
+                          <strong>{d.room}</strong> ya está ocupada la noche del <strong>{fmtNight(d.date)}</strong>.{' '}
+                        </span>
+                      ))}
+                      Ajusta las fechas o elige otra suite.
+                    </>
+                  ) : (
+                    <>Una o más habitaciones del carrito no están disponibles para estas fechas. Cámbialas o elige otras fechas.</>
+                  )}
                 </span>
               </div>
             )}
@@ -1212,7 +1333,7 @@ function ReservarPageInner() {
             {holdExpired && cart.length > 0 && (
               <div className={styles.holdExpiredNote} role="alert">
                 <AlertTriangle size={14} strokeWidth={2} />
-                <span>Tu apartado de 10 min expiró — la disponibilidad puede haber cambiado.</span>
+                <span>Tu apartado de 10 min terminó. Tu selección sigue aquí; puedes reactivarlo.</span>
                 <button onClick={() => renewHold(cart, checkin, checkout)}>Renovar apartado</button>
               </div>
             )}

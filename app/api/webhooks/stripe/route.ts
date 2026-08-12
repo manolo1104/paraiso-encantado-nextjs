@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationByPaymentIntent } from '@/lib/sheets';
+import { markIncompleteAsBooked } from '@/lib/abandoned';
 import { buildEmailHtml } from '@/lib/email';
 import { notifyBotOfWebBooking } from '@/lib/notify-bot';
 
@@ -118,6 +119,10 @@ export async function POST(req: NextRequest) {
     if (md.sessionId) {
       await removeTemporaryBlock(md.sessionId).catch(() => {});
     }
+    // Cierra la reserva incompleta para que el cron de recuperación no le
+    // escriba a alguien que ya pagó (este webhook es la red de seguridad
+    // cuando el navegador no alcanzó a llamar a send-confirmation).
+    await markIncompleteAsBooked({ sessionId: md.sessionId, email, checkin }).catch(() => {});
 
     // Email de confirmación (red de seguridad: el cliente no completó el flujo normal)
     if (process.env.RESEND_API_KEY && email && email.includes('@')) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import Stripe from 'stripe';
 import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationByPaymentIntent } from '@/lib/sheets';
+import { markIncompleteAsBooked } from '@/lib/abandoned';
 import { notifyBotOfWebBooking } from '@/lib/notify-bot';
 import { buildEmailHtml } from '@/lib/email';
 
@@ -101,6 +102,11 @@ export async function POST(req: NextRequest) {
     try {
       if (sessionId) await removeTemporaryBlock(sessionId);
     } catch (e: any) { console.error('❌ removeTemporaryBlock:', e.message); }
+
+    // 7b. Cerrar la reserva incompleta: ya pagó, no debe recibir el correo
+    // de recuperación de carrito.
+    markIncompleteAsBooked({ sessionId, email, checkin: checkin ?? undefined })
+      .catch((e: any) => console.error('❌ markIncompleteAsBooked:', e.message));
 
     // 8. Email (opcional)
     if (!resend) {

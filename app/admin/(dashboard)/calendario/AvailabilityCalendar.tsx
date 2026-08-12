@@ -140,8 +140,8 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
     setSaving(false);
   }
 
-  // Libera una fecha ocupada por OTA (escribe el centinela 'ABIERTO', que sobrevive
-  // al re-sync). No la libera en la OTA de origen: eso se hace en su extranet.
+  // Libera una fecha ocupada por OTA (escribe el centinela 'ABIERTO').
+  // No la libera en la OTA de origen: eso se hace en su extranet.
   async function handleOpenOta() {
     if (!clicked) return;
     setSaving(true); setSaveError('');
@@ -156,6 +156,26 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
     } else {
       const d = await res.json();
       setSaveError(d.error || 'Error al liberar la fecha');
+    }
+    setSaving(false);
+  }
+
+  // Deshace la liberación: la fecha vuelve a quedar ocupada por OTA. Escribe el
+  // valor de vuelta en la hoja — ya no hay sincronización que lo repinte sola.
+  async function handleRestoreOta() {
+    if (!clicked) return;
+    setSaving(true); setSaveError('');
+    const res = await fetch('/api/admin/disponibilidad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room: clicked.room, date: clicked.date, status: 'OTA' }),
+    });
+    if (res.ok) {
+      await loadSheet();
+      setClicked(null);
+    } else {
+      const d = await res.json();
+      setSaveError(d.error || 'Error al restaurar el bloqueo');
     }
     setSaving(false);
   }
@@ -370,7 +390,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               {/* OTA info */}
               {clicked.state.status === 'ota' && (
                 <div style={{ background: '#F1E9FA', borderLeft: '3px solid #7C3AED', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#6b7280', lineHeight: 1.6, fontFamily: 'var(--font-jost,sans-serif)' }}>
-                  Fecha ocupada por una reserva en una OTA (Expedia), importada del calendario iCal.<br /><br />
+                  Fecha ocupada por una reserva de OTA (Expedia). Ya no hay sincronización automática: este bloqueo se queda hasta que tú lo cambies aquí.<br /><br />
                   Si sabes que en realidad está libre (p. ej. el huésped canceló en Expedia), puedes <strong>liberarla</strong> y volverá a venderse en tu web y tu bot.<br />
                   <span style={{ color: '#b45309' }}>⚠️ Ojo: esto NO la libera en Expedia — si Expedia sí la tenía vendida, hay riesgo de doble reserva. Para liberarla también en Expedia, cancélala en su extranet.</span>
                 </div>
@@ -379,8 +399,8 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
               {/* Override (liberada a mano) info */}
               {clicked.state.status === 'override' && (
                 <div style={{ background: '#E0F2FE', borderLeft: '3px solid #0284C7', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#6b7280', lineHeight: 1.6, fontFamily: 'var(--font-jost,sans-serif)' }}>
-                  Fecha que estaba ocupada en una OTA y <strong>liberaste manualmente</strong>. Vuelve a estar disponible en tu web y tu bot (aguanta la sincronización automática).<br /><br />
-                  Puedes crear una reserva aquí, bloquearla, o restaurar el bloqueo de OTA (en la próxima sincronización volverá a marcarse como ocupada si sigue en el calendario de la OTA).
+                  Fecha que estaba ocupada en una OTA y <strong>liberaste manualmente</strong>. Vuelve a estar disponible en tu web y tu bot.<br /><br />
+                  Puedes crear una reserva aquí, bloquearla, o restaurar el bloqueo de OTA (vuelve a quedar ocupada de inmediato).
                 </div>
               )}
 
@@ -450,7 +470,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                       Bloquear esta fecha
                     </button>
                     <button
-                      onClick={handleUnblock}
+                      onClick={handleRestoreOta}
                       disabled={saving}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: 'transparent', color: '#5B2C91', border: '1px solid #7C3AED', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
                     >

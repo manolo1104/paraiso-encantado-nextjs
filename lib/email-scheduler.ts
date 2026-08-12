@@ -5,8 +5,7 @@
  *
  * Por qué en-proceso: el disparo vivía en un cron externo de Railway que se
  * ejecutó una sola vez (8 may 2026) y nunca volvió → 66 días sin enviar ningún
- * correo, en silencio. Es el mismo problema que ya resolvimos con el sync
- * OTA/iCal (ver lib/ical-scheduler.ts): el servicio de Railway está siempre
+ * correo, en silencio. El servicio de Railway está siempre
  * encendido (sleepApplication=false) con una sola réplica (numReplicas=1), así
  * que un setInterval aquí dispara de forma confiable y no puede morir en
  * silencio. La deduplicación (pestaña EmailsEnviados) evita cualquier reenvío.
