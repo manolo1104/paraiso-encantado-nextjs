@@ -1,0 +1,143 @@
+/* ===== LANDINGS SEO — estilos compartidos =====
+   Mismo lenguaje visual que las landings existentes (familias / luna de miel):
+   hero oscuro con foto, franja de datos en verde bosque, secciones alternando
+   blanco y pergamino. Lo nuevo aquí son el bloque de respuesta directa, la
+   tabla comparativa y las fuentes. */
+
+.main { padding-top: 0; }
+
+/* ── HERO ── */
+.hero { position: relative; min-height: clamp(460px, 66vh, 640px); display: flex; align-items: center; overflow: hidden; }
+.heroImg { position: absolute; inset: 0; }
+/* Doble velo: uno horizontal para la columna de texto y otro vertical para el
+   pie de la foto. Con uno solo, los títulos largos se perdían sobre las zonas
+   claras de las fotos de selva. */
+.heroOverlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.30) 100%),
+    linear-gradient(to right, rgba(12,20,12,0.92) 0%, rgba(12,20,12,0.78) 42%, rgba(12,20,12,0.34) 78%, rgba(12,20,12,0.18) 100%);
+}
+.heroContent { position: relative; z-index: 1; padding: 100px 24px 64px; max-width: 760px; margin: 0 auto; width: 100%; color: white; }
+.breadcrumb { font-size: 13px; opacity: 0.65; margin-bottom: 14px; font-family: var(--font-jost, sans-serif); }
+.breadcrumb a { color: white; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.72; margin-bottom: 14px; font-family: var(--font-jost, sans-serif); }
+/* `color` explícito: globals.css pinta TODO h1 de verde bosque y esa regla gana
+   sobre el `color: white` heredado del contenedor — sin esto el título del hero
+   queda verde oscuro sobre la foto y no se lee. */
+.heroContent h1 { font-family: var(--font-cormorant), serif; font-size: clamp(30px, 4.6vw, 50px); font-weight: 300; line-height: 1.16; margin-bottom: 18px; max-width: 15ch; color: #fff; text-shadow: 0 2px 20px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.5); }
+@media (min-width: 900px) { .heroContent h1 { max-width: 18ch; } }
+.heroContent h1 em { font-style: italic; color: var(--gold); }
+.heroSub { font-size: 16px; line-height: 1.65; opacity: 0.9; margin-bottom: 28px; font-family: var(--font-jost, sans-serif); max-width: 620px; }
+.heroCtas { display: flex; gap: 12px; flex-wrap: wrap; }
+.heroCtaPrimary { display: inline-block; background: var(--gold); color: var(--forest); padding: 14px 28px; border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none; font-family: var(--font-jost, sans-serif); }
+.heroCtaSecondary { display: inline-block; border: 1.5px solid rgba(255,255,255,0.65); color: white; padding: 14px 28px; border-radius: 6px; font-size: 15px; text-decoration: none; font-family: var(--font-jost, sans-serif); }
+.updated { margin-top: 20px; font-size: 12px; opacity: 0.6; font-family: var(--font-jost, sans-serif); }
+
+/* ── RESPUESTA DIRECTA (lo que extraen los buscadores con IA) ── */
+.answer { background: var(--parch); padding: 44px 24px; }
+.answerInner { max-width: 760px; margin: 0 auto; }
+.answerLabel { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sage); margin-bottom: 12px; font-family: var(--font-jost, sans-serif); }
+.answerInner p { font-family: var(--font-jost, sans-serif); font-size: 17px; line-height: 1.75; color: #3a3a2e; margin: 0 0 14px; }
+.answerInner p:last-child { margin-bottom: 0; }
+.answerInner strong { color: var(--forest); }
+
+/* ── FRANJA DE DATOS ── */
+.stats { background: var(--forest); padding: 40px 24px; position: relative; overflow: hidden; isolation: isolate; }
+.statsInner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+@media (max-width: 640px) { .statsInner { flex-direction: column; gap: 22px; } .statDivider { display: none; } }
+.stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: white; text-align: center; padding: 0 16px; }
+.statNum { font-family: var(--font-cormorant), serif; font-size: clamp(38px, 6vw, 58px); font-weight: 300; color: var(--gold); line-height: 1; }
+.statLabel { font-size: 13px; opacity: 0.72; font-family: var(--font-jost, sans-serif); max-width: 170px; }
+.statDivider { width: 1px; height: 56px; background: rgba(255,255,255,0.2); }
+
+/* ── SECCIONES ── */
+.section { padding: 72px 24px; background: white; }
+.sectionAlt { padding: 72px 24px; background: var(--parch); }
+.sectionInner { max-width: 900px; margin: 0 auto; }
+.sectionInner h2 { font-family: var(--font-cormorant), serif; font-size: clamp(26px, 4vw, 40px); font-weight: 400; color: var(--forest); margin-bottom: 16px; }
+.sectionInner h3 { font-family: var(--font-jost, sans-serif); font-size: 17px; font-weight: 600; color: var(--forest); margin: 28px 0 8px; }
+.sectionInner p { font-family: var(--font-jost, sans-serif); font-size: 15px; line-height: 1.8; color: #555; margin-bottom: 14px; }
+.sectionInner ul { margin: 0 0 16px; padding-left: 20px; }
+.sectionInner li { font-family: var(--font-jost, sans-serif); font-size: 15px; line-height: 1.85; color: #555; }
+.lead { font-size: 16px !important; color: #444 !important; }
+
+/* ── TABLA COMPARATIVA ── */
+.tableWrap { overflow-x: auto; margin: 8px 0 20px; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; border-collapse: collapse; font-family: var(--font-jost, sans-serif); font-size: 14px; min-width: 540px; }
+.table caption { text-align: left; font-size: 13px; color: #888; padding-bottom: 10px; }
+.table th { text-align: left; background: var(--forest); color: white; font-weight: 600; padding: 12px 14px; font-size: 13px; }
+.table th:first-child { border-top-left-radius: 8px; }
+.table th:last-child { border-top-right-radius: 8px; }
+.table td { padding: 12px 14px; border-bottom: 1px solid #eee; color: #555; vertical-align: top; line-height: 1.6; }
+.table tbody tr:nth-child(even) { background: #fafaf7; }
+.table tbody tr.highlight { background: #f4f7f0; }
+.table tbody tr.highlight td { color: #2f3d24; font-weight: 500; }
+
+/* ── TARJETAS ── */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 12px; }
+@media (max-width: 860px) { .cards { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .cards { grid-template-columns: 1fr; } }
+.card { background: var(--parch); border-radius: 10px; padding: 22px 20px; }
+.sectionAlt .card { background: white; }
+.cardIcon { display: block; margin-bottom: 10px; color: var(--sage); }
+.card h3 { font-family: var(--font-jost, sans-serif); font-size: 15px; font-weight: 600; color: var(--forest); margin: 0 0 8px; }
+.card p { font-size: 14px; line-height: 1.7; color: #666; margin: 0; }
+
+/* ── HUÉSPEDES DISTINGUIDOS ── */
+.guest { background: var(--forest); color: white; padding: 64px 24px; position: relative; overflow: hidden; isolation: isolate; }
+.guestInner { max-width: 760px; margin: 0 auto; text-align: center; }
+.guestInner h2 { font-family: var(--font-cormorant), serif; font-size: clamp(26px, 4vw, 38px); font-weight: 400; color: white; margin-bottom: 16px; }
+/* Video de la visita — mismo tratamiento 16:9 que el de la portada.
+   `loading="lazy"` en el iframe: es una landing SEO y el reproductor de YouTube
+   pesa más que todo el resto de la página junta. */
+.guestVideo {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 28px;
+  padding-bottom: min(56.25%, 360px);
+  height: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+.guestVideoIframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+.guestQuote { font-family: var(--font-cormorant), serif; font-size: clamp(20px, 2.7vw, 28px); font-style: italic; line-height: 1.5; color: var(--gold); margin: 0 0 14px; border: 0; padding: 0; }
+.guestAttrib { font-family: var(--font-jost, sans-serif); font-size: 13px; letter-spacing: 0.04em; opacity: 0.75; margin: 0 0 20px; }
+.guestBody { font-family: var(--font-jost, sans-serif); font-size: 15px; line-height: 1.8; opacity: 0.85; margin: 0 auto 18px; max-width: 620px; }
+.guestSource { font-family: var(--font-jost, sans-serif); font-size: 13px; opacity: 0.7; }
+.guestSource a { color: var(--gold); }
+
+/* ── ITINERARIO / PASOS ── */
+.steps { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 8px; }
+.step { background: white; border: 1px solid #e8e4da; border-left: 3px solid var(--sage); border-radius: 8px; padding: 18px 22px; }
+.sectionAlt .step { background: white; }
+.stepLabel { font-family: var(--font-jost, sans-serif); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage); margin: 0 0 6px; }
+.step h3 { margin: 0 0 8px; font-family: var(--font-cormorant), serif; font-size: 21px; font-weight: 400; color: var(--forest); }
+.step p { margin: 0; font-size: 14.5px; line-height: 1.8; color: #555; font-family: var(--font-jost, sans-serif); }
+
+/* ── FAQ ── */
+.faqList { display: flex; flex-direction: column; margin-top: 8px; }
+.faqItem { border-bottom: 1px solid #e8e4da; padding: 20px 0; }
+.faqItem:first-child { border-top: 1px solid #e8e4da; }
+.faqItem h3 { font-family: var(--font-jost, sans-serif); font-size: 16px; font-weight: 600; color: var(--forest); margin: 0 0 8px; }
+.faqItem p { font-family: var(--font-jost, sans-serif); font-size: 15px; line-height: 1.8; color: #555; margin: 0; }
+
+/* ── ENLACES RELACIONADOS ── */
+.related { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.relatedLink { display: inline-block; border: 1px solid #d8d2c4; background: white; color: var(--forest); padding: 9px 16px; border-radius: 20px; font-size: 13.5px; text-decoration: none; font-family: var(--font-jost, sans-serif); }
+.relatedLink:hover { border-color: var(--sage); }
+
+/* ── CTA FINAL ── */
+.cta { background: var(--forest); padding: 68px 24px; text-align: center; position: relative; overflow: hidden; isolation: isolate; }
+.ctaInner { max-width: 640px; margin: 0 auto; color: white; }
+.ctaInner h2 { font-family: var(--font-cormorant), serif; font-size: clamp(26px, 4vw, 40px); font-weight: 300; color: white; margin-bottom: 14px; }
+.ctaInner h2 em { font-style: italic; color: var(--gold); }
+.ctaInner p { font-family: var(--font-jost, sans-serif); font-size: 15.5px; line-height: 1.75; opacity: 0.85; margin-bottom: 26px; }
+.ctaBtns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.ctaPrimary { display: inline-block; background: var(--gold); color: var(--forest); padding: 15px 32px; border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none; font-family: var(--font-jost, sans-serif); }
+.ctaSecondary { display: inline-block; border: 1.5px solid rgba(255,255,255,0.6); color: white; padding: 15px 32px; border-radius: 6px; font-size: 15px; text-decoration: none; font-family: var(--font-jost, sans-serif); }
+.ctaNote { margin-top: 18px; font-size: 12.5px; opacity: 0.6; font-family: var(--font-jost, sans-serif); }

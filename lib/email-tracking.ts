@@ -21,7 +21,19 @@ export interface SentEmailRecord {
 
 async function ensureTab(client: NonNullable<Awaited<ReturnType<typeof getSheetsClient>>>, title: string, headers: string[]) {
   try {
-    await client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${title}!A1` });
+    const res = await client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${title}!1:1` });
+    const actuales = (res.data.values?.[0] || []) as string[];
+    // La pestaña ya existía con menos columnas de las que ahora escribimos (pasó
+    // al agregar la encuesta a Feedback): se completa el encabezado o los datos
+    // nuevos quedan en columnas sin nombre.
+    if (actuales.length < headers.length) {
+      await client.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${title}!A1`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [headers] },
+      });
+    }
   } catch {
     await client.spreadsheets.batchUpdate({
       spreadsheetId: SHEET_ID,
@@ -59,14 +71,47 @@ export async function markEmailSent(record: SentEmailRecord): Promise<void> {
   });
 }
 
-export async function saveFeedback(confirmacion: string, rating: number, comment: string, ip: string): Promise<void> {
+/** Respuestas de la encuesta de 1 minuto (ver app/encuesta/preguntas.ts). */
+export interface FeedbackDetalle {
+  limpieza?: number;
+  agua?: number;
+  descanso?: number;
+  desayuno?: number;
+  atencion?: number;
+  spa?: number;
+  /** 'Sin problema' | 'Un poco' | 'Me perdí' */
+  llegada?: string;
+  /** 'sí' | 'no' */
+  tour?: string;
+  /** Calificación del guía, solo si tomó tour */
+  guia?: number;
+  /** NPS 0-10 */
+  nps?: number;
+}
+
+export async function saveFeedback(
+  confirmacion: string, rating: number, comment: string, ip: string,
+  detalle?: FeedbackDetalle,
+): Promise<void> {
   const client = await getSheetsClient();
   if (!client) return;
-  await ensureTab(client, TAB_FB, ['Fecha', 'Confirmacion', 'Rating', 'Comentario', 'IP']);
+  await ensureTab(client, TAB_FB, [
+    'Fecha', 'Confirmacion', 'Rating', 'Comentario', 'IP',
+    'Limpieza', 'AguaCaliente', 'Descanso', 'Desayuno', 'Atencion',
+    'SpaPrivado', 'Llegada', 'TomoTour', 'Guia', 'NPS',
+  ]);
+  // RAW y no USER_ENTERED: un comentario que empiece con "=" o "+" se guardaría
+  // como fórmula rota (#ERROR!) y perderíamos lo que dijo el huésped.
   await client.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: `${TAB_FB}!A:E`,
-    valueInputOption: 'USER_ENTERED',
-    requestBody: { values: [[new Date().toISOString(), confirmacion, rating, comment, ip]] },
+    range: `${TAB_FB}!A:O`,
+    valueInputOption: 'RAW',
+    requestBody: { values: [[
+      new Date().toISOString(), confirmacion, rating, comment, ip,
+      detalle?.limpieza ?? '', detalle?.agua ?? '', detalle?.descanso ?? '',
+      detalle?.desayuno ?? '', detalle?.atencion ?? '', detalle?.spa ?? '',
+      detalle?.llegada ?? '', detalle?.tour ?? '', detalle?.guia ?? '',
+      detalle?.nps ?? '',
+    ]] },
   });
 }

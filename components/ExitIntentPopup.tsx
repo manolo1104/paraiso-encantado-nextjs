@@ -15,7 +15,15 @@ export default function ExitIntentPopup() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
   // Don't show on booking flow, admin, or confirmation pages
-  const blocked = pathname.startsWith('/reservar') || pathname.startsWith('/admin') || pathname.includes('confirmacion');
+  // Fuera de cualquier página donde el visitante ya está haciendo algo: reservar,
+  // pagar, o responder la encuesta post-estancia. Pedirle el correo a un huésped
+  // que ya se hospedó —y que está a media encuesta— tapa la pregunta y sobra.
+  const blocked =
+    pathname.startsWith('/reservar') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/encuesta') ||
+    pathname.startsWith('/gracias-por-tu-opinion') ||
+    pathname.includes('confirmacion');
 
   const tryShow = useCallback(() => {
     if (blocked) return;

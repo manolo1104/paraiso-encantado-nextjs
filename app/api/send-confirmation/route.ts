@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { Resend } from 'resend';
 import Stripe from 'stripe';
 import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationByPaymentIntent } from '@/lib/sheets';
@@ -128,6 +130,17 @@ export async function POST(req: NextRequest) {
           promoDiscount: Number(md.promoDiscount) || undefined,
         });
 
+        // Guía de bienvenida adjunta desde la confirmación: el huésped la tiene
+        // desde que reserva y no hasta el día de llegada. Si el archivo no está,
+        // el correo sale igual — nunca vale la pena perder una confirmación por
+        // un adjunto.
+        let welcomePdf: Buffer | null = null;
+        try {
+          welcomePdf = Buffer.from(await readFile(path.join(process.cwd(), 'public', 'guia-bienvenida.pdf')));
+        } catch (e: any) {
+          console.warn('⚠️ Guía de bienvenida no adjuntada:', e?.message);
+        }
+
         const from    = process.env.RESEND_FROM || 'reservas@paraisoencantado.com';
         const adminTo = process.env.ADMIN_EMAIL || 'reservas@paraisoencantado.com';
         const bcc     = Array.from(new Set([adminTo, 'marioarturocovarrubias@hotmail.com']));
@@ -139,6 +152,12 @@ export async function POST(req: NextRequest) {
           bcc,
           subject: `Tu estadía está confirmada — ${confirmationNumber}`,
           html,
+          ...(welcomePdf ? {
+            attachments: [{
+              filename: 'Guia-de-Bienvenida-Paraiso-Encantado.pdf',
+              content: welcomePdf,
+            }],
+          } : {}),
         });
 
         if (resendError) {

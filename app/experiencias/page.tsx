@@ -9,7 +9,7 @@ import styles from './experiencias.module.css';
 export const metadata: Metadata = {
   title: 'Tours Huasteca Potosina · Tamul, Las Pozas, Rappel y RZR | Desde Xilitla',
   description:
-    '7 tours en la Huasteca: Cascada de Tamul, Las Pozas de Edward James, Puente de Dios, rappel y RZR. Guía certificado NOM-09, transporte y desayuno incluidos. Salidas diarias desde el hotel. Desde $800 MXN/persona.',
+    '7 tours en la Huasteca: Cascada de Tamul, Las Pozas de Edward James, Puente de Dios, rappel y RZR. Guía certificado NOM-09, transporte y desayuno incluidos. Salidas diarias desde el hotel. Desde $1,400 MXN/persona.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/experiencias',
   },
@@ -40,7 +40,7 @@ const tours = [
     subtitle: 'Sótano, Cañón & Cueva del Agua',
     category: 'Aventura & Naturaleza',
     difficulty: 'Media',
-    price: '$1,450',
+    price: '$1,550',
     priceUnit: 'MXN / persona',
     duration: '9 horas',
     durationHours: 9,
@@ -55,7 +55,7 @@ const tours = [
     subtitle: 'Edward James, Manantiales & Selva',
     category: 'Cultura & Naturaleza',
     difficulty: 'Fácil',
-    price: '$1,300',
+    price: '$1,400',
     priceUnit: 'MXN / persona',
     duration: '8 horas',
     durationHours: 8,
@@ -70,7 +70,7 @@ const tours = [
     subtitle: 'Puente de Dios, Hacienda & Siete Cascadas',
     category: 'Aventura Acuática',
     difficulty: 'Media',
-    price: '$1,500',
+    price: '$1,600',
     priceUnit: 'MXN / persona',
     duration: '10 horas',
     durationHours: 10,
@@ -85,7 +85,7 @@ const tours = [
     subtitle: 'Turquesas, Mirador & El Gran Salto',
     category: 'Cascadas & Fotografía',
     difficulty: 'Fácil',
-    price: '$1,600',
+    price: '$1,700',
     priceUnit: 'MXN / persona',
     duration: '7 horas',
     durationHours: 7,
@@ -100,7 +100,7 @@ const tours = [
     subtitle: 'Minas Viejas & Cascadas de Micos',
     category: 'Cascadas & Bienestar',
     difficulty: 'Fácil',
-    price: '$1,500',
+    price: '$1,600',
     priceUnit: 'MXN / persona',
     duration: '8 horas',
     durationHours: 8,
@@ -130,8 +130,8 @@ const tours = [
     subtitle: 'Ruta Nanacatli · Todoterreno',
     category: 'Aventura Off-Road',
     difficulty: 'Media',
-    price: '$800',
-    priceUnit: 'MXN / persona',
+    price: 'desde $1,600',
+    priceUnit: 'MXN / vehículo',
     duration: '2 horas',
     durationHours: 2,
     image: '/images/atracciones/rzr_xilitla.jpg',
@@ -195,7 +195,9 @@ const toursSchema = {
       arrivalTime: `${String(8 + tour.durationHours).padStart(2, '0')}:00`,
       offers: {
         '@type': 'Offer',
-        price: tour.price.replace('$', '').replace(',', ''),
+        // Solo dígitos: hay precios con prefijo ('desde $1,600') y schema.org
+        // espera un número, no un texto.
+        price: tour.price.replace(/[^0-9]/g, ''),
         priceCurrency: 'MXN',
         availability: 'https://schema.org/InStock',
         seller: {

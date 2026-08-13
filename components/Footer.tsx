@@ -85,9 +85,22 @@ export default function Footer() {
           <ul role="list">
             <li><a href="/blog">Blog de Viaje</a></li>
             <li><a href="/xilitla">Qué Hacer en Xilitla</a></li>
+            <li><a href="/que-hacer-huasteca-potosina-3-dias">La Huasteca en 3 Días</a></li>
             <li><a href="/hotel-cerca-de-las-pozas">Hotel cerca de Las Pozas</a></li>
             <li><a href="/hotel-luna-de-miel-xilitla">Hotel Romántico Xilitla</a></li>
             <li><a href="/hotel-familias-xilitla">Hotel Familias Xilitla</a></li>
+          </ul>
+        </div>
+
+        {/* Guías para elegir hotel */}
+        <div className={styles.section}>
+          <h4>Guías para Elegir</h4>
+          <ul role="list">
+            <li><a href="/mejor-hotel-huasteca-potosina">Mejor Hotel de la Huasteca</a></li>
+            <li><a href="/hoteles-en-xilitla">Hoteles en Xilitla</a></li>
+            <li><a href="/donde-hospedarse-huasteca-potosina">Dónde Hospedarse en la Huasteca</a></li>
+            <li><a href="/hotel-alberca-privada-xilitla">Hotel con Alberca Privada</a></li>
+            <li><a href="/comparar">Comparar Suites</a></li>
           </ul>
         </div>
 

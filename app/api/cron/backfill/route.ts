@@ -12,7 +12,7 @@ import {
   buildSurveyEmailHtml,
   buildReviewEmailHtml,
   buildReturnOfferEmailHtml,
-  buildRestaurantEmailHtml,
+  buildToursEmailHtml,
   buildWelcomeGuideEmailHtml,
 } from '@/lib/email-sequences';
 
@@ -137,8 +137,8 @@ export async function GET(req: NextRequest) {
     const pre3Date = shiftDate(checkin, -3);
     if (pre3Date === today) {
       await handle('pre_day3', `checkin el ${checkin}`,
-        `${first}, ¿una cena especial en El Papán Huasteco?`,
-        buildRestaurantEmailHtml({ customerName: b.cliente, confirmacion: b.confirmacion, checkin, checkinFormatted: formatDateEs(checkin) }));
+        `${first}, ¿ya elegiste tus tours en la Huasteca?`,
+        buildToursEmailHtml({ customerName: b.cliente, confirmacion: b.confirmacion, checkin, checkinFormatted: formatDateEs(checkin) }));
     }
 
     // Pre-llegada: SOLO si hoy ES el día del checkin

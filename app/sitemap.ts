@@ -4,6 +4,9 @@ import { getAllPosts } from '@/lib/blog';
 
 const BASE = 'https://www.paraisoencantado.com';
 const SITE_UPDATED = '2026-05-19';
+// Fecha propia de las landings SEO: su valor depende de que se vean recientes,
+// así que se actualiza cuando se revisa su contenido, no cuando cambia el sitio.
+const SEO_UPDATED = '2026-08-12';
 
 function encodeImgPath(path: string): string {
   return path.split('/').map((s) => encodeURIComponent(s)).join('/');
@@ -27,6 +30,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/hotel-luna-de-miel-xilitla`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.82, images: [`${BASE}/images/LINDAVISTA/PORTADA.jpg`] },
     { url: `${BASE}/hotel-familias-xilitla`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.82, images: [`${BASE}/images/HELECHOS%201/PORTADA.jpg`] },
     { url: `${BASE}/hotel-cerca-de-las-pozas`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.85, images: [`${BASE}/images/atracciones/ruta-surrealista-pozas.png`] },
+    // Landings SEO de posicionamiento regional (ago 2026)
+    { url: `${BASE}/mejor-hotel-huasteca-potosina`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.92, images: [`${BASE}/images/JUNGLA/PORTADA.JPG`] },
+    { url: `${BASE}/hoteles-en-xilitla`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.88, images: [`${BASE}/images/Areas%20comunes/DSC09456-HDR.jpg`] },
+    { url: `${BASE}/donde-hospedarse-huasteca-potosina`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.86, images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`] },
+    { url: `${BASE}/hotel-alberca-privada-xilitla`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.86, images: [`${BASE}/images/JUNGLA/PORTADA.JPG`] },
+    { url: `${BASE}/que-hacer-huasteca-potosina-3-dias`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.84, images: [`${BASE}/images/atracciones/cascada_de_tamul.jpg`] },
     { url: `${BASE}/xilitla`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.80, images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`] },
     { url: `${BASE}/sobre-nosotros`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.65 },
     { url: `${BASE}/reviews`, lastModified: SITE_UPDATED, changeFrequency: 'weekly', priority: 0.75 },

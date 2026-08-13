@@ -8,7 +8,7 @@ import {
   buildSurveyEmailHtml,
   buildReviewEmailHtml,
   buildReturnOfferEmailHtml,
-  buildRestaurantEmailHtml,
+  buildToursEmailHtml,
   buildWelcomeGuideEmailHtml,
 } from '@/lib/email-sequences';
 
@@ -163,8 +163,8 @@ export async function GET(req: NextRequest) {
     if (shiftDate(checkin, -3) <= today && today < checkin) {
       await send(
         b.confirmacion, b.email, 'pre_day3',
-        `${first}, ¿una cena especial en El Papán Huasteco?`,
-        buildRestaurantEmailHtml({
+        `${first}, ¿ya elegiste tus tours en la Huasteca?`,
+        buildToursEmailHtml({
           customerName: b.cliente, confirmacion: b.confirmacion,
           checkin, checkinFormatted: formatDateEs(checkin),
         }),

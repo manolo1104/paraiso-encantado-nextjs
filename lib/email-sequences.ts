@@ -1,9 +1,12 @@
-// Templates HTML para las 5 secuencias de email automatizadas
+// Templates HTML para las secuencias de email automatizadas
 // Mismo estilo que lib/email.ts: Cormorant Garamond + Jost, hero oscuro, crema
 
 const BASE_URL = 'https://www.paraisoencantado.com';
+// Enlace corto de reseña de la ficha real del hotel (verificado por el dueño,
+// ago 2026). El `placeid` anterior apuntaba a otra ficha y el huésped acababa
+// en una página de Google sin dónde escribir.
 const REVIEW_URL = process.env.GOOGLE_MAPS_REVIEW_URL ||
-  'https://search.google.com/local/writereview?placeid=ChIJj_GQ9t76mojbAQ';
+  'https://g.page/r/CY84xO7VaxDbEBM/review';
 const WA_NUMBER = '524891007679';
 const PROMO_CODE = 'REGRESA10';
 const PROMO_DISCOUNT = '10%';
@@ -107,8 +110,12 @@ export function buildSurveyEmailHtml(data: {
   checkin: string; checkout: string; habitaciones: string;
 }): string {
   const first = data.customerName.trim().split(' ')[0];
+  // Las estrellas llevan a la encuesta con la calificación ya elegida: el huésped
+  // llega con la primera pregunta contestada, que es lo que sostiene la tasa de
+  // respuesta. Antes solo guardaban la estrella y ahí terminaba todo.
+  const encuestaUrl = `${BASE_URL}/encuesta?conf=${encodeURIComponent(data.confirmacion)}`;
   const starsHtml = [1,2,3,4,5].map(n => {
-    const url = `${BASE_URL}/api/feedback?conf=${encodeURIComponent(data.confirmacion)}&rating=${n}`;
+    const url = `${encuestaUrl}&r=${n}`;
     return `<td style="padding:0 4px;">
       <a href="${url}" style="display:block;background:#2a2218;padding:14px 16px;text-decoration:none;">
         <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;color:#c9b99a;">★</span>
@@ -124,15 +131,18 @@ export function buildSurveyEmailHtml(data: {
         Tu estancia del <strong>${formatDateEs(data.checkin)}</strong> al <strong>${formatDateEs(data.checkout)}</strong> en ${data.habitaciones} terminó hace un día. ¿Cómo fue tu experiencia?
       </p>
       ${divider()}
-      <p style="margin:0 0 20px;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#9a8a74;text-align:center;letter-spacing:0.05em;">HAZ CLIC EN LAS ESTRELLAS PARA CALIFICARNOS</p>
-      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 32px;">
+      <p style="margin:0 0 20px;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#9a8a74;text-align:center;letter-spacing:0.05em;">EMPIEZA POR AQUÍ — TE TOMA UN MINUTO</p>
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 20px;">
         <tr>${starsHtml}</tr>
       </table>
-      <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-style:italic;color:#5a4e3c;text-align:center;line-height:1.7;margin:0 0 32px;">
-        "Cada opinión nos ayuda a hacer de Paraíso Encantado un lugar más mágico<br>para quienes vienen después de ti."
+      <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:13.5px;color:#5a4e3c;text-align:center;line-height:1.8;margin:0 0 30px;">
+        Al tocar una estrella se abre una encuesta corta: cuatro preguntas sobre limpieza,
+        atención, desayuno y descanso. <strong>Es lo que usamos para arreglar cosas</strong>
+        antes de que le toquen al siguiente huésped.
       </p>
+      ${ctaButton('Responder la encuesta (1 min)', encuestaUrl, '#2a2218')}
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#9a8a74;text-align:center;margin:0;">
-        También puedes respondernos directamente a este correo. 🌿
+        Si prefieres, respóndenos directamente a este correo. 🌿
       </p>
     </td></tr>`;
   return wrap(`${first}, ¿cómo fue tu estancia en Paraíso Encantado?`, body);
@@ -188,47 +198,60 @@ export function buildReturnOfferEmailHtml(data: {
 }
 
 // ── 4. Pre-llegada -3 días: Restaurante ────────────────────────────────────
-export function buildRestaurantEmailHtml(data: {
+export function buildToursEmailHtml(data: {
   customerName: string; confirmacion: string;
   checkin: string; checkinFormatted: string;
 }): string {
   const first = data.customerName.trim().split(' ')[0];
-  const waText = encodeURIComponent(`Hola, quisiera reservar una cena en El Papán Huasteco para el ${data.checkinFormatted}. Mi confirmación es ${data.confirmacion}.`);
+  const waText = encodeURIComponent(`Hola, llego el ${data.checkinFormatted} (confirmación ${data.confirmacion}) y quiero apartar un tour.`);
   const waUrl = `https://wa.me/${WA_NUMBER}?text=${waText}`;
+  // Los tours se venden y se reservan en el sitio de la operadora, no en el del
+  // hotel: ahí están los precios vigentes y el botón de reservar.
+  const toursUrl = 'https://www.huasteca-potosina.com/tours';
 
-  const menus = [
-    { name: 'Antojitos Mexicanos', desc: 'Sopes, enchiladas, flautas y quesadillas del comal', precio: '$190/persona' },
-    { name: 'Tacos de Cecina', desc: '3 tacos en tortilla grande con guarniciones y salsas', precio: '$165/persona' },
-    { name: 'Enchiladas Huastecas', desc: 'Tradición huasteca con cecina, frijoles, queso y aguacate', precio: '$210/persona' },
-    { name: 'Ensalada Verde con Pollo', desc: 'Fresca y ligera con arándanos y aderezo especial', precio: '$180/persona' },
-  ].map(m => `
+  // Los tres que más se reservan. Precios y duraciones vienen de /experiencias:
+  // si cambian allá, cámbialos aquí — el correo no debe prometer otra cosa.
+  const tours = [
+    { name: 'Expedición Tamul', desc: 'La cascada más alta de San Luis Potosí, remontando el río en canoa', meta: '8–10 h · desde $1,550' },
+    { name: 'Ruta Acuática', desc: 'Puente de Dios, la hacienda y las siete cascadas', meta: '8–10 h · desde $1,600' },
+    { name: 'Ruta Surrealista', desc: 'Jardín de Edward James, manantiales y selva — a 5 min del hotel', meta: '8–10 h · desde $1,400' },
+  ].map(t => `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;margin-bottom:4px;">
       <tr>
-        <td style="padding:16px 0;width:75%;vertical-align:top;">
-          <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;margin:0 0 4px;">${m.name}</p>
-          <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;margin:0;">${m.desc}</p>
+        <td style="padding:16px 0;width:72%;vertical-align:top;">
+          <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;margin:0 0 4px;">
+            <a href="${toursUrl}" style="color:#2a2218;text-decoration:none;">${t.name}</a>
+          </p>
+          <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;margin:0;">${t.desc}</p>
         </td>
         <td style="padding:16px 0 16px 16px;text-align:right;vertical-align:top;white-space:nowrap;">
-          <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;color:#2a2218;margin:0;">${m.precio}</p>
+          <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#5a7a5c;margin:0;">${t.meta}</p>
         </td>
       </tr>
     </table>`).join('');
 
   const body = `
-    ${hero('Tu cena en la selva', '¿Una cena especial?', 'Restaurante El Papán Huasteco · Paraíso Encantado')}
+    ${hero('Tu viaje empieza en 3 días', '¿Ya elegiste tus tours?', 'Experiencias guiadas · Paraíso Encantado')}
     <tr><td class="mplg" style="background-color:#faf8f5;padding:52px 48px;">
       ${greeting(data.customerName)}
       <p style="margin:16px 0 32px;font-family:'Jost','Helvetica Neue',Arial;font-size:15px;font-weight:300;color:#4a3f30;line-height:1.85;">
-        En <strong>3 días</strong> llegas a Paraíso Encantado. ¿Te gustaría reservar una cena en nuestro restaurante <strong>El Papán Huasteco</strong>? Aquí nuestra selección:
+        En <strong>3 días</strong> llegas a Paraíso Encantado. Los tours salen desde el hotel con guía,
+        y en temporada alta los cupos —sobre todo el de Tamul— se agotan con días de anticipación.
+        Vale la pena apartarlos antes de llegar:
       </p>
-      ${menus}
-      <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;margin:16px 0 0;">Incluye aguas frescas, café y pan dulce · Sin costo de reserva</p>
-      ${ctaButton('Reservar mi cena por WhatsApp 💬', waUrl, '#2a2218')}
+      ${tours}
+      <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;margin:16px 0 0;">
+        Transporte, guía certificado y equipo incluidos · Se apartan sin pago por adelantado
+      </p>
+      ${ctaButton('Ver todos los tours', toursUrl, '#2a2218')}
+      <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#4a3f30;text-align:center;margin:0 0 6px;">
+        ¿Prefieres que te lo armemos nosotros? <a href="${waUrl}" style="color:#5a7a5c;">Escríbenos por WhatsApp</a>
+      </p>
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;text-align:center;margin:0;">
         También puedes llamarnos al +52 489-100-7679
       </p>
     </td></tr>`;
-  return wrap(`${first}, ¿una cena especial en El Papán Huasteco?`, body);
+  return wrap(`${first}, ¿ya elegiste tus tours en la Huasteca?`, body);
 }
 
 // ── 5. Pre-llegada día del checkin: Guía de bienvenida ────────────────────
