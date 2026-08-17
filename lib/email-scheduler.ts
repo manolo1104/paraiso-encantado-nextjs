@@ -32,7 +32,15 @@ function mxNow(): { date: string; hour: number } {
     hour: '2-digit', hour12: false,
   }).formatToParts(new Date());
   const get = (t: string) => parts.find(p => p.type === t)?.value || '';
-  return { date: `${get('year')}-${get('month')}-${get('day')}`, hour: parseInt(get('hour'), 10) || 0 };
+  // `% 24`: el Node del contenedor de Railway devuelve "24" para la medianoche
+  // (ciclo h24), no "00". Sin esto, `hour` valía 24 entre las 00:00 y las 00:59 y
+  // la guarda `hour < 8` nunca frenaba: la secuencia salía a las ~00:20 de México
+  // en vez de a las 8:00 (verificado en los logs de producción: "@24h MX").
+  const h = parseInt(get('hour'), 10);
+  return {
+    date: `${get('year')}-${get('month')}-${get('day')}`,
+    hour: Number.isNaN(h) ? 0 : h % 24,
+  };
 }
 
 async function tick(): Promise<void> {
