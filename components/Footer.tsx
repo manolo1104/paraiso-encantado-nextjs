@@ -96,6 +96,7 @@ export default function Footer() {
         <div className={styles.section}>
           <h4>Guías para Elegir</h4>
           <ul role="list">
+            <li><a href="/mejor-hotel-xilitla">Por Qué Somos el Mejor de Xilitla</a></li>
             <li><a href="/mejor-hotel-huasteca-potosina">Mejor Hotel de la Huasteca</a></li>
             <li><a href="/hoteles-en-xilitla">Hoteles en Xilitla</a></li>
             <li><a href="/donde-hospedarse-huasteca-potosina">Dónde Hospedarse en la Huasteca</a></li>

@@ -11,6 +11,7 @@
  * y Debate nombran el hotel) y por el video de la propia visita, que además vive
  * en la home del sitio.
  */
+import { AMLO, ENTITY_IDS } from '@/lib/seo-entidades';
 import styles from './seo-landing.module.css';
 
 export interface Fuente {
@@ -48,15 +49,32 @@ export const HUESPED_DISTINGUIDO: HuespedDistinguido | null = {
   videoEmbedUrl: 'https://www.youtube.com/embed/Y8h8CuTNLcA?start=1&rel=0&modestbranding=1',
 };
 
+/**
+ * `title`, `eyebrow` y `lead` existen porque esta misma sección se usa en dos
+ * registros distintos: como dato de apoyo dentro de una guía comparativa
+ * (el título por defecto, "Quién ha dormido aquí") y como argumento
+ * protagonista en la página de por qué este es el mejor hotel de Xilitla,
+ * donde la visita presidencial es el titular y no una nota al pie.
+ */
 export default function HuespedDistinguidoSection({
   huesped = HUESPED_DISTINGUIDO,
-}: { huesped?: HuespedDistinguido | null }) {
+  title = 'Quién ha dormido aquí',
+  eyebrow,
+  lead,
+}: {
+  huesped?: HuespedDistinguido | null;
+  title?: string;
+  eyebrow?: string;
+  lead?: string;
+}) {
   if (!huesped || huesped.fuentes.length === 0) return null;
 
   return (
     <section className={styles.guest}>
       <div className={styles.guestInner}>
-        <h2>Quién ha dormido aquí</h2>
+        {eyebrow && <p className={styles.guestEyebrow}>{eyebrow}</p>}
+        <h2>{title}</h2>
+        {lead && <p className={styles.guestLead}>{lead}</p>}
 
         {huesped.videoEmbedUrl && (
           <div className={styles.guestVideo}>
@@ -113,20 +131,18 @@ export function huespedSchema(huesped: HuespedDistinguido | null = HUESPED_DISTI
   if (!huesped || huesped.fuentes.length === 0) return null;
   return {
     '@type': 'Event',
+    '@id': 'https://www.paraisoencantado.com/#visita-presidencial-2023',
     name: 'Visita del presidente de México al Hotel Paraíso Encantado',
     startDate: '2023-06-10',
     eventStatus: 'https://schema.org/EventScheduled',
-    location: {
-      '@type': 'LodgingBusiness',
-      name: 'Hotel Paraíso Encantado',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Xilitla',
-        addressRegion: 'San Luis Potosí',
-        addressCountry: 'MX',
-      },
-    },
-    attendee: { '@type': 'Person', name: 'Andrés Manuel López Obrador' },
+    // Mismo `@id` que el hotel del resto del sitio: el evento le ocurrió a la
+    // entidad, no a una copia con el mismo nombre.
+    location: { '@id': ENTITY_IDS.hotel },
+    // Enganchado a la entidad real (Wikidata Q318508) y no a una persona
+    // anónima que se llama igual. `hasOccupation` lleva las fechas del mandato
+    // para que la afirmación de la página —vino el presidente EN FUNCIONES—
+    // se pueda comprobar sola: el 10 de junio de 2023 cae dentro.
+    attendee: AMLO,
     subjectOf: [
       ...huesped.fuentes.map(f => ({
         '@type': 'NewsArticle',

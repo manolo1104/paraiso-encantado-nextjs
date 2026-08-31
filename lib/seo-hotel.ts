@@ -31,6 +31,13 @@ export const HOTEL = {
   suitesConSpaPrivado: 4,        // Jungla, LindaVista, Flor de Lis 1, Flor de Lis 2
   capacidadMaxima: 8,            // Helechos 2
   precioDesde: 1500,             // MXN/noche, 2 personas
+  precioSuiteConSpa: 2000,       // MXN/noche, 2 personas — las 4 con spa privado
+
+  // Confirmado por el dueño (31 ago 2026). Hasta esa fecha el sitio publicaba lo
+  // contrario en la FAQ de /hotel-alberca-privada-xilitla ("se siente fresca en
+  // diciembre y enero"), que estaba vendiendo de menos una ventaja real.
+  spaClimatizado: true,
+  spaAgua: 'Agua caliente climatizada, en la terraza privada de la suite',
 
   // Distancias verificadas
   metrosALasPozas: 400,
@@ -38,10 +45,13 @@ export const HOTEL = {
 
   // Operación
   checkIn: '3:00 PM',
-  checkOut: '11:30 AM',
+  checkOut: '12:00 PM',
   cancelacion: 'Reembolso 100% cancelando con 7 días de anticipación; 50% con 72 horas.',
   anticipo: 'Se paga 50% al reservar en estancias de 2 noches o más; el resto al llegar.',
   restaurante: 'El Papán Huasteco',
+  restauranteHorario: '8:00 AM – 8:00 PM',
+  // Confirmado por el dueño (31 ago 2026): el comal es de leña, no de gas.
+  restauranteFirma: 'Tortillas hechas a mano al comal de leña, zacahuil y café de olla',
   codigoDescuento: 'XILITLA2026PE',
 } as const;
 
@@ -73,13 +83,33 @@ export const POSTAL_ADDRESS = {
   addressCountry: 'MX',
 } as const;
 
-/** Bloque LodgingBusiness reutilizable para el JSON-LD de cada página. */
-export function lodgingSchema(opts: { name: string; description: string; url: string; image?: string }) {
+/**
+ * Bloque LodgingBusiness reutilizable para el JSON-LD de cada página.
+ *
+ * Tres decisiones que importan para que un buscador con IA entienda el sitio:
+ *
+ * 1. **`@id` fijo.** Antes cada landing emitía un `LodgingBusiness` anónimo, así
+ *    que un modelo que leía seis páginas veía SEIS hoteles distintos con el
+ *    mismo nombre, cada uno con sus propias reseñas y sus propios datos. Con el
+ *    `@id` canónico son seis páginas describiendo UN hotel, y las señales se
+ *    suman en vez de repartirse.
+ * 2. **`name` siempre igual.** El nombre es la identidad de la entidad, no un
+ *    espacio para meter palabras clave: los nombres inflados del tipo "Hotel X
+ *    — el mejor hotel de Y" contradicen al resto del sitio y, según la
+ *    investigación de GEO de Princeton, meter palabras clave a la fuerza baja
+ *    la visibilidad en IA en vez de subirla. Lo específico de cada página va en
+ *    `description`, que sí admite matiz.
+ * 3. **`url` es la del hotel; la de la página va en `mainEntityOfPage`.** La
+ *    entidad vive en el dominio; la página solo la describe.
+ */
+export function lodgingSchema(opts: { name?: string; description: string; url: string; image?: string }) {
   return {
     '@type': 'LodgingBusiness',
-    name: opts.name,
+    '@id': `${HOTEL.url}/#hotel`,
+    name: opts.name ?? HOTEL.nombre,
     description: opts.description,
-    url: opts.url,
+    url: HOTEL.url,
+    mainEntityOfPage: opts.url,
     telephone: HOTEL.telefono,
     address: POSTAL_ADDRESS,
     aggregateRating: AGGREGATE_RATING,

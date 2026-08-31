@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: '¿La piscina privada es climatizada?',
-    a: 'Son piscinas spa al aire libre en la terraza de la suite. El clima de Xilitla es cálido casi todo el año, así que el agua se disfruta de día y al atardecer; en las noches frías de diciembre y enero se siente fresca.',
+    a: 'Sí. Las cuatro suites con spa privado tienen la piscina climatizada, con agua caliente, en su propia terraza al aire libre. Se puede usar a cualquier hora y en cualquier época del año, incluidas las noches frescas de diciembre y enero.',
   },
   {
     q: '¿Cuánto cuesta una suite con alberca privada en Xilitla?',
@@ -57,7 +57,6 @@ const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     lodgingSchema({
-      name: `${HOTEL.nombre} — Suites con alberca privada en Xilitla`,
       description: `${HOTEL.suitesConSpaPrivado} suites con piscina spa o tina de hidromasaje privada en la terraza, en Xilitla, Huasteca Potosina.`,
       url: URL,
       image: `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`,
@@ -175,6 +174,7 @@ export default function AlbercaPrivadaPage() {
         <SeoFaq faqs={FAQS} />
 
         <RelatedLinks links={[
+          { href: '/mejor-hotel-xilitla', label: 'Por qué Paraíso Encantado es el mejor hotel de Xilitla' },
           { href: '/hotel-luna-de-miel-xilitla', label: 'Luna de miel en Xilitla' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca' },
           { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla por zona' },

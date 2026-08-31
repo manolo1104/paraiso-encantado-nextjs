@@ -43,6 +43,10 @@ const restaurantSchema = {
   telephone: '+524891255181',
   image: 'https://www.paraisoencantado.com/images/RESTAURANTE/sirviendo-zacahuil.webp',
   servesCuisine: ['Mexican', 'Huastec', 'Cocina Huasteca'],
+  // El restaurante estaba suelto en el grafo: se sabía que existía, no de qué
+  // hotel era. Con esto, "¿dónde comer en Xilitla?" y "¿qué hotel de Xilitla
+  // tiene restaurante?" se responden con la misma entidad.
+  containedInPlace: { '@id': 'https://www.paraisoencantado.com/#hotel' },
   priceRange: '$$',
   openingHoursSpecification: [
     {
@@ -74,11 +78,6 @@ const restaurantSchema = {
   },
   hasMenu: 'https://www.paraisoencantado.com/restaurante',
   acceptsReservations: true,
-  containedInPlace: {
-    '@type': 'LodgingBusiness',
-    name: 'Hotel Paraíso Encantado',
-    url: 'https://www.paraisoencantado.com',
-  },
 };
 
 // ── Menu Schema — activa rich results de menú con precios en Google ───────────

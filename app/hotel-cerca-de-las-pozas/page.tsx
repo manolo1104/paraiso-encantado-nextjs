@@ -34,6 +34,9 @@ const schema = {
   '@graph': [
     {
       '@type': 'LodgingBusiness',
+      // Mismo `@id` que el resto del sitio: una entidad descrita por muchas
+      // páginas, no una entidad nueva por página.
+      '@id': 'https://www.paraisoencantado.com/#hotel',
       name: 'Hotel Paraíso Encantado',
       description:
         'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. 13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín Surrealista, Huasteca Potosina.',
@@ -56,7 +59,9 @@ const schema = {
       nearbyAttractions: [
         {
           '@type': 'TouristAttraction',
+          '@id': 'https://www.wikidata.org/wiki/Q11688402',
           name: 'Las Pozas de Edward James',
+          sameAs: ['https://es.wikipedia.org/wiki/Las_Pozas', 'https://www.wikidata.org/wiki/Q11688402'],
           geo: { '@type': 'GeoCoordinates', latitude: 21.387, longitude: -98.994 },
         },
       ],
@@ -257,6 +262,10 @@ export default function HotelCercaDeLasPozasPage() {
               </p>
               <Link href="/xilitla" className={styles.aboutLink}>
                 Guía completa de Xilitla →
+              </Link>
+              <br />
+              <Link href="/mejor-hotel-xilitla" className={styles.aboutLink}>
+                Por qué somos el mejor hotel de Xilitla →
               </Link>
             </div>
           </div>

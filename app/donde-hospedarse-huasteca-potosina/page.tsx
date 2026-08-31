@@ -54,7 +54,6 @@ const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     lodgingSchema({
-      name: `${HOTEL.nombre} — Hospedaje en la Huasteca Potosina`,
       description: `Hotel boutique en Xilitla, base para visitar Las Pozas y la sierra de la Huasteca Potosina.`,
       url: URL,
       image: `${HOTEL.url}/images/atracciones/jardin-edward-james-aerial.png`,

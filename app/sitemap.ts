@@ -6,7 +6,7 @@ const BASE = 'https://www.paraisoencantado.com';
 const SITE_UPDATED = '2026-05-19';
 // Fecha propia de las landings SEO: su valor depende de que se vean recientes,
 // así que se actualiza cuando se revisa su contenido, no cuando cambia el sitio.
-const SEO_UPDATED = '2026-08-12';
+const SEO_UPDATED = '2026-08-31';
 
 function encodeImgPath(path: string): string {
   return path.split('/').map((s) => encodeURIComponent(s)).join('/');
@@ -31,6 +31,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/hotel-familias-xilitla`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.82, images: [`${BASE}/images/HELECHOS%201/PORTADA.jpg`] },
     { url: `${BASE}/hotel-cerca-de-las-pozas`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.85, images: [`${BASE}/images/atracciones/ruta-surrealista-pozas.png`] },
     // Landings SEO de posicionamiento regional (ago 2026)
+    // La página de marca lleva la prioridad más alta de las landings: es la que
+    // responde la consulta evaluativa ("mejor hotel de Xilitla") y la que
+    // concentra la prueba externa (visita presidencial + 523 reseñas).
+    { url: `${BASE}/mejor-hotel-xilitla`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.93, images: [`${BASE}/images/JUNGLA/PORTADA.JPG`] },
     { url: `${BASE}/mejor-hotel-huasteca-potosina`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.92, images: [`${BASE}/images/JUNGLA/PORTADA.JPG`] },
     { url: `${BASE}/hoteles-en-xilitla`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.88, images: [`${BASE}/images/Areas%20comunes/DSC09456-HDR.jpg`] },
     { url: `${BASE}/donde-hospedarse-huasteca-potosina`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.86, images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`] },

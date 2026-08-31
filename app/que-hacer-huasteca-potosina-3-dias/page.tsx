@@ -54,7 +54,6 @@ const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     lodgingSchema({
-      name: `${HOTEL.nombre} — Base para recorrer la Huasteca Potosina`,
       description: 'Hotel boutique en Xilitla, punto de partida para Las Pozas, cascadas y Tamul.',
       url: URL,
       image: `${HOTEL.url}/images/atracciones/cascada_de_tamul.jpg`,

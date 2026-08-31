@@ -62,6 +62,21 @@
 .sectionInner ul { margin: 0 0 16px; padding-left: 20px; }
 .sectionInner li { font-family: var(--font-jost, sans-serif); font-size: 15px; line-height: 1.85; color: #555; }
 .lead { font-size: 16px !important; color: #444 !important; }
+/* Los enlaces dentro del texto se veían igual que el texto: nadie los pulsaba
+   y el enlazado interno —que es de lo que viven estas landings— no llegaba a
+   ninguna parte. Subrayado discreto, no color chillón: siguen leyéndose como
+   prosa. */
+.sectionInner p a,
+.answerInner p a {
+  color: var(--forest);
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  font-weight: 500;
+}
+.sectionInner p a:hover,
+.answerInner p a:hover { color: var(--gold); }
 
 /* ── TABLA COMPARATIVA ── */
 .tableWrap { overflow-x: auto; margin: 8px 0 20px; -webkit-overflow-scrolling: touch; }
@@ -89,6 +104,11 @@
 .guest { background: var(--forest); color: white; padding: 64px 24px; position: relative; overflow: hidden; isolation: isolate; }
 .guestInner { max-width: 760px; margin: 0 auto; text-align: center; }
 .guestInner h2 { font-family: var(--font-cormorant), serif; font-size: clamp(26px, 4vw, 38px); font-weight: 400; color: white; margin-bottom: 16px; }
+/* Registro "protagonista": cuando la visita presidencial es el titular de la
+   página y no un dato de apoyo, lleva antetítulo dorado y una entrada antes
+   del video. */
+.guestEyebrow { font-family: var(--font-jost, sans-serif); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin: 0 0 12px; }
+.guestLead { font-family: var(--font-jost, sans-serif); font-size: 16px; line-height: 1.8; opacity: 0.86; margin: 0 auto 28px; max-width: 640px; }
 /* Video de la visita — mismo tratamiento 16:9 que el de la portada.
    `loading="lazy"` en el iframe: es una landing SEO y el reproductor de YouTube
    pesa más que todo el resto de la página junta. */

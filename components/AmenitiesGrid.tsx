@@ -4,8 +4,8 @@ import { DropletsIcon, UtensilsIcon, CompassIcon, SunriseIcon, WifiIcon, CarIcon
 const amenities = [
   {
     Icon: DropletsIcon,
-    title: 'Spa privado',
-    desc: 'Tu propio spa al aire libre en las suites que lo incluyen.',
+    title: 'Spa privado climatizado',
+    desc: 'Agua caliente en tu propia terraza, en las suites que lo incluyen.',
   },
   {
     Icon: UtensilsIcon,

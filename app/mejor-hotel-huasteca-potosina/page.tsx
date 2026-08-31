@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: 'El Mejor Hotel de la Huasteca Potosina: Cómo Elegirlo (Guía 2026)',
   description:
     'Guía para elegir hotel en la Huasteca Potosina: qué criterios deciden tu viaje y por qué dormir en Xilitla. Paraíso Encantado, 4.5/5 en 523 reseñas, a 400 m de Las Pozas — donde pernoctó el presidente de México en 2023.',
-  keywords: ['mejor hotel huasteca potosina', 'hoteles huasteca potosina', 'mejor hotel xilitla', 'donde hospedarse huasteca'],
+  keywords: ['mejor hotel huasteca potosina', 'hoteles huasteca potosina', 'donde hospedarse huasteca', 'que hotel elegir huasteca potosina'],
   alternates: { canonical: URL },
   openGraph: {
     title: 'El Mejor Hotel de la Huasteca Potosina — Guía para Elegir Bien',
@@ -65,7 +65,6 @@ const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     lodgingSchema({
-      name: `${HOTEL.nombre} — Hotel en la Huasteca Potosina`,
       description: `Hotel boutique en Xilitla, a ${HOTEL.metrosALasPozas} metros de Las Pozas de Edward James. ${HOTEL.suites} suites, ${HOTEL.suitesConSpaPrivado} con piscina spa privada dentro de la habitación.`,
       url: URL,
       image: `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`,
@@ -230,6 +229,7 @@ export default function MejorHotelHuastecaPage() {
         <SeoFaq faqs={FAQS} />
 
         <RelatedLinks links={[
+          { href: '/mejor-hotel-xilitla', label: 'Por qué Paraíso Encantado es el mejor hotel de Xilitla' },
           { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla: en qué zona conviene dormir' },
           { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca Potosina' },
           { href: '/que-hacer-huasteca-potosina-3-dias', label: 'Qué hacer en la Huasteca en 3 días' },

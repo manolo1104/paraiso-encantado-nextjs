@@ -55,7 +55,6 @@ const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     lodgingSchema({
-      name: `${HOTEL.nombre} — Hotel en Xilitla`,
       description: `Hotel boutique en la zona de La Conchita, Xilitla, a ${HOTEL.metrosALasPozas} metros de Las Pozas de Edward James.`,
       url: URL,
       image: `${HOTEL.url}/images/Areas comunes/DSC09456-HDR.jpg`,
@@ -180,6 +179,7 @@ export default function HotelesEnXilitlaPage() {
         <SeoFaq faqs={FAQS} />
 
         <RelatedLinks links={[
+          { href: '/mejor-hotel-xilitla', label: 'Por qué Paraíso Encantado es el mejor hotel de Xilitla' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca Potosina' },
           { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas' },
           { href: '/hotel-alberca-privada-xilitla', label: 'Hoteles con alberca privada en la habitación' },
