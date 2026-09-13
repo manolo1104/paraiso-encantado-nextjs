@@ -64,13 +64,21 @@ function getPaquetesTotal(paquetes: PaqueteItem[]): number {
 }
 
 // ── Tours / Experiencias ──────────────────────────────────────────────────────
+// Precios por persona de la operadora (repo INTINERARIO HUASTECA, rama main:
+// src/lib/tours.ts). Los 5 primeros conservan su nombre de siempre para que las
+// cotizaciones ya guardadas sigan encontrando su tour en el selector.
 export const TOURS_CATALOG: { nombre: string; precio: number }[] = [
-  { nombre: 'Expedición Tamul (Sótano + Cascada + Cenote)', precio: 1450 },
-  { nombre: 'Ruta Surrealista (Las Pozas + Huichihuayán)', precio: 1300 },
-  { nombre: 'Cascadas del Meco (El Meco + El Salto)', precio: 1600 },
-  { nombre: 'Paraíso Escalonado (Minas Viejas + Micos)', precio: 1500 },
-  { nombre: 'Ruta Acuática (Puente de Dios + Siete Cascadas)', precio: 1500 },
-  { nombre: 'Sótano de las Golondrinas', precio: 800 },
+  { nombre: 'Expedición Tamul (Sótano + Cascada + Cenote)', precio: 1550 },
+  { nombre: 'Ruta Surrealista (Las Pozas + Huichihuayán)', precio: 1400 },
+  { nombre: 'Cascadas del Meco (El Meco + El Salto)', precio: 1700 },
+  { nombre: 'Paraíso Escalonado (Minas Viejas + Micos)', precio: 1600 },
+  { nombre: 'Ruta Acuática (Puente de Dios + Siete Cascadas)', precio: 1600 },
+  { nombre: 'Rappel en Tamul (mín. 4 personas)', precio: 1700 },
+  { nombre: 'Rafting Río Tampaón (mín. 5 personas)', precio: 1950 },
+  // El RZR se cobra POR VEHÍCULO (desde $1,600): cotízalo con 1 "persona" por vehículo.
+  { nombre: 'RZR por Xilitla (por vehículo, desde)', precio: 1600 },
+  { nombre: 'Buceo Laguna Media Luna (10+ años)', precio: 1300 },
+  { nombre: 'Travesía del Café', precio: 900 },
   { nombre: 'Tour personalizado', precio: 0 },
 ];
 

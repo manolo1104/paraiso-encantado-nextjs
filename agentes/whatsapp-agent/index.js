@@ -13,10 +13,21 @@
 
 import 'dotenv/config';
 import pkg from 'whatsapp-web.js';
-const { Client, LocalAuth, MessageMedia } = pkg;
+const { Client, LocalAuth } = pkg;
 import qrcode from 'qrcode-terminal';
-import { handleMessage, handlePaymentProof, getStats, addToHistory, getConversationSummary, clearHistory } from './claude-handler.js';
-import { confirmPayment, getByUser, getByFolio } from './reservations.js';
+import { handleMessage, getStats, addToHistory, getConversationSummary, clearHistory, getSessionFolio, releaseWaHold } from './claude-handler.js';
+import {
+  confirmPayment, getByUser, getByFolio, updateReservation, findLatestPendingByPhone, markPaymentProofReceived,
+} from './reservations.js';
+import { createMessageBuffer } from './message-buffer.js';
+import {
+  createProofProcessor, classifyIncomingMedia, mediaKind, findActiveQuoteForChat, buildProofAckNoQuote,
+} from './proof-handler.js';
+import {
+  createBurstHandler, cleanMediaCaption, pickWaDigits, reservationAmounts, parseConfirmCommand,
+} from './conversation-flow.js';
+import { digitsOnly, extractDigitsFromJid, normalizeMxCandidates, normalizeChatId } from './phone.js';
+import { buildQuoteGroupAlert } from './quote-summary.js';
 import { appendConfirmedReservationToSheet, updateRoomStatusInDisponibilidad } from './google-sheets.js';
 import { formatWebBookingAlert } from './web-booking-notify.js';
 import { readFile } from 'node:fs/promises';
@@ -40,14 +51,9 @@ function cleanChromiumLocks() {
 
 const escalatedChats = new Set();
 const hydratedChats = new Set(); // chatId ya inicializado con historial previo
-const sentPriceImageByChat = new Map(); // chatId -> timestamp
 
-// ── Debounce: espera a que la persona termine de escribir antes de responder ──
-// El timer se REINICIA con cada mensaje nuevo, así que Camila espera hasta que haya
-// MESSAGE_WAIT_MS ms de silencio y ENTONCES arma UNA sola respuesta con todo lo que
-// el cliente escribió (ej. "Hola" + "quiero info" + "de la jungla" + "para el sábado").
-const pendingByChat = new Map(); // chatId → { texts: [], timer, chat, lastMsg, userName, contextBody }
-const MESSAGE_WAIT_MS = Number(process.env.MESSAGE_DEBOUNCE_MS || 8000); // 8 s de silencio por defecto (ajustable por env)
+// La espera por ráfaga (15 s, tope 60 s, candado por chat) vive en message-buffer.js;
+// el buffer se crea más abajo, junto al handler de mensajes (`bursts`).
 
 // ── Pausa manual del bot (humano tomó la conversación) ────
 const pausedChats = new Map(); // chatId → { expiresAt, startedAt }
@@ -150,6 +156,30 @@ function hasRecentPaymentProof(chatId, maxAgeMs = 48 * 60 * 60 * 1000) {
   return ts > 0 && (Date.now() - ts) <= maxAgeMs;
 }
 
+// Almacén de reservas que usan los comprobantes y la búsqueda de la cotización activa
+// (folio de la sesión → usuario → teléfono, para no fallar con @lid/@c.us).
+const proofRepo = {
+  getByFolio, getByUser, findLatestPendingByPhone, markPaymentProofReceived, normalizeMxCandidates, extractDigitsFromJid,
+};
+
+// Cotización PENDIENTE_PAGO de este chat (o null). Nunca lanza.
+function findActiveQuote(chatId, contactNumber = '') {
+  try {
+    let sessionFolio = null;
+    try { sessionFolio = getSessionFolio(chatId); } catch { /* sin sesión */ }
+    return findActiveQuoteForChat({ userId: chatId, contactNumber, sessionFolio }, proofRepo);
+  } catch (err) {
+    console.warn(`⚠️ No se pudo buscar la cotización activa de ${chatId}:`, String(err?.message || err).split('\n')[0]);
+    return null;
+  }
+}
+
+// El comprobante guardado EN DISCO (proofReceivedAt) sobrevive a un redeploy; el
+// registro en memoria de arriba no. Cualquiera de los dos frena los recordatorios.
+function hasPersistedPaymentProof(chatId, contactNumber = '') {
+  return Boolean(findActiveQuote(chatId, contactNumber)?.proofReceivedAt);
+}
+
 function looksAvailabilityRequest(userText = '') {
   const text = normalizeText(userText);
   const availabilityIntent =
@@ -193,10 +223,14 @@ function isSpamOrBroadcast(message = '') {
   return false;
 }
 
-function scheduleAvailabilityFollowup(client, chatId, userName = '', type = 'inquiry_no_response') {
+function scheduleAvailabilityFollowup(client, chatId, userName = '', type = 'inquiry_no_response', { contactNumber = '' } = {}) {
   if (!chatId) return;
   const schedule = FOLLOWUP_SCHEDULES[type] || FOLLOWUP_SCHEDULES.inquiry_no_response;
   clearAvailabilityFollowup(chatId);
+
+  // "Vi que estabas cotizando" solo tiene sentido con una cotización PENDIENTE_PAGO:
+  // si la última quedó REEMPLAZADA o CANCELADA (o ya no hay), no se programa.
+  if (type === 'cart_abandoned' && !findActiveQuote(chatId, contactNumber)) return;
 
   const scheduledAt = Date.now();
   const timeoutId = setTimeout(async () => {
@@ -205,6 +239,8 @@ function scheduleAvailabilityFollowup(client, chatId, userName = '', type = 'inq
     if (hasNewMessagesSince(chatId, scheduledAt)) return;
     if (hasConfirmedOrPaidReservation(chatId)) return; // ya reservó/confirmó → no molestar
     if (hasRecentPaymentProof(chatId)) return;          // ya mandó comprobante → no molestar
+    if (hasPersistedPaymentProof(chatId, contactNumber)) return; // comprobante guardado en el folio
+    if (type === 'cart_abandoned' && !findActiveQuote(chatId, contactNumber)) return; // reemplazada/cancelada
     if (hasRecentPendingQuote(chatId) && type !== 'cart_abandoned') return;
     if (checkBotPause(chatId).paused) return;
 
@@ -230,19 +266,20 @@ function isLidChatId(chatId = '') {
 // "r" (minificado) en grupos y "No LID for user" en @c.us. Escalera de intentos:
 // directo → vía objeto Chat (getChatById) → resolviendo el WID vigente con
 // getNumberId (solo números). Lanza el error original si nada funcionó.
-async function sendMessageRobust(to, content) {
+// options (opcional) se pasa tal cual a sendMessage: p. ej. { caption } de un archivo.
+async function sendMessageRobust(to, content, options) {
   try {
-    return await client.sendMessage(to, content);
+    return await client.sendMessage(to, content, options);
   } catch (firstErr) {
     try {
       const chatObj = await client.getChatById(to);
-      if (chatObj) return await chatObj.sendMessage(content);
+      if (chatObj) return await chatObj.sendMessage(content, options);
     } catch { /* siguiente intento */ }
     if (String(to).endsWith('@c.us')) {
       try {
         const wid = await client.getNumberId(String(to).replace('@c.us', ''));
         if (wid?._serialized && wid._serialized !== to) {
-          return await client.sendMessage(wid._serialized, content);
+          return await client.sendMessage(wid._serialized, content, options);
         }
       } catch { /* sin más intentos */ }
     }
@@ -306,6 +343,9 @@ function isRecentBotOutgoing(chatId) {
 
 function pauseBotForChat(chatId) {
   const key = normalizeChatId(chatId);
+  // Contestó un humano: lo que el cliente escribió y aún esperaba respuesta se tira
+  // (si no, Camila contestaría encima del equipo al vencer los 15 s).
+  discardPendingBurst(chatId);
   if (pausedChats.has(key)) return; // ya estaba pausado, evitar spam de logs
   const startedAt = Date.now();
   const expiresAt = startedAt + HUMAN_TAKEOVER_MS;
@@ -336,11 +376,6 @@ function isBotPausedForChat(chatId) {
 }
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DEFAULT_GROUP_PRICE_IMAGE_PATHS = [
-  process.env.GROUP_PRICE_IMAGE_PATH,
-  path.resolve(__dirname, './PRECIO HOTEL PARAISO ENCANTADO.jpeg'),
-  path.resolve(__dirname, '../PRECIO HOTEL PARAISO ENCANTADO.jpeg')
-].filter(Boolean);
 
 const DEFAULT_TEMPLATE_PATHS = [
   process.env.EMAIL_TEMPLATE_PATH,
@@ -349,46 +384,8 @@ const DEFAULT_TEMPLATE_PATHS = [
   path.resolve(__dirname, './email-templates/email-quiet-luxury.html')
 ].filter(Boolean);
 
-function digitsOnly(value = '') {
-  return String(value).replace(/\D/g, '');
-}
-
-function extractDigitsFromJid(jid = '') {
-  return digitsOnly(String(jid).split('@')[0] || '');
-}
-
-// Normaliza cualquier formato de chatId (@c.us, @lid, número puro) a dígitos@c.us
-// para evitar mismatch entre el evento message_create (usa @lid) y message (usa @c.us)
-function normalizeChatId(chatId = '') {
-  if (!chatId) return chatId;
-  const digits = extractDigitsFromJid(chatId);
-  return digits ? `${digits}@c.us` : chatId;
-}
-
-function normalizeMxCandidates(rawNumber = '') {
-  const n = digitsOnly(rawNumber);
-  if (!n) return [];
-
-  const candidates = new Set([n]);
-
-  // Si viene sin lada país (10 dígitos), considerar 52 y 521
-  if (n.length === 10) {
-    candidates.add(`52${n}`);
-    candidates.add(`521${n}`);
-  }
-
-  // Si viene con 52, considerar también 521
-  if (n.length === 12 && n.startsWith('52')) {
-    candidates.add(`521${n.slice(2)}`);
-  }
-
-  // Si viene con 521, considerar también 52
-  if (n.length === 13 && n.startsWith('521')) {
-    candidates.add(`52${n.slice(3)}`);
-  }
-
-  return [...candidates];
-}
+// digitsOnly, extractDigitsFromJid, normalizeChatId y normalizeMxCandidates viven en
+// phone.js (importados arriba) para poder usarlos y probarlos fuera de este archivo.
 
 function getAuthorizedHotelNumbers() {
   const combined = [
@@ -559,17 +556,6 @@ async function loadEmailTemplate() {
       return html;
     } catch {
       // probar siguiente ruta
-    }
-  }
-  return null;
-}
-
-async function loadGroupPriceImageMedia() {
-  for (const p of DEFAULT_GROUP_PRICE_IMAGE_PATHS) {
-    try {
-      return MessageMedia.fromFilePath(p);
-    } catch {
-      // intentar siguiente ruta
     }
   }
   return null;
@@ -814,8 +800,8 @@ async function processConfirmarCommand(msg) {
 
   if (!/^\/(reservar|confirmar)\s+/i.test(body)) return false;
 
-  const parts = body.split(/\s+/);
-  const folio = (parts[1] || '').replace(/[^A-Za-z0-9-]/g, '').toUpperCase();
+  // "/confirmar WA-XXX" o "/confirmar WA-XXX forzar"
+  const { folio, force } = parseConfirmCommand(body) || { folio: '', force: false };
 
   if (!folio) {
     await msg.reply('Uso: /reservar FOLIO (también puedes usar /confirmar FOLIO)');
@@ -823,7 +809,21 @@ async function processConfirmarCommand(msg) {
   }
 
   try {
-    const reservation = confirmPayment(folio);
+    // Un folio REEMPLAZADA es una cotización vieja: el cliente cambió fechas o suite y
+    // su apartado ya se liberó. Confirmarla por error dejaría una reserva fantasma.
+    const existing = getByFolio(folio);
+    if (existing?.status === 'REEMPLAZADA' && !force) {
+      const newer = existing.supersededBy || '';
+      await msg.reply(newer
+        ? `⚠️ El folio *${existing.folio}* fue reemplazado por *${newer}*. Usa /confirmar ${newer}\n\n(Si de verdad quieres confirmar el folio viejo, escribe /confirmar ${existing.folio} forzar)`
+        : `⚠️ El folio *${existing.folio}* fue reemplazado por otra cotización. Revisa el folio vigente del cliente.\n\n(Si de verdad quieres confirmar el folio viejo, escribe /confirmar ${existing.folio} forzar)`);
+      return true;
+    }
+    if (existing?.status === 'REEMPLAZADA' && force) {
+      console.warn(`⚠️ /confirmar ${existing.folio} forzado sobre un folio REEMPLAZADA (reemplazado por ${existing.supersededBy || '¿?'})`);
+    }
+
+    const reservation = confirmPayment(existing?.folio || folio);
     if (!reservation) {
       await msg.reply(`❌ No encontré una reserva con folio *${folio}*.`);
       return true;
@@ -837,35 +837,47 @@ async function processConfirmarCommand(msg) {
     try {
       sheetResult = await appendConfirmedReservationToSheet(reservation);
       if (sheetResult?.alreadyExists) {
-        console.log(`ℹ️ Reserva ${folio} ya estaba registrada en Google Sheets.`);
+        console.log(`ℹ️ Reserva ${reservation.folio} ya estaba registrada en Google Sheets.`);
       } else {
-        console.log(`✅ Reserva ${folio} registrada en Google Sheets (${sheetResult?.updatedRange || 'sin rango'}).`);
+        console.log(`✅ Reserva ${reservation.folio} registrada en Google Sheets (${sheetResult?.updatedRange || 'sin rango'}).`);
       }
     } catch (sheetErr) {
-      console.error(`❌ No se pudo registrar reserva ${folio} en Google Sheets:`, sheetErr.message);
+      console.error(`❌ No se pudo registrar reserva ${reservation.folio} en Google Sheets:`, sheetErr.message);
+    }
+
+    // La reserva ya ocupa sus noches en Reservas/Disponibilidad: el apartado de 3 h de la
+    // cotización (wa-<folio>) sobra y, si se queda, frena al motor web y al panel.
+    if (sheetResult?.success || sheetResult?.alreadyExists) {
+      await releaseWaHold(reservation.folio).catch(() => {});
     }
 
     // Actualizar estado en pestaña Disponibilidad: BLOQUEADO TEMPORAL → RESERVADO
     try {
-      const dispResult = await updateRoomStatusInDisponibilidad(folio, 'RESERVADO');
+      const dispResult = await updateRoomStatusInDisponibilidad(reservation.folio, 'RESERVADO');
       if (dispResult.success) {
-        console.log(`🔒 Disponibilidad actualizada a RESERVADO: ${folio} (filas ${dispResult.updatedRows?.join(', ')})`);
+        console.log(`🔒 Disponibilidad actualizada a RESERVADO: ${reservation.folio} (filas ${dispResult.updatedRows?.join(', ')})`);
       } else {
-        console.warn(`⚠️ No se actualizó Disponibilidad para ${folio}: ${dispResult.reason}`);
+        console.warn(`⚠️ No se actualizó Disponibilidad para ${reservation.folio}: ${dispResult.reason}`);
       }
     } catch (dispErr) {
-      console.error(`❌ Error actualizando Disponibilidad para ${folio}:`, dispErr.message);
+      console.error(`❌ Error actualizando Disponibilidad para ${reservation.folio}:`, dispErr.message);
     }
 
     const destination = normalizeUserJid(reservation.userId);
     const guestFirstName = (reservation.guestName || reservation.userName || '').split(' ')[0];
-    const paidAmount = Number(reservation.depositAmount || reservation.totalPrice);
-    const pendingAmount = Math.max(0, Number(reservation.totalPrice) - paidAmount);
+    // Pago recibido = el anticipo; pendiente = el saldo guardado (o total − anticipo en folios viejos).
+    const { total: totalAmount, deposit: paidAmount, saldo: pendingAmount } = reservationAmounts(reservation);
     const toursSection = Array.isArray(reservation.tours) && reservation.tours.length > 0
       ? `\n🌊 *Tours:*\n${reservation.tours.map(t => `· ${t?.name || 'Tour'}${t?.participants ? ` (${t.participants} persona${Number(t.participants) === 1 ? '' : 's'})` : ''}`).join('\n')}\n`
       : '';
     const roomsTotal = Number(reservation.roomsTotal ?? reservation.totalPrice ?? 0);
     const toursTotal = Number(reservation.toursTotal ?? 0);
+    const discount = Number(reservation.discount || 0);
+    const stayLines = discount > 0
+      ? `🏨 *Hospedaje:* $${Number(reservation.subtotal || (totalAmount + discount)).toLocaleString('es-MX')} MXN\n` +
+        `🎁 *Descuento de grupo:* −$${discount.toLocaleString('es-MX')} MXN\n` +
+        `💰 *Total:* $${totalAmount.toLocaleString('es-MX')} MXN\n`
+      : `🏨 *Hospedaje:* $${roomsTotal.toLocaleString('es-MX')} MXN\n`;
     const confirmationText =
       `🌟 *¡Tu reserva ha sido confirmada!* 🌟\n` +
       `¡Gracias por tu preferencia!\n\n` +
@@ -877,11 +889,13 @@ async function processConfirmarCommand(msg) {
       `🏠 *Habitación:*\n${(Array.isArray(reservation.rooms) && reservation.rooms.length > 0 ? reservation.rooms : [reservation.room]).map(r => `· ${r?.name || ''}${r?.guests ? ` (${r.guests} huésped${Number(r.guests) === 1 ? '' : 'es'})` : ''}`).join('\n')}\n\n` +
       `${toursSection ? `${toursSection}\n` : ''}` +
       `👤 *Total huéspedes:* ${reservation.guests}\n\n` +
-      `🏨 *Hospedaje:* $${roomsTotal.toLocaleString('es-MX')} MXN\n` +
+      stayLines +
       `${toursTotal > 0 ? `🌊 *Tours:* $${toursTotal.toLocaleString('es-MX')} MXN\n` : ''}` +
       `\n` +
       `💰 *Pago recibido:* $${paidAmount.toLocaleString('es-MX')} MXN\n\n` +
-      `🧾 *Pago pendiente:* $${pendingAmount.toLocaleString('es-MX')} MXN${pendingAmount > 0 ? ' — Al llegar al hotel' : ''}\n\n` +
+      (pendingAmount > 0
+        ? `🧾 *Pago pendiente — al llegar al hotel:* $${pendingAmount.toLocaleString('es-MX')} MXN\n\n`
+        : `🧾 *Pago pendiente:* $0 MXN (pagado completo)\n\n`) +
       `📍 *Ubicación:* https://g.co/kgs/gft1pTH\n\n` +
       `🕒 *Check-in:* 3:00 PM | Check-out: 12:00 PM\n\n` +
       `📖 *Información adicional:*\n` +
@@ -902,55 +916,70 @@ async function processConfirmarCommand(msg) {
     }
 
     if (!delivered) {
-      await msg.reply(`⚠️ Reserva *${folio}* marcada como confirmada, pero no pude enviar WhatsApp al huésped (${reservation.userId}). Revisa manualmente.`);
+      await msg.reply(`⚠️ Reserva *${reservation.folio}* marcada como confirmada, pero no pude enviar WhatsApp al huésped (${reservation.userId}). Revisa manualmente.`);
     } else {
       if (sheetResult?.alreadyExists) {
-        await msg.reply(`✅ Reserva *${folio}* confirmada. Se notificó al huésped por WhatsApp. Ya estaba registrada en Google Sheets.`);
+        await msg.reply(`✅ Reserva *${reservation.folio}* confirmada. Se notificó al huésped por WhatsApp. Ya estaba registrada en Google Sheets.`);
       } else if (sheetResult?.success) {
-        await msg.reply(`✅ Reserva *${folio}* confirmada. Se notificó al huésped por WhatsApp y se registró en Google Sheets.`);
+        await msg.reply(`✅ Reserva *${reservation.folio}* confirmada. Se notificó al huésped por WhatsApp y se registró en Google Sheets.`);
       } else {
-        await msg.reply(`✅ Reserva *${folio}* confirmada. Se notificó al huésped por WhatsApp. No pude confirmar registro en Google Sheets, revísalo por favor.`);
+        await msg.reply(`✅ Reserva *${reservation.folio}* confirmada. Se notificó al huésped por WhatsApp. No pude confirmar registro en Google Sheets, revísalo por favor.`);
       }
     }
 
-    // Notificar al equipo del hotel en Control Hotel cuando la reserva es nueva
-    if (!sheetResult?.alreadyExists) {
+    // Aviso al equipo en Control Hotel. Sale SIEMPRE (antes se saltaba si la reserva ya
+    // estaba en Sheets), pero una sola vez por folio: confirmAlertSentAt queda en disco.
+    if (reservation.confirmAlertSentAt) {
+      console.log(`ℹ️ Aviso de reserva confirmada ${reservation.folio} ya se había enviado (${reservation.confirmAlertSentAt}); no se repite.`);
+    } else {
       const rooms = Array.isArray(reservation.rooms) && reservation.rooms.length > 0
         ? reservation.rooms.map(r => `· ${r?.name || ''}${r?.guests ? ` (${r.guests}p)` : ''}`).join('\n')
         : `· ${reservation.room?.name || '—'}`;
-      const pendingTeam = Math.max(0, Number(reservation.totalPrice || 0) - paidAmount);
+      const teamWaDigits = pickWaDigits({ chatId: reservation.userId, record: reservation });
       const teamAlert =
-        `🏨 *Nueva reserva confirmada*\n\n` +
+        `🏨 *Nueva reserva confirmada*${sheetResult?.alreadyExists ? ' (ya estaba registrada en Sheets)' : ''}\n\n` +
         `👤 *${reservation.guestName || reservation.userName || 'Sin nombre'}*\n` +
-        `📱 wa.me/${String(reservation.userId || '').split('@')[0]}\n` +
+        `📱 ${teamWaDigits ? `wa.me/${teamWaDigits}` : '(número no visible, revisa el chat)'}\n` +
         `🧾 Folio: ${reservation.folio}\n` +
         `📅 Check-in: ${reservation.checkin}\n` +
         `📅 Check-out: ${reservation.checkout}\n` +
         `👥 Huéspedes: ${reservation.guests}\n` +
         `🛏️ Habitaciones:\n${rooms}\n` +
         `${toursSection}` +
-        `💰 Total: $${Number(reservation.totalPrice || 0).toLocaleString('es-MX')} MXN\n` +
+        (discount > 0 ? `🎁 Descuento de grupo: −$${discount.toLocaleString('es-MX')} MXN\n` : '') +
+        `💰 Total: $${totalAmount.toLocaleString('es-MX')} MXN\n` +
         `💳 Anticipo pagado: $${paidAmount.toLocaleString('es-MX')} MXN\n` +
-        `🔸 Resta por pagar: $${pendingTeam.toLocaleString('es-MX')} MXN`;
+        `🔸 Resta por pagar al llegar: $${pendingAmount.toLocaleString('es-MX')} MXN`;
 
       const sendTeamAlert = async (to) => {
         try {
           markRecentBotOutgoing(to);
           await sendMessageRobust(to, teamAlert);
+          return true;
         } catch (e) {
           console.warn(`⚠️ No se pudo enviar alerta de reserva a ${to}:`, String(e?.message || '').split('\n')[0]);
+          return false;
         }
       };
 
       const groupOkReserva = await sendToControlHotelGroup(teamAlert);
+      let hotelOkReserva = false;
       if (process.env.HOTEL_WHATSAPP_NUMBER) {
-        await sendTeamAlert(`${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`);
+        hotelOkReserva = await sendTeamAlert(`${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`);
       }
-      console.log(`📣 Alerta de reserva ${reservation.folio} → grupo: ${groupOkReserva ? 'enviada' : 'FALLÓ'} · número del hotel: ${process.env.HOTEL_WHATSAPP_NUMBER ? 'enviada' : 'sin configurar'}`);
+      // Dedupe persistido: con que el equipo lo haya recibido por una vía basta.
+      if (groupOkReserva || hotelOkReserva) {
+        try {
+          updateReservation(reservation.folio, { confirmAlertSentAt: new Date().toISOString() });
+        } catch (updErr) {
+          console.warn(`⚠️ No se pudo guardar confirmAlertSentAt de ${reservation.folio}:`, String(updErr?.message || updErr).split('\n')[0]);
+        }
+      }
+      console.log(`📣 Alerta de reserva ${reservation.folio} → grupo: ${groupOkReserva ? 'enviada' : 'FALLÓ'} · número del hotel: ${process.env.HOTEL_WHATSAPP_NUMBER ? (hotelOkReserva ? 'enviada' : 'FALLÓ') : 'sin configurar'}`);
     }
   } catch (cmdErr) {
     console.error('❌ Error en /reservar:', cmdErr.message);
-        await msg.reply(`No pude procesar /reservar ${folio}: ${cmdErr.message}`);
+    await msg.reply(`No pude procesar /reservar ${folio}: ${cmdErr.message}`);
   }
   return true;
 }
@@ -987,6 +1016,218 @@ client.on('message_create', async (msg) => {
     }
   }
 });
+
+// ── Comprobantes y ráfagas de mensajes ────────────────────
+
+// Lee un número de milisegundos de una variable de entorno; si no es válido usa el default.
+function envMs(name, fallback) {
+  const n = Number(process.env[name]);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function hotelNumberJid() {
+  const digits = digitsOnly(process.env.HOTEL_WHATSAPP_NUMBER || '');
+  return digits ? `${digits}@c.us` : '';
+}
+
+// Comprobantes: marca el folio, avisa al grupo Control Hotel y al número del hotel
+// (el archivo va al hotel; al grupo solo si PROOF_MEDIA_TO_GROUP=true) y arma el acuse.
+const proofs = createProofProcessor({
+  repo: proofRepo,
+  sendToHotel: async (content, options) => {
+    const to = hotelNumberJid();
+    if (!to) return false;
+    markRecentBotOutgoing(to);
+    await sendMessageRobust(to, content, options);
+    return true;
+  },
+  // Texto o archivo: sendToControlHotelGroup resuelve el grupo, reintenta y nunca lanza.
+  sendToGroup: (content, options) => sendToControlHotelGroup(content, options),
+  mediaToGroup: process.env.PROOF_MEDIA_TO_GROUP === 'true',
+  log: console,
+});
+
+// Manda una respuesta de Camila al cliente de la ráfaga.
+async function sendBurstReply(meta, text) {
+  if (!text) return;
+  const msg = meta?.msg;
+  if (!msg) throw new Error('ráfaga sin mensaje al cual responder');
+  await new Promise(r => setTimeout(r, 1000));
+  trackBotReply();
+  markRecentBotOutgoing(msg.from);
+  await safeReply(client, msg, meta.chat, text);
+}
+
+// Aviso al grupo Control Hotel de una cotización REAL creada en este turno, con
+// respaldo al número del hotel si el grupo falla.
+async function sendQuoteGroupAlert(meta, result) {
+  const msg = meta.msg;
+  const folio = result.quote?.folio || result.quoteFolio || '';
+  let record = null;
+  try { record = folio ? getByFolio(folio) : null; } catch { /* sin registro */ }
+  // El contrato manda result.quote; si no llegara, se arma con lo guardado en el folio.
+  const baseQuote = result.quote || (record ? { ...record, guestName: record.guestName || record.userName } : null);
+  if (!baseQuote) {
+    console.warn(`⚠️ Cotización ${folio || '(sin folio)'} creada pero sin datos para avisar al grupo`);
+    return;
+  }
+  const quote = { ...baseQuote, folio: baseQuote.folio || folio };
+  if (quote.blockConfirmed == null && typeof result.quoteBlockConfirmed === 'boolean') {
+    quote.blockConfirmed = result.quoteBlockConfirmed;
+  }
+  const waDigits = pickWaDigits({
+    contactNumber: meta.contactNumber,
+    chatId: msg.from,
+    record: record || { waNumber: quote.waNumber, userId: quote.userId },
+  });
+  const quoteAlert = buildQuoteGroupAlert(quote, {
+    userName: meta.userName,
+    waDigits,
+    supersededFolio: result.supersededFolio || null,
+    supersededCheckin: result.supersededCheckin || null,
+    supersededCheckout: result.supersededCheckout || null,
+  });
+
+  const groupOk = await sendToControlHotelGroup(quoteAlert);
+  if (groupOk) {
+    console.log(`📋 Alerta de cotización ${quote.folio} enviada a Control Hotel`);
+    return;
+  }
+  const hotelJid = hotelNumberJid();
+  if (!hotelJid) return;
+  // Fallback: que el equipo se entere aunque el grupo falle.
+  try {
+    markRecentBotOutgoing(hotelJid);
+    await sendMessageRobust(hotelJid, quoteAlert);
+    console.log(`📋 Alerta de cotización ${quote.folio} NO llegó al grupo — enviada al número del hotel (fallback)`);
+  } catch (fbErr) {
+    console.warn(`⚠️ Alerta de cotización ${quote.folio} no llegó NI al grupo NI al número del hotel:`, String(fbErr?.message || fbErr).split('\n')[0]);
+  }
+}
+
+// Todo lo que pasa DESPUÉS de contestarle al cliente: escalación, desayunos, aviso de
+// tours, aviso de cotización y follow-ups.
+async function afterBurstReply(meta, result, combinedText) {
+  const msg = meta?.msg;
+  if (!msg || !result || typeof result !== 'object') return;
+  const responseText = result.text || '';
+  if (!responseText && !result.quoteCreated) return;
+  const chatId = msg.from;
+  const userName = meta.userName || '';
+  const followupOpts = { contactNumber: meta.contactNumber || '' };
+
+  // Escalación a humano
+  if (result.requiresHumanIntervention) {
+    await tagChatForHumanIntervention(client, meta.chat, msg, userName, responseText);
+  }
+
+  // Notificación de desayunos grupales
+  const bodyLower = normalizeText(combinedText || '');
+  const responseLower = normalizeText(responseText || '');
+  const looksBreakfastInterest =
+    (bodyLower.includes('desayuno') || bodyLower.includes('desayunos') || bodyLower.includes('breakfast')) &&
+    (bodyLower.includes('grupo') || bodyLower.includes('somos') || bodyLower.includes('personas') ||
+     responseLower.includes('desayuno') || responseLower.includes('papan'));
+  if (looksBreakfastInterest && !breakfastNotifiedChats.has(chatId)) {
+    breakfastNotifiedChats.add(chatId);
+    setTimeout(() => breakfastNotifiedChats.delete(chatId), 4 * 60 * 60 * 1000);
+    try {
+      markRecentBotOutgoing(`${BREAKFAST_AGENT_NUMBER}@c.us`);
+      await sendMessageRobust(`${BREAKFAST_AGENT_NUMBER}@c.us`,
+        `🍳 *Grupo interesado en desayunos*\n\n👤 *${userName || 'Sin nombre'}*\n📱 wa.me/${chatId.split('@')[0]}\n\nEstán preguntando por desayunos grupales en El Papán Huasteco. 🌿`
+      );
+    } catch (brkErr) {
+      console.warn('⚠️ No se pudo notificar al coordinador de desayunos:', String(brkErr?.message || '').split('\n')[0]);
+    }
+  }
+
+  // Notificación de interés en tours
+  if (result.requiresTourNotification && !tourNotifiedChats.has(chatId)) {
+    tourNotifiedChats.add(chatId);
+    setTimeout(() => tourNotifiedChats.delete(chatId), 2 * 60 * 60 * 1000);
+    try {
+      markRecentBotOutgoing(`${TOUR_AGENT_NUMBER}@c.us`);
+      await sendMessageRobust(`${TOUR_AGENT_NUMBER}@c.us`,
+        `🌊 *Cliente interesado en tours*\n\n👤 *${userName || 'Sin nombre'}*\n📱 wa.me/${chatId.split('@')[0]}\n\nHablando con el agente del hotel. Puedes tomar la conversación. 🌿`
+      );
+    } catch (tourErr) {
+      console.warn('⚠️ No se pudo notificar al agente de tours:', String(tourErr?.message || '').split('\n')[0]);
+    }
+  }
+
+  // Follow-ups de disponibilidad y cotización
+  const textNorm = normalizeText(String(responseText || ''));
+  const noAvailabilityFound =
+    textNorm.includes('no hay disponibilidad') ||
+    textNorm.includes('no tenemos disponibilidad') ||
+    textNorm.includes('sin disponibilidad');
+
+  // ── Aviso al grupo Control Hotel SOLO cuando se creó una cotización REAL ──
+  // Señal confiable desde el handler (create_reservation_quote ejecutado con folio
+  // nuevo), nunca por folios repetidos en el texto.
+  if (result.quoteCreated && (result.quote || result.quoteFolio)) {
+    scheduleAvailabilityFollowup(client, chatId, userName, 'cart_abandoned', followupOpts);
+    await sendQuoteGroupAlert(meta, result);
+  } else if (hasRecentPendingQuote(chatId)) {
+    // Ya tenía una cotización pendiente de antes y sigue activo: solo recordatorio
+    // al cliente (no se vuelve a avisar al grupo).
+    scheduleAvailabilityFollowup(client, chatId, userName, 'cart_abandoned', followupOpts);
+  } else if (noAvailabilityFound) {
+    scheduleAvailabilityFollowup(client, chatId, userName, 'no_availability_found', followupOpts);
+  } else if (looksAvailabilityRequest(combinedText || '')) {
+    scheduleAvailabilityFollowup(client, chatId, userName, 'inquiry_no_response', followupOpts);
+  }
+}
+
+// Si Camila no pudo contestar (modelo caído, envío roto): disculpa al cliente y aviso
+// al grupo para que un humano tome la conversación. Nunca lanza.
+async function handleBurstError(err, key) {
+  const meta = err?.burstMeta || {};
+  const msg = meta.msg || null;
+  console.error(`❌ Error procesando mensaje de ${key}:`, String(err?.message || err).split('\n')[0]);
+  if (msg) {
+    try {
+      trackBotReply();
+      markRecentBotOutgoing(msg.from);
+      await safeReply(client, msg, meta.chat, 'Disculpa, tuve un problemita para procesar tu último mensaje. 🙏 Ya le avisé al equipo del hotel y en un momento te atiende una persona. 🌿');
+    } catch { /* ignore */ }
+  }
+  // Así una caída del cerebro (como la del 22-27 jul 2026) NO vuelve a pasar
+  // inadvertida durante días (freno anti-spam interno).
+  await notifyControlOfBotFailure(msg || { from: key }, meta.userName || '', err).catch(() => {});
+}
+
+const handleBurst = createBurstHandler({
+  handleMessage,
+  addToHistory,
+  checkBotPause,
+  sendReply: sendBurstReply,
+  afterReply: afterBurstReply,
+  log: console,
+});
+
+// Espera por ráfaga: 15 s de silencio (tope 60 s desde el primer mensaje) y candado por
+// chat. La key es msg.from, el mismo userId de siempre para historial/sesión/reservas.
+const bursts = createMessageBuffer({
+  debounceMs: envMs('MESSAGE_DEBOUNCE_MS', 15000),
+  maxWaitMs: envMs('MESSAGE_MAX_WAIT_MS', 60000),
+  onFlush: handleBurst,
+  onTyping: (key, meta) => meta?.chat?.sendStateTyping?.()?.catch?.(() => {}),
+  onError: (err, key) => { handleBurstError(err, key).catch(() => {}); },
+});
+
+// Tira lo pendiente de un chat (un humano tomó la conversación). El mismo cliente
+// puede aparecer como @c.us o @lid con los mismos dígitos: se prueban las variantes.
+function discardPendingBurst(chatId) {
+  if (!chatId) return 0;
+  const digits = extractDigitsFromJid(chatId);
+  const keys = new Set([String(chatId), normalizeChatId(chatId)]);
+  if (digits) keys.add(`${digits}@lid`);
+  let dropped = 0;
+  for (const k of keys) dropped += bursts.discard(k);
+  if (dropped) console.log(`🗑️  ${dropped} mensaje(s) sin responder descartados para ${chatId}: el equipo tomó la conversación`);
+  return dropped;
+}
 
 // ── Manejo de mensajes entrantes ──────────────────────────
 
@@ -1086,308 +1327,118 @@ client.on('message', async (msg) => {
   // Si un humano del hotel tomó la conversación, el bot no responde durante 1 hora
   // pero sigue rastreando mensajes para tener contexto al retomar
   const pauseStatus = checkBotPause(msg.from);
-  if (pauseStatus.paused) {
-    if (msg.body?.trim()) {
-      addToHistory(msg.from, 'user', msg.body.trim());
-    }
-    console.log(`⏸️  Mensaje guardado en historial (bot pausado): ${msg.from}`);
-    return;
-  }
   const userName = contact?.pushname || contact?.name || '';
+  // Número real del contacto (en chats @lid el JID no lo trae): comprobantes, avisos y
+  // búsqueda de la cotización por teléfono.
+  // OJO: bajo @lid, contact.number trae los MISMOS dígitos del lid (no el teléfono) —
+  // visto en logs de producción —; esos dígitos darían un wa.me falso, así que se descartan.
+  const contactDigits = digitsOnly(contact?.number || '');
+  const realNumber = (String(msg.from).endsWith('@lid') && contactDigits === extractDigitsFromJid(msg.from))
+    ? ''
+    : contactDigits;
 
-  // Si el bot acaba de retomar la conversación tras intervención humana,
-  // agregar nota de contexto para que Claude sepa lo que ocurrió
-  let contextualBody = msg.body;
+  // Si el bot acaba de retomar la conversación tras intervención humana, la nota de
+  // contexto viaja con la ráfaga (resumeNote) para que Claude sepa lo que ocurrió.
+  let resumeNote = '';
   if (pauseStatus.justResumed) {
     const fmtTime = (ts) => new Date(ts).toLocaleTimeString('es-MX', {
       hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City'
     });
-    const nota = `[NOTA INTERNA DEL SISTEMA: El equipo del hotel atendió personalmente esta conversación de ${fmtTime(pauseStatus.startedAt)} a ${fmtTime(pauseStatus.resumedAt)}. El historial completo está disponible arriba. Retoma la conversación con naturalidad, sin mencionar esta nota.]`;
-    contextualBody = `${nota}\n\n${msg.body}`;
+    resumeNote = `[NOTA INTERNA DEL SISTEMA: El equipo del hotel atendió personalmente esta conversación de ${fmtTime(pauseStatus.startedAt)} a ${fmtTime(pauseStatus.resumedAt)}. El historial completo está disponible arriba. Retoma la conversación con naturalidad, sin mencionar esta nota.]`;
     console.log(`▶️  Bot retomando conversación con contexto para ${msg.from}`);
   }
 
-  // Detectar imagen como comprobante de pago
+  const burstMeta = { msg, chat, userName, contactNumber: realNumber, resumeNote };
+  let incomingText = String(msg.body || '').trim();
+
+  // ── Archivos: comprobante (imagen o PDF), caption como texto, o no soportado ──
+  // Va ANTES del corte por pausa: un comprobante avisa al equipo aunque un humano
+  // tenga la conversación (en ese caso no se le contesta al cliente).
   if (msg.hasMedia) {
-    const mediaData = await msg.downloadMedia().catch(() => null);
-    const isImage = Boolean(mediaData && mediaData.mimetype?.startsWith('image/'));
-    const caption = (msg.body || msg.caption || '').trim();
-    const pend = getByUser(msg.from);
-    const hasPending = Boolean(pend && pend.status === 'PENDIENTE_PAGO');
+    const media = await msg.downloadMedia().catch((e) => {
+      console.warn(`⚠️ No se pudo descargar el archivo de ${msg.from}:`, String(e?.message || e).split('\n')[0]);
+      return null;
+    });
+    const mimetype = media?.mimetype || msg?._data?.mimetype || '';
+    const rawCaption = String(msg.body || msg.caption || '').trim();
+    const caption = cleanMediaCaption(rawCaption); // sin el nombre de archivo suelto
+    const activeQuote = findActiveQuote(msg.from, realNumber);
+    const kind = classifyIncomingMedia({
+      mimetype, caption: rawCaption, hasPendingQuote: Boolean(activeQuote), messageType: msg.type,
+    });
 
-    // Imagen sin texto, O imagen con caption pero con reserva pendiente → comprobante de pago.
-    // (Antes una imagen con cualquier caption se ignoraba como comprobante.)
-    if (isImage && (!caption || hasPending)) {
-      const result = await handlePaymentProof(msg.from, userName, caption);
-      trackBotReply();
-      markRecentBotOutgoing(msg.from);
-      await safeReply(client, msg, chat, result.message);
+    if (kind === 'proof') {
+      let sessionFolio = null;
+      try { sessionFolio = getSessionFolio(msg.from); } catch { /* sin sesión */ }
+      console.log(`\n🧾 [${new Date().toLocaleTimeString('es-MX')}] Comprobante (${mediaKind(mimetype) || 'archivo'}) de ${userName || msg.from}${activeQuote ? ` · folio ${activeQuote.folio}` : ' · sin cotización activa'}${media ? '' : ' · ⚠️ archivo sin descargar'}`);
 
-      // Si tiene reserva pendiente, avisar al equipo (número del hotel + grupo Control Hotel)
-      if (result.hasPendingReservation) {
-        // Ya mandó su comprobante → cancelar cualquier recordatorio pendiente y no
-        // volver a mandarle "¿aún quieres reservar?" (reporte 4.4).
+      // Marca el folio y avisa al grupo Control Hotel y al número del hotel YA,
+      // sin esperar los 15 s de la ráfaga. El acuse al cliente sí va en la ráfaga.
+      let proofResult = { ackText: null, folio: null };
+      try {
+        proofResult = await proofs.process({
+          chatId: msg.from, userName, contactNumber: realNumber, sessionFolio,
+          media, mimetype, caption, paused: pauseStatus.paused,
+        });
+      } catch (proofErr) {
+        console.error('❌ Error procesando comprobante:', String(proofErr?.message || proofErr).split('\n')[0]);
+        proofResult = { ackText: pauseStatus.paused ? null : buildProofAckNoQuote(), folio: null };
+      }
+
+      // Ya mandó su comprobante → no volver a mandarle "¿aún quieres reservar?" (reporte 4.4).
+      if (proofResult.folio) {
         recordPaymentProof(msg.from);
         clearAvailabilityFollowup(msg.from);
-        const r = result.reservation;
-        const toursInline = Array.isArray(r.tours) && r.tours.length > 0
-          ? `\n*Tours:*\n${r.tours.map(t => `· ${t?.name || 'Tour'} (${t?.participants || 1} persona${Number(t?.participants || 1) === 1 ? '' : 's'})`).join('\n')}\n`
-          : '';
-        const paidProof = Number(r.depositAmount || 0);
-        const pendProof = Math.max(0, Number(r.totalPrice || 0) - paidProof);
-        const comprobanteAlert =
-          `🔔 *Comprobante de pago recibido*\n\n*Folio:* ${r.folio}\n*Huésped:* ${r.userName}\n📱 wa.me/${String(r.userId || '').split('@')[0]}\n*Habitaciones:* ${(Array.isArray(r.rooms) && r.rooms.length > 0 ? r.rooms : [r.room]).map(x => x?.name || 'Suite').join(', ')}\n${toursInline}*Check-in:* ${r.checkin} | *Check-out:* ${r.checkout}\n*Huéspedes:* ${r.guests}\n*Total:* $${Number(r.totalPrice || 0).toLocaleString('es-MX')} MXN\n*Anticipo:* $${paidProof.toLocaleString('es-MX')} MXN | *Resta:* $${pendProof.toLocaleString('es-MX')} MXN\n\nVerifica el pago y confirma con */confirmar ${r.folio}*.`;
-
-        // 1) Número del hotel (verificador): texto + imagen del comprobante
-        if (process.env.HOTEL_WHATSAPP_NUMBER) {
-          const hotelNumber = process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '') + '@c.us';
-          markRecentBotOutgoing(hotelNumber);
-          await sendMessageRobust(hotelNumber, comprobanteAlert).catch(() => {});
-          markRecentBotOutgoing(hotelNumber);
-          try { await sendMessageRobust(hotelNumber, mediaData); }
-          catch (fwdErr) { console.warn('⚠️ No se pudo reenviar imagen al equipo:', String(fwdErr?.message || '').split('\n')[0]); }
-        }
-
-        // 2) Grupo Control Hotel (visibilidad del equipo): solo texto (la imagen no se manda al grupo)
-        const groupOkComprobante = await sendToControlHotelGroup(comprobanteAlert);
-        if (!groupOkComprobante) console.warn('⚠️ Aviso de comprobante NO llegó al grupo Control Hotel (el número del hotel sí lo recibió aparte)');
       }
+
+      if (pauseStatus.paused) {
+        addToHistory(msg.from, 'user', '[El cliente envió un comprobante de pago]');
+        if (caption) addToHistory(msg.from, 'user', caption);
+        console.log(`⏸️  Comprobante avisado al equipo y guardado en historial (bot pausado): ${msg.from}`);
+        return;
+      }
+
+      chat?.sendSeen?.()?.catch?.(() => {});
+      bursts.push(msg.from, {
+        type: 'proof', folio: proofResult.folio, kind: mediaKind(mimetype), ackText: proofResult.ackText,
+        duplicate: Boolean(proofResult.duplicate),
+      }, burstMeta);
+      if (caption) bursts.push(msg.from, { type: 'text', text: caption }, burstMeta);
       return;
     }
 
-    // Media sin texto que no es imagen (audio, sticker, documento): avisar y salir.
-    if (!isImage && !caption) {
-      trackBotReply();
-      markRecentBotOutgoing(msg.from);
-      await safeReply(client, msg, chat, 'Hola 👋 Solo puedo leer mensajes de texto o imágenes de comprobante. Escríbeme tu consulta y con gusto te ayudo. 🌿');
+    if (kind === 'unsupported') {
+      // Audio, sticker, video sin texto, etc.
+      if (pauseStatus.paused) {
+        console.log(`⏸️  Archivo no soportado ignorado (bot pausado): ${msg.from}`);
+        return;
+      }
+      chat?.sendSeen?.()?.catch?.(() => {});
+      bursts.push(msg.from, { type: 'unsupported_media' }, burstMeta);
       return;
     }
 
-    // Imagen con caption y sin reserva pendiente (o media con texto): continuar al
-    // flujo de texto usando el caption para que Claude responda la consulta.
+    // kind === 'text': el caption se contesta como un mensaje normal (p. ej. una foto
+    // con una pregunta, o una constancia fiscal).
+    incomingText = caption || rawCaption;
   }
 
-  // Ignorar mensajes sin texto (audios, stickers, documentos, etc.)
-  if (!msg.body || !msg.body.trim()) return;
+  // Ignorar mensajes sin texto
+  if (!incomingText) return;
 
-  console.log(`\n📩 [${new Date().toLocaleTimeString('es-MX')}] ${userName || msg.from}: ${msg.body}`);
-
-  // ── DEBOUNCE: agrupar mensajes seguidos antes de responder ──────────────────
-  // Espera MESSAGE_WAIT_MS ms de silencio para tener el mensaje completo.
-  // Si llegan varios mensajes rápido (ej. "Hola" + "quiero info" + "de la jungla"),
-  // los combina en uno solo antes de enviarlo a Claude.
-  const existing = pendingByChat.get(msg.from);
-  if (existing) {
-    clearTimeout(existing.timer);
-    existing.texts.push(msg.body.trim());
-    existing.lastMsg = msg;
-    existing.contextBody = contextualBody; // preservar nota de contexto del último mensaje
-  } else {
-    pendingByChat.set(msg.from, {
-      texts: [msg.body.trim()],
-      lastMsg: msg,
-      chat,
-      userName,
-      contextBody: contextualBody,
-      timer: null,
-    });
+  if (pauseStatus.paused) {
+    addToHistory(msg.from, 'user', incomingText);
+    console.log(`⏸️  Mensaje guardado en historial (bot pausado): ${msg.from}`);
+    return;
   }
 
-  const pending = pendingByChat.get(msg.from);
-  pending.timer = setTimeout(async () => {
-    pendingByChat.delete(msg.from);
-    const combinedText = pending.texts.join('\n').trim();
-    const finalMsg = pending.lastMsg;
-    const finalChat = pending.chat;
-    const finalContextBody = pending.texts.length > 1
-      ? combinedText  // múltiples mensajes → combinados, sin nota de contexto de pausa
-      : pending.contextBody; // un solo mensaje → preservar contexto original
+  console.log(`\n📩 [${new Date().toLocaleTimeString('es-MX')}] ${userName || msg.from}: ${incomingText}`);
 
-    if (pending.texts.length > 1) {
-      console.log(`⏱️  Mensajes agrupados (${pending.texts.length}): "${combinedText.slice(0, 80)}..."`);
-    }
-
-    // Indicador de "escribiendo..." (finalChat puede ser null si getChat falló en @lid)
-    await finalChat?.sendStateTyping?.().catch(() => {});
-
-    try {
-      const result = await handleMessage(finalMsg.from, finalContextBody, pending.userName);
-      const responseText = typeof result === 'string' ? result : result?.text;
-      const requiresHumanIntervention = typeof result === 'object' && result?.requiresHumanIntervention;
-
-      if (responseText) {
-        await new Promise(r => setTimeout(r, 1000));
-        trackBotReply();
-        markRecentBotOutgoing(finalMsg.from);
-        await safeReply(client, finalMsg, finalChat, responseText);
-
-        const bodyNorm = normalizeText(combinedText || '');
-        const responseNorm = normalizeText(responseText || '');
-        const looksGroupConversation =
-          bodyNorm.includes('grupo') || bodyNorm.includes('personas') || bodyNorm.includes('habitaciones');
-        const looksAvailabilityReply = responseNorm.includes('disponibilidad') || responseNorm.includes('disponible');
-        const lastSentImageAt = sentPriceImageByChat.get(finalMsg.from) || 0;
-
-        if (looksGroupConversation && looksAvailabilityReply && (Date.now() - lastSentImageAt > 6 * 60 * 60 * 1000)) {
-          const priceImage = await loadGroupPriceImageMedia();
-          if (priceImage) {
-            try {
-              markRecentBotOutgoing(finalMsg.from);
-              await client.sendMessage(finalMsg.from, priceImage);
-              sentPriceImageByChat.set(finalMsg.from, Date.now());
-            } catch (imgErr) {
-              console.warn('⚠️ No se pudo enviar imagen de precios:', String(imgErr?.message || '').split('\n')[0]);
-            }
-          }
-        }
-
-        // Escalación a humano
-        if (requiresHumanIntervention) {
-          await tagChatForHumanIntervention(client, finalChat, finalMsg, pending.userName, responseText);
-        }
-
-        // Notificación de desayunos grupales
-        const bodyLower = normalizeText(combinedText || '');
-        const responseLower = normalizeText(responseText || '');
-        const looksBreakfastInterest =
-          (bodyLower.includes('desayuno') || bodyLower.includes('desayunos') || bodyLower.includes('breakfast')) &&
-          (bodyLower.includes('grupo') || bodyLower.includes('somos') || bodyLower.includes('personas') ||
-           responseLower.includes('desayuno') || responseLower.includes('papan'));
-        if (looksBreakfastInterest && !breakfastNotifiedChats.has(finalMsg.from)) {
-          breakfastNotifiedChats.add(finalMsg.from);
-          setTimeout(() => breakfastNotifiedChats.delete(finalMsg.from), 4 * 60 * 60 * 1000);
-          try {
-            markRecentBotOutgoing(`${BREAKFAST_AGENT_NUMBER}@c.us`);
-            await sendMessageRobust(`${BREAKFAST_AGENT_NUMBER}@c.us`,
-              `🍳 *Grupo interesado en desayunos*\n\n👤 *${pending.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n\nEstán preguntando por desayunos grupales en El Papán Huasteco. 🌿`
-            );
-          } catch (brkErr) {
-            console.warn('⚠️ No se pudo notificar al coordinador de desayunos:', String(brkErr?.message || '').split('\n')[0]);
-          }
-        }
-
-        // Notificación de interés en tours
-        const requiresTourNotification = typeof result === 'object' && result?.requiresTourNotification;
-        if (requiresTourNotification && !tourNotifiedChats.has(finalMsg.from)) {
-          tourNotifiedChats.add(finalMsg.from);
-          setTimeout(() => tourNotifiedChats.delete(finalMsg.from), 2 * 60 * 60 * 1000);
-          try {
-            markRecentBotOutgoing(`${TOUR_AGENT_NUMBER}@c.us`);
-            await sendMessageRobust(`${TOUR_AGENT_NUMBER}@c.us`,
-              `🌊 *Cliente interesado en tours*\n\n👤 *${pending.userName || 'Sin nombre'}*\n📱 wa.me/${finalMsg.from.split('@')[0]}\n\nHablando con el agente del hotel. Puedes tomar la conversación. 🌿`
-            );
-          } catch (tourErr) {
-            console.warn('⚠️ No se pudo notificar al agente de tours:', String(tourErr?.message || '').split('\n')[0]);
-          }
-        }
-
-        // Follow-ups de disponibilidad y cotización
-        const textNorm = normalizeText(String(responseText || ''));
-        const noAvailabilityFound =
-          textNorm.includes('no hay disponibilidad') ||
-          textNorm.includes('no tenemos disponibilidad') ||
-          textNorm.includes('sin disponibilidad');
-
-        // ── Aviso al grupo Control Hotel SOLO cuando se creó una cotización REAL ──
-        // Señal confiable desde el handler (create_reservation_quote ejecutado con
-        // folio nuevo). Ya no se dispara por folios repetidos en el texto (confirmaciones,
-        // "mi folio es WA-...", etc.).
-        if (result?.quoteCreated && result?.quoteFolio) {
-          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'cart_abandoned');
-          const folio = result.quoteFolio;
-          // Buscar por folio (robusto ante mismatch @lid/@c.us); respaldo: por usuario
-          const pr = getByFolio(folio) || getByUser(finalMsg.from);
-
-          const phoneRaw = finalMsg.from.split('@')[0];
-          const clientName = pending.userName || pr?.userName || 'Sin nombre';
-          const email = pr?.guestEmail || '—';
-          const howFound = pr?.howFound || '—';
-          const overallCheckin = pr?.checkin || '—';
-          const overallCheckout = pr?.checkout || '—';
-          const guestsTotal = pr?.guests
-            || (Array.isArray(pr?.rooms) ? pr.rooms.reduce((s, r) => s + Number(r.guests || 0), 0) : '—');
-
-          // Estancia con cambio de suite: alguna habitación tiene fechas propias distintas al rango global
-          const prRooms = Array.isArray(pr?.rooms) ? pr.rooms : [];
-          const isSplitStay = prRooms.some(r =>
-            (r.checkin && r.checkin !== pr?.checkin) || (r.checkout && r.checkout !== pr?.checkout)
-          );
-
-          const roomsBlock = prRooms.length
-            ? prRooms.map(r => {
-                const dateTag = (isSplitStay && r.checkin && r.checkout) ? ` · 📅 ${r.checkin} → ${r.checkout}` : '';
-                return `· ${r.name} (${r.guests} personas)${dateTag} — $${Number(r.price).toLocaleString('es-MX')} MXN`;
-              }).join('\n')
-            : '(ver folio)';
-
-          const toursLine = Array.isArray(pr?.tours) && pr.tours.length
-            ? `\n\n🌊 *Tours:*\n${pr.tours.map(t => `· ${t?.name || 'Tour'}${t?.participants ? ` (${t.participants} personas)` : ''}${t?.price ? ` — $${Number(t.price).toLocaleString('es-MX')} MXN` : ''}`).join('\n')}`
-            : '';
-
-          const total = Number(pr?.totalPrice || 0);
-          const deposit = Number(pr?.depositAmount || 0);
-          const saldo = Math.max(0, total - deposit);
-
-          const quoteAlert =
-            `📋 *NUEVA COTIZACIÓN — WhatsApp*\n\n` +
-            `👤 *Cliente:* ${clientName}\n` +
-            `📱 *WhatsApp:* +${phoneRaw} · wa.me/${phoneRaw}\n` +
-            `📧 *Email:* ${email}\n` +
-            `🔎 *Nos encontró por:* ${howFound}\n\n` +
-            `🧾 *Folio:* ${folio}\n` +
-            `📅 *Check-in:* ${overallCheckin}  |  *Check-out:* ${overallCheckout}\n` +
-            `🌙 *Noches:* ${pr?.nights || '—'}  ·  👥 *Huéspedes:* ${guestsTotal}` +
-            (isSplitStay ? `\n⚠️ *Estancia con cambio de suite* (fechas por suite abajo)` : '') +
-            `\n\n🏨 *Habitaciones:*\n${roomsBlock}${toursLine}\n\n` +
-            `💰 *Total: $${total.toLocaleString('es-MX')} MXN*\n` +
-            `💳 *Anticipo: $${deposit.toLocaleString('es-MX')} MXN*\n` +
-            `🧮 *Saldo: $${saldo.toLocaleString('es-MX')} MXN*` +
-            // Sin bloqueo confirmado la suite NO está apartada: cualquiera puede
-            // reservarla por el motor web o una OTA mientras el cliente decide.
-            (result?.quoteBlockConfirmed === false
-              ? `\n\n🚨 *SIN BLOQUEO CONFIRMADO* — la(s) suite(s) NO quedaron apartadas.\n👉 Validen disponibilidad a mano ANTES de aceptar el pago.`
-              : '');
-
-          const groupOk = await sendToControlHotelGroup(quoteAlert);
-          if (groupOk) {
-            console.log(`📋 Alerta de cotización ${folio} enviada a Control Hotel`);
-          } else if (process.env.HOTEL_WHATSAPP_NUMBER) {
-            // Fallback: que el equipo se entere aunque el grupo falle.
-            const hotelJid = `${process.env.HOTEL_WHATSAPP_NUMBER.replace(/\D/g, '')}@c.us`;
-            try {
-              markRecentBotOutgoing(hotelJid);
-              await sendMessageRobust(hotelJid, quoteAlert);
-              console.log(`📋 Alerta de cotización ${folio} NO llegó al grupo — enviada al número del hotel (fallback)`);
-            } catch (fbErr) {
-              console.warn(`⚠️ Alerta de cotización ${folio} no llegó NI al grupo NI al número del hotel:`, String(fbErr?.message || fbErr).split('\n')[0]);
-            }
-          }
-        } else if (hasRecentPendingQuote(finalMsg.from)) {
-          // Ya tenía una cotización pendiente de antes y sigue activo: solo recordatorio
-          // al cliente (no se vuelve a avisar al grupo).
-          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'cart_abandoned');
-        } else if (noAvailabilityFound) {
-          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'no_availability_found');
-        } else if (looksAvailabilityRequest(combinedText || '')) {
-          scheduleAvailabilityFollowup(client, finalMsg.from, pending.userName, 'inquiry_no_response');
-        }
-      }
-    } catch (err) {
-      console.error('❌ Error procesando mensaje:', err);
-      try {
-        await safeReply(client, finalMsg, finalChat, 'Disculpa, tuve un problemita para procesar tu último mensaje. 🙏 Ya le avisé al equipo del hotel y en un momento te atiende una persona. 🌿');
-      } catch { /* ignore */ }
-      // Avisar al grupo Control Hotel para que un humano tome la conversación —
-      // así una caída del cerebro (como la del 22-27 jul 2026) NO vuelve a pasar
-      // inadvertida durante días. Fire-and-forget y nunca rompe (freno anti-spam interno).
-      notifyControlOfBotFailure(finalMsg, pending.userName, err).catch(() => {});
-    }
-  }, MESSAGE_WAIT_MS);
-
-  // El bloque try/catch original ya no aplica (movido al callback del debounce)
-  // — el código continúa al final del handler sin procesar nada más aquí.
-  return; // ← el procesamiento ocurre en el timer de arriba
-
+  // ── RÁFAGA: se junta con lo que siga escribiendo y se contesta UNA vez ──────
+  // Espera 15 s de silencio (tope 60 s) y nunca contesta dos veces en paralelo al
+  // mismo chat: ver message-buffer.js y handleBurst (conversation-flow.js).
+  chat?.sendSeen?.()?.catch?.(() => {});
+  bursts.push(msg.from, { type: 'text', text: incomingText }, burstMeta);
 });
 
 
@@ -1525,14 +1576,15 @@ async function resolveControlHotelGroupJid() {
 }
 
 // Devuelve true SOLO si el mensaje realmente salió al grupo; nunca lanza.
-async function sendToControlHotelGroup(message) {
+// message puede ser texto o un archivo (MessageMedia); options se pasa a sendMessage.
+async function sendToControlHotelGroup(message, options) {
   let lastErr = null;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const groupId = await resolveControlHotelGroupJid();
       if (!groupId) throw new Error('grupo no resuelto (sin CONTROL_HOTEL_GROUP_ID y sin match por nombre)');
       markRecentBotOutgoing(groupId);
-      await sendMessageRobust(groupId, message);
+      await sendMessageRobust(groupId, message, options);
       return true;
     } catch (err) {
       lastErr = err;

@@ -218,7 +218,7 @@ export default async function ArticlePage({ params }: Props) {
       text: 'Ya sabes cómo llegar — ahora elige dónde quedarte:',
       links: [
         { href: '/habitaciones', label: 'Ver las 13 suites', desc: 'Desde $1,500 MXN/noche · Spa privado' },
-        { href: '/paquetes', label: 'Paquetes todo incluido', desc: 'Suite + desayuno + tours desde $5,200 MXN' },
+        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días · Hotel + tours guiados' },
         { href: '/reservar', label: 'Reservar ahora', desc: 'Confirmación instantánea · Sin comisiones' },
       ],
     },
@@ -226,7 +226,7 @@ export default async function ArticlePage({ params }: Props) {
       text: '¿Planeas visitar Las Pozas? Estamos a 5 min caminando:',
       links: [
         { href: '/habitaciones/jungla', label: 'Suite Jungla', desc: 'Spa privado · La más cercana a Las Pozas' },
-        { href: '/paquetes', label: 'Paquete Ruta de las Pozas', desc: '3 noches + tour coordinado + desayunos' },
+        { href: '/paquetes', label: 'Paquete Luna de Miel', desc: 'Las Pozas + Tamul · 3 días / 2 noches' },
         { href: '/reservar', label: 'Reservar suite', desc: 'Check-in a 5 min de Las Pozas' },
       ],
     },
@@ -234,7 +234,7 @@ export default async function ArticlePage({ params }: Props) {
       text: 'Haz de Xilitla tu base de operaciones:',
       links: [
         { href: '/experiencias', label: 'Tours desde el hotel', desc: 'Tamul, Micos, Pozas con guía certificado' },
-        { href: '/paquetes', label: 'Paquetes de aventura', desc: 'Ruta de las Pozas · 3 noches todo incluido' },
+        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'Familiar, Aventura Extrema y más · 3 a 6 días' },
         { href: '/habitaciones', label: 'Ver habitaciones', desc: '13 suites · 4 con spa privado · WiFi' },
       ],
     },
@@ -242,15 +242,15 @@ export default async function ArticlePage({ params }: Props) {
       text: '¿Quieres hacer el tour a Tamul desde nuestro hotel?',
       links: [
         { href: '/experiencias', label: 'Tour Expedición Tamul', desc: 'Sótano + Cascada + Cenote · Guía certificado' },
-        { href: '/paquetes', label: 'Paquete Ruta de las Pozas', desc: 'Tour Tamul incluido + 3 noches' },
-        { href: '/reservar', label: 'Reservar y coordinar tour', desc: 'Salidas diarias desde el hotel' },
+        { href: '/paquetes', label: 'Paquete Aventura Extrema', desc: 'Tamul, rafting y rappel · 4 días / 3 noches' },
+        { href: '/reservar', label: 'Reservar tu suite', desc: 'El tour pasa por ti al hotel' },
       ],
     },
     'ruta-maestra-huasteca-potosina': {
       text: 'Empieza tu ruta maestra desde Xilitla:',
       links: [
-        { href: '/experiencias', label: 'Todos los tours disponibles', desc: '5 rutas · Guías locales certificados' },
-        { href: '/paquetes', label: 'Paquetes todo incluido', desc: 'Varios días con tours y desayunos' },
+        { href: '/experiencias', label: 'Tours por la Huasteca', desc: 'Tamul, Pozas, Puente de Dios · Guías certificados' },
+        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días con tours guiados' },
         { href: '/habitaciones', label: 'Suites en Xilitla', desc: 'Tu base en la Huasteca desde $1,500 MXN' },
       ],
     },
@@ -258,7 +258,7 @@ export default async function ArticlePage({ params }: Props) {
       text: 'Ya sabes cuándo ir — ahora asegura tu lugar:',
       links: [
         { href: '/reservar', label: 'Verificar disponibilidad', desc: 'Temporada alta · Reserva con anticipación' },
-        { href: '/paquetes', label: 'Paquete Selva en Silencio', desc: 'Temporada baja · Precio especial' },
+        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días · Consulta disponibilidad' },
         { href: '/habitaciones', label: 'Ver suites disponibles', desc: '13 opciones · Desde $1,500 MXN/noche' },
       ],
     },

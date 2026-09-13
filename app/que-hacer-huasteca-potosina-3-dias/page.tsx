@@ -6,7 +6,7 @@ import {
 import { HOTEL, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
 
 const URL = `${HOTEL.url}/que-hacer-huasteca-potosina-3-dias`;
-const ACTUALIZADO = 'agosto de 2026';
+const ACTUALIZADO = 'septiembre de 2026';
 
 export const metadata: Metadata = {
   title: 'Qué Hacer en la Huasteca Potosina en 3 Días: Itinerario Real (2026)',
@@ -34,7 +34,7 @@ const FAQS = [
   },
   {
     q: '¿Cuánto cuesta un viaje de 3 días a la Huasteca Potosina?',
-    a: `Para dos personas, calcula hospedaje desde $${HOTEL.precioDesde.toLocaleString('es-MX')} MXN por noche, entre $400 y $900 MXN por persona por cada tour con guía, y las entradas de cada atracción aparte. La gasolina y las casetas dependen de tu ciudad de origen.`,
+    a: `Para dos personas, calcula hospedaje desde $${HOTEL.precioDesde.toLocaleString('es-MX')} MXN por noche, entre $1,400 y $1,700 MXN por persona por cada tour de día completo con guía (ya incluye entradas, traslado desde tu hospedaje y desayuno buffet); si vas por tu cuenta, las entradas se pagan aparte. La gasolina y las casetas dependen de tu ciudad de origen.`,
   },
   {
     q: '¿Cuál es la mejor época para visitar la Huasteca Potosina?',
@@ -179,7 +179,7 @@ export default function TresDiasPage() {
           { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla por zona' },
           { href: '/experiencias', label: 'Tours desde el hotel' },
           { href: '/xilitla', label: 'Guía de Xilitla' },
-          { href: '/paquetes', label: 'Paquetes todo incluido' },
+          { href: '/paquetes', label: 'Paquetes de hotel y tours' },
         ]} />
 
         <SeoCta

@@ -145,7 +145,7 @@ Cada ángulo es una fotografía diferente. Llegar temprano (apertura a las 9 AM)
     time: 'Tour de día completo',
     body: `La Cascada de Tamul es la más alta e impresionante de San Luis Potosí: 105 metros de caída libre donde el río Santa María se une al Tampaón. El acceso es exclusivamente en canoa —navegas 3 kilómetros por el río entre paredes de roca calcárea cubierta de vegetación— y la cascada aparece de golpe a la vuelta de un recodo.
 
-El recorrido completo incluye el Sótano de las Huahuastecas (una caverna vertical de 450 metros) y el Cenote Cueva del Agua. Son 10-12 horas de excursión. Los tours salen a las 7 AM desde el hotel.`,
+El recorrido completo incluye el Sótano de las Huahuastecas (una caverna vertical de 450 metros) y el Cenote Cueva del Agua. Son 8 a 10 horas de excursión: pasan por ti al hotel hacia las 8:30 AM (el horario exacto se confirma al reservar).`,
   },
   {
     id: 'puente-de-dios',
@@ -157,7 +157,7 @@ El recorrido completo incluye el Sótano de las Huahuastecas (una caverna vertic
     time: 'Tour de día completo',
     body: `El Puente de Dios es un arco natural de piedra caliza bajo el cual fluye un río de aguas turquesas casi increíbles. El color del agua se debe a la alta concentración de minerales calcáreos —similar al agua de las cenotes de Yucatán, pero en plena sierra potosina.
 
-El tour incluye Hacienda Los Gómez y las Siete Cascadas escalonadas donde puedes nadar. El agua tiene temperatura perfecta todo el año (entre 22 y 24°C). Ideal para familias y para quienes buscan un día más relajado que la expedición Tamul.`,
+La Ruta Acuática (10 horas) incluye el Puente de Dios y, a elegir, la Hacienda Los Gómez con las Siete Cascadas o las Cascadas de Tamasopo, donde puedes nadar. El agua tiene temperatura perfecta todo el año (entre 22 y 24°C). Ideal para familias y para quienes buscan un día más relajado que la expedición Tamul.`,
   },
   {
     id: 'el-meco',
@@ -166,8 +166,8 @@ El tour incluye Hacienda Los Gómez y las Siete Cascadas escalonadas donde puede
     image: '/images/atracciones/cascada_el_salto.jpg',
     imageAlt: 'Cascada El Meco y mirador — Sierra Potosina, Huasteca desde Xilitla',
     distance: '1 hora desde Xilitla',
-    time: 'Tour de medio día a día completo',
-    body: `La Ruta Acuática incluye la Cascada El Meco con su mirador panorámico desde donde se ven tres cascadas al mismo tiempo con la selva como fondo. Es uno de los paisajes más fotogénicos de toda la Huasteca. A diferencia de Tamul, este tour es más accesible para niños pequeños y personas con movilidad reducida.`,
+    time: 'Tour de día completo',
+    body: `El tour Cascadas del Meco (10 horas) incluye la Cascada El Meco con su mirador panorámico desde donde se ven tres cascadas al mismo tiempo con la selva como fondo. Es uno de los paisajes más fotogénicos de toda la Huasteca. A diferencia de Tamul, este tour es más accesible para niños pequeños y personas con movilidad reducida.`,
   },
 ];
 

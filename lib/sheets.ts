@@ -6,6 +6,10 @@ const TEMP_BLOCKS_SHEET = 'BloqueosTemporal';
 // Minutos que dura el apartado temporal. Debe coincidir con lo que ve el
 // huésped en el cronómetro de /reservar (se envía al cliente en la respuesta).
 export const HOLD_MINUTES = 10;
+// Apartado de las cotizaciones de WhatsApp (sesiones `wa-<folio>`): Camila le
+// promete al cliente 3 horas para mandar su comprobante. Solo lo pueden pedir
+// las rutas autenticadas con AGENT_API_TOKEN; el motor web sigue en 10 min.
+export const WA_HOLD_MINUTES = 180;
 
 /**
  * Candado en-proceso para SERIALIZAR toda escritura que reescribe la matriz
@@ -534,31 +538,85 @@ async function checkTemporaryBlocks(
   } catch { return []; }
 }
 
+/** Un tramo de un apartado: unas habitaciones para unas noches [checkin, checkout). */
+export type HoldSegment = {
+  checkin: string;
+  checkout: string;
+  rooms: (string | { name: string })[];
+};
+
+/** Habitación y noche que ya tiene apartada OTRA sesión (apartado vigente). */
+export type HoldConflict = { room: string; date: string };
+
+export type TemporaryHoldResult = {
+  /** Expiración ISO de las filas nuevas, o null si no se escribió apartado. */
+  expiresAt: string | null;
+  /** Solo con failOnConflict: choques que impidieron escribir. */
+  conflicts?: HoldConflict[];
+};
+
 /**
- * Crea el apartado de 10 min de una sesión. Delega en renewTemporaryBlock para
- * que (a) siempre exista encabezado, (b) no se dupliquen filas si la sesión ya
- * tenía apartado de /reservar y (c) se purguen de paso los apartados vencidos.
- * Devuelve la expiración ISO, o null si no se creó.
+ * Lógica pura del apartado (sin Google): a partir de las filas actuales de la
+ * hoja calcula qué filas quedan y cuáles se agregan.
+ * - Purga como siempre: encabezado/basura, filas viejas de ESTA sesión y filas
+ *   expiradas de cualquier sesión (cada fila con SU expiración, así un apartado
+ *   de 3 h de WhatsApp no lo borra una renovación de 10 min del motor web).
+ * - Con failOnConflict: si una fila vigente de OTRA sesión tiene la misma
+ *   habitación y noche que alguno de los tramos, devuelve los choques y
+ *   `rows: null` (no hay que escribir nada).
  */
-export async function createTemporaryBlock(
-  checkin: string, checkout: string,
-  rooms: (string | { name: string })[], sessionId: string,
-): Promise<string | null> {
-  return renewTemporaryBlock(checkin, checkout, rooms, sessionId);
+function planTemporaryHold(
+  data: unknown[], sessionId: string, segments: HoldSegment[],
+  holdMinutes: number, now: Date, failOnConflict: boolean,
+): { rows: string[][] | null; expiresAt: string | null; conflicts: HoldConflict[] } {
+  const kept = data.filter((row): row is string[] => {
+    if (!isTempBlockRow(row)) return false;   // encabezado o basura: se reescribe
+    if (row[3] === sessionId) return false;   // filas viejas de esta sesión
+    const exp = new Date(row[2] || '');
+    return !isNaN(exp.getTime()) && exp > now; // purga expiradas
+  });
+
+  // Noche+habitación de todos los tramos, sin repetir (dos tramos que se
+  // enciman no duplican filas).
+  const wanted: HoldConflict[] = [];
+  const seen = new Set<string>();
+  for (const seg of segments) {
+    const normalizedRooms = (seg.rooms || [])
+      .map(r => normalizeRoomName(typeof r === 'string' ? r : r?.name ?? ''))
+      .filter(name => ROOM_NAMES.includes(name));
+    for (const date of getDateRange(seg.checkin, seg.checkout)) {
+      for (const room of normalizedRooms) {
+        const key = `${date}|${room}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        wanted.push({ room, date });
+      }
+    }
+  }
+
+  if (failOnConflict && wanted.length > 0) {
+    const taken = new Set(kept.map(row => `${String(row[0]).trim().slice(0, 10)}|${row[1]}`));
+    const conflicts = wanted.filter(w => taken.has(`${w.date}|${w.room}`));
+    if (conflicts.length > 0) return { rows: null, expiresAt: null, conflicts };
+  }
+
+  const expiration = new Date(now.getTime() + holdMinutes * 60 * 1000).toISOString();
+  const rows = [...kept, ...wanted.map(w => [w.date, w.room, expiration, sessionId])];
+  return { rows, expiresAt: wanted.length > 0 ? expiration : null, conflicts: [] };
 }
 
 /**
- * Renueva el apartado de una sesión: purga sus filas anteriores (y de paso
- * TODAS las filas ya expiradas de cualquier sesión) y escribe filas frescas
- * con expiración a 10 min. Con rooms vacío solo libera. Devuelve la
- * expiración ISO de las filas nuevas, o null si no se creó apartado.
+ * Escribe (reemplaza) el apartado de una sesión dentro del candado de la hoja.
+ * Todos los tramos se escriben en UNA sola reescritura: antes, en una estancia
+ * con cambio de suite cada llamada borraba el apartado del tramo anterior.
+ * Con segments vacío (o sin habitaciones) solo libera.
  */
-export async function renewTemporaryBlock(
-  checkin: string, checkout: string,
-  rooms: (string | { name: string })[], sessionId: string,
-): Promise<string | null> {
+async function writeTemporaryHold(
+  sessionId: string, segments: HoldSegment[], holdMinutes: number,
+  opts: { failOnConflict?: boolean } = {},
+): Promise<TemporaryHoldResult> {
   const client = await getSheetsClient();
-  if (!client || !process.env.GOOGLE_SHEET_ID) return null;
+  if (!client || !process.env.GOOGLE_SHEET_ID) return { expiresAt: null };
   const sid = process.env.GOOGLE_SHEET_ID;
   return withTempBlockLock(async () => {
   try {
@@ -569,32 +627,62 @@ export async function renewTemporaryBlock(
       })
     );
     const data = res.data.values || [];
-    const now = new Date();
-    const kept = data.filter(row => {
-      if (!isTempBlockRow(row)) return false;   // encabezado o basura: se reescribe
-      if (row[3] === sessionId) return false;   // filas viejas de esta sesión
-      const exp = new Date(row[2] || '');
-      return !isNaN(exp.getTime()) && exp > now; // purga expiradas
-    });
-
-    const normalizedRooms = rooms
-      .map(r => typeof r === 'string' ? { name: normalizeRoomName(r) } : { name: normalizeRoomName(r.name) })
-      .filter(r => ROOM_NAMES.includes(r.name));
-    const dateRange = getDateRange(checkin, checkout);
-    const expiration = new Date(Date.now() + HOLD_MINUTES * 60 * 1000).toISOString();
-    for (const date of dateRange) {
-      for (const room of normalizedRooms) {
-        kept.push([date, room.name, expiration, sessionId]);
-      }
+    const plan = planTemporaryHold(
+      data, sessionId, segments, holdMinutes, new Date(), Boolean(opts.failOnConflict),
+    );
+    if (!plan.rows) {
+      console.warn(`⚠️ Apartado NO creado (${sessionId}): ${plan.conflicts.length} noche(s) ya apartadas por otra sesión`);
+      return { expiresAt: null, conflicts: plan.conflicts };
     }
 
-    await rewriteTempBlocks(client, sid, kept, data.length);
-    return normalizedRooms.length > 0 && dateRange.length > 0 ? expiration : null;
+    await rewriteTempBlocks(client, sid, plan.rows, data.length);
+    return { expiresAt: plan.expiresAt, conflicts: [] };
   } catch (e: any) {
-    console.error('❌ renewTemporaryBlock error:', e.message);
-    return null;
+    console.error('❌ writeTemporaryHold error:', e.message);
+    return { expiresAt: null };
   }
   });
+}
+
+/**
+ * Crea el apartado de una sesión (10 min por omisión). Reutiliza la escritura de
+ * renewTemporaryBlock para que (a) siempre exista encabezado, (b) no se dupliquen
+ * filas si la sesión ya tenía apartado y (c) se purguen de paso los vencidos.
+ * opts (solo rutas autenticadas del bot):
+ * - holdMinutes: duración (WA_HOLD_MINUTES para cotizaciones de WhatsApp).
+ * - segments: varios tramos en una sola escritura; si vienen, se ignoran
+ *   checkin/checkout/rooms sueltos.
+ * - failOnConflict: si otra sesión ya tiene apartada alguna noche, no escribe
+ *   nada y devuelve `conflicts`.
+ * Devuelve `{ expiresAt }` (null si no se creó) y, si hubo choques, `conflicts`.
+ */
+export async function createTemporaryBlock(
+  checkin: string, checkout: string,
+  rooms: (string | { name: string })[], sessionId: string,
+  opts: { holdMinutes?: number; segments?: HoldSegment[]; failOnConflict?: boolean } = {},
+): Promise<TemporaryHoldResult> {
+  const segments = opts.segments && opts.segments.length > 0
+    ? opts.segments
+    : [{ checkin, checkout, rooms }];
+  return writeTemporaryHold(sessionId, segments, opts.holdMinutes ?? HOLD_MINUTES, {
+    failOnConflict: opts.failOnConflict,
+  });
+}
+
+/**
+ * Renueva el apartado de una sesión: purga sus filas anteriores (y de paso
+ * TODAS las filas ya expiradas de cualquier sesión) y escribe filas frescas
+ * con expiración a HOLD_MINUTES (10 min). Con rooms vacío solo libera. Devuelve la
+ * expiración ISO de las filas nuevas, o null si no se creó apartado.
+ */
+export async function renewTemporaryBlock(
+  checkin: string, checkout: string,
+  rooms: (string | { name: string })[], sessionId: string,
+): Promise<string | null> {
+  const { expiresAt } = await writeTemporaryHold(
+    sessionId, [{ checkin, checkout, rooms }], HOLD_MINUTES,
+  );
+  return expiresAt;
 }
 
 export async function removeTemporaryBlock(sessionId: string) {

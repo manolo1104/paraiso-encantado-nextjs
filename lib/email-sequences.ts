@@ -8,6 +8,8 @@ const BASE_URL = 'https://www.paraisoencantado.com';
 const REVIEW_URL = process.env.GOOGLE_MAPS_REVIEW_URL ||
   'https://g.page/r/CY84xO7VaxDbEBM/review';
 const WA_NUMBER = '524891007679';
+// WhatsApp del equipo de tours (Tours Huasteca Potosina): los tours se organizan ahí.
+const TOURS_WA_NUMBER = '524891251458';
 const PROMO_CODE = 'REGRESA10';
 const PROMO_DISCOUNT = '10%';
 
@@ -204,7 +206,9 @@ export function buildToursEmailHtml(data: {
 }): string {
   const first = data.customerName.trim().split(' ')[0];
   const waText = encodeURIComponent(`Hola, llego el ${data.checkinFormatted} (confirmación ${data.confirmacion}) y quiero apartar un tour.`);
-  const waUrl = `https://wa.me/${WA_NUMBER}?text=${waText}`;
+  // Los tours los organiza el equipo de tours (Tours Huasteca Potosina), no la
+  // recepción del hotel: el WhatsApp de este correo va a su número.
+  const waUrl = `https://wa.me/${TOURS_WA_NUMBER}?text=${waText}`;
   // Los tours se venden y se reservan en el sitio de la operadora, no en el del
   // hotel: ahí están los precios vigentes y el botón de reservar.
   const toursUrl = 'https://www.huasteca-potosina.com/tours';
@@ -212,20 +216,21 @@ export function buildToursEmailHtml(data: {
   // Los tres que más se reservan. Precios y duraciones vienen de /experiencias:
   // si cambian allá, cámbialos aquí — el correo no debe prometer otra cosa.
   const tours = [
-    { name: 'Expedición Tamul', desc: 'La cascada más alta de San Luis Potosí, remontando el río en canoa', meta: '8–10 h · desde $1,550' },
-    { name: 'Ruta Acuática', desc: 'Puente de Dios, la hacienda y las siete cascadas', meta: '8–10 h · desde $1,600' },
-    { name: 'Ruta Surrealista', desc: 'Jardín de Edward James, manantiales y selva — a 5 min del hotel', meta: '8–10 h · desde $1,400' },
+    { name: 'Expedición Tamul', url: `${toursUrl}/expedicion-tamul`, desc: 'La cascada más alta de San Luis Potosí, remontando el río en canoa', meta: '8–10 h · $1,550' },
+    { name: 'Ruta Acuática', url: `${toursUrl}/ruta-acuatica-puente-de-dios`, desc: 'Puente de Dios y, a elegir, Hacienda Los Gómez con las siete cascadas o Tamasopo', meta: '10 h · $1,600' },
+    { name: 'Ruta Surrealista', url: `${toursUrl}/ruta-surrealista-edward-james`, desc: 'Jardín de Edward James, manantiales y selva — a 5 min del hotel', meta: '8–10 h · $1,400' },
   ].map(t => `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;margin-bottom:4px;">
       <tr>
         <td style="padding:16px 0;width:72%;vertical-align:top;">
           <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;margin:0 0 4px;">
-            <a href="${toursUrl}" style="color:#2a2218;text-decoration:none;">${t.name}</a>
+            <a href="${t.url}" style="color:#2a2218;text-decoration:none;">${t.name}</a>
           </p>
           <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;margin:0;">${t.desc}</p>
         </td>
         <td style="padding:16px 0 16px 16px;text-align:right;vertical-align:top;white-space:nowrap;">
           <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#5a7a5c;margin:0;">${t.meta}</p>
+          <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:10px;color:#9a8a74;margin:2px 0 0;">por persona</p>
         </td>
       </tr>
     </table>`).join('');
@@ -235,17 +240,17 @@ export function buildToursEmailHtml(data: {
     <tr><td class="mplg" style="background-color:#faf8f5;padding:52px 48px;">
       ${greeting(data.customerName)}
       <p style="margin:16px 0 32px;font-family:'Jost','Helvetica Neue',Arial;font-size:15px;font-weight:300;color:#4a3f30;line-height:1.85;">
-        En <strong>3 días</strong> llegas a Paraíso Encantado. Los tours salen desde el hotel con guía,
+        En <strong>3 días</strong> llegas a Paraíso Encantado. Los tours de día completo pasan por ti al hotel,
         y en temporada alta los cupos —sobre todo el de Tamul— se agotan con días de anticipación.
         Vale la pena apartarlos antes de llegar:
       </p>
       ${tours}
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;margin:16px 0 0;">
-        Transporte, guía certificado y equipo incluidos · Se apartan sin pago por adelantado
+        Traslado desde el hotel, desayuno buffet, entradas y guía certificado incluidos
       </p>
       ${ctaButton('Ver todos los tours', toursUrl, '#2a2218')}
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#4a3f30;text-align:center;margin:0 0 6px;">
-        ¿Prefieres que te lo armemos nosotros? <a href="${waUrl}" style="color:#5a7a5c;">Escríbenos por WhatsApp</a>
+        ¿Prefieres que te lo armen? <a href="${waUrl}" style="color:#5a7a5c;">Escríbele a nuestro equipo de tours por WhatsApp</a> (+52 489 125 1458)
       </p>
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;text-align:center;margin:0;">
         También puedes llamarnos al +52 489-100-7679
