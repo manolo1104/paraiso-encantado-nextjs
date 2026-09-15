@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, Calendar, Users, MessageCircle, Phone } from 'lucide-react';
-import { BookingState, BOOKING_ROOMS, calcRoomStayTotal, formatMXN, calcCartSubtotal } from '@/lib/booking';
+import { BookingState, BOOKING_ROOMS, calcRoomStayTotal, formatMXN, calcStayTotals } from '@/lib/booking';
 import styles from './confirmacion.module.css';
 
 const WHATSAPP_URL = 'https://wa.me/524891007679';
@@ -28,8 +28,7 @@ export default function ConfirmacionPage() {
     // El tag de conversión se configura en GTM (ver marketing/MEDICION-GOOGLE-ADS.md).
     if (cn && parsed) {
       const b = parsed;
-      const sub = calcCartSubtotal(b.cart, b.checkin, b.checkout);
-      const totalValue = Math.max(0, sub - b.promoDiscount);
+      const totalValue = calcStayTotals(b).total;
       type DataLayerWindow = { dataLayer?: Array<Record<string, unknown>> };
       const w = window as unknown as DataLayerWindow;
       w.dataLayer = w.dataLayer || [];
@@ -59,8 +58,9 @@ export default function ConfirmacionPage() {
     sessionStorage.removeItem('pe_booking_state');
   }, []);
 
-  const subtotal = booking ? calcCartSubtotal(booking.cart, booking.checkin, booking.checkout) : 0;
-  const total = booking ? Math.max(0, subtotal - booking.promoDiscount) : 0;
+  const totals = booking ? calcStayTotals(booking) : null;
+  const total = totals?.total ?? 0;
+  const addons = totals?.addons ?? { desayunoPersonas: 0, desayuno: 0, cancelacionFlexible: 0, total: 0 };
 
   const checkinFmt = booking
     ? new Date(`${booking.checkin}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -133,6 +133,18 @@ export default function ConfirmacionPage() {
                   </div>
                 );
               })}
+              {addons.desayuno > 0 && (
+                <div className={styles.roomRow}>
+                  <span>Desayuno ({addons.desayunoPersonas} pers. × {booking.nights} noche{booking.nights !== 1 ? 's' : ''})</span>
+                  <span>{formatMXN(addons.desayuno)}</span>
+                </div>
+              )}
+              {addons.cancelacionFlexible > 0 && (
+                <div className={styles.roomRow}>
+                  <span>Cancelación flexible (10%)</span>
+                  <span>{formatMXN(addons.cancelacionFlexible)}</span>
+                </div>
+              )}
               {booking.promoDiscount > 0 && (
                 <div className={`${styles.roomRow} ${styles.discountRow}`}>
                   <span>Descuento ({booking.promoCode})</span>

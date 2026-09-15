@@ -10,6 +10,9 @@ const REVIEW_URL = process.env.GOOGLE_MAPS_REVIEW_URL ||
 const WA_NUMBER = '524891007679';
 // WhatsApp del equipo de tours (Tours Huasteca Potosina): los tours se organizan ahí.
 const TOURS_WA_NUMBER = '524891251458';
+// Toda la venta cruzada de tours en los correos antes de llegar aterriza aquí:
+// el catálogo de la operadora con precios vigentes y el botón de reservar.
+const TOURS_RESERVAR_URL = 'https://www.huasteca-potosina.com/reservar';
 const PROMO_CODE = 'REGRESA10';
 const PROMO_DISCOUNT = '10%';
 
@@ -209,16 +212,12 @@ export function buildToursEmailHtml(data: {
   // Los tours los organiza el equipo de tours (Tours Huasteca Potosina), no la
   // recepción del hotel: el WhatsApp de este correo va a su número.
   const waUrl = `https://wa.me/${TOURS_WA_NUMBER}?text=${waText}`;
-  // Los tours se venden y se reservan en el sitio de la operadora, no en el del
-  // hotel: ahí están los precios vigentes y el botón de reservar.
-  const toursUrl = 'https://www.huasteca-potosina.com/tours';
-
   // Los tres que más se reservan. Precios y duraciones vienen de /experiencias:
   // si cambian allá, cámbialos aquí — el correo no debe prometer otra cosa.
   const tours = [
-    { name: 'Expedición Tamul', url: `${toursUrl}/expedicion-tamul`, desc: 'La cascada más alta de San Luis Potosí, remontando el río en canoa', meta: '8–10 h · $1,550' },
-    { name: 'Ruta Acuática', url: `${toursUrl}/ruta-acuatica-puente-de-dios`, desc: 'Puente de Dios y, a elegir, Hacienda Los Gómez con las siete cascadas o Tamasopo', meta: '10 h · $1,600' },
-    { name: 'Ruta Surrealista', url: `${toursUrl}/ruta-surrealista-edward-james`, desc: 'Jardín de Edward James, manantiales y selva — a 5 min del hotel', meta: '8–10 h · $1,400' },
+    { name: 'Expedición Tamul', url: TOURS_RESERVAR_URL, desc: 'La cascada más alta de San Luis Potosí, remontando el río en canoa', meta: '8–10 h · $1,550' },
+    { name: 'Ruta Acuática', url: TOURS_RESERVAR_URL, desc: 'Puente de Dios y, a elegir, Hacienda Los Gómez con las siete cascadas o Tamasopo', meta: '10 h · $1,600' },
+    { name: 'Ruta Surrealista', url: TOURS_RESERVAR_URL, desc: 'Jardín de Edward James, manantiales y selva — a 5 min del hotel', meta: '8–10 h · $1,400' },
   ].map(t => `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;margin-bottom:4px;">
       <tr>
@@ -248,7 +247,7 @@ export function buildToursEmailHtml(data: {
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;margin:16px 0 0;">
         Traslado desde el hotel, desayuno buffet, entradas y guía certificado incluidos
       </p>
-      ${ctaButton('Ver todos los tours', toursUrl, '#2a2218')}
+      ${ctaButton('Ver todos los tours', TOURS_RESERVAR_URL, '#2a2218')}
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#4a3f30;text-align:center;margin:0 0 6px;">
         ¿Prefieres que te lo armen? <a href="${waUrl}" style="color:#5a7a5c;">Escríbele a nuestro equipo de tours por WhatsApp</a> (+52 489 125 1458)
       </p>
@@ -310,7 +309,7 @@ export function buildWelcomeGuideEmailHtml(data: {
             <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">
               Expedición Tamul · Cascadas del Meco<br>
               Ruta Surrealista · Puente de Dios<br>
-              <a href="https://wa.me/${WA_NUMBER}" style="color:#8a6830;text-decoration:underline;">Consultar por WhatsApp</a>
+              <a href="${TOURS_RESERVAR_URL}" style="color:#8a6830;text-decoration:underline;">Reservar un tour</a>
             </p>
           </td>
           <td style="width:50%;padding:20px;vertical-align:top;">

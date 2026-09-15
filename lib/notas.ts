@@ -17,13 +17,46 @@ export interface QuoteTour { nombre?: string; precio?: number; personas?: number
 export interface QuoteHab { suite?: string; personas?: number; precio?: number; noches?: number; [k: string]: unknown }
 
 // Add-ons de servicio con precio unitario (desayuno por persona/noche, late
-// check-out por habitación/noche). total del renglón = cantidad × precioUnit.
+// check-out por habitación/noche, cancelación flexible como un solo cargo).
+// total del renglón = cantidad × precioUnit.
 export interface ExtraItem {
-  tipo: 'desayuno' | 'late_checkout';
+  tipo: 'desayuno' | 'late_checkout' | 'cancelacion_flexible';
   nombre: string;
-  cantidad: number;     // person-noches (desayuno) o habitación-noches (late check-out)
+  cantidad: number;     // person-noches (desayuno), habitación-noches (late) o 1 (cancelación)
   precioUnit: number;   // MXN por unidad
   detalle?: string;     // etiqueta legible p.ej. "2 personas × 3 noches"
+}
+
+export const EXTRA_ICONO: Record<ExtraItem['tipo'], string> = {
+  desayuno: '🍳',
+  late_checkout: '🕐',
+  cancelacion_flexible: '🛡️',
+};
+
+export function extraTotal(e: ExtraItem): number {
+  return (Number(e.cantidad) || 0) * (Number(e.precioUnit) || 0);
+}
+
+/** Extras de una reserva del motor web (desayuno americano y cancelación flexible). */
+export function extrasMotorWeb(p: {
+  desayunoPersonas: number; desayunoPrecio: number; noches: number; cancelacionFlexible: number;
+}): ExtraItem[] {
+  const out: ExtraItem[] = [];
+  const n = Math.max(1, p.noches);
+  if (p.desayunoPersonas > 0 && p.desayunoPrecio > 0) {
+    out.push({
+      tipo: 'desayuno', nombre: 'Desayuno americano',
+      cantidad: p.desayunoPersonas * n, precioUnit: p.desayunoPrecio,
+      detalle: `${p.desayunoPersonas} persona${p.desayunoPersonas !== 1 ? 's' : ''} × ${n} noche${n !== 1 ? 's' : ''}`,
+    });
+  }
+  if (p.cancelacionFlexible > 0) {
+    out.push({
+      tipo: 'cancelacion_flexible', nombre: 'Cancelación flexible',
+      cantidad: 1, precioUnit: p.cancelacionFlexible, detalle: '10% del total de la estancia',
+    });
+  }
+  return out;
 }
 
 export interface ParsedNotas {
@@ -102,4 +135,14 @@ export function joinNotas(p: Partial<ParsedNotas>): string {
   if (p.habs && p.habs.length > 0) base += `${HABS}${JSON.stringify(p.habs)}`;
   if (p.extras && p.extras.length > 0) base += `${EXTRAS}${JSON.stringify(p.extras)}`;
   return base;
+}
+
+/** Extras de una reserva web a partir de la metadata que puso el servidor en Stripe. */
+export function extrasDesdeStripe(md: Record<string, string | undefined>, noches: number): ExtraItem[] {
+  return extrasMotorWeb({
+    desayunoPersonas: Number(md.desayunoPersonas) || 0,
+    desayunoPrecio: Number(md.desayunoPrecio) || 0,
+    noches,
+    cancelacionFlexible: Number(md.cancelacionFlexible) || 0,
+  });
 }

@@ -11,8 +11,9 @@ import {
   BookingState,
   BOOKING_ROOMS,
   calcRoomStayTotal,
-  calcCartSubtotal,
+  calcStayTotals,
   formatMXN,
+  CANCELACION_FLEX_CORTO,
 } from '@/lib/booking';
 import styles from '@/app/reservar/checkout/checkout.module.css';
 
@@ -23,8 +24,7 @@ function fmtDate(d: string): string {
 }
 
 export default function BookingSummary({ booking }: { booking: BookingState }) {
-  const subtotal = calcCartSubtotal(booking.cart, booking.checkin, booking.checkout);
-  const total = Math.max(0, subtotal - booking.promoDiscount);
+  const { subtotal, total, addons } = calcStayTotals(booking);
   const isDeposit = booking.isDeposit ?? false;
 
   return (
@@ -71,6 +71,18 @@ export default function BookingSummary({ booking }: { booking: BookingState }) {
             <span>−{formatMXN(booking.promoDiscount)}</span>
           </div>
         )}
+        {addons.desayuno > 0 && (
+          <div className={styles.summaryRow}>
+            <span>Desayuno ({addons.desayunoPersonas} pers. × {booking.nights} noche{booking.nights !== 1 ? 's' : ''})</span>
+            <span>{formatMXN(addons.desayuno)}</span>
+          </div>
+        )}
+        {addons.cancelacionFlexible > 0 && (
+          <div className={styles.summaryRow}>
+            <span>Cancelación flexible (10%)</span>
+            <span>{formatMXN(addons.cancelacionFlexible)}</span>
+          </div>
+        )}
         <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
           <span>Total estadía</span>
           <span>{formatMXN(total)}</span>
@@ -91,7 +103,10 @@ export default function BookingSummary({ booking }: { booking: BookingState }) {
 
       <div className={styles.summaryGuarantees}>
         <p><ShieldCheck size={13} strokeWidth={1.5} /> Confirmación instantánea por email</p>
-        <p><ShieldCheck size={13} strokeWidth={1.5} /> Reembolso 100% hasta 7 días antes</p>
+        {addons.cancelacionFlexible > 0
+          ? <p><ShieldCheck size={13} strokeWidth={1.5} /> Cancelación flexible: {CANCELACION_FLEX_CORTO.toLowerCase()}</p>
+          : <p><ShieldCheck size={13} strokeWidth={1.5} /> Reembolso 100% hasta 7 días antes</p>
+        }
         {isDeposit
           ? <p><ShieldCheck size={13} strokeWidth={1.5} /> Resto ({formatMXN(booking.amountPending ?? 0)}) se paga al llegar</p>
           : <p><ShieldCheck size={13} strokeWidth={1.5} /> Reserva directa sin comisiones</p>

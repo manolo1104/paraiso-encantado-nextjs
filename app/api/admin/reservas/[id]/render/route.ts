@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { getAllBookings } from '@/lib/admin/sheets-admin';
-import { parseNotas } from '@/lib/notas';
+import { parseNotas, EXTRA_ICONO, extraTotal } from '@/lib/notas';
 import { mexicoTodayStr } from '@/lib/date-mx';
 
 export const dynamic = 'force-dynamic';
@@ -57,7 +57,7 @@ export async function GET(
   const extras = parsed.extras;
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
-  const extrasTotal = extras.reduce((s, e) => s + e.cantidad * e.precioUnit, 0);
+  const extrasTotal = extras.reduce((s, e) => s + extraTotal(e), 0);
   const habsTotal = b.total - toursTotal - paquetesTotal - extrasTotal;
 
   // Parse room names: "Jungla (2 personas)" → { name, guests }
@@ -101,11 +101,13 @@ export async function GET(
   // Add extras (desayuno / late check-out). perNight = unidades por noche → el
   // renglón lee "perNight × noches × precioUnit = subtotal".
   for (const e of extras) {
-    const perNight = Math.max(1, Math.round(e.cantidad / noches));
+    // La cancelación flexible es un solo cargo: no se multiplica por noches.
+    const unico = e.tipo === 'cancelacion_flexible';
+    const perNight = unico ? 1 : Math.max(1, Math.round(e.cantidad / noches));
     rooms.push({
-      name: `${e.tipo === 'desayuno' ? '🍳' : '🕐'} ${e.nombre}`,
+      name: `${EXTRA_ICONO[e.tipo] || '➕'} ${e.nombre}`,
       category: e.detalle || 'Servicio adicional',
-      guests: perNight, nights: noches, rate: e.precioUnit, subtotal: e.cantidad * e.precioUnit,
+      guests: perNight, nights: unico ? 1 : noches, rate: e.precioUnit, subtotal: extraTotal(e),
     });
   }
 

@@ -6,6 +6,8 @@ import {
   calcPromoDiscount,
   calcDepositAmount,
   calcNights,
+  calcAddonTotals,
+  DESAYUNO_PRECIO,
   VALID_PROMO_CODES,
   type CartItem,
   type PromoCode,
@@ -20,7 +22,7 @@ export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   try {
     const body = await req.json();
-    const { cart, checkin, checkout, promoCode, customerEmail, customerName, bookingDetails } = body;
+    const { cart, checkin, checkout, promoCode, customerEmail, customerName, bookingDetails, addons } = body;
 
     // ── Validación servidor: el precio se calcula AQUÍ, nunca se confía en el cliente ──
     if (!Array.isArray(cart) || cart.length === 0 || !checkin || !checkout) {
@@ -57,7 +59,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const stayTotal = Math.max(0, subtotal - discount);
+    // Add-ons. El desayuno se cobra por persona: nunca a menos adultos de los que
+    // ya van asignados a las habitaciones (eso sí lo validó el servidor).
+    const adultosCarrito = cleanCart.reduce((s, c) => s + c.guestCount, 0);
+    const adults = Math.max(adultosCarrito, Math.min(Number(bookingDetails?.adults) || 0, 40));
+    const children = Math.max(0, Math.min(Number(bookingDetails?.children ?? bookingDetails?.minors) || 0, 20));
+    const stayBase = Math.max(0, subtotal - discount);
+    const addonTotals = calcAddonTotals(
+      { desayuno: addons?.desayuno === true, cancelacionFlexible: addons?.cancelacionFlexible === true },
+      adults + children, nights, stayBase,
+    );
+
+    const stayTotal = stayBase + addonTotals.total;
     const deposit = calcDepositAmount(stayTotal, nights);
     const pending = stayTotal - deposit;
     const isDeposit = nights >= 2;
@@ -90,8 +103,14 @@ export async function POST(req: NextRequest) {
         checkin: String(checkin),
         checkout: String(checkout),
         nights: String(nights),
-        adults: String(bookingDetails?.adults ?? bookingDetails?.guests ?? ''),
-        children: String(bookingDetails?.children ?? bookingDetails?.minors ?? ''),
+        adults: String(adults),
+        children: String(children),
+        // Add-ons (0 = no lo pidió). Con esto la confirmación y el webhook
+        // reconstruyen los extras sin confiar en el navegador.
+        desayunoPersonas: String(addonTotals.desayunoPersonas),
+        desayunoPrecio: String(DESAYUNO_PRECIO),
+        desayunoTotal: String(addonTotals.desayuno),
+        cancelacionFlexible: String(addonTotals.cancelacionFlexible),
         rooms: roomsMeta,
         customerEmail: customerEmail || '',
         customerName: customerName || '',

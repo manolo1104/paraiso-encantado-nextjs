@@ -13,7 +13,7 @@ const faqs = [
   {
     question: '¿El desayuno está incluido en el precio?',
     answer:
-      'No está incluido en la tarifa. Nuestro restaurante El Papán Huasteco sirve desayunos de $100 a $200 MXN: tortillas hechas a mano en comal, zacahuil y café de olla.',
+      'No está incluido en la tarifa. Puedes agregarlo al reservar por $250 MXN por persona por noche: a elegir huevos, enchiladas huastecas o chilaquiles con huevo, con café o agua de frutas frescas y fruta. Se sirve en El Papán Huasteco, nuestro restaurante.',
   },
   {
     question: '¿Puedo cancelar mi reserva sin cargo?',

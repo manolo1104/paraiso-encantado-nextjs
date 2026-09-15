@@ -380,6 +380,51 @@ export function calcPromoDiscount(
   return 0;
 }
 
+// ── Add-ons del checkout ─────────────────────────────────
+// Desayuno americano: precio por persona por noche (adultos + menores). El mismo
+// precio se usa en el motor web y en las reservas que se capturan en el panel.
+export const DESAYUNO_PRECIO = 250;
+export const DESAYUNO_MENU = 'A elegir: huevos, enchiladas huastecas o chilaquiles con huevo. Incluye café o agua de frutas frescas y fruta.';
+// Cancelación flexible: porcentaje sobre el total de la estancia (habitaciones
+// con descuento + desayunos).
+export const CANCELACION_FLEX_PCT = 0.10;
+// Qué compra el huésped con la cancelación flexible. Se muestra en el checkout y
+// en el correo: si cambia la regla, cambia solo aquí.
+export const CANCELACION_FLEX_REGLA = 'Cancela hasta 24 horas antes de tu llegada y te devolvemos el 100% de lo pagado.';
+export const CANCELACION_FLEX_CORTO = 'Reembolso 100% hasta 24 h antes';
+
+export interface BookingAddons {
+  desayuno: boolean;
+  cancelacionFlexible: boolean;
+}
+
+export interface AddonTotals {
+  desayunoPersonas: number;
+  desayuno: number;
+  cancelacionFlexible: number;
+  total: number;
+}
+
+/**
+ * Montos de los add-ons. `stayBase` = habitaciones − descuento. La cancelación
+ * flexible se calcula DESPUÉS del desayuno porque cubre todo lo pagado.
+ * El servidor usa esta misma función para cobrar: el cliente solo la usa para mostrar.
+ */
+export function calcAddonTotals(
+  addons: BookingAddons | undefined,
+  personas: number,
+  nights: number,
+  stayBase: number,
+): AddonTotals {
+  const p = Math.max(0, Math.round(personas));
+  const n = Math.max(0, Math.round(nights));
+  const desayuno = addons?.desayuno ? DESAYUNO_PRECIO * p * n : 0;
+  const cancelacionFlexible = addons?.cancelacionFlexible
+    ? Math.round((Math.max(0, stayBase) + desayuno) * CANCELACION_FLEX_PCT)
+    : 0;
+  return { desayunoPersonas: addons?.desayuno ? p : 0, desayuno, cancelacionFlexible, total: desayuno + cancelacionFlexible };
+}
+
 // ── Booking state (persisted to sessionStorage) ──────────
 export interface BookingState {
   checkin: string;
@@ -390,6 +435,7 @@ export interface BookingState {
   cart: CartItem[];
   promoCode: PromoCode | null;
   promoDiscount: number;
+  addons?: BookingAddons;
   // Deposit info (50% for 2+ nights)
   amountTotal?: number;
   amountPaid?: number;
@@ -427,6 +473,27 @@ export function calcCartSubtotal(cart: CartItem[], checkin: string, checkout: st
     if (!room) return sum;
     return sum + calcRoomStayTotal(room, item.guestCount, checkin, checkout);
   }, 0);
+}
+
+export interface StayTotals {
+  subtotal: number;      // habitaciones
+  discount: number;
+  addons: AddonTotals;
+  total: number;         // lo que cuesta la estancia completa
+  deposit: number;       // lo que se cobra hoy
+  pending: number;
+  isDeposit: boolean;
+}
+
+/** Totales de la reserva en el navegador (checkout, pago, resumen y confirmación). */
+export function calcStayTotals(state: BookingState): StayTotals {
+  const subtotal = calcCartSubtotal(state.cart, state.checkin, state.checkout);
+  const discount = state.promoDiscount || 0;
+  const base = Math.max(0, subtotal - discount);
+  const addons = calcAddonTotals(state.addons, state.adults + state.children, state.nights, base);
+  const total = base + addons.total;
+  const deposit = calcDepositAmount(total, state.nights);
+  return { subtotal, discount, addons, total, deposit, pending: total - deposit, isDeposit: state.nights >= 2 };
 }
 
 export function formatMXN(n: number): string {

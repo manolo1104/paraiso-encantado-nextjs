@@ -33,14 +33,21 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { conf, rating, comment, detalle } = await req.json();
-    if (!conf) return NextResponse.json({ error: 'Falta conf' }, { status: 400 });
+    // El folio NO es obligatorio: si alguien abre /encuesta sin él (un enlace
+    // reenviado, un correo viejo), perder su respuesta es peor que guardarla sin
+    // identificar. Lo que sí se exige es una calificación: sin eso no hay dato.
+    const folio = String(conf || '').trim() || '(sin folio)';
+    const estrellas = Number(rating) || 0;
+    if (estrellas < 1 || estrellas > 5) {
+      return NextResponse.json({ error: 'Falta la calificación' }, { status: 400 });
+    }
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '';
     const clamp = (v: unknown) => {
       const n = Number(v);
       return n >= 1 && n <= 5 ? Math.round(n) : undefined;
     };
     await saveFeedback(
-      String(conf), Number(rating) || 0, String(comment || '').slice(0, 1000), ip,
+      folio, estrellas, String(comment || '').slice(0, 1000), ip,
       detalle ? {
         limpieza: clamp(detalle.limpieza),
         agua: clamp(detalle.agua),

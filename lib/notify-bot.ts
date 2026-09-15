@@ -22,6 +22,7 @@ export interface WebBookingNotification {
   nights?: number;
   guests?: number;
   rooms?: Array<{ name: string; guestCount?: number }>;
+  extras?: string[];   // "Desayuno americano (2 personas × 3 noches)", "Cancelación flexible (…)"
   total?: number;
   amountPaid?: number;
   pending?: number;

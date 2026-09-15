@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBookings, logAgentActivity } from '@/lib/admin/sheets-admin';
 import { buildEmailHtml } from '@/lib/email';
-import { parseNotas, clienteNota } from '@/lib/notas';
+import { parseNotas, clienteNota, extraTotal } from '@/lib/notas';
 import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const extras = parsed.extras;
   const toursTotal = tours.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesTotal = paquetes.reduce((s, p) => s + p.precio, 0);
-  const extrasTotal = extras.reduce((s, e) => s + e.cantidad * e.precioUnit, 0);
+  const extrasTotal = extras.reduce((s, e) => s + extraTotal(e), 0);
 
   const rawRooms = b.habitaciones.split(',').map(s => s.trim()).filter(Boolean);
   const habsTotal = b.total - toursTotal - paquetesTotal - extrasTotal;
@@ -38,15 +38,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return { name, guestCount, totalPrice: pricePerRoom };
   });
   for (const t of tours) {
-    rooms.push({ name: `🗺 ${t.nombre}`, guestCount: t.personas, totalPrice: t.precio * t.personas });
+    rooms.push({ name: `Tour · ${t.nombre}`, guestCount: t.personas, totalPrice: t.precio * t.personas });
   }
   for (const p of paquetes) {
-    rooms.push({ name: `🎁 ${p.nombre}`, guestCount: p.personas, totalPrice: p.precio });
+    rooms.push({ name: `Paquete · ${p.nombre}`, guestCount: p.personas, totalPrice: p.precio });
   }
-  for (const e of extras) {
-    const perNight = Math.max(1, Math.round(e.cantidad / Math.max(b.noches, 1)));
-    rooms.push({ name: `${e.tipo === 'desayuno' ? '🍳' : '🕐'} ${e.nombre}`, guestCount: perNight, totalPrice: e.cantidad * e.precioUnit });
-  }
+  // Los extras (desayuno, late check-out, cancelación flexible) van en su propia
+  // sección del correo, no como si fueran habitaciones.
 
   // Solo la nota visible para el cliente (nunca ||INTERNO||/||HABS||/JSON técnicos)
   const notasCliente = clienteNota(b.notas);
@@ -60,6 +58,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     guests:             b.huespedes,
     total:              b.total,
     rooms,
+    extras,
     paymentIntentId:    b.paymentId || 'MANUAL',
     anticipo:           b.anticipo || 0,
     notas:              notasCliente,

@@ -13,6 +13,10 @@ export function formatWebBookingAlert(b = {}) {
   const paid = Number(b.amountPaid ?? 0);
   const pending = (b.pending != null) ? Number(b.pending) : Math.max(0, total - paid);
   const paidLabel = b.isDeposit ? 'Anticipo pagado' : 'Pago completo';
+  // Desayuno y cancelación flexible: cocina y recepción se enteran por aquí.
+  const extras = Array.isArray(b.extras) && b.extras.length
+    ? `➕ *Extras:*\n${b.extras.map(e => `· ${e}`).join('\n')}\n\n`
+    : '';
   return (
     `🌐 *NUEVA RESERVA — Página web* ✅\n\n` +
     `👤 *Cliente:* ${b.customerName || 'Sin nombre'}\n` +
@@ -22,6 +26,7 @@ export function formatWebBookingAlert(b = {}) {
     `📅 *Check-in:* ${b.checkin || '—'}  |  *Check-out:* ${b.checkout || '—'}\n` +
     `🌙 *Noches:* ${b.nights || '—'}  ·  👥 *Huéspedes:* ${b.guests || '—'}\n\n` +
     `🏨 *Habitaciones:*\n${rooms}\n\n` +
+    extras +
     `💰 *Total:* ${money(total)}\n` +
     `💳 *${paidLabel}:* ${money(paid)}\n` +
     `🧮 *Saldo:* ${money(pending)}\n\n` +

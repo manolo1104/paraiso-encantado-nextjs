@@ -7,6 +7,7 @@ import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationBy
 import { markIncompleteAsBooked } from '@/lib/abandoned';
 import { notifyBotOfWebBooking } from '@/lib/notify-bot';
 import { buildEmailHtml } from '@/lib/email';
+import { extrasDesdeStripe, joinNotas } from '@/lib/notas';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +65,11 @@ export async function POST(req: NextRequest) {
       } else { nights = 1; }
     }
 
+    // Desayuno / cancelación flexible: salen de la metadata del cobro (los calculó
+    // el servidor), no del navegador. Van a la hoja en la sección ||EXTRAS|| de
+    // las notas, igual que los extras que se capturan desde el panel.
+    const extras = extrasDesdeStripe(md, nights);
+
     // 3. Número de confirmación
     const confirmationNumber = 'PE' + Date.now().toString(36).toUpperCase();
 
@@ -79,7 +85,8 @@ export async function POST(req: NextRequest) {
       booking_details: {
         ...bookingDetails, checkin, checkout,
         checkin_date: checkin, checkout_date: checkout,
-        nights, guests, adults, minors, children: minors, notes: notes || '',
+        nights, guests, adults, minors, children: minors,
+        notes: joinNotas({ cliente: notes || '', extras }),
       },
       rooms: normalizedRooms,
       how_did_you_hear: howDidYouHear || '',
@@ -122,6 +129,7 @@ export async function POST(req: NextRequest) {
           checkin: checkin ?? undefined, checkout: checkout ?? undefined,
           nights, guests, adults, minors,
           rooms: normalizedRooms, total: stayTotal,
+          extras,
           amountPaid: depositPaid,
           amountPending: pending,
           isDeposit: isDepositFinal,
@@ -180,6 +188,7 @@ export async function POST(req: NextRequest) {
         email,
         checkin, checkout, nights, guests,
         rooms: normalizedRooms.map((r: any) => ({ name: r.name, guestCount: r.guestCount })),
+        extras: extras.map(e => `${e.nombre} (${e.detalle})`),
         total: Math.round(stayTotal),
         amountPaid: Math.round(depositPaid),
         pending: Math.max(0, Math.round(pending)),

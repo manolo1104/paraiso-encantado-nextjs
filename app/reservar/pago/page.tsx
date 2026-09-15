@@ -17,8 +17,7 @@ import {
   BookingState,
   BOOKING_ROOMS,
   calcRoomStayTotal,
-  calcCartSubtotal,
-  calcDepositAmount,
+  calcStayTotals,
   formatMXN,
 } from '@/lib/booking';
 import styles from '../checkout/checkout.module.css';
@@ -53,8 +52,8 @@ function PaymentForm({
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
 
-  const subtotal = calcCartSubtotal(booking.cart, booking.checkin, booking.checkout);
-  const total = Math.max(0, subtotal - booking.promoDiscount);
+  const totals = calcStayTotals(booking);
+  const total = totals.total;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,6 +101,7 @@ function PaymentForm({
             isDeposit: booking.isDeposit,
             paymentIntentId,
             sessionId,
+            addons: booking.addons,
             bookingDetails: {
               checkin: booking.checkin,
               checkout: booking.checkout,
@@ -201,6 +201,8 @@ function PaymentForm({
             '',
             '*Habitaciones:*',
             rooms,
+            totals.addons.desayuno > 0 ? `• Desayuno americano (${totals.addons.desayunoPersonas} pers. × ${booking.nights} noches) — ${formatMXN(totals.addons.desayuno)}` : '',
+            totals.addons.cancelacionFlexible > 0 ? `• Cancelación flexible (10%) — ${formatMXN(totals.addons.cancelacionFlexible)}` : '',
             '',
             `*Total estadía:* ${formatMXN(total)}`,
             booking.promoDiscount > 0 ? `*Descuento aplicado:* −${formatMXN(booking.promoDiscount)} (${booking.promoCode})` : '',
@@ -247,15 +249,13 @@ export default function PagoPage() {
     }
     setGuest(info);
 
-    const subtotal = calcCartSubtotal(state.cart, state.checkin, state.checkout);
-    const total = Math.max(0, subtotal - state.promoDiscount);
-    const deposit = calcDepositAmount(total, state.nights);
+    const t = calcStayTotals(state);
     const withDeposit: BookingState = {
       ...state,
-      amountTotal: total,
-      amountPaid: deposit,
-      amountPending: total - deposit,
-      isDeposit: state.nights >= 2,
+      amountTotal: t.total,
+      amountPaid: t.deposit,
+      amountPending: t.pending,
+      isDeposit: t.isDeposit,
     };
     setBooking(withDeposit);
     bookingRef.current = withDeposit;
@@ -282,6 +282,7 @@ export default function PagoPage() {
         checkin: state.checkin,
         checkout: state.checkout,
         promoCode: state.promoCode,
+        addons: state.addons,
         customerEmail: info.email,
         customerName: info.name,
         bookingDetails: {

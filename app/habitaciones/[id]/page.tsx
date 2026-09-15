@@ -145,7 +145,7 @@ export default async function SuitePage({ params, searchParams }: Props) {
         name: '¿El desayuno está incluido en la tarifa?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'El desayuno no está incluido en la tarifa base. Puedes disfrutarlo en El Papán Huasteco, nuestro restaurante de cocina huasteca auténtica, de 8:00 AM a 8:00 PM. Precio aproximado $100–$200 MXN por persona.',
+          text: 'El desayuno no está incluido en la tarifa base. Puedes agregarlo al reservar por $250 MXN por persona por noche: a elegir huevos, enchiladas huastecas o chilaquiles con huevo, con café o agua de frutas frescas y fruta. Se sirve en El Papán Huasteco, nuestro restaurante de cocina huasteca auténtica.',
         },
       },
       {

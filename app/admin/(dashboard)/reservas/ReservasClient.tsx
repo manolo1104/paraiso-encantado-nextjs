@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun, MessageSquare, Users, Wallet, FileSpreadsheet, Gift, StickyNote, X } from 'lucide-react';
+import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun, MessageSquare, Users, Wallet, FileSpreadsheet, Gift, StickyNote, X, Coffee, ShieldCheck } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
 import { normalizeMxPhone } from '@/lib/phone';
-import { parseNotas } from '@/lib/notas';
+import { parseNotas, extraTotal } from '@/lib/notas';
 import { printBookingPDF } from '../cotizaciones/CotizacionesClient';
 import styles from './reservas.module.css';
 
@@ -95,15 +95,29 @@ function PagoChip({ total, pendiente, pagado }: { total: number; pendiente: numb
 
 function ReservaTags({ notas }: { notas: string }) {
   const n = parseNotas(notas);
+  // Desayuno y cancelación flexible van con nombre: cocina y recepción tienen que
+  // verlos sin abrir la reserva. El resto de extras se cuentan en el regalo.
+  const desayuno = n.extras.find(e => e.tipo === 'desayuno');
+  const cancelFlex = n.extras.find(e => e.tipo === 'cancelacion_flexible');
   const addons = [
     ...n.tours.map(t => (t as any).nombre),
     ...n.paquetes.map(p => (p as any).nombre),
-    ...n.extras.map(e => e.nombre),
+    ...n.extras.filter(e => e !== desayuno && e !== cancelFlex).map(e => e.nombre),
   ].filter(Boolean) as string[];
   const nota = n.cliente || n.interno;
-  if (addons.length === 0 && !nota) return null;
+  if (addons.length === 0 && !nota && !desayuno && !cancelFlex) return null;
   return (
     <div className={styles.reservaTags}>
+      {desayuno && (
+        <span className={styles.tagDesayuno} title={`${desayuno.nombre}: ${desayuno.detalle || ''}`}>
+          <Coffee size={11} /> Desayuno
+        </span>
+      )}
+      {cancelFlex && (
+        <span className={styles.tagFlexible} title={`Cancelación flexible: ${money(extraTotal(cancelFlex))}`}>
+          <ShieldCheck size={11} /> Flexible
+        </span>
+      )}
       {addons.length > 0 && (
         <span className={styles.tagAddon} title={`Extras: ${addons.join(', ')}`}>
           <Gift size={11} /> {addons.length}

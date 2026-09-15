@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { addBookingToSheet, blockDates, removeTemporaryBlock, findConfirmationByPaymentIntent } from '@/lib/sheets';
 import { markIncompleteAsBooked } from '@/lib/abandoned';
 import { buildEmailHtml } from '@/lib/email';
+import { extrasDesdeStripe, joinNotas } from '@/lib/notas';
 import { notifyBotOfWebBooking } from '@/lib/notify-bot';
 
 export const dynamic = 'force-dynamic';
@@ -92,6 +93,8 @@ export async function POST(req: NextRequest) {
       nights = ms > 0 ? Math.round(ms / 86400000) : 1;
     }
 
+    const extras = extrasDesdeStripe(md, nights);
+
     const confirmationNumber = 'PE' + Date.now().toString(36).toUpperCase();
 
     await addBookingToSheet({
@@ -104,7 +107,8 @@ export async function POST(req: NextRequest) {
       payment_intent_id: pi.id,
       booking_details: {
         checkin, checkout, checkin_date: checkin, checkout_date: checkout,
-        nights, guests: adults + minors, adults, minors, children: minors, notes: '',
+        nights, guests: adults + minors, adults, minors, children: minors,
+        notes: joinNotas({ cliente: '', extras }),
       },
       rooms,
       how_did_you_hear: '',
@@ -139,7 +143,7 @@ export async function POST(req: NextRequest) {
             customerName: name, confirmationNumber, paymentIntentId: pi.id,
             checkin: checkin || undefined, checkout: checkout || undefined,
             nights, guests: adults + minors, adults, minors,
-            rooms, total: stayTotal, amountPaid: depositPaid,
+            rooms, extras, total: stayTotal, amountPaid: depositPaid,
             amountPending: pending, isDeposit,
             promoCode: md.promoCode || undefined,
             promoDiscount: Number(md.promoDiscount) || undefined,
@@ -160,6 +164,7 @@ export async function POST(req: NextRequest) {
         email,
         checkin, checkout, nights, guests: adults + minors,
         rooms: rooms.map(r => ({ name: r.name, guestCount: r.guestCount })),
+        extras: extras.map(e => `${e.nombre} (${e.detalle})`),
         total: Math.round(stayTotal),
         amountPaid: Math.round(depositPaid),
         pending: Math.max(0, Math.round(pending)),

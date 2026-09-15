@@ -433,6 +433,8 @@
   color: #4a5a4a;
 }
 
+.summaryRow > span:last-child { white-space: nowrap; }
+
 .summaryDiscount { color: #2d5a27; }
 
 .summaryDeposit {
@@ -645,4 +647,87 @@
   font-size: 0.8rem;
   color: #8a1a1a;
   margin-top: 8px;
+}
+
+/* ── Add-ons (desayuno, cancelación flexible) ── */
+.addons {
+  border: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.addonsTitle {
+  font-family: var(--font-cormorant), serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #1a2e1a;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.addonCard {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid #d8d0c4;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.addonCard:hover { border-color: #b8ab96; }
+
+.addonCard input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #1a2e1a;
+  cursor: pointer;
+}
+
+.addonCardOn {
+  border-color: #1a2e1a;
+  background: rgba(45, 90, 39, 0.05);
+}
+
+.addonIcon { color: #6a7a6a; }
+
+.addonText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.addonText strong {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #1a2e1a;
+}
+
+.addonText small {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.76rem;
+  color: #7a8a7a;
+  line-height: 1.45;
+}
+
+.addonPrice {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #1a2e1a;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .addonCard { grid-template-columns: auto 1fr auto; padding: 12px; gap: 10px; }
+  .addonIcon { display: none; }
 }

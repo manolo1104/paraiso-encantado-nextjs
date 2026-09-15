@@ -1,3 +1,22 @@
+import { CANCELACION_FLEX_REGLA, DESAYUNO_MENU } from './booking';
+import { extraTotal, type ExtraItem } from './notas';
+
+// Íconos de los correos: PNG en public/email/iconos (se regeneran con
+// scripts/generar-iconos-correo.mjs). Nada de emojis ni SVG: Gmail/Outlook no
+// muestran SVG y cada cliente de correo dibuja los emojis distinto.
+const ICONOS_URL = 'https://www.paraisoencantado.com/email/iconos';
+type Icono = 'coffee' | 'shield-check' | 'clock' | 'map-pin' | 'leaf' | 'phone' | 'id-card' | 'mail';
+
+function icono(nombre: Icono, size = 18): string {
+  return `<img src="${ICONOS_URL}/${nombre}.png" width="${size}" height="${size}" alt="" style="display:inline-block;width:${size}px;height:${size}px;border:0;vertical-align:-3px;margin:0 8px 0 0;">`;
+}
+
+const ICONO_EXTRA: Record<ExtraItem['tipo'], Icono> = {
+  desayuno: 'coffee',
+  late_checkout: 'clock',
+  cancelacion_flexible: 'shield-check',
+};
+
 export function buildQuoteEmailHtml(data: {
   customerName: string;
   quoteId: string;
@@ -228,8 +247,10 @@ export function buildEmailHtml(data: {
   notas?: string;
   promoCode?: string;
   promoDiscount?: number;
+  extras?: ExtraItem[];
 }): string {
-  const base = 'https://www.paraisoencantado.com';
+  // Venta cruzada: el botón de "Antes de tu llegada" lleva a reservar tours.
+  const toursReservarUrl = 'https://www.huasteca-potosina.com/reservar';
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'Por confirmar';
@@ -259,6 +280,23 @@ export function buildEmailHtml(data: {
         </td>
         <td style="padding:20px 0 20px 20px;text-align:right;vertical-align:top;white-space:nowrap;">
           <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:500;color:#2a2218;margin:0;">$${Number(room.totalPrice || 0).toLocaleString('es-MX')}</p>
+        </td>
+      </tr>
+    </table>`).join('');
+
+  // Desayuno, cancelación flexible, late check-out: renglones propios debajo de
+  // las habitaciones, cada uno con su monto (el total ya los incluye).
+  const extras = (data.extras || []).filter(e => extraTotal(e) > 0);
+  const extrasRows = extras.map(e => `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;">
+      <tr>
+        <td style="padding:16px 0;vertical-align:top;width:80%;">
+          <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:400;color:#2a2218;margin:0 0 4px 0;">${icono(ICONO_EXTRA[e.tipo] || 'coffee')}${e.nombre}</p>
+          <p style="font-size:12px;color:#9a8a74;font-weight:300;margin:0;line-height:1.5;">${e.tipo === 'cancelacion_flexible' ? CANCELACION_FLEX_REGLA : (e.detalle || '')}</p>
+          ${e.tipo === 'desayuno' ? `<p style="font-size:12px;color:#9a8a74;font-weight:300;margin:2px 0 0;line-height:1.5;">${DESAYUNO_MENU}</p>` : ''}
+        </td>
+        <td style="padding:16px 0 16px 20px;text-align:right;vertical-align:top;white-space:nowrap;">
+          <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:500;color:#2a2218;margin:0;">$${extraTotal(e).toLocaleString('es-MX')}</p>
         </td>
       </tr>
     </table>`).join('');
@@ -372,6 +410,9 @@ export function buildEmailHtml(data: {
           <!-- ROOMS -->
           <p style="margin:32px 0 20px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:#9a8a74;">Habitaciones Reservadas</p>
           ${roomsRows}
+          ${extrasRows ? `
+          <p style="margin:28px 0 8px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:#9a8a74;">Servicios Adicionales</p>
+          ${extrasRows}` : ''}
 
           ${notasCliente ? `
           <!-- NOTAS CLIENTE -->
@@ -449,21 +490,21 @@ export function buildEmailHtml(data: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f0e8;margin:32px 0 0 0;">
             <tr>
               <td style="width:50%;padding:20px;vertical-align:top;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">Cómo Llegar</p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('map-pin')}Cómo Llegar</p>
                 <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A 7 min del centro. Paraíso Encantado, Xilitla, SLP 79910.</p>
               </td>
               <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-left:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">🌿 Cerca de Ti</p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('leaf')}Cerca de Ti</p>
                 <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A pasos del Jardín Surrealista de Edward James.</p>
               </td>
             </tr>
             <tr>
               <td style="width:50%;padding:20px;vertical-align:top;border-top:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">📞 Contacto Directo</p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('phone')}Contacto Directo</p>
                 <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;"><a href="tel:+524891007679" style="color:#2a2218;border-bottom:1px solid #c9b99a;">489-100-7679</a></p>
               </td>
               <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-top:1px solid #e4ddd3;border-left:1px solid #e4ddd3;">
-                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">🆔 Al Llegar</p>
+                <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('id-card')}Al Llegar</p>
                 <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;">Presenta: <strong>${data.confirmationNumber}</strong></p>
               </td>
             </tr>
@@ -477,7 +518,7 @@ export function buildEmailHtml(data: {
           <h2 style="margin:0 0 24px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-style:italic;font-weight:300;color:#2a2218;">Descubre todo lo que puedes vivir en Xilitla.</h2>
           <table class="cta-button" role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
             <tr><td style="background-color:#2a2218;padding:16px 38px;">
-              <a href="${base}" style="font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#faf8f5;text-decoration:none;display:block;">Explorar la Huasteca</a>
+              <a href="${toursReservarUrl}" style="font-family:'Jost','Helvetica Neue',Arial;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#faf8f5;text-decoration:none;display:block;">Explorar la Huasteca</a>
             </td></tr>
           </table>
         </td></tr>
@@ -486,10 +527,10 @@ export function buildEmailHtml(data: {
         <tr><td class="mobile-padding" style="background-color:#faf8f5;padding:32px 48px;border-top:1px solid #e4ddd3;">
           <p style="margin:0 0 16px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9a8a74;">¿Tienes Preguntas?</p>
           <p style="margin:0 0 8px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#2a2218;">
-            📧 <a href="mailto:reservas@paraisoencantado.com" style="color:#2a2218;border-bottom:1px solid #c9b99a;">reservas@paraisoencantado.com</a>
+            ${icono('mail', 16)}<a href="mailto:reservas@paraisoencantado.com" style="color:#2a2218;border-bottom:1px solid #c9b99a;">reservas@paraisoencantado.com</a>
           </p>
           <p style="margin:0 0 12px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#2a2218;">
-            📞 <a href="tel:+524891007679" style="color:#2a2218;">489-100-7679</a>
+            ${icono('phone', 16)}<a href="tel:+524891007679" style="color:#2a2218;">489-100-7679</a>
           </p>
           <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;">ID de Pago: ${data.paymentIntentId || 'N/A'}</p>
         </td></tr>

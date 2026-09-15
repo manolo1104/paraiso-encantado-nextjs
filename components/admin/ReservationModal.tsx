@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Loader2, AlertTriangle, CheckCircle, Plus, MessageSquare, Mail, Download, Pencil } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
-import { BOOKING_ROOMS, getRoomBasePrice } from '@/lib/booking';
+import { BOOKING_ROOMS, getRoomBasePrice, CANCELACION_FLEX_PCT, DESAYUNO_PRECIO } from '@/lib/booking';
 import { TOURS_CATALOG, PAQUETES_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import type { TourItem } from '@/lib/booking-html';
 import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
-import { parseNotas, joinNotas, type ExtraItem } from '@/lib/notas';
+import { parseNotas, joinNotas, extraTotal, type ExtraItem } from '@/lib/notas';
 import { normalizeMxPhone } from '@/lib/phone';
 import { splitRooms } from '@/lib/room-names';
 import styles from './Modal.module.css';
@@ -173,15 +173,21 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const [tourItems, setTourItems] = useState<TourItem[]>(parsedNotas.tours as unknown as TourItem[]);
   const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(parsedNotas.paquetes as unknown as PaqueteItem[]);
 
-  // Extras: desayuno ($250 por persona/noche) y late check-out 2h ($250 por
-  // habitación/noche). Se guardan en la sección ||EXTRAS|| de las notas.
+  // Extras: desayuno (por persona/noche), late check-out 2h ($250 por
+  // habitación/noche) y cancelación flexible (10% del total). Se guardan en la
+  // sección ||EXTRAS|| de las notas.
   const initDesayuno = parsedNotas.extras.find(e => e.tipo === 'desayuno');
   const initLate = parsedNotas.extras.find(e => e.tipo === 'late_checkout');
+  const initCancel = parsedNotas.extras.find(e => e.tipo === 'cancelacion_flexible');
+  // Mismo precio que el motor web. Al editar una reserva vieja se respeta el
+  // precio con que se vendió, no se re-tarifica.
+  const desayunoPrecio = Number(initDesayuno?.precioUnit) || DESAYUNO_PRECIO;
   const [desayuno, setDesayuno] = useState<boolean>(!!initDesayuno);
   const [desayunoPersonas, setDesayunoPersonas] = useState<number>(
     initDesayuno ? Math.max(1, Math.round(initDesayuno.cantidad / Math.max(booking?.noches || 1, 1))) : 0
   );
   const [lateCheckout, setLateCheckout] = useState<boolean>(!!initLate);
+  const [cancelFlex, setCancelFlex] = useState<boolean>(!!initCancel);
 
   // Agregar/editar tours y paquetes recalcula el "Total a cobrar" (igual que
   // cambiar habitaciones). Antes el total se quedaba solo con las habitaciones
@@ -322,9 +328,14 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const toursCalculado = tourItems.reduce((s, t) => s + t.precio * t.personas, 0);
   const paquetesCalculado = paqueteItems.reduce((s, p) => s + p.precio, 0);
   const nochesQ = Math.max(form.noches, 1);
-  const desayunoTotal = desayuno ? 250 * Math.max(desayunoPersonas, 0) * nochesQ : 0;
+  const desayunoTotal = desayuno ? desayunoPrecio * Math.max(desayunoPersonas, 0) * nochesQ : 0;
   const lateCheckoutTotal = lateCheckout ? 250 * habitaciones.length * nochesQ : 0;
-  const extrasCalculado = desayunoTotal + lateCheckoutTotal;
+  // Mientras no se toque nada que mueva el total, la cancelación flexible guarda
+  // el monto que ya se cobró; si cambian habitaciones/fechas/extras, se recalcula.
+  const cancelFlexTotal = !cancelFlex ? 0
+    : (initCancel && totalOverride) ? extraTotal(initCancel)
+    : Math.round((habsCalculado + toursCalculado + paquetesCalculado + desayunoTotal + lateCheckoutTotal) * CANCELACION_FLEX_PCT);
+  const extrasCalculado = desayunoTotal + lateCheckoutTotal + cancelFlexTotal;
   const precioCalculado = habsCalculado + toursCalculado + paquetesCalculado + extrasCalculado;
   const restante = restanteOverride ?? (form.total - anticipo);
 
@@ -338,6 +349,10 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
     setLateCheckout(on);
     setTotalOverride(false);
   }
+  function toggleCancelFlex(on: boolean) {
+    setCancelFlex(on);
+    setTotalOverride(false);
+  }
 
   // Auto-calcular noches y precio (only when NOT editing)
   useEffect(() => {
@@ -346,18 +361,19 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       const n = Math.max(0, Math.round((new Date(checkout).getTime() - new Date(checkin).getTime()) / 86400000));
       // El auto-total incluye tours, paquetes y extras (antes solo habitaciones).
       const nq = Math.max(n, 1);
-      const precioAuto = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * n, 0)
+      const precioSinCancel = habitaciones.reduce((sum, h) => sum + getHabPrecio(h) * n, 0)
         + tourItems.reduce((s, t) => s + t.precio * t.personas, 0)
         + paqueteItems.reduce((s, p) => s + p.precio, 0)
-        + (desayuno ? 250 * Math.max(desayunoPersonas, 0) * nq : 0)
+        + (desayuno ? desayunoPrecio * Math.max(desayunoPersonas, 0) * nq : 0)
         + (lateCheckout ? 250 * habitaciones.length * nq : 0);
+      const precioAuto = precioSinCancel + (cancelFlex ? Math.round(precioSinCancel * CANCELACION_FLEX_PCT) : 0);
       setForm(f => ({
         ...f,
         noches: n,
         total: totalOverride ? f.total : precioAuto,
       }));
     }
-  }, [form.checkin, form.checkout, habitaciones, tourItems, paqueteItems, desayuno, desayunoPersonas, lateCheckout, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form.checkin, form.checkout, habitaciones, tourItems, paqueteItems, desayuno, desayunoPersonas, lateCheckout, cancelFlex, totalOverride]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!totalOverride) setRestanteOverride(null);
@@ -427,8 +443,8 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
       const extras: ExtraItem[] = [];
       if (desayuno && desayunoPersonas > 0) {
         extras.push({
-          tipo: 'desayuno', nombre: 'Desayuno',
-          cantidad: desayunoPersonas * nochesFinal, precioUnit: 250,
+          tipo: 'desayuno', nombre: initDesayuno?.nombre || 'Desayuno',
+          cantidad: desayunoPersonas * nochesFinal, precioUnit: desayunoPrecio,
           detalle: `${desayunoPersonas} persona${desayunoPersonas !== 1 ? 's' : ''} × ${nochesFinal} noche${nochesFinal !== 1 ? 's' : ''}`,
         });
       }
@@ -438,6 +454,12 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
           tipo: 'late_checkout', nombre: 'Late check-out (2h)',
           cantidad: habs * nochesFinal, precioUnit: 250,
           detalle: `${habs} habitación${habs !== 1 ? 'es' : ''} × ${nochesFinal} noche${nochesFinal !== 1 ? 's' : ''}`,
+        });
+      }
+      if (cancelFlex && cancelFlexTotal > 0) {
+        extras.push({
+          tipo: 'cancelacion_flexible', nombre: 'Cancelación flexible',
+          cantidad: 1, precioUnit: cancelFlexTotal, detalle: '10% del total de la estancia',
         });
       }
       const notas = joinNotas({
@@ -721,7 +743,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
             <label className={styles.extraRow}>
               <input type="checkbox" checked={desayuno} onChange={e => toggleDesayuno(e.target.checked)} />
               <span className={styles.extraName}>
-                Desayuno <small>$250 por persona / noche</small>
+                {initDesayuno?.nombre || 'Desayuno'} <small>${desayunoPrecio} por persona / noche</small>
               </span>
               {desayuno && (
                 <span className={styles.extraQty}>
@@ -747,6 +769,14 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
                 </span>
               )}
               {lateCheckout && <span className={styles.extraTotal}>${lateCheckoutTotal.toLocaleString('es-MX')}</span>}
+            </label>
+
+            <label className={styles.extraRow}>
+              <input type="checkbox" checked={cancelFlex} onChange={e => toggleCancelFlex(e.target.checked)} />
+              <span className={styles.extraName}>
+                Cancelación flexible <small>10% del total de la estancia</small>
+              </span>
+              {cancelFlex && <span className={styles.extraTotal}>${cancelFlexTotal.toLocaleString('es-MX')}</span>}
             </label>
           </div>
 

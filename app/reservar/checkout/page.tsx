@@ -10,13 +10,18 @@
  */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Lock, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, ShieldCheck, Coffee, CalendarX } from 'lucide-react';
 import {
   loadBookingState,
+  saveBookingState,
   BookingState,
+  BookingAddons,
   BOOKING_ROOMS,
-  calcCartSubtotal,
-  calcDepositAmount,
+  calcStayTotals,
+  formatMXN,
+  DESAYUNO_PRECIO,
+  DESAYUNO_MENU,
+  CANCELACION_FLEX_REGLA,
 } from '@/lib/booking';
 import styles from './checkout.module.css';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
@@ -27,6 +32,11 @@ import { getHoldSessionId } from '@/lib/hold-session';
 import { loadGuestInfo, saveGuestInfo } from '@/lib/guest-info';
 
 const API = '';
+
+function withAmounts(state: BookingState): BookingState {
+  const t = calcStayTotals(state);
+  return { ...state, amountTotal: t.total, amountPaid: t.deposit, amountPending: t.pending, isDeposit: t.isDeposit };
+}
 
 export default function GuestInfoPage() {
   const router = useRouter();
@@ -47,16 +57,7 @@ export default function GuestInfoPage() {
       router.replace('/reservar');
       return;
     }
-    const subtotal = calcCartSubtotal(state.cart, state.checkin, state.checkout);
-    const total = Math.max(0, subtotal - state.promoDiscount);
-    const deposit = calcDepositAmount(total, state.nights);
-    setBooking({
-      ...state,
-      amountTotal: total,
-      amountPaid: deposit,
-      amountPending: total - deposit,
-      isDeposit: state.nights >= 2,
-    });
+    setBooking(withAmounts(state));
 
     // Recuperar datos ya escritos (si volvió desde el paso de pago)
     const saved = loadGuestInfo();
@@ -75,6 +76,18 @@ export default function GuestInfoPage() {
 
     trackEvent('CHECKOUT_STEP_2', { rooms: state.cart.length, checkin: state.checkin, checkout: state.checkout });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Los add-ons se guardan en el estado de la reserva (sessionStorage) para que
+  // el paso de pago cobre lo mismo que el huésped eligió aquí.
+  function toggleAddon(key: keyof BookingAddons, on: boolean) {
+    if (!booking) return;
+    const addons: BookingAddons = { desayuno: false, cancelacionFlexible: false, ...booking.addons, [key]: on };
+    const next = withAmounts({ ...booking, addons });
+    const { amountTotal, amountPaid, amountPending, isDeposit, ...persist } = next; // eslint-disable-line @typescript-eslint/no-unused-vars
+    saveBookingState(persist);
+    setBooking(next);
+    trackEvent('ADDON_TOGGLE', { addon: key, on });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,6 +137,17 @@ export default function GuestInfoPage() {
   }
 
   if (!booking) return null;
+
+  // Precio de cada add-on como si estuviera activado, para que el huésped vea
+  // cuánto suma ANTES de marcarlo.
+  const personas = booking.adults + booking.children;
+  const conTodo = calcStayTotals({ ...booking, addons: { desayuno: true, cancelacionFlexible: true } });
+  const sinCancel = calcStayTotals({ ...booking, addons: { desayuno: !!booking.addons?.desayuno, cancelacionFlexible: true } });
+  const addonsTotals = {
+    desayunoMonto: conTodo.addons.desayuno,
+    desayunoLabel: `${personas} persona${personas !== 1 ? 's' : ''} × ${booking.nights} noche${booking.nights !== 1 ? 's' : ''}`,
+    cancelMonto: sinCancel.addons.cancelacionFlexible,
+  };
 
   return (
     <main className={styles.main}>
@@ -201,6 +225,41 @@ export default function GuestInfoPage() {
                 </select>
               </label>
             </div>
+
+            <fieldset className={styles.addons}>
+              <legend className={styles.addonsTitle}>Mejora tu estancia</legend>
+
+              <label className={`${styles.addonCard} ${booking.addons?.desayuno ? styles.addonCardOn : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={!!booking.addons?.desayuno}
+                  onChange={e => toggleAddon('desayuno', e.target.checked)}
+                />
+                <Coffee size={20} strokeWidth={1.5} className={styles.addonIcon} aria-hidden="true" />
+                <span className={styles.addonText}>
+                  <strong>Desayuno americano</strong>
+                  <small>{DESAYUNO_MENU}</small>
+                  <small>
+                    {formatMXN(DESAYUNO_PRECIO)} por persona por noche · {addonsTotals.desayunoLabel}
+                  </small>
+                </span>
+                <span className={styles.addonPrice}>+{formatMXN(addonsTotals.desayunoMonto)}</span>
+              </label>
+
+              <label className={`${styles.addonCard} ${booking.addons?.cancelacionFlexible ? styles.addonCardOn : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={!!booking.addons?.cancelacionFlexible}
+                  onChange={e => toggleAddon('cancelacionFlexible', e.target.checked)}
+                />
+                <CalendarX size={20} strokeWidth={1.5} className={styles.addonIcon} aria-hidden="true" />
+                <span className={styles.addonText}>
+                  <strong>Cancelación flexible</strong>
+                  <small>{CANCELACION_FLEX_REGLA} 10% extra sobre el total.</small>
+                </span>
+                <span className={styles.addonPrice}>+{formatMXN(addonsTotals.cancelMonto)}</span>
+              </label>
+            </fieldset>
 
             <label className={styles.formLabel} style={{ marginTop: 8 }}>
               <span>Peticiones especiales (opcional)</span>
