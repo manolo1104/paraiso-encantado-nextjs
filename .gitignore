@@ -48,3 +48,7 @@ next-env.d.ts
 /.claude/
 /.impeccable/
 /skills-lock.json
+
+# Datos de reservas del bot (números de WhatsApp de huéspedes): nunca al repo.
+# En Railway vive en el disco persistente (RESERVATIONS_FILE=/data/reservations.json).
+agentes/whatsapp-agent/reservations.json
