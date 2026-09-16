@@ -98,11 +98,10 @@ export async function GET(
       guests: p.personas, nights: p.noches, rate: Math.round(p.precio / p.noches), subtotal: p.precio,
     });
   }
-  // Add extras (desayuno / late check-out). perNight = unidades por noche → el
-  // renglón lee "perNight × noches × precioUnit = subtotal".
+  // Add extras. El desayuno se cobra por persona-noche; el late check-out y la
+  // cancelación flexible son cargos únicos (no se multiplican por noches).
   for (const e of extras) {
-    // La cancelación flexible es un solo cargo: no se multiplica por noches.
-    const unico = e.tipo === 'cancelacion_flexible';
+    const unico = e.tipo !== 'desayuno';
     const perNight = unico ? 1 : Math.max(1, Math.round(e.cantidad / noches));
     rooms.push({
       name: `${EXTRA_ICONO[e.tipo] || '➕'} ${e.nombre}`,

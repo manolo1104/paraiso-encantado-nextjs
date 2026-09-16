@@ -137,7 +137,7 @@ export default async function SuitePage({ params, searchParams }: Props) {
         name: '¿A qué hora es el check-in y el check-out?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Check-in a partir de las 3:00 PM. Check-out antes de las 12:00 PM. Check-in anticipado o check-out tardío sujeto a disponibilidad, sin cargo adicional cuando es posible.',
+          text: 'Check-in a partir de las 3:00 PM. Check-out antes de las 12:00 PM. Puedes apartar el late check-out garantizado hasta las 2:00 PM al reservar por $250 MXN por habitación (una sola vez); sin apartarlo, el check-in anticipado y el check-out tardío quedan sujetos a disponibilidad.',
         },
       },
       {

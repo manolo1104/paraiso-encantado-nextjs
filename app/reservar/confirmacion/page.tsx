@@ -60,7 +60,7 @@ export default function ConfirmacionPage() {
 
   const totals = booking ? calcStayTotals(booking) : null;
   const total = totals?.total ?? 0;
-  const addons = totals?.addons ?? { desayunoPersonas: 0, desayuno: 0, cancelacionFlexible: 0, total: 0 };
+  const addons = totals?.addons ?? { desayunoPersonas: 0, desayuno: 0, lateCheckoutHabitaciones: 0, lateCheckout: 0, cancelacionFlexible: 0, total: 0 };
 
   const checkinFmt = booking
     ? new Date(`${booking.checkin}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -137,6 +137,12 @@ export default function ConfirmacionPage() {
                 <div className={styles.roomRow}>
                   <span>Desayuno ({addons.desayunoPersonas} pers. × {booking.nights} noche{booking.nights !== 1 ? 's' : ''})</span>
                   <span>{formatMXN(addons.desayuno)}</span>
+                </div>
+              )}
+              {addons.lateCheckout > 0 && (
+                <div className={styles.roomRow}>
+                  <span>Late check-out ({addons.lateCheckoutHabitaciones} hab.)</span>
+                  <span>{formatMXN(addons.lateCheckout)}</span>
                 </div>
               )}
               {addons.cancelacionFlexible > 0 && (

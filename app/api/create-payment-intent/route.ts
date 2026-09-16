@@ -8,6 +8,7 @@ import {
   calcNights,
   calcAddonTotals,
   DESAYUNO_PRECIO,
+  LATE_CHECKOUT_PRECIO,
   VALID_PROMO_CODES,
   type CartItem,
   type PromoCode,
@@ -66,8 +67,12 @@ export async function POST(req: NextRequest) {
     const children = Math.max(0, Math.min(Number(bookingDetails?.children ?? bookingDetails?.minors) || 0, 20));
     const stayBase = Math.max(0, subtotal - discount);
     const addonTotals = calcAddonTotals(
-      { desayuno: addons?.desayuno === true, cancelacionFlexible: addons?.cancelacionFlexible === true },
-      adults + children, nights, stayBase,
+      {
+        desayuno: addons?.desayuno === true,
+        cancelacionFlexible: addons?.cancelacionFlexible === true,
+        lateCheckout: addons?.lateCheckout === true,
+      },
+      adults + children, nights, stayBase, cleanCart.length,
     );
 
     const stayTotal = stayBase + addonTotals.total;
@@ -110,6 +115,9 @@ export async function POST(req: NextRequest) {
         desayunoPersonas: String(addonTotals.desayunoPersonas),
         desayunoPrecio: String(DESAYUNO_PRECIO),
         desayunoTotal: String(addonTotals.desayuno),
+        lateCheckoutHabitaciones: String(addonTotals.lateCheckoutHabitaciones),
+        lateCheckoutPrecio: String(LATE_CHECKOUT_PRECIO),
+        lateCheckoutTotal: String(addonTotals.lateCheckout),
         cancelacionFlexible: String(addonTotals.cancelacionFlexible),
         rooms: roomsMeta,
         customerEmail: customerEmail || '',

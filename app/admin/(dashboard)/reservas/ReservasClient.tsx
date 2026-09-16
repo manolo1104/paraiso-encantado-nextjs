@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun, MessageSquare, Users, Wallet, FileSpreadsheet, Gift, StickyNote, X, Coffee, ShieldCheck } from 'lucide-react';
+import { Plus, Search, RefreshCw, Send, Download, Loader2, ChevronDown, ChevronUp, Sun, MessageSquare, Users, Wallet, FileSpreadsheet, Gift, StickyNote, X, Coffee, ShieldCheck, Clock } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
 import { normalizeMxPhone } from '@/lib/phone';
@@ -99,18 +99,24 @@ function ReservaTags({ notas }: { notas: string }) {
   // verlos sin abrir la reserva. El resto de extras se cuentan en el regalo.
   const desayuno = n.extras.find(e => e.tipo === 'desayuno');
   const cancelFlex = n.extras.find(e => e.tipo === 'cancelacion_flexible');
+  const late = n.extras.find(e => e.tipo === 'late_checkout');
   const addons = [
     ...n.tours.map(t => (t as any).nombre),
     ...n.paquetes.map(p => (p as any).nombre),
-    ...n.extras.filter(e => e !== desayuno && e !== cancelFlex).map(e => e.nombre),
+    ...n.extras.filter(e => e !== desayuno && e !== cancelFlex && e !== late).map(e => e.nombre),
   ].filter(Boolean) as string[];
   const nota = n.cliente || n.interno;
-  if (addons.length === 0 && !nota && !desayuno && !cancelFlex) return null;
+  if (addons.length === 0 && !nota && !desayuno && !cancelFlex && !late) return null;
   return (
     <div className={styles.reservaTags}>
       {desayuno && (
         <span className={styles.tagDesayuno} title={`${desayuno.nombre}: ${desayuno.detalle || ''}`}>
           <Coffee size={11} /> Desayuno
+        </span>
+      )}
+      {late && (
+        <span className={styles.tagLate} title={`Late check-out hasta las 2:00 PM: ${late.detalle || ''}`}>
+          <Clock size={11} /> Late 2 PM
         </span>
       )}
       {cancelFlex && (

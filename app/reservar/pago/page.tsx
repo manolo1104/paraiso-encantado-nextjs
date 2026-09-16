@@ -202,6 +202,7 @@ function PaymentForm({
             '*Habitaciones:*',
             rooms,
             totals.addons.desayuno > 0 ? `• Desayuno americano (${totals.addons.desayunoPersonas} pers. × ${booking.nights} noches) — ${formatMXN(totals.addons.desayuno)}` : '',
+            totals.addons.lateCheckout > 0 ? `• Late check-out 2 PM (${totals.addons.lateCheckoutHabitaciones} hab.) — ${formatMXN(totals.addons.lateCheckout)}` : '',
             totals.addons.cancelacionFlexible > 0 ? `• Cancelación flexible (10%) — ${formatMXN(totals.addons.cancelacionFlexible)}` : '',
             '',
             `*Total estadía:* ${formatMXN(total)}`,

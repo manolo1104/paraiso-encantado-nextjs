@@ -10,7 +10,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Lock, ShieldCheck, Coffee, CalendarX } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, ShieldCheck, Coffee, CalendarX, Clock } from 'lucide-react';
 import {
   loadBookingState,
   saveBookingState,
@@ -21,6 +21,8 @@ import {
   formatMXN,
   DESAYUNO_PRECIO,
   DESAYUNO_MENU,
+  LATE_CHECKOUT_PRECIO,
+  LATE_CHECKOUT_REGLA,
   CANCELACION_FLEX_REGLA,
 } from '@/lib/booking';
 import styles from './checkout.module.css';
@@ -81,7 +83,7 @@ export default function GuestInfoPage() {
   // el paso de pago cobre lo mismo que el huésped eligió aquí.
   function toggleAddon(key: keyof BookingAddons, on: boolean) {
     if (!booking) return;
-    const addons: BookingAddons = { desayuno: false, cancelacionFlexible: false, ...booking.addons, [key]: on };
+    const addons: BookingAddons = { desayuno: false, cancelacionFlexible: false, lateCheckout: false, ...booking.addons, [key]: on };
     const next = withAmounts({ ...booking, addons });
     const { amountTotal, amountPaid, amountPending, isDeposit, ...persist } = next; // eslint-disable-line @typescript-eslint/no-unused-vars
     saveBookingState(persist);
@@ -141,12 +143,16 @@ export default function GuestInfoPage() {
   // Precio de cada add-on como si estuviera activado, para que el huésped vea
   // cuánto suma ANTES de marcarlo.
   const personas = booking.adults + booking.children;
-  const conTodo = calcStayTotals({ ...booking, addons: { desayuno: true, cancelacionFlexible: true } });
-  const sinCancel = calcStayTotals({ ...booking, addons: { desayuno: !!booking.addons?.desayuno, cancelacionFlexible: true } });
+  const habs = booking.cart.length;
+  const noches = `${booking.nights} noche${booking.nights !== 1 ? 's' : ''}`;
+  const conTodo = calcStayTotals({ ...booking, addons: { desayuno: true, cancelacionFlexible: true, lateCheckout: true } });
+  const conCancel = calcStayTotals({ ...booking, addons: { ...booking.addons, desayuno: !!booking.addons?.desayuno, cancelacionFlexible: true } });
   const addonsTotals = {
     desayunoMonto: conTodo.addons.desayuno,
-    desayunoLabel: `${personas} persona${personas !== 1 ? 's' : ''} × ${booking.nights} noche${booking.nights !== 1 ? 's' : ''}`,
-    cancelMonto: sinCancel.addons.cancelacionFlexible,
+    desayunoLabel: `${personas} persona${personas !== 1 ? 's' : ''} × ${noches}`,
+    lateMonto: conTodo.addons.lateCheckout,
+    lateLabel: `${habs} habitación${habs !== 1 ? 'es' : ''}`,
+    cancelMonto: conCancel.addons.cancelacionFlexible,
   };
 
   return (
@@ -244,6 +250,23 @@ export default function GuestInfoPage() {
                   </small>
                 </span>
                 <span className={styles.addonPrice}>+{formatMXN(addonsTotals.desayunoMonto)}</span>
+              </label>
+
+              <label className={`${styles.addonCard} ${booking.addons?.lateCheckout ? styles.addonCardOn : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={!!booking.addons?.lateCheckout}
+                  onChange={e => toggleAddon('lateCheckout', e.target.checked)}
+                />
+                <Clock size={20} strokeWidth={1.5} className={styles.addonIcon} aria-hidden="true" />
+                <span className={styles.addonText}>
+                  <strong>Late check-out</strong>
+                  <small>{LATE_CHECKOUT_REGLA}</small>
+                  <small>
+                    {formatMXN(LATE_CHECKOUT_PRECIO)} por habitación, una sola vez · {addonsTotals.lateLabel}
+                  </small>
+                </span>
+                <span className={styles.addonPrice}>+{formatMXN(addonsTotals.lateMonto)}</span>
               </label>
 
               <label className={`${styles.addonCard} ${booking.addons?.cancelacionFlexible ? styles.addonCardOn : ''}`}>

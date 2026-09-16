@@ -40,6 +40,7 @@ export function extraTotal(e: ExtraItem): number {
 /** Extras de una reserva del motor web (desayuno americano y cancelación flexible). */
 export function extrasMotorWeb(p: {
   desayunoPersonas: number; desayunoPrecio: number; noches: number; cancelacionFlexible: number;
+  lateCheckoutHabitaciones?: number; lateCheckoutPrecio?: number;
 }): ExtraItem[] {
   const out: ExtraItem[] = [];
   const n = Math.max(1, p.noches);
@@ -48,6 +49,16 @@ export function extrasMotorWeb(p: {
       tipo: 'desayuno', nombre: 'Desayuno americano',
       cantidad: p.desayunoPersonas * n, precioUnit: p.desayunoPrecio,
       detalle: `${p.desayunoPersonas} persona${p.desayunoPersonas !== 1 ? 's' : ''} × ${n} noche${n !== 1 ? 's' : ''}`,
+    });
+  }
+  const lateH = p.lateCheckoutHabitaciones || 0;
+  if (lateH > 0 && (p.lateCheckoutPrecio || 0) > 0) {
+    // Mismo nombre y detalle que el panel, para que al editar la reserva la
+    // casilla de late check-out aparezca marcada.
+    out.push({
+      tipo: 'late_checkout', nombre: 'Late check-out (2h)',
+      cantidad: lateH, precioUnit: p.lateCheckoutPrecio || 0,
+      detalle: `${lateH} habitación${lateH !== 1 ? 'es' : ''} · una sola vez`,
     });
   }
   if (p.cancelacionFlexible > 0) {
@@ -144,5 +155,7 @@ export function extrasDesdeStripe(md: Record<string, string | undefined>, noches
     desayunoPrecio: Number(md.desayunoPrecio) || 0,
     noches,
     cancelacionFlexible: Number(md.cancelacionFlexible) || 0,
+    lateCheckoutHabitaciones: Number(md.lateCheckoutHabitaciones) || 0,
+    lateCheckoutPrecio: Number(md.lateCheckoutPrecio) || 0,
   });
 }

@@ -77,6 +77,12 @@ export default function BookingSummary({ booking }: { booking: BookingState }) {
             <span>{formatMXN(addons.desayuno)}</span>
           </div>
         )}
+        {addons.lateCheckout > 0 && (
+          <div className={styles.summaryRow}>
+            <span>Late check-out ({addons.lateCheckoutHabitaciones} hab.)</span>
+            <span>{formatMXN(addons.lateCheckout)}</span>
+          </div>
+        )}
         {addons.cancelacionFlexible > 0 && (
           <div className={styles.summaryRow}>
             <span>Cancelación flexible (10%)</span>

@@ -890,5 +890,258 @@
     "createdAt": "2026-05-29T17:52:41.138Z",
     "roomStatus": "RESERVADO",
     "confirmedAt": "2026-05-29T17:55:54.797Z"
+  },
+  {
+    "folio": "WA-MPZ3MG30",
+    "status": "PENDIENTE_PAGO",
+    "userId": "21595313668267@lid",
+    "userName": "José Eduardo Tonatiuh Méndez Navarro",
+    "guestEmail": null,
+    "howFound": "WhatsApp",
+    "rooms": [
+      {
+        "id": "orquideas_doble",
+        "name": "Orquídeas Doble",
+        "backendName": "Orquídeas Doble",
+        "guests": 3,
+        "price": 3800
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "orquideas_doble",
+      "name": "Orquídeas Doble",
+      "backendName": "Orquídeas Doble",
+      "guests": 3,
+      "price": 3800
+    },
+    "checkin": "2026-06-06",
+    "checkout": "2026-06-08",
+    "guests": 3,
+    "nights": 2,
+    "roomsTotal": 3800,
+    "toursTotal": 0,
+    "totalPrice": 3800,
+    "depositAmount": 1900,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-06-04T06:12:50.796Z"
+  },
+  {
+    "folio": "WA-MQ13QKFI",
+    "status": "PENDIENTE_PAGO",
+    "userId": "183549856592077@lid",
+    "userName": "Mara Cortina Alfaro",
+    "guestEmail": null,
+    "howFound": "WhatsApp",
+    "rooms": [
+      {
+        "id": "helechos-2",
+        "name": "Helechos II Familiar",
+        "backendName": "Helechos 2",
+        "guests": 6,
+        "price": 6000
+      },
+      {
+        "id": "bromelias-1",
+        "name": "Bromelias 1",
+        "backendName": "Bromelias",
+        "guests": 4,
+        "price": 3800
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "helechos-2",
+      "name": "Helechos II Familiar",
+      "backendName": "Helechos 2",
+      "guests": 6,
+      "price": 6000
+    },
+    "checkin": "2026-06-20",
+    "checkout": "2026-06-22",
+    "guests": 10,
+    "nights": 2,
+    "roomsTotal": 9800,
+    "toursTotal": 0,
+    "totalPrice": 9800,
+    "depositAmount": 5000,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-06-05T15:51:35.406Z"
+  },
+  {
+    "folio": "WA-MQMWR255",
+    "status": "RESERVADO",
+    "userId": "232108689760281@lid",
+    "userName": "Jorge Alberto Garza Vazquez",
+    "guestEmail": "jorgea.garzav@gmail.com",
+    "howFound": "WhatsApp",
+    "rooms": [
+      {
+        "id": "jungla",
+        "name": "Suite Jungla",
+        "backendName": "Jungla",
+        "guests": 4,
+        "price": 9600
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla",
+      "backendName": "Jungla",
+      "guests": 4,
+      "price": 9600
+    },
+    "checkin": "2026-07-08",
+    "checkout": "2026-07-12",
+    "guests": 4,
+    "nights": 4,
+    "roomsTotal": 9600,
+    "toursTotal": 0,
+    "totalPrice": 9600,
+    "depositAmount": 4800,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-06-20T22:06:56.921Z",
+    "roomStatus": "RESERVADO",
+    "confirmedAt": "2026-06-22T17:15:18.107Z"
+  },
+  {
+    "folio": "WA-MQPGLMHE",
+    "status": "PENDIENTE_PAGO",
+    "userId": "22875666956393@lid",
+    "userName": "Lubotello",
+    "guestEmail": null,
+    "howFound": "WhatsApp",
+    "rooms": [
+      {
+        "id": "jungla",
+        "name": "Suite Jungla",
+        "backendName": "Jungla",
+        "guests": 4,
+        "price": 2400
+      },
+      {
+        "id": "flor_liz_1",
+        "name": "Suite Flor de Liz 1",
+        "backendName": "Suite Flor de Liz 1",
+        "guests": 4,
+        "price": 2400
+      },
+      {
+        "id": "flor_liz_2",
+        "name": "Suite Flor de Liz 2",
+        "backendName": "Suite Flor de Liz 2",
+        "guests": 4,
+        "price": 2400
+      },
+      {
+        "id": "lindavista",
+        "name": "Suite LindaVista",
+        "backendName": "Suite LindaVista",
+        "guests": 4,
+        "price": 2400
+      },
+      {
+        "id": "lajas",
+        "name": "Suite Lajas",
+        "backendName": "Suite Lajas",
+        "guests": 4,
+        "price": 2400
+      },
+      {
+        "id": "helechos_1",
+        "name": "Helechos I Familiar",
+        "backendName": "Helechos 1",
+        "guests": 5,
+        "price": 2700
+      },
+      {
+        "id": "helechos_2",
+        "name": "Helechos II Familiar",
+        "backendName": "Helechos 2",
+        "guests": 5,
+        "price": 2700
+      },
+      {
+        "id": "lirios_1",
+        "name": "Lirios 1",
+        "backendName": "Lirios 1",
+        "guests": 4,
+        "price": 1900
+      },
+      {
+        "id": "lirios_2",
+        "name": "Lirios 2",
+        "backendName": "Lirios 2",
+        "guests": 4,
+        "price": 1900
+      },
+      {
+        "id": "orquideas_doble",
+        "name": "Orquídeas Doble",
+        "backendName": "Orquídeas Doble",
+        "guests": 3,
+        "price": 1900
+      },
+      {
+        "id": "bromelias",
+        "name": "Bromelias 1",
+        "backendName": "Bromelias",
+        "guests": 3,
+        "price": 1900
+      },
+      {
+        "id": "orquideas_2",
+        "name": "Orquídeas 2",
+        "backendName": "Orquídeas 2",
+        "guests": 2,
+        "price": 1500
+      },
+      {
+        "id": "orquideas_3",
+        "name": "Orquídeas 3",
+        "backendName": "Orquídeas 3",
+        "guests": 2,
+        "price": 1500
+      }
+    ],
+    "tours": [],
+    "room": {
+      "id": "jungla",
+      "name": "Suite Jungla",
+      "backendName": "Jungla",
+      "guests": 4,
+      "price": 2400
+    },
+    "checkin": "2026-12-05",
+    "checkout": "2026-12-06",
+    "guests": 48,
+    "nights": 1,
+    "roomsTotal": 28000,
+    "toursTotal": 0,
+    "totalPrice": 28000,
+    "depositAmount": 5000,
+    "bankInfo": {
+      "banco": "Banamex",
+      "titular": "Mario Arturo Covarrubias Orduña",
+      "clabe": "002705700824116647",
+      "cuenta": "4217470058780996"
+    },
+    "createdAt": "2026-06-22T16:58:08.018Z"
   }
 ]

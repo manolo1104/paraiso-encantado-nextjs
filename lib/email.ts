@@ -1,4 +1,4 @@
-import { CANCELACION_FLEX_REGLA, DESAYUNO_MENU } from './booking';
+import { CANCELACION_FLEX_REGLA, DESAYUNO_MENU, LATE_CHECKOUT_REGLA } from './booking';
 import { extraTotal, type ExtraItem } from './notas';
 
 // Íconos de los correos: PNG en public/email/iconos (se regeneran con
@@ -293,7 +293,7 @@ export function buildEmailHtml(data: {
         <td style="padding:16px 0;vertical-align:top;width:80%;">
           <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:400;color:#2a2218;margin:0 0 4px 0;">${icono(ICONO_EXTRA[e.tipo] || 'coffee')}${e.nombre}</p>
           <p style="font-size:12px;color:#9a8a74;font-weight:300;margin:0;line-height:1.5;">${e.tipo === 'cancelacion_flexible' ? CANCELACION_FLEX_REGLA : (e.detalle || '')}</p>
-          ${e.tipo === 'desayuno' ? `<p style="font-size:12px;color:#9a8a74;font-weight:300;margin:2px 0 0;line-height:1.5;">${DESAYUNO_MENU}</p>` : ''}
+          ${e.tipo === 'desayuno' || e.tipo === 'late_checkout' ? `<p style="font-size:12px;color:#9a8a74;font-weight:300;margin:2px 0 0;line-height:1.5;">${e.tipo === 'desayuno' ? DESAYUNO_MENU : LATE_CHECKOUT_REGLA}</p>` : ''}
         </td>
         <td style="padding:16px 0 16px 20px;text-align:right;vertical-align:top;white-space:nowrap;">
           <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:500;color:#2a2218;margin:0;">$${extraTotal(e).toLocaleString('es-MX')}</p>

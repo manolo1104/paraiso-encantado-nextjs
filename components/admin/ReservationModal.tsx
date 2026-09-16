@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Loader2, AlertTriangle, CheckCircle, Plus, MessageSquare, Mail, Download, Pencil } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
-import { BOOKING_ROOMS, getRoomBasePrice, CANCELACION_FLEX_PCT, DESAYUNO_PRECIO } from '@/lib/booking';
+import { BOOKING_ROOMS, getRoomBasePrice, CANCELACION_FLEX_PCT, DESAYUNO_PRECIO, LATE_CHECKOUT_PRECIO } from '@/lib/booking';
 import { TOURS_CATALOG, PAQUETES_CATALOG } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
 import type { TourItem } from '@/lib/booking-html';
 import type { PaqueteItem } from '@/app/admin/(dashboard)/cotizaciones/CotizacionesClient';
@@ -173,15 +173,16 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const [tourItems, setTourItems] = useState<TourItem[]>(parsedNotas.tours as unknown as TourItem[]);
   const [paqueteItems, setPaqueteItems] = useState<PaqueteItem[]>(parsedNotas.paquetes as unknown as PaqueteItem[]);
 
-  // Extras: desayuno (por persona/noche), late check-out 2h ($250 por
-  // habitación/noche) y cancelación flexible (10% del total). Se guardan en la
-  // sección ||EXTRAS|| de las notas.
+  // Extras: desayuno (por persona/noche), late check-out 2h (por habitación,
+  // UNA SOLA VEZ desde el 15 sep 2026 — antes era por noche) y cancelación
+  // flexible (10% del total). Se guardan en la sección ||EXTRAS|| de las notas.
   const initDesayuno = parsedNotas.extras.find(e => e.tipo === 'desayuno');
   const initLate = parsedNotas.extras.find(e => e.tipo === 'late_checkout');
   const initCancel = parsedNotas.extras.find(e => e.tipo === 'cancelacion_flexible');
   // Mismo precio que el motor web. Al editar una reserva vieja se respeta el
   // precio con que se vendió, no se re-tarifica.
   const desayunoPrecio = Number(initDesayuno?.precioUnit) || DESAYUNO_PRECIO;
+  const latePrecio = Number(initLate?.precioUnit) || LATE_CHECKOUT_PRECIO;
   const [desayuno, setDesayuno] = useState<boolean>(!!initDesayuno);
   const [desayunoPersonas, setDesayunoPersonas] = useState<number>(
     initDesayuno ? Math.max(1, Math.round(initDesayuno.cantidad / Math.max(booking?.noches || 1, 1))) : 0
@@ -329,7 +330,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
   const paquetesCalculado = paqueteItems.reduce((s, p) => s + p.precio, 0);
   const nochesQ = Math.max(form.noches, 1);
   const desayunoTotal = desayuno ? desayunoPrecio * Math.max(desayunoPersonas, 0) * nochesQ : 0;
-  const lateCheckoutTotal = lateCheckout ? 250 * habitaciones.length * nochesQ : 0;
+  const lateCheckoutTotal = lateCheckout ? latePrecio * habitaciones.length : 0;
   // Mientras no se toque nada que mueva el total, la cancelación flexible guarda
   // el monto que ya se cobró; si cambian habitaciones/fechas/extras, se recalcula.
   const cancelFlexTotal = !cancelFlex ? 0
@@ -365,7 +366,7 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
         + tourItems.reduce((s, t) => s + t.precio * t.personas, 0)
         + paqueteItems.reduce((s, p) => s + p.precio, 0)
         + (desayuno ? desayunoPrecio * Math.max(desayunoPersonas, 0) * nq : 0)
-        + (lateCheckout ? 250 * habitaciones.length * nq : 0);
+        + (lateCheckout ? latePrecio * habitaciones.length : 0);
       const precioAuto = precioSinCancel + (cancelFlex ? Math.round(precioSinCancel * CANCELACION_FLEX_PCT) : 0);
       setForm(f => ({
         ...f,
@@ -452,8 +453,8 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
         const habs = habitaciones.length;
         extras.push({
           tipo: 'late_checkout', nombre: 'Late check-out (2h)',
-          cantidad: habs * nochesFinal, precioUnit: 250,
-          detalle: `${habs} habitación${habs !== 1 ? 'es' : ''} × ${nochesFinal} noche${nochesFinal !== 1 ? 's' : ''}`,
+          cantidad: habs, precioUnit: latePrecio,
+          detalle: `${habs} habitación${habs !== 1 ? 'es' : ''} · una sola vez`,
         });
       }
       if (cancelFlex && cancelFlexTotal > 0) {
@@ -761,11 +762,11 @@ export default function ReservationModal({ booking, defaultCheckin, defaultRoom,
             <label className={styles.extraRow}>
               <input type="checkbox" checked={lateCheckout} onChange={e => toggleLateCheckout(e.target.checked)} />
               <span className={styles.extraName}>
-                Late check-out (2h) <small>$250 por habitación / noche</small>
+                Late check-out (2h) <small>${latePrecio} por habitación, una sola vez</small>
               </span>
               {lateCheckout && (
                 <span className={styles.extraQty}>
-                  <span>{habitaciones.length} hab. × {nochesQ}n</span>
+                  <span>{habitaciones.length} hab.</span>
                 </span>
               )}
               {lateCheckout && <span className={styles.extraTotal}>${lateCheckoutTotal.toLocaleString('es-MX')}</span>}

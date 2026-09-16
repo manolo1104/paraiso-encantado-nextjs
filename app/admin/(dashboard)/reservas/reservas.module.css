@@ -529,3 +529,9 @@
   background: #e8f3ea; color: #2d6a36;
   padding: 2px 7px; border-radius: 10px; cursor: default;
 }
+.tagLate {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.68rem; font-weight: 700;
+  background: #e8eef8; color: #2f5596;
+  padding: 2px 7px; border-radius: 10px; cursor: default;
+}
