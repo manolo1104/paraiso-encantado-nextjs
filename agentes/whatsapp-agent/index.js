@@ -431,7 +431,7 @@ function isAlwaysRespond(jid = '') {
 const CONTROL_HOTEL_GROUP_NAME = process.env.CONTROL_HOTEL_GROUP_NAME || 'Control Hotel';
 const CONTROL_HOTEL_GROUP_ID = process.env.CONTROL_HOTEL_GROUP_ID || '';
 const HUMAN_ESCALATION_ALERT_NUMBER = (process.env.HUMAN_ESCALATION_ALERT_NUMBER || '524891007601').replace(/\D/g, '');
-const TOUR_AGENT_NUMBER = (process.env.TOUR_AGENT_NUMBER || '524891251458').replace(/\D/g, '');
+const TOUR_AGENT_NUMBER = (process.env.TOUR_AGENT_NUMBER || '524891090388').replace(/\D/g, '');
 const BREAKFAST_AGENT_NUMBER = (process.env.BREAKFAST_AGENT_NUMBER || '524891255181').replace(/\D/g, '');
 
 // Evitar notificar dos veces por conversación en la misma sesión

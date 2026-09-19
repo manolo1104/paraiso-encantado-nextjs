@@ -602,7 +602,7 @@ async function runScenarios() {
   if (want('E5') || want('E6')) {
     scenario('E5', '"¿qué tours tienen?" y "agrégame el tour de Tamul a mi reserva"');
     const e5a = await turn(A, ['¿qué tours tienen?']);
-    check('contiene el WhatsApp de tours 489 125 1458', /489 125 1458/.test(e5a.text));
+    check('contiene el WhatsApp de tours 489 109 0388', /489 109 0388/.test(e5a.text));
     check('contiene el link huasteca-potosina.com/tours', /https:\/\/www\.huasteca-potosina\.com\/tours/.test(e5a.text));
     check('precios nuevos (Tamul $1,550, Surrealista $1,400)', e5a.text.includes('$1,550') && e5a.text.includes('$1,400'));
     check('sin precios viejos ($1,450)', !/\$1,450/.test(e5a.text));
@@ -613,7 +613,7 @@ async function runScenarios() {
     check('no llamó create_reservation_quote', !e5b.tools.some(t => t.name === 'create_reservation_quote'));
     const active = activeBefore ? byFolio(activeBefore) : null;
     check('la cotización vigente sigue igual, sin tours', !active || (active.status === 'PENDIENTE_PAGO' && !active.tours?.length));
-    check('remite al WhatsApp de tours', /489 125 1458/.test(e5b.text));
+    check('remite al WhatsApp de tours', /489 109 0388/.test(e5b.text));
     const r5 = e5b.results[e5b.results.length - 1];
     note(`requiresTourNotification=${r5?.requiresTourNotification}`);
     check('avisa al equipo de tours (requiresTourNotification)', r5?.requiresTourNotification === true);

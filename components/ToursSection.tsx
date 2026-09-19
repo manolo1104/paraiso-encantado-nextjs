@@ -6,7 +6,7 @@ import styles from './ToursSection.module.css';
 // sitio; aquí solo se enseñan. Decisión del dueño (sep 2026): SIN precios, sin
 // "Ahorras" y sin "desde $" — el precio vigente vive en huasteca-potosina.com.
 const PACKAGES_URL = 'https://www.huasteca-potosina.com/paquetes';
-const TOURS_WHATSAPP_URL = 'https://wa.me/524891251458';
+const TOURS_WHATSAPP_URL = 'https://wa.me/524891090388';
 
 // Nombre, subtítulo, duración, badge y slug copiados de la fuente canónica
 // (repo INTINERARIO HUASTECA, rama main: src/lib/paquetes.ts). Si cambian allá,
@@ -124,7 +124,7 @@ export default function ToursSection() {
             rel="noopener noreferrer"
             style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
           >
-            +52 489 125 1458
+            +52 489 109 0388
           </a>
         </p>
       </div>

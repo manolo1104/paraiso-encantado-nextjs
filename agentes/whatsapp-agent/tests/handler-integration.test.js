@@ -564,7 +564,7 @@ test('getDeterministicResponse: una ráfaga con personas y fechas NO recibe resp
 
 test('getDeterministicResponse: "¿qué tours tienen?" con precios al día y contacto de tours', () => {
   const msg = T.getDeterministicResponse('¿qué tours tienen?', {});
-  assert.ok(msg.includes('489 125 1458'));
+  assert.ok(msg.includes('489 109 0388'));
   assert.ok(msg.includes('huasteca-potosina.com/tours'));
   assert.ok(msg.includes('$1,550'));
   assert.ok(!msg.includes('$1,450'));
@@ -585,7 +585,7 @@ test('"agrégame el tour de Tamul a mi reserva": remite a tours (no repite la co
   for (const ask of ['agrégame el tour de Tamul a mi reserva', 'quiero agregar un tour a mi reservación', 'añade la excursión de Tamul a mi cotización']) {
     const msg = T.getDeterministicResponse(ask, session, { stage: 'cotizacion_pendiente_pago' });
     assert.ok(msg, `"${ask}" tiene respuesta fija`);
-    assert.ok(msg.includes('489 125 1458'), `"${ask}" manda al WhatsApp de tours`);
+    assert.ok(msg.includes('489 109 0388'), `"${ask}" manda al WhatsApp de tours`);
     assert.ok(!msg.includes(res.folio), `"${ask}" no contesta con la cotización`);
   }
   // Preguntas informativas de tours NO son "agregar": no reciben ese atajo.
@@ -608,7 +608,7 @@ test('HOTEL_SYSTEM_PROMPT sin precios ni flujos viejos y determinístico', () =>
   for (const old of ['$1,450', 'Paquete Esencial', 'Opción 2', '3 horas', 'PRECIO HOTEL', 'rellena', 'deposit_amount']) {
     assert.ok(!p.includes(old), `el prompt contiene "${old}"`);
   }
-  for (const must of ['489 125 1458', 'https://www.huasteca-potosina.com/paquetes', 'room_options', '1) llama check_availability', '$1,550']) {
+  for (const must of ['489 109 0388', 'https://www.huasteca-potosina.com/paquetes', 'room_options', '1) llama check_availability', '$1,550']) {
     assert.ok(p.includes(must), `al prompt le falta "${must}"`);
   }
   assert.equal(p, HOTEL_SYSTEM_PROMPT());
@@ -709,7 +709,7 @@ test('handleMessage: una ráfaga con personas y fechas va al modelo, y el pie de
   T.setAnthropicClient(fake);
   const result = await handler.handleMessage(USER, 'Hola\nsomos 5 personas\ndel 9 al 11 de octubre, ¿qué nos recomiendas?', 'Ana');
   assert.equal(fake.calls.length, 1, 'no se la tragó un atajo');
-  assert.ok(result.text.includes('489 125 1458'), 'pie de tours');
+  assert.ok(result.text.includes('489 109 0388'), 'pie de tours');
   assert.equal(result.requiresTourNotification, false, 'informar de tours no avisa al equipo de tours');
   assert.equal(result.quoteCreated, false);
   assert.equal(result.quote, null);

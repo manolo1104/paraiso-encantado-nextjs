@@ -24,14 +24,14 @@ const EXPECTED_PRICES = {
 };
 
 test('constantes de contacto', () => {
-  assert.equal(TOURS_WHATSAPP, '+52 489 125 1458');
-  assert.equal(TOURS_WA_DIGITS, '524891251458');
+  assert.equal(TOURS_WHATSAPP, '+52 489 109 0388');
+  assert.equal(TOURS_WA_DIGITS, '524891090388');
   assert.equal(TOURS_BASE_URL, 'https://www.huasteca-potosina.com');
   assert.equal(TOURS_LIST_URL, 'https://www.huasteca-potosina.com/tours');
   assert.equal(PACKAGES_URL, 'https://www.huasteca-potosina.com/paquetes');
   assert.match(TOURS_KIDS_RULE, /6 a 10 años pagan 70%/);
   assert.match(TOURS_KIDS_RULE, /menores de 6 el 50%/);
-  assert.equal(TOURS_CONTACT_FOOTER, '🌊 Para organizar o reservar tus tours escríbele a nuestro equipo de tours al *+52 489 125 1458* 📲\n🔗 https://www.huasteca-potosina.com/tours');
+  assert.equal(TOURS_CONTACT_FOOTER, '🌊 Para organizar o reservar tus tours escríbele a nuestro equipo de tours al *+52 489 109 0388* 📲\n🔗 https://www.huasteca-potosina.com/tours');
 });
 
 test('10 tours con los precios de Huasteca y su link /tours/<id>', () => {
@@ -58,7 +58,7 @@ test('10 tours con los precios de Huasteca y su link /tours/<id>', () => {
 test('renderToursForPrompt: 10 links, número de tours, paquetes sin precio y sin precios viejos', () => {
   const block = renderToursForPrompt();
   for (const t of TOURS) assert.ok(block.includes(t.url), `falta ${t.url}`);
-  assert.ok(block.includes('489 125 1458'));
+  assert.ok(block.includes('489 109 0388'));
   assert.ok(block.includes(PACKAGES_URL));
   assert.ok(block.includes(TOURS_KIDS_RULE));
   for (const old of ['$1,450', '$1,300.00', '$1,500.00', 'Paquete Esencial', 'Paquete Aventura', '$5,000', '$9,000', '$12,200']) {
@@ -91,13 +91,13 @@ test('ensureToursContact agrega el pie una sola vez y es idempotente', () => {
   const once = ensureToursContact(base);
   assert.equal(once, `${base}\n\n${TOURS_CONTACT_FOOTER}`);
   assert.equal(ensureToursContact(once), once);
-  assert.equal(once.match(/489 125 1458/g).length, 1);
+  assert.equal(once.match(/489 109 0388/g).length, 1);
 });
 
 test('ensureToursContact no toca textos sin tours ni textos que ya traen el número', () => {
   const hotel = '¡Hola! Estamos a 400 m del Jardín de Edward James, en Xilitla. 🌿';
   assert.equal(ensureToursContact(hotel), hotel);
-  const withNumber = 'Para tours escríbele al 489 125 1458';
+  const withNumber = 'Para tours escríbele al 489 109 0388';
   assert.equal(ensureToursContact(withNumber), withNumber);
   assert.equal(ensureToursContact(''), '');
   assert.equal(ensureToursContact(null), null);
@@ -110,7 +110,7 @@ test('ensureToursContact agrega el link de paquetes cuando se habla de paquetes'
   assert.ok(once.includes(`🎒 Paquetes: ${PACKAGES_URL}`));
   assert.equal(ensureToursContact(once), once);
 
-  const numberOnly = 'Los paquetes los ve el equipo al +52 489 125 1458';
+  const numberOnly = 'Los paquetes los ve el equipo al +52 489 109 0388';
   const fixed = ensureToursContact(numberOnly);
   assert.equal(fixed, `${numberOnly}\n\n🎒 Paquetes: ${PACKAGES_URL}`);
   assert.equal(ensureToursContact(fixed), fixed);
@@ -122,7 +122,7 @@ test('buildToursCatalogMessage: los 10 tours con precio y duración, link y cont
     assert.ok(msg.includes(`*${t.name}* — ${t.priceText} — ${t.duration}`), `falta ${t.name}`);
   }
   assert.ok(msg.includes(`🔗 Detalles y fotos: ${TOURS_LIST_URL}`));
-  assert.ok(msg.includes('489 125 1458'));
+  assert.ok(msg.includes('489 109 0388'));
   assert.ok(!msg.includes('$1,450'));
   assert.equal(ensureToursContact(msg), msg, 'ya trae el contacto');
   assert.doesNotMatch(msg, /\b(tenés|podés|querés|mandame|vos)\b/);

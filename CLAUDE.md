@@ -115,7 +115,7 @@ JSON-LD schema (`LodgingBusiness`) lives **only** in `app/page.tsx` (not duplica
 
 `HeroLiveSignals` shows 15–45 viewers, drifts ±5 every 20–40 seconds.
 
-`ToursSection` — "Paquetes hotel + tours": shows the 5 current packages of Tours Huasteca Potosina (Luna de Miel, Familiar, Aventura Extrema, Tu Huasteca, Odisea Huasteca), mirrored in `/paquetes`, with name, duration and subtitle only — **no prices** (owner's decision, Sep 2026). Each card links to `https://www.huasteca-potosina.com/paquetes/<slug>`; the CTA goes to `/paquetes` on that site and to the tours WhatsApp (+52 489 125 1458). Canonical source for tours and packages: repo `INTINERARIO HUASTECA`, branch `main` (`src/lib/tours.ts`, `src/lib/paquetes.ts`); `/experiencias` and the admin `TOURS_CATALOG` copy prices from there.
+`ToursSection` — "Paquetes hotel + tours": shows the 5 current packages of Tours Huasteca Potosina (Luna de Miel, Familiar, Aventura Extrema, Tu Huasteca, Odisea Huasteca), mirrored in `/paquetes`, with name, duration and subtitle only — **no prices** (owner's decision, Sep 2026). Each card links to `https://www.huasteca-potosina.com/paquetes/<slug>`; the CTA goes to `/paquetes` on that site and to the tours WhatsApp (+52 489 109 0388). Canonical source for tours and packages: repo `INTINERARIO HUASTECA`, branch `main` (`src/lib/tours.ts`, `src/lib/paquetes.ts`); `/experiencias` and the admin `TOURS_CATALOG` copy prices from there.
 
 `NewsletterSection` — captures email via `/api/capture-lead` (saves to Sheets). Positioned after Testimonials.
 

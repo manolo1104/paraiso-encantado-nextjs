@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 // del dueño (sep 2026): aquí SIN precios, sin "Ahorras" y sin ofertas en el
 // JSON-LD — el precio vigente vive en huasteca-potosina.com.
 const PACKAGES_URL = 'https://www.huasteca-potosina.com/paquetes';
-const TOURS_WHATSAPP_URL = 'https://wa.me/524891251458';
+const TOURS_WHATSAPP_URL = 'https://wa.me/524891090388';
 
 // Nombre, subtítulo, duración, badge y slug copiados de la fuente canónica
 // (repo INTINERARIO HUASTECA, rama main: src/lib/paquetes.ts). Si cambian allá,
@@ -125,7 +125,7 @@ const paquetesBreadcrumb = {
 const FAQ = [
   {
     q: '¿Puedo personalizar los paquetes?',
-    a: 'Sí. Escríbele a nuestro equipo de tours por WhatsApp al +52 489 125 1458 y ajustan fechas, habitación, número de personas y actividades. Si tu grupo es más grande o quieres agregar más tours, te arman una cotización sin compromiso.',
+    a: 'Sí. Escríbele a nuestro equipo de tours por WhatsApp al +52 489 109 0388 y ajustan fechas, habitación, número de personas y actividades. Si tu grupo es más grande o quieres agregar más tours, te arman una cotización sin compromiso.',
   },
   {
     q: '¿Puedo cambiar la habitación incluida en el paquete?',
@@ -137,7 +137,7 @@ const FAQ = [
   },
   {
     q: '¿Cómo reservo un paquete?',
-    a: 'Entra a la página del paquete en huasteca-potosina.com/paquetes para ver el itinerario día por día, o escríbele a nuestro equipo de tours por WhatsApp al +52 489 125 1458 con tus fechas y el paquete que te interesa. Ellos confirman la disponibilidad del hotel y te dicen cómo apartar.',
+    a: 'Entra a la página del paquete en huasteca-potosina.com/paquetes para ver el itinerario día por día, o escríbele a nuestro equipo de tours por WhatsApp al +52 489 109 0388 con tus fechas y el paquete que te interesa. Ellos confirman la disponibilidad del hotel y te dicen cómo apartar.',
   },
   {
     q: '¿Qué pasa si necesito cancelar?',

@@ -10,8 +10,8 @@
  * cliente con el equipo de tours (WhatsApp y links).
  */
 
-export const TOURS_WHATSAPP = '+52 489 125 1458';
-export const TOURS_WA_DIGITS = '524891251458';
+export const TOURS_WHATSAPP = '+52 489 109 0388';
+export const TOURS_WA_DIGITS = '524891090388';
 export const TOURS_BASE_URL = 'https://www.huasteca-potosina.com';
 export const TOURS_LIST_URL = `${TOURS_BASE_URL}/tours`;
 export const PACKAGES_URL = `${TOURS_BASE_URL}/paquetes`;

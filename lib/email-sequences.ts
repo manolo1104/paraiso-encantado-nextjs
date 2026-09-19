@@ -9,7 +9,7 @@ const REVIEW_URL = process.env.GOOGLE_MAPS_REVIEW_URL ||
   'https://g.page/r/CY84xO7VaxDbEBM/review';
 const WA_NUMBER = '524891007679';
 // WhatsApp del equipo de tours (Tours Huasteca Potosina): los tours se organizan ahí.
-const TOURS_WA_NUMBER = '524891251458';
+const TOURS_WA_NUMBER = '524891090388';
 // Toda la venta cruzada de tours en los correos antes de llegar aterriza aquí:
 // el catálogo de la operadora con precios vigentes y el botón de reservar.
 const TOURS_RESERVAR_URL = 'https://www.huasteca-potosina.com/reservar';
@@ -249,7 +249,7 @@ export function buildToursEmailHtml(data: {
       </p>
       ${ctaButton('Ver todos los tours', TOURS_RESERVAR_URL, '#2a2218')}
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:13px;color:#4a3f30;text-align:center;margin:0 0 6px;">
-        ¿Prefieres que te lo armen? <a href="${waUrl}" style="color:#5a7a5c;">Escríbele a nuestro equipo de tours por WhatsApp</a> (+52 489 125 1458)
+        ¿Prefieres que te lo armen? <a href="${waUrl}" style="color:#5a7a5c;">Escríbele a nuestro equipo de tours por WhatsApp</a> (+52 489 109 0388)
       </p>
       <p style="font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#9a8a74;text-align:center;margin:0;">
         También puedes llamarnos al +52 489-100-7679

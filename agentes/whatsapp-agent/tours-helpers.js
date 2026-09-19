@@ -5,7 +5,7 @@
  */
 
 import {
-  TOURS, TOURS_WHATSAPP, TOURS_LIST_URL, PACKAGES_URL, TOURS_KIDS_RULE,
+  TOURS, TOURS_WHATSAPP, TOURS_WA_DIGITS, TOURS_LIST_URL, PACKAGES_URL, TOURS_KIDS_RULE,
 } from './tours-data.js';
 
 export const TOURS_CONTACT_FOOTER =
@@ -31,7 +31,15 @@ const TOUR_KEYWORDS_REGEX = new RegExp(
 );
 const GENERIC_TOURS_REGEX = /\btours?\b|excursi[oó]n|huasteca-potosina\.com|\bpaquetes?\b/i;
 const PACKAGES_REGEX = /\bpaquetes?\b/i;
-const TOURS_NUMBER_REGEX = /489[\s.-]*125[\s.-]*1458/;
+// Se arma con el número que declara tours-data.js, no escrito a mano: cuando el
+// WhatsApp de tours cambió (19 sep 2026) esta regex se quedó con el viejo —está
+// partida en grupos, así que ningún buscar-y-reemplazar la encuentra—, dejó de
+// reconocer el número nuevo y el bot empezó a pegar el pie de contacto DOS veces
+// en el mismo mensaje. Derivándola del dato, eso no puede volver a pasar.
+const TOURS_NUMBER_REGEX = (() => {
+  const d = TOURS_WA_DIGITS.replace(/\D/g, '').replace(/^52/, '');
+  return new RegExp(`${d.slice(0, 3)}[\\s.-]*${d.slice(3, 6)}[\\s.-]*${d.slice(6)}`);
+})();
 const PACKAGES_URL_REGEX = /huasteca-potosina\.com\/paquetes/i;
 
 /**

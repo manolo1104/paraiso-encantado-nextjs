@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 
 // Los tours los opera Tours Huasteca Potosina (otra marca del mismo dueño): se
 // reservan en su sitio y con su equipo por WhatsApp, no con el número del hotel.
-const TOURS_WHATSAPP_URL = 'https://wa.me/524891251458';
+const TOURS_WHATSAPP_URL = 'https://wa.me/524891090388';
 const BOOKING_URL = '/reservar';
 const TOURS_SITE_URL = 'https://www.huasteca-potosina.com';
 const TOURS_LIST_URL = `${TOURS_SITE_URL}/tours`;
@@ -452,7 +452,7 @@ export default function ExperienciasPage() {
           La Huasteca <em>te espera</em>
         </h2>
         <p className={styles.ctaDesc}>
-          Escríbele a nuestro equipo de tours por WhatsApp al +52 489 125 1458 para armar
+          Escríbele a nuestro equipo de tours por WhatsApp al +52 489 109 0388 para armar
           tu itinerario, y reserva tu suite para dormir a 5 minutos de Las Pozas.
         </p>
         <div className={styles.ctaButtons}>
