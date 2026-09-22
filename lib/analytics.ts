@@ -83,8 +83,51 @@ function scheduleFlush() {
   }, 300);
 }
 
+/**
+ * Eventos de este sistema que Google Ads debe contar como conversión, y el
+ * nombre con el que entran a GTM.
+ *
+ * Los WHATSAPP_CLICK de /reservar son los de mayor intención de todo el sitio:
+ * los dispara quien ya buscó fechas y no encontró lugar, o vio disponibilidad
+ * incompleta. Comparten nombre en GTM con el botón flotante para que una sola
+ * conversión («Contacto WhatsApp») los cuente todos.
+ */
+const NOMBRE_EN_GTM: Record<string, string> = {
+  WHATSAPP_CLICK: 'contacto_whatsapp',
+  WHATSAPP_PAY_CLICK: 'contacto_whatsapp',
+  WHATSAPP_RECOVERY_CLICK: 'contacto_whatsapp',
+  BOOKING_START: 'inicio_reserva',
+};
+
+/**
+ * Empuja el evento a la capa de datos de GTM, además de encolarlo para
+ * /api/analytics.
+ *
+ * Sin esto, ninguno de estos eventos sale nunca del log de Railway: la cola de
+ * este archivo POSTea a un endpoint propio que solo hace console.log, así que
+ * Google Ads no veía ni un solo contacto por WhatsApp.
+ */
+function empujarACapaDatos(event: string, data?: Record<string, unknown>): void {
+  const nombre = NOMBRE_EN_GTM[event];
+  if (!nombre) return; // Solo los que son conversión: el resto ensucia GTM.
+  try {
+    const w = window as unknown as { dataLayer?: Record<string, unknown>[] };
+    w.dataLayer = w.dataLayer || [];
+    w.dataLayer.push({
+      ...(data ?? {}),
+      event: nombre,
+      evento_interno: event,
+      pagina: window.location.pathname,
+    });
+  } catch {
+    // Medir nunca puede tumbar la página.
+  }
+}
+
 export function trackEvent(event: string, data?: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
+
+  empujarACapaDatos(event, data);
 
   memQueue.push({
     event,

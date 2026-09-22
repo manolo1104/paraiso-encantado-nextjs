@@ -3,9 +3,11 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Reservar Suite | Paraíso Encantado · Desde $1,500 MXN/noche sin comisiones',
+  // Era el título más ancho del sitio (716 px): se cortaba justo donde estaba
+  // el precio. Ahora cabe entero y el precio queda del lado visible.
+  title: 'Reservar Hotel en Xilitla sin comisiones · Desde $1,500',
   description:
-    'Reserva directa sin comisiones desde $1,500 MXN/noche. 13 suites boutique, 4 con spa privado en Xilitla, Huasteca Potosina. Confirmación instantánea, reembolso del 100% hasta 7 días antes.',
+    'Elige fechas y suite y confirma al instante, sin comisión de agencia. Cancelación con 100% de reembolso hasta 7 días antes. Xilitla, Huasteca Potosina.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/reservar',
   },

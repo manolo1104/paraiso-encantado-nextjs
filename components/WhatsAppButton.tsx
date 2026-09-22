@@ -1,9 +1,17 @@
 'use client';
 
-import { track } from '@/lib/track';
+import { trackConversion } from '@/lib/track';
 import styles from './WhatsAppButton.module.css';
 
 export default function WhatsAppButton() {
+  // `origen` es la clave que se lee en GTM; `source` se conserva porque el log
+  // de Railway imprime la línea de WhatsApp buscando ese nombre.
+  const alHacerClic = () =>
+    trackConversion('clic_whatsapp', {
+      origen: 'boton_flotante',
+      source: 'floating_button',
+    });
+
   return (
     <a
       href="https://wa.me/524891007679"
@@ -11,7 +19,9 @@ export default function WhatsAppButton() {
       rel="noopener noreferrer"
       className={styles.btn}
       aria-label="Chatear por WhatsApp"
-      onClick={() => track('clic_whatsapp', { source: 'floating_button' }, true)}
+      /* Ya manda su propio evento: el detector global de TrackingSetup lo salta. */
+      data-wa-medido="1"
+      onClick={alHacerClic}
     >
       <svg
         viewBox="0 0 24 24"

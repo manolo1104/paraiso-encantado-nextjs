@@ -1,0 +1,97 @@
+/* Estilos propios de /hoteles-en-xilitla.
+   Existen por una sola razón: la tabla compartida de las landings SEO está
+   pensada para 2 o 3 columnas y aquí son 6 (Hotel, Zona, Desde, A Las Pozas,
+   Alberca, Estacionamiento). Con el `min-width: 540px` del módulo compartido,
+   seis columnas se aprietan hasta partir cada celda en cuatro renglones y la
+   tabla deja de leerse. Nada de esto se toca en el CSS compartido porque lo
+   usan otras seis landings que sí tienen 2 o 3 columnas. */
+
+/* El selector de elemento no se renombra en CSS Modules, así que esto solo
+   alcanza a la tabla que va dentro de este contenedor. */
+.hotelesTable table {
+  min-width: 760px;
+  font-size: 13.5px;
+}
+
+.hotelesTable th,
+.hotelesTable td {
+  padding: 11px 12px;
+}
+
+/* La primera columna es el nombre del hotel: si se parte en dos renglones, la
+   tabla se lee como una lista de fragmentos. */
+.hotelesTable tbody th {
+  white-space: nowrap;
+}
+
+/* Aviso de deslizar. En pantallas donde la tabla sí cabe entera sobra, así que
+   solo aparece cuando el contenedor es más angosto que la tabla. */
+.swipeHint {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .swipeHint {
+    display: block;
+    font-family: var(--font-jost, sans-serif);
+    font-size: 12.5px;
+    color: #8a8a7a;
+    margin: 0 0 6px;
+  }
+}
+
+/* Nota al pie de la tabla: de dónde salen las cifras. Va en el flujo normal de
+   la página, fuera del contenedor que hace scroll, para que se lea entera en
+   móvil. */
+.tablaNota {
+  font-family: var(--font-jost, sans-serif);
+  font-size: 12.5px !important;
+  line-height: 1.7 !important;
+  color: #8a8a7a !important;
+  margin: -8px 0 22px !important;
+}
+
+/* Dos columnas de "qué incluye / qué no", que en móvil se apilan. */
+.dosColumnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+@media (max-width: 700px) {
+  .dosColumnas {
+    grid-template-columns: 1fr;
+  }
+}
+
+.columna {
+  background: white;
+  border: 1px solid #e8e4da;
+  border-radius: 10px;
+  padding: 22px 24px;
+}
+
+/* En las secciones de fondo blanco la tarjeta blanca desaparece: ahí se
+   invierte al color pergamino. */
+.columnaClara {
+  background: var(--parch);
+  border-color: transparent;
+}
+
+.columna h3 {
+  margin-top: 0 !important;
+}
+
+/* globals.css apaga las viñetas en todo el sitio. Aquí sí hacen falta: sin
+   marcador, las cinco líneas de cada columna se leen como un párrafo partido
+   y se pierde justo lo que la lista quiere decir, que son puntos sueltos. */
+.columna ul {
+  margin-bottom: 0 !important;
+  list-style: disc outside !important;
+  padding-left: 18px !important;
+}
+
+.columna li::marker {
+  color: var(--sage);
+}

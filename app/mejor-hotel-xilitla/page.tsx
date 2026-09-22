@@ -34,9 +34,11 @@ const ACTUALIZADO = 'agosto de 2026';
 const OG_IMAGE = `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`;
 
 export const metadata: Metadata = {
-  title: 'Por Qué Paraíso Encantado es el Mejor Hotel de Xilitla (2026)',
+  // La consulta es "mejor hotel de xilitla", no "por qué"; esas tres palabras
+  // gastaban el arranque del título sin coincidir con nada que se teclee.
+  title: 'Mejor Hotel de Xilitla · 4.5 de 5 en 523 Reseñas Reales',
   description:
-    'El hotel donde durmió el presidente de México en 2023, a 400 m de Las Pozas de Edward James. 4.5/5 en 523 reseñas, suites con spa privado de agua caliente en terraza panorámica, restaurante huasteca con tortillas al comal de leña y estacionamiento gratis.',
+    'A 400 m de Las Pozas, 4.5 de 5 en 523 reseñas y el hotel donde durmió el presidente en 2023. Compara y decide. Reserva directo sin comisiones.',
   keywords: [
     'mejor hotel de xilitla',
     'mejor hotel xilitla',

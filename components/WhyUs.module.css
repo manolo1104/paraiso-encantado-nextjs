@@ -103,6 +103,66 @@
   line-height: 1.6;
 }
 
+/* Enlaces a las guías — cierran la sección sin competir con la lista numerada */
+.guias {
+  max-width: 1000px;
+  margin: 56px auto 0;
+}
+
+.guiasTitulo {
+  font-family: var(--font-jost);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: var(--clay);
+  margin: 0 0 28px;
+}
+
+.guiasLista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px 48px;
+}
+
+.guiaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guiaEnlace {
+  font-family: var(--font-cormorant);
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--forest);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(201, 169, 122, 0.45);
+  padding-bottom: 3px;
+  align-self: flex-start;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .guiaEnlace:hover {
+    color: var(--clay);
+    border-color: var(--clay);
+  }
+}
+
+.guiaNota {
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: rgba(42, 34, 24, 0.7);
+  margin: 0;
+}
+
 /* Scroll-driven entrance con stagger */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
@@ -147,5 +207,18 @@
 
   .itemNumber {
     font-size: 44px;
+  }
+
+  .guias {
+    margin-top: 40px;
+  }
+
+  .guiasLista {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .guiaEnlace {
+    font-size: 19px;
   }
 }

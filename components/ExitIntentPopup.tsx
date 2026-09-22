@@ -3,10 +3,47 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { X, Mail } from 'lucide-react';
+import { track } from '@/lib/track';
 import styles from './ExitIntentPopup.module.css';
 
 const STORAGE_KEY = 'pe_exit_shown';
-const DELAY_MS = 8000; // show on mobile after 8s idle
+
+// Antes eran 8 segundos. En celular —de donde viene el 88% de las visitas de
+// Google— no existe la "intención de salida" del ratón, así que ese
+// temporizador solo servía para taparle la pantalla a alguien que llevaba
+// ocho segundos leyendo, que es exactamente cuando apenas está enganchando.
+const ESPERA_MS = 25000;
+
+// Y además tiene que haber leído algo: el popup se gana con el 40% de la
+// página vista, no con el reloj.
+const SCROLL_MINIMO = 0.4;
+
+/** Qué parte de la página lleva vista el visitante, de 0 a 1. */
+function profundidadDeScroll(): number {
+  const alto = document.documentElement.scrollHeight;
+  const visible = window.innerHeight;
+  // Una página que cabe entera en la pantalla ya está leída al 100%: sin esta
+  // salida el popup no aparecería nunca en /contacto ni en /reviews.
+  if (alto <= visible) return 1;
+  return Math.min(1, (window.scrollY + visible) / alto);
+}
+
+/** En navegación privada sessionStorage truena; ahí se muestra una vez por carga. */
+function yaSeMostro(): boolean {
+  try {
+    return sessionStorage.getItem(STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function marcarComoMostrado(): void {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, '1');
+  } catch {
+    /* sin almacenamiento: no se puede recordar, y no pasa nada */
+  }
+}
 
 export default function ExitIntentPopup() {
   const pathname = usePathname();
@@ -25,31 +62,48 @@ export default function ExitIntentPopup() {
     pathname.startsWith('/gracias-por-tu-opinion') ||
     pathname.includes('confirmacion');
 
-  const tryShow = useCallback(() => {
+  const mostrar = useCallback((motivo: string) => {
     if (blocked) return;
-    if (sessionStorage.getItem(STORAGE_KEY)) return;
-    sessionStorage.setItem(STORAGE_KEY, '1');
+    if (yaSeMostro()) return;
+    const profundidad = profundidadDeScroll();
+    if (profundidad < SCROLL_MINIMO) return;
+    marcarComoMostrado();
     setVisible(true);
+    track('popup_mostrado', {
+      motivo,
+      profundidad: Math.round(profundidad * 100),
+    });
   }, [blocked]);
 
   useEffect(() => {
     if (blocked) return;
-    if (sessionStorage.getItem(STORAGE_KEY)) return;
+    if (yaSeMostro()) return;
 
-    // Desktop: exit intent on mouse leaving viewport from top
+    // Escritorio: el ratón sale por arriba de la ventana = se está yendo.
     function onMouseLeave(e: MouseEvent) {
-      if (e.clientY < 10) tryShow();
+      if (e.clientY < 10) mostrar('intencion_salida');
     }
     document.addEventListener('mouseleave', onMouseLeave);
 
-    // Mobile / fallback: show after DELAY_MS of inactivity
-    const timer = setTimeout(tryShow, DELAY_MS);
+    // Celular y respaldo: 25 segundos de lectura. Si al cumplirse todavía no
+    // ha bajado el 40%, el popup espera a que lo haga en lugar de descartarse:
+    // el que lee despacio es justo el que sí quiere la guía.
+    let esperaCumplida = false;
+    function onScroll() {
+      if (esperaCumplida) mostrar('tiempo_y_scroll');
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    const timer = setTimeout(() => {
+      esperaCumplida = true;
+      mostrar('tiempo_y_scroll');
+    }, ESPERA_MS);
 
     return () => {
       document.removeEventListener('mouseleave', onMouseLeave);
+      window.removeEventListener('scroll', onScroll);
       clearTimeout(timer);
     };
-  }, [blocked, tryShow]);
+  }, [blocked, mostrar]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,7 +115,14 @@ export default function ExitIntentPopup() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      if (res.ok) setStatus('success');
+      if (res.ok) {
+        setStatus('success');
+        // Es un correo capturado, no una reserva: no va como conversión de
+        // Google Ads, pero sí necesita nombre propio para poder comparar
+        // cuántos se muestran contra cuántos dejan el correo. Hasta hoy el
+        // popup no medía nada y no había forma de saber si aportaba o estorbaba.
+        track('popup_convertido', { origen: 'popup_guia' });
+      }
     } catch { /* silent */ }
   }
 

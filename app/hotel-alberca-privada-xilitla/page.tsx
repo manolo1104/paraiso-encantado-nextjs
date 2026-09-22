@@ -11,9 +11,12 @@ const URL = `${HOTEL.url}/hotel-alberca-privada-xilitla`;
 const ACTUALIZADO = 'agosto de 2026';
 
 export const metadata: Metadata = {
-  title: 'Hotel con Alberca Privada en la Habitación · Xilitla | Paraíso Encantado',
+  // Nadie busca "alberca privada en la habitación": las 220 impresiones reales
+  // son "hoteles con alberca en xilitla" y sus variantes, todas en posición
+  // 13-15. El título arranca con esa búsqueda y deja lo privado como gancho.
+  title: 'Hoteles en Xilitla con Alberca · 4 Suites con Spa Privado',
   description:
-    `${HOTEL.suitesConSpaPrivado} suites en Xilitla con piscina spa o tina de hidromasaje dentro de la propia terraza, a ${HOTEL.metrosALasPozas} m de Las Pozas. Sin compartir el agua con nadie. Desde $${HOTEL.precioDesde.toLocaleString('es-MX')} MXN la noche.`,
+    `${HOTEL.suitesConSpaPrivado} suites con alberca spa climatizada en tu propia terraza, sin compartir el agua. A ${HOTEL.metrosALasPozas} m de Las Pozas. Desde $${HOTEL.precioDesde.toLocaleString('es-MX')} la noche, reserva directa.`,
   keywords: ['hotel alberca privada xilitla', 'hotel jacuzzi xilitla', 'suite con jacuzzi huasteca potosina', 'hotel con tina xilitla'],
   alternates: { canonical: URL },
   openGraph: {

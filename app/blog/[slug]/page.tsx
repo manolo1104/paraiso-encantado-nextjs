@@ -17,15 +17,73 @@ function slugify(text: string): string {
 
 interface Heading { level: number; text: string; id: string; }
 
+// El bloque de preguntas frecuentes siempre se titula así en los .mdx; es el ancla
+// que usan tanto el índice como el JSON-LD de FAQPage.
+const FAQ_HEADING = /^preguntas frecuentes$/i;
+
 function extractHeadings(content: string): Heading[] {
   const headings: Heading[] = [];
   const regex = /^(#{2,3})\s+(.+)$/gm;
   let match;
+  let enFaq = false;
   while ((match = regex.exec(content)) !== null) {
+    const level = match[1].length;
     const text = match[2].replace(/[*_`]/g, '').trim();
-    headings.push({ level: match[1].length, text, id: slugify(text) });
+    if (level === 2) enFaq = FAQ_HEADING.test(text);
+    // Las preguntas son h3 y ocupan una línea entera cada una: si entraran al índice,
+    // taparían la estructura del artículo. El índice lista el bloque, no cada pregunta.
+    if (enFaq && level === 3) continue;
+    headings.push({ level, text, id: slugify(text) });
   }
   return headings;
+}
+
+interface FaqItem { question: string; answer: string; }
+
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // de un enlace sólo sobrevive el texto
+    .replace(/[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Las preguntas se leen del propio MDX en lugar de declararlas aparte en el frontmatter
+// porque Google descarta el FAQPage cuando el schema no dice literalmente lo mismo que
+// ve el visitante. Con una sola fuente no hay forma de que los dos textos se separen.
+function extractFaq(content: string): FaqItem[] {
+  const lines = content.split('\n');
+  const inicio = lines.findIndex((l) => {
+    const m = l.trim().match(/^##\s+(.+)$/);
+    return m !== null && FAQ_HEADING.test(m[1].trim());
+  });
+  if (inicio === -1) return [];
+
+  const faq: FaqItem[] = [];
+  let pregunta = '';
+  let respuesta: string[] = [];
+
+  const cerrarPregunta = () => {
+    const texto = stripMarkdown(respuesta.join(' '));
+    if (pregunta && texto) faq.push({ question: pregunta, answer: texto });
+    pregunta = '';
+    respuesta = [];
+  };
+
+  for (let i = inicio + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^##\s/.test(line)) break; // empezó otra sección: el bloque de FAQ terminó
+    const h3 = line.match(/^###\s+(.+)$/);
+    if (h3) {
+      cerrarPregunta();
+      pregunta = stripMarkdown(h3[1]);
+      continue;
+    }
+    if (pregunta && line.trim()) respuesta.push(line.trim());
+  }
+  cerrarPregunta();
+
+  return faq;
 }
 
 const mdxComponents = {
@@ -54,16 +112,16 @@ const HOWTO_SCHEMAS: Record<string, object> = {
   'como-llegar-a-xilitla': {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'Cómo Llegar a Xilitla desde Ciudad de México en Carro',
-    description: 'Ruta en carro desde CDMX a Xilitla, San Luis Potosí, 5.5 horas por autopista de cuota.',
-    totalTime: 'PT5H30M',
+    name: 'Cómo Llegar a la Huasteca Potosina y a Xilitla desde Ciudad de México en Carro',
+    description: 'Ruta en carro desde CDMX a Xilitla, San Luis Potosí: de 6 a 7 horas aproximadas por Pachuca, Huejutla y Tamazunchale.',
+    totalTime: 'PT6H30M',
     estimatedCost: { '@type': 'MonetaryAmount', currency: 'MXN', value: '500' },
     tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
     step: [
-      { '@type': 'HowToStep', position: 1, name: 'Salir por la autopista México-Tampico (MEX-85D)', text: 'Toma la autopista México-Tampico hacia el noreste desde CDMX.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#en-carro-la-opcion-mas-flexible' },
-      { '@type': 'HowToStep', position: 2, name: 'Pasar por Pachuca y Tamazunchale', text: 'Pachuca en ~1 hora, Tamazunchale en ~3.5 horas. En este tramo la carretera sube la sierra con curvas, ve despacio.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
-      { '@type': 'HowToStep', position: 3, name: 'Llegar a Ciudad Valles (4 horas)', text: 'Ciudad Valles es el punto de conexión principal. Puedes parar a cargar gasolina y comer.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-55-horas' },
-      { '@type': 'HowToStep', position: 4, name: 'Tomar la carretera federal 120 hacia Xilitla', text: 'Desde Ciudad Valles toma la carretera 120. Son ~1.5 horas más con curvas de sierra.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#ultimos-kilometros-ciudad-valles-xilitla' },
+      { '@type': 'HowToStep', position: 1, name: 'Salir por la autopista México-Pachuca (MEX-85D)', text: 'Toma la autopista México-Pachuca hacia el noreste desde CDMX.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#en-carro-la-opcion-mas-flexible' },
+      { '@type': 'HowToStep', position: 2, name: 'Pasar Pachuca y seguir a Huejutla y Tamazunchale', text: 'Pachuca en alrededor de 1 hora y Tamazunchale en cerca de 4. Es el tramo largo del viaje.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-6-a-7-horas' },
+      { '@type': 'HowToStep', position: 3, name: 'Tomar la federal 120 en Huichihuayán', text: 'Poco después de Tamazunchale, en el entronque de Huichihuayán, toma la federal 120. Viniendo del sur no hace falta pasar por Ciudad Valles.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-6-a-7-horas' },
+      { '@type': 'HowToStep', position: 4, name: 'Subir la sierra hasta Xilitla', text: 'La federal 120 sube la sierra con curvas cerradas y niebla frecuente. Son de 45 minutos a 1 hora más; conviene hacerlo de día.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#ultimos-kilometros-la-carretera-120-y-la-sierra' },
       { '@type': 'HowToStep', position: 5, name: 'Llegar al Hotel Paraíso Encantado en Xilitla', text: 'El hotel está en el centro de Xilitla, a 400 metros de Las Pozas de Edward James. Estacionamiento privado incluido.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#al-llegar-donde-esta-el-hotel' },
     ],
   },
@@ -112,7 +170,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const post = getPost(slug);
     return {
-      title: `${post.title} | Hotel Paraíso Encantado`,
+      // Sin sufijo de marca a propósito: Google ya muestra el dominio encima
+      // del título y repetir «Hotel Paraíso Encantado» gastaba 26 caracteres
+      // de los ~60 que caben, cortando justo la parte útil del titular.
+      title: post.title,
       description: post.description,
       alternates: {
         canonical: `https://www.paraisoencantado.com/blog/${slug}`,
@@ -213,29 +274,46 @@ export default async function ArticlePage({ params }: Props) {
 
   const howToSchema = HOWTO_SCHEMAS[slug] ?? null;
 
+  const faqItems = extractFaq(post.content);
+  // Con una sola pregunta el FAQPage no aporta nada y Google suele ignorarlo; si el
+  // artículo todavía no tiene su bloque de preguntas, no se emite schema vacío.
+  const faqSchema =
+    faqItems.length >= 2
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          inLanguage: 'es-MX',
+          mainEntity: faqItems.map((f) => ({
+            '@type': 'Question',
+            name: f.question,
+            acceptedAnswer: { '@type': 'Answer', text: f.answer },
+          })),
+        }
+      : null;
+
   const INTERNAL_LINKS: Record<string, { text: string; links: { href: string; label: string; desc: string }[] }> = {
     'como-llegar-a-xilitla': {
       text: 'Ya sabes cómo llegar — ahora elige dónde quedarte:',
       links: [
-        { href: '/habitaciones', label: 'Ver las 13 suites', desc: 'Desde $1,500 MXN/noche · Spa privado' },
-        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días · Hotel + tours guiados' },
+        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas en una tabla' },
+        { href: '/habitaciones', label: 'Ver las 13 suites', desc: 'Desde $1,500 MXN/noche · Estacionamiento incluido' },
         { href: '/reservar', label: 'Reservar ahora', desc: 'Confirmación instantánea · Sin comisiones' },
       ],
     },
     'las-pozas-edward-james-guia': {
       text: '¿Planeas visitar Las Pozas? Estamos a 5 min caminando:',
       links: [
+        { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas', desc: 'A 400 metros de la entrada · 5 min caminando' },
         { href: '/habitaciones/jungla', label: 'Suite Jungla', desc: 'Spa privado · La más cercana a Las Pozas' },
-        { href: '/paquetes', label: 'Paquete Luna de Miel', desc: 'Las Pozas + Tamul · 3 días / 2 noches' },
         { href: '/reservar', label: 'Reservar suite', desc: 'Check-in a 5 min de Las Pozas' },
       ],
     },
     'que-hacer-en-xilitla': {
       text: 'Haz de Xilitla tu base de operaciones:',
       links: [
-        { href: '/experiencias', label: 'Tours desde el hotel', desc: 'Tamul, Micos, Pozas con guía certificado' },
-        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'Familiar, Aventura Extrema y más · 3 a 6 días' },
-        { href: '/habitaciones', label: 'Ver habitaciones', desc: '13 suites · 4 con spa privado · WiFi' },
+        { href: '/xilitla', label: 'Guía de Xilitla', desc: 'Qué ver, cómo moverte y qué esperar del pueblo' },
+        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas' },
+        { href: '/experiencias', label: 'Tours desde el hotel', desc: 'Tamul, Micos y Las Pozas con guía certificado' },
       ],
     },
     'cascada-tamul-guia-completa': {
@@ -249,9 +327,9 @@ export default async function ArticlePage({ params }: Props) {
     'ruta-maestra-huasteca-potosina': {
       text: 'Empieza tu ruta maestra desde Xilitla:',
       links: [
+        { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca', desc: 'Qué ves desde cada base y cuánto manejas' },
         { href: '/experiencias', label: 'Tours por la Huasteca', desc: 'Tamul, Pozas, Puente de Dios · Guías certificados' },
         { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días con tours guiados' },
-        { href: '/habitaciones', label: 'Suites en Xilitla', desc: 'Tu base en la Huasteca desde $1,500 MXN' },
       ],
     },
     'temporada-lluvias-vs-seca-xilitla': {
@@ -260,6 +338,70 @@ export default async function ArticlePage({ params }: Props) {
         { href: '/reservar', label: 'Verificar disponibilidad', desc: 'Temporada alta · Reserva con anticipación' },
         { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días · Consulta disponibilidad' },
         { href: '/habitaciones', label: 'Ver suites disponibles', desc: '13 opciones · Desde $1,500 MXN/noche' },
+      ],
+    },
+    'mejor-epoca-visitar-xilitla': {
+      text: 'Ya tienes el mes — ahora aparta las fechas:',
+      links: [
+        { href: '/reservar', label: 'Verificar disponibilidad', desc: 'Elige fechas y ve el precio al instante' },
+        { href: '/habitaciones', label: 'Ver las 13 suites', desc: '4 con spa privado · Desde $1,500 MXN/noche' },
+        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días con tours guiados' },
+      ],
+    },
+    'xilitla-con-ninos': {
+      text: 'Viajar con niños se planea distinto — empieza por aquí:',
+      links: [
+        { href: '/hotel-familias-xilitla', label: 'Hotel para familias en Xilitla', desc: 'Suites de 4 a 8 personas · Piscina' },
+        { href: '/habitaciones', label: 'Ver las suites familiares', desc: 'Helechos 1 y 2 · Hasta 8 personas' },
+        { href: '/paquetes', label: 'Paquete Familiar', desc: 'Hotel y tours aptos para niños · 3 a 6 días' },
+      ],
+    },
+    'tips-las-pozas-sin-multitudes': {
+      text: 'El tip que más sirve es dormir al lado del jardín:',
+      links: [
+        { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas', desc: 'A 400 metros · Entras a la hora de apertura' },
+        { href: '/habitaciones', label: 'Ver las 13 suites', desc: '4 con spa privado · Desde $1,500 MXN/noche' },
+        { href: '/reservar', label: 'Reservar suite', desc: 'Confirmación instantánea · Sin comisiones' },
+      ],
+    },
+    'comparativa-cascadas-huasteca': {
+      text: 'Ya elegiste cascada — así se hace el tour:',
+      links: [
+        { href: '/experiencias', label: 'Tours por la Huasteca', desc: 'Tamul, Tamasopo y Micos · Guías certificados' },
+        { href: '/paquetes', label: 'Paquete Aventura Extrema', desc: 'Varias cascadas en un solo viaje · 4 días' },
+        { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse', desc: 'Qué cascadas quedan cerca de cada base' },
+      ],
+    },
+    'gastronomia-xilitla-huasteca': {
+      text: 'La cocina huasteca, sin salir del hotel:',
+      links: [
+        { href: '/restaurante', label: 'Restaurante El Papán Huasteco', desc: 'Zacahuil, bocoles y café de olla' },
+        { href: '/paquetes', label: 'Paquetes con desayuno', desc: 'De 3 a 6 días · Hotel, tours y comida' },
+        { href: '/reservar', label: 'Reservar mesa o suite', desc: 'Escríbenos y te apartamos lugar' },
+      ],
+    },
+    'puente-de-dios-xilitla': {
+      text: 'El Puente de Dios se visita con tour desde Xilitla:',
+      links: [
+        { href: '/experiencias', label: 'Tour a Tamasopo y Puente de Dios', desc: 'Transporte desde el hotel · Guía certificado' },
+        { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca', desc: 'Cuánto manejas hasta Tamasopo desde cada base' },
+        { href: '/reservar', label: 'Reservar tu suite', desc: 'El tour pasa por ti al hotel' },
+      ],
+    },
+    'sotano-golondrinas-xilitla': {
+      text: 'Para ver el amanecer hay que dormir cerca:',
+      links: [
+        { href: '/experiencias', label: 'Tour al Sótano de las Golondrinas', desc: 'Salida de madrugada · Guía certificado' },
+        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia en una tabla' },
+        { href: '/reservar', label: 'Reservar tu suite', desc: 'El tour pasa por ti al hotel' },
+      ],
+    },
+    'que-llevar-a-xilitla': {
+      text: 'Lo que empacas depende de los tours que vas a hacer:',
+      links: [
+        { href: '/experiencias', label: 'Ver los tours disponibles', desc: 'Qué equipo incluye cada uno' },
+        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas' },
+        { href: '/reservar', label: 'Reservar ahora', desc: 'Confirmación instantánea · Sin comisiones' },
       ],
     },
   };
@@ -271,6 +413,7 @@ export default async function ArticlePage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleBreadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       {howToSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />}
+      {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
       <main className={styles.main}>
 
         {/* HERO */}

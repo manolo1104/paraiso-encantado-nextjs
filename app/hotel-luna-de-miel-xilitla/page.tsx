@@ -7,9 +7,11 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './luna-de-miel.module.css';
 
 export const metadata: Metadata = {
-  title: 'Hotel Romántico Xilitla · Luna de Miel en la Huasteca Potosina | Paraíso Encantado',
+  // Era el título más largo del sitio (82 caracteres, 743 px). Se queda solo
+  // la consulta ("hotel romántico en xilitla") y el diferenciador real.
+  title: 'Hotel Romántico en Xilitla · Suites con Spa Privado',
   description:
-    'Suites románticas con spa privado a 5 min de Las Pozas de Edward James, Xilitla. La escapada perfecta para parejas y luna de miel en la Huasteca Potosina. Desde $1,500 MXN.',
+    'Escapada de pareja en la Huasteca: terraza, alberca climatizada privada y selva alrededor, a 5 min de Las Pozas. Reserva directa sin comisiones.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/hotel-luna-de-miel-xilitla',
   },

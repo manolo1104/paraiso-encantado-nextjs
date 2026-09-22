@@ -4,9 +4,14 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './reviews.module.css';
 
 export const metadata: Metadata = {
-  title: 'Reseñas y Opiniones · Hotel Paraíso Encantado Xilitla | 4.5★ Google',
+  // Esta página no tiene demanda propia: en las 1,010 consultas exportadas de
+  // Search Console no aparece ni una con "reseñas", "opiniones" o "reviews".
+  // Sus impresiones son de marca, así que el título es honesto y va con la
+  // marca al frente; no se le pelea tráfico que no existe. Sin el símbolo ★
+  // porque Google lo borra a veces y el texto tiene que leerse igual.
+  title: 'Reseñas del Hotel Paraíso Encantado · 4.5 de 5 en Google',
   description:
-    'Opiniones verificadas de huéspedes del Hotel Paraíso Encantado en Xilitla, Huasteca Potosina. 523 reseñas en Google con 4.5★. Lee qué dicen familias, parejas y viajeros.',
+    '523 reseñas con 4.5 de 5 en Google: lo que dicen familias y parejas que ya durmieron a 400 m de Las Pozas, en Xilitla. Léelas y reserva directo.',
   alternates: { canonical: 'https://www.paraisoencantado.com/reviews' },
   openGraph: {
     title: 'Reseñas Reales — Hotel Paraíso Encantado · 4.5★ · 523 Opiniones',

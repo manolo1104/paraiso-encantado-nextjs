@@ -7,9 +7,11 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './experiencias.module.css';
 
 export const metadata: Metadata = {
-  title: 'Tours Huasteca Potosina · Tamul, Las Pozas, Rappel y RZR | Desde Xilitla',
+  // El precio arrancaba en el carácter 168 de la description: Google corta en
+  // ~155, así que nunca se veía. Ahora el "desde $1,400" va en el título.
+  title: 'Tours en la Huasteca Potosina desde $1,400 por persona',
   description:
-    'Tours en la Huasteca desde Xilitla: Cascada de Tamul, Las Pozas de Edward James, Puente de Dios, rappel y RZR. Tours de día completo desde $1,400 MXN por persona, con recogida en tu hospedaje, guía certificado NOM-09 y desayuno buffet.',
+    'Cascada de Tamul, Las Pozas, Puente de Dios, rappel y RZR. Día completo con guía certificado, desayuno y traslado desde tu hotel en Xilitla.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/experiencias',
   },

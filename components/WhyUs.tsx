@@ -1,4 +1,36 @@
+import Link from 'next/link';
 import styles from './WhyUs.module.css';
+
+/**
+ * Las páginas de /hoteles-en-xilitla, /hotel-cerca-de-las-pozas y compañía solo
+ * recibían enlaces desde el pie de página, y por eso llevaban semanas sin aparecer
+ * en Google: un enlace de pie de página vale poco porque se repite en las 34 páginas
+ * del sitio y no dice nada del contenido. Estos cuatro van en el cuerpo de la portada
+ * —la página con más autoridad— y justo después de "¿por qué este hotel?", que es
+ * donde la pregunta natural del visitante pasa a ser "¿es para mí?".
+ */
+const guias = [
+  {
+    href: '/hoteles-en-xilitla',
+    texto: 'Los hoteles de Xilitla, comparados uno por uno',
+    nota: 'Zona, precio por noche y distancia a Las Pozas de diez opciones del pueblo.',
+  },
+  {
+    href: '/hotel-cerca-de-las-pozas',
+    texto: 'Qué hotel queda más cerca de Las Pozas de Edward James',
+    nota: 'Los 400 metros que nos separan del jardín y a qué hora conviene entrar.',
+  },
+  {
+    href: '/hotel-familias-xilitla',
+    texto: 'Ir a Xilitla con la familia: suites grandes y piscina',
+    nota: 'Las suites Helechos, los tours que sí funcionan con niños y el restaurante.',
+  },
+  {
+    href: '/hotel-luna-de-miel-xilitla',
+    texto: 'Luna de miel y aniversarios en la Huasteca Potosina',
+    nota: 'Las suites con spa privado en la terraza y los detalles que preparamos.',
+  },
+];
 
 const benefits = [
   {
@@ -52,6 +84,22 @@ export default function WhyUs() {
           </article>
         ))}
       </div>
+
+      <aside className={styles.guias} aria-labelledby="whyus-guias-titulo">
+        <h3 id="whyus-guias-titulo" className={styles.guiasTitulo}>
+          Antes de reservar, quizá te sirva leer
+        </h3>
+        <ul className={styles.guiasLista}>
+          {guias.map(({ href, texto, nota }) => (
+            <li key={href} className={styles.guiaItem}>
+              <Link href={href} className={styles.guiaEnlace}>
+                {texto}
+              </Link>
+              <p className={styles.guiaNota}>{nota}</p>
+            </li>
+          ))}
+        </ul>
+      </aside>
     </section>
   );
 }

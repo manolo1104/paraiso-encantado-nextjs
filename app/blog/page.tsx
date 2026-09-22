@@ -9,9 +9,10 @@ import styles from './blog.module.css';
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Blog de Viaje · Xilitla y la Huasteca Potosina | Hotel Paraíso Encantado',
+  // "Blog" no lo busca nadie; "guía" sí acompaña a las consultas de viaje.
+  title: 'Guías de Viaje: Xilitla y la Huasteca Potosina 2026',
   description:
-    'Guías de viaje, consejos y todo lo que necesitas saber para visitar Xilitla, la Cascada de Tamul, Las Pozas de Edward James y la Huasteca Potosina.',
+    'Cómo llegar, cuánto cuesta, cuándo ir y qué comer en la Huasteca Potosina: guías escritas desde Xilitla por quienes viven aquí todo el año. Léelas.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/blog',
   },

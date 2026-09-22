@@ -6,9 +6,12 @@ import type { Metadata } from 'next';
 import GaleriaClient from './GaleriaClient';
 
 export const metadata: Metadata = {
-  title: 'Fotos Hotel Paraíso Encantado · Suites, Selva y Las Pozas | Xilitla',
+  // Aquí sí se conserva la marca: la única consulta de fotos que trae
+  // impresiones es "hotel paraíso encantado xilitla fotos", o sea búsqueda de
+  // marca. El gancho es la cantidad de fotos.
+  title: 'Fotos del Hotel Paraíso Encantado en Xilitla · 50+ Reales',
   description:
-    'Fotos de las 13 suites boutique, 4 con spa privado, restaurante El Papán, jardines y Las Pozas de Edward James. Hotel Paraíso Encantado en Xilitla, Huasteca Potosina.',
+    'Suites, albercas spa privadas, el restaurante El Papán y la selva de Xilitla en más de 50 fotos y videos reales. Mira el hotel antes de reservar.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/galeria',
   },

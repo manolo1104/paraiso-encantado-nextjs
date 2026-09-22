@@ -9,9 +9,9 @@ const URL = `${HOTEL.url}/donde-hospedarse-huasteca-potosina`;
 const ACTUALIZADO = 'agosto de 2026';
 
 export const metadata: Metadata = {
-  title: 'Dónde Hospedarse en la Huasteca Potosina: Xilitla o Ciudad Valles (2026)',
+  title: 'Dónde Hospedarse en la Huasteca Potosina · Xilitla o Valles',
   description:
-    'La Huasteca no se recorre desde un solo punto. Comparativa honesta entre Xilitla, Ciudad Valles, Aquismón y Tamasopo: qué ves desde cada base, cuánto manejas y cómo repartir las noches en un viaje de 3 a 5 días.',
+    'Xilitla, Ciudad Valles, Aquismón o Tamasopo: qué ves desde cada base, cuánto manejas y cómo repartir las noches en 3 a 5 días. Arma aquí tu viaje.',
   keywords: ['donde hospedarse huasteca potosina', 'xilitla o ciudad valles', 'donde dormir huasteca potosina', 'base huasteca potosina'],
   alternates: { canonical: URL },
   openGraph: {

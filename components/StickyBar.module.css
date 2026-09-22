@@ -5,7 +5,11 @@
   right: 0;
   height: 60px;
   display: flex;
-  z-index: 9999;
+  /* Antes era 9999. Al montarse en todo el sitio la barra se ponía encima del
+     aviso de cookies (8500), del popup de la guía (9000) y de las galerías a
+     pantalla completa (1000): 80 la deja por encima del contenido normal y por
+     debajo de todo lo que sí debe taparla. */
+  z-index: 80;
   transform: translateY(100%);
   transition: transform 0.4s var(--ease-drawer);
 }

@@ -52,3 +52,14 @@
     bottom: 92px;
   }
 }
+
+/* Debajo de 1025px la barra fija del sitio (StickyBar) ocupa los 60px de abajo
+   y ya lleva su propio botón de WhatsApp: el flotante quedaría tapado por ella
+   y además duplicaría el mismo CTA. El atributo lo pone app/layout.tsx solo en
+   las páginas donde esa barra se monta, así que en /reservar —que no la
+   lleva— el botón flotante sigue intacto. */
+@media (max-width: 1024px) {
+  :global(body[data-barra-movil='1']) .btn {
+    display: none;
+  }
+}

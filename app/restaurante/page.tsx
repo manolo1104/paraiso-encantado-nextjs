@@ -11,9 +11,13 @@ const RESTAURANT_WA = 'https://wa.me/524891255181?text=Hola%2C%20quisiera%20rese
 
 // ── Metadata ─────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'El Papán Huasteco — Restaurante en Xilitla · Zacahuil y Cocina Huasteca',
+  // La marca del restaurante no la teclea nadie fuera de Xilitla: en Search
+  // Console "restaurante(s) en xilitla" suma ~1,180 impresiones y "el papán
+  // huasteco" otras 1,080 que ya se lleva la ficha de Google Maps. Por eso la
+  // consulta va al frente y la marca después, con el horario como gancho.
+  title: 'Restaurante en Xilitla: El Papán Huasteco · Abre 8 a 20 h',
   description:
-    'Zacahuil, tortillas de comal y café de olla en Xilitla. Restaurante El Papán Huasteco — cocina regional auténtica con vista a la selva. Abierto 8 AM–8 PM.',
+    'Zacahuil, enchiladas huastecas y café de olla con vista a la selva, en Xilitla. Abierto todos los días de 8 a 20 h. Llega sin reservación previa.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/restaurante',
   },

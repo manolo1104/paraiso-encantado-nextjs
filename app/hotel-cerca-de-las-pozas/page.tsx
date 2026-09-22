@@ -7,9 +7,12 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './hotel-las-pozas.module.css';
 
 export const metadata: Metadata = {
-  title: 'Hotel Cerca de Las Pozas de Edward James · Xilitla | Paraíso Encantado',
+  // Se conserva "Edward James" porque es parte de la consulta real ("hoteles
+  // las pozas", "hotel edward james xilitla"); lo que sale es la marca, que
+  // Google ya muestra arriba en la línea del dominio.
+  title: 'Hotel Cerca de Las Pozas de Edward James · A 400 m a pie',
   description:
-    'El hotel boutique más cercano a Las Pozas de Edward James en Xilitla. A 5 minutos caminando del Jardín Surrealista. 13 suites boutique, 4 con spa privado desde $1,500 MXN. Reserva directa.',
+    'Duerme a 400 metros de Las Pozas de Edward James y entra a primera hora sin fila ni traslado. 13 suites boutique en Xilitla. Reserva directa.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/hotel-cerca-de-las-pozas',
   },

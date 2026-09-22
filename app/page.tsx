@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+import { HOTEL, POSTAL_ADDRESS } from '@/lib/seo-hotel';
 import Hero from '@/components/Hero';
 import PromoStrip from '@/components/PromoStrip';
 import SocialProofBar from '@/components/SocialProofBar';
@@ -12,7 +14,55 @@ import NewsletterSection from '@/components/NewsletterSection';
 import LocationSection from '@/components/LocationSection';
 import FAQ from '@/components/FAQ';
 import FinalCTA from '@/components/FinalCTA';
-import StickyBar from '@/components/StickyBar';
+
+/**
+ * Metadata propia de la portada.
+ *
+ * Hasta ahora heredaba la del layout ("Hotel Boutique en la Huasteca Potosina ·
+ * Xilitla | Paraíso Encantado"): 68 caracteres y 613 px, o sea que Google lo
+ * cortaba a media palabra y dejaba "Xilitla" en sexta posición. Esta portada es
+ * la que compite por "hoteles en xilitla", "hotel xilitla" y sus variantes
+ * —4,898 impresiones con 0.31% de clic— así que el título arranca con la frase
+ * que la gente teclea y cierra con la prueba social. Medido: 56 caracteres,
+ * 507 px en Arial 20 px, el tipo de letra con el que Google pinta los títulos.
+ */
+export const metadata: Metadata = {
+  title: 'Hotel en Xilitla a 5 min de Las Pozas · 4.5★ 523 reseñas',
+  description:
+    '13 suites en Xilitla a 400 metros del Jardín de Edward James, 4 con spa privado en la terraza. Desde $1,500 MXN la noche. Reserva directo, sin comisiones.',
+  alternates: {
+    canonical: HOTEL.url,
+    languages: {
+      es: HOTEL.url,
+      en: `${HOTEL.url}/en`,
+      'x-default': HOTEL.url,
+    },
+  },
+  openGraph: {
+    siteName: HOTEL.nombre,
+    title: 'Hotel en Xilitla a 5 minutos de Las Pozas de Edward James',
+    description:
+      '13 suites boutique, 4 con spa privado en la terraza, a 400 metros del Jardín de Edward James. Reserva directo con el hotel, sin comisiones.',
+    url: HOTEL.url,
+    type: 'website',
+    locale: 'es_MX',
+    images: [
+      {
+        url: '/og/home.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Hotel Paraíso Encantado — Xilitla, Huasteca Potosina',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Hotel en Xilitla a 5 minutos de Las Pozas de Edward James',
+    description:
+      '13 suites boutique, 4 con spa privado en la terraza, a 400 metros del Jardín de Edward James. Reserva directo con el hotel.',
+    images: ['/og/home.jpg'],
+  },
+};
 
 // Schema unificado en @graph — evita duplicados y facilita la lectura de Google
 const homeSchema = {
@@ -35,29 +85,43 @@ const homeSchema = {
   ],
 };
 
+/**
+ * La entidad Hotel de la portada.
+ *
+ * Tres cosas que se corrigieron aquí y conviene no deshacer:
+ *
+ * 1. **`@type` como texto, no como lista.** Antes decía `['Hotel', 'LocalBusiness']`.
+ *    `Hotel` ya ES un `LocalBusiness` en schema.org, así que la lista no añadía nada
+ *    y sí estorbaba: los validadores que buscan `"@type":"Hotel"` no encontraban la
+ *    entidad, y la auditoría de septiembre concluyó por eso que la portada —la
+ *    página que se lleva TODAS las búsquedas de marca— no declaraba qué era.
+ * 2. **La dirección sale de `lib/seo-hotel.ts`.** Aquí estaba escrita a mano como
+ *    "Calle 5 de Mayo, CP 79910", que no es la del hotel: es La Conchita, CP 79900,
+ *    igual que en `public/llms.txt` y en las landings. Dos direcciones distintas para
+ *    el mismo `@id` es justo lo que hace que Google no arme la ficha del negocio.
+ * 3. **Un solo `aggregateRating`, el de esta entidad.** Los 13 que colgaban de cada
+ *    suite se quitaron (ver `roomsSchema`).
+ */
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': ['Hotel', 'LocalBusiness'],
+  '@type': 'Hotel',
   '@id': 'https://www.paraisoencantado.com/#hotel',
   name: 'Hotel Paraíso Encantado',
   description:
     '13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina. El hotel más cercano a Las Pozas.',
   url: 'https://www.paraisoencantado.com',
-  telephone: '+524891007679',
+  telephone: HOTEL.telefono,
   email: 'reservas@paraisoencantado.com',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Xilitla',
-    addressRegion: 'San Luis Potosí',
-    postalCode: '79910',
-    addressCountry: 'MX',
-    streetAddress: 'Calle 5 de Mayo, Xilitla, Huasteca Potosina',
-  },
+  address: POSTAL_ADDRESS,
   geo: {
     '@type': 'GeoCoordinates',
     latitude: 21.383,
     longitude: -99.002,
   },
+  image: [
+    'https://www.paraisoencantado.com/og/home.jpg',
+    'https://www.paraisoencantado.com/images/JUNGLA/PORTADA.JPG',
+  ],
   hasMap: 'https://maps.google.com/?q=Hotel+Paraíso+Encantado+Xilitla',
   starRating: { '@type': 'Rating', ratingValue: 4 },
   numberOfRooms: 13,
@@ -165,10 +229,13 @@ function beds(type: string, count: number) {
 function floorSize(m2: number) {
   return { '@type': 'QuantitativeValue', value: m2, unitCode: 'MTK' };
 }
-function roomRating(value: number, count: number) {
-  return { '@type': 'AggregateRating', ratingValue: value, reviewCount: count, bestRating: 5 };
-}
-
+/**
+ * Cada suite traía su propio `aggregateRating` inventado (4.9 con 48 reseñas, 4.8 con
+ * 52…). Eran 13 calificaciones que no salen de ningún lado: las reseñas reales son las
+ * 523 de Google y son del hotel entero, no de la suite Jungla. Google ignora un rating
+ * cuyo objeto no tiene reseñas propias y ese marcado puede leerse como engañoso, así
+ * que la única calificación del sitio es la del Hotel, arriba.
+ */
 const roomsSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -190,7 +257,6 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Spa privado al aire libre', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
-      aggregateRating: roomRating(4.9, 48),
       offers: roomOffer(2000, 'flor-de-lis-1'),
     },
     {
@@ -211,7 +277,6 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Spa privado al aire libre', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
-      aggregateRating: roomRating(4.8, 52),
       offers: roomOffer(2000, 'flor-de-lis-2'),
     },
     {
@@ -232,7 +297,6 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Tina de hidromasaje', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza privada con vista a la montaña', value: true },
       ],
-      aggregateRating: roomRating(4.8, 31),
       offers: roomOffer(2000, 'lindavista'),
     },
     {
@@ -253,7 +317,6 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Spa privado', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza privada con vista a la selva', value: true },
       ],
-      aggregateRating: roomRating(4.9, 67),
       offers: roomOffer(2000, 'jungla'),
     },
     {
@@ -274,7 +337,6 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Sala de estar independiente', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
-      aggregateRating: roomRating(4.7, 29),
       offers: roomOffer(1900, 'lajas'),
     },
     {
@@ -294,7 +356,6 @@ const roomsSchema = {
       amenityFeature: [...BASE_AMENITIES,
         { '@type': 'LocationFeatureSpecification', name: 'Vista al jardín y selva', value: true },
       ],
-      aggregateRating: roomRating(4.7, 38),
       offers: roomOffer(1500, 'lirios-1'),
     },
     {
@@ -314,7 +375,6 @@ const roomsSchema = {
       amenityFeature: [...BASE_AMENITIES,
         { '@type': 'LocationFeatureSpecification', name: 'Balcón privado con vista a jardines', value: true },
       ],
-      aggregateRating: roomRating(4.8, 41),
       offers: roomOffer(1500, 'lirios-2'),
     },
     {
@@ -334,7 +394,6 @@ const roomsSchema = {
       amenityFeature: [...BASE_AMENITIES,
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista a piscina y selva', value: true },
       ],
-      aggregateRating: roomRating(4.7, 35),
       offers: roomOffer(1500, 'orquideas-2'),
     },
     {
@@ -354,7 +413,6 @@ const roomsSchema = {
       amenityFeature: [...BASE_AMENITIES,
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista a piscina y selva', value: true },
       ],
-      aggregateRating: roomRating(4.8, 44),
       offers: roomOffer(1500, 'orquideas-doble'),
     },
     {
@@ -374,7 +432,6 @@ const roomsSchema = {
       amenityFeature: [...BASE_AMENITIES,
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista elevada a piscina', value: true },
       ],
-      aggregateRating: roomRating(4.9, 39),
       offers: roomOffer(1500, 'orquideas-3'),
     },
     {
@@ -394,7 +451,6 @@ const roomsSchema = {
       amenityFeature: [...BASE_AMENITIES,
         { '@type': 'LocationFeatureSpecification', name: 'Acceso directo a piscina spa', value: true },
       ],
-      aggregateRating: roomRating(4.7, 27),
       offers: roomOffer(1500, 'bromelias'),
     },
     {
@@ -415,7 +471,6 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Suite familiar', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista a piscina', value: true },
       ],
-      aggregateRating: roomRating(4.8, 33),
       offers: roomOffer(1900, 'helechos-1'),
     },
     {
@@ -436,10 +491,29 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Suite familiar plus', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Vista a jardín y naturaleza', value: true },
       ],
-      aggregateRating: roomRating(4.8, 30),
       offers: roomOffer(1900, 'helechos-2'),
     },
   ],
+};
+
+/**
+ * Las suites, ya con identidad propia, y el hotel que las contiene.
+ *
+ * Los `HotelRoom` apuntaban al hotel con `containedInPlace`, pero el hotel no
+ * apuntaba de vuelta y las suites no tenían `@id`: para un buscador eran 13 nodos
+ * anónimos flotando. Aquí se les da un `@id` derivado de su propia URL —así no hay
+ * dos listas que mantener sincronizadas— y el hotel las reclama con `containsPlace`.
+ */
+const roomNodes = roomsSchema['@graph'].map(room => ({ '@id': `${room.url}#suite`, ...room }));
+
+const roomsGraph = {
+  '@context': 'https://schema.org',
+  '@graph': roomNodes,
+};
+
+const hotelSchema = {
+  ...jsonLd,
+  containsPlace: roomNodes.map(room => ({ '@id': room['@id'] })),
 };
 
 const restaurantSchema = {
@@ -515,10 +589,10 @@ export default function HomePage() {
     <>
       {/* Orden SEO optimizado: WebSite → Hotel → FAQPage → Restaurant → HotelRooms (secundarios) */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(hotelSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeFaqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(roomsSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(roomsGraph) }} />
       <main data-sticky-bar>
         <Hero />
         <SocialProofBar />
@@ -535,7 +609,7 @@ export default function HomePage() {
         <LocationSection />
         <FAQ />
         <FinalCTA />
-        <StickyBar />
+        {/* La barra fija ya no se monta aquí: vive en el layout para salir en todo el sitio */}
       </main>
     </>
   );

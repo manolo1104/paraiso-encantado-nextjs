@@ -7,9 +7,12 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import AvailabilityFilterClient from './AvailabilityFilterClient';
 
 export const metadata = {
-  title: '13 Suites Boutique · 4 con Spa Privado · Xilitla | Hotel Paraíso Encantado',
+  // "13 Suites Boutique" es un dato de inventario que nadie busca; la consulta
+  // con volumen es "hoteles en xilitla precios". Por eso abre con el lugar y
+  // cierra con la tarifa.
+  title: 'Suites en Xilitla con Spa Privado · Desde $1,500 la noche',
   description:
-    '13 suites boutique, 4 con spa privado en Xilitla, a 5 min de Las Pozas de Edward James. Desde $1,500 MXN. Reserva directa sin comisiones. Cancelación gratuita.',
+    '13 suites con vista a la selva, 4 con alberca spa privada climatizada. A 400 m de Las Pozas. Mira fotos y precios y reserva directo.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/habitaciones',
   },

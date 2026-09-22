@@ -9,9 +9,9 @@ const URL = `${HOTEL.url}/que-hacer-huasteca-potosina-3-dias`;
 const ACTUALIZADO = 'septiembre de 2026';
 
 export const metadata: Metadata = {
-  title: 'Qué Hacer en la Huasteca Potosina en 3 Días: Itinerario Real (2026)',
+  title: 'Qué Hacer en la Huasteca Potosina en 3 Días · Con Horarios',
   description:
-    'Itinerario de 3 días por la Huasteca Potosina con horarios reales, tiempos de traslado y qué llevar: Las Pozas de Edward James, cascadas cercanas y Tamul. Base en Xilitla, a 400 m del Jardín de Edward James.',
+    'Itinerario día por día con horarios reales y tiempos de traslado: Las Pozas, cascadas y Tamul, con base en Xilitla. Pide tu cotización sin costo.',
   keywords: ['que hacer en la huasteca potosina', 'huasteca potosina 3 dias', 'itinerario huasteca potosina', 'que ver en xilitla'],
   alternates: { canonical: URL },
   openGraph: {

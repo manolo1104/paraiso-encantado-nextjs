@@ -7,14 +7,18 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './paquetes.module.css';
 
 export const metadata: Metadata = {
-  title: 'Paquetes de Hotel y Tours · Xilitla Huasteca Potosina | Paraíso Encantado',
+  // "Todo incluido" vuelve al frente: las 10 consultas que dan impresiones a
+  // esta página la traen literal ("viaje a xilitla todo incluido", "hoteles
+  // todo incluido en la huasteca potosina") y al quitarla la página pasó a
+  // cero clics con 676 impresiones.
+  title: 'Paquetes a Xilitla Todo Incluido · Hotel + Tours 3 a 6 días',
   description:
-    'Paquetes de hotel + tours en Xilitla: Luna de Miel, Familiar, Aventura Extrema, Tu Huasteca y Odisea Huasteca. Hospedaje en Paraíso Encantado con tours guiados por la Huasteca Potosina.',
+    'Hospedaje en hotel boutique más tours guiados por la Huasteca: Tamul, Las Pozas y Puente de Dios. De 3 a 6 días. Pide tu cotización sin costo.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/paquetes',
   },
   openGraph: {
-    title: 'Paquetes de Hotel y Tours en Xilitla | Paraíso Encantado',
+    title: 'Paquetes a Xilitla Todo Incluido · Hotel + Tours | Paraíso Encantado',
     description: 'De 3 a 6 días en la Huasteca Potosina: hospedaje en Paraíso Encantado y tours guiados a Tamul, Las Pozas, Puente de Dios y más.',
     url: 'https://www.paraisoencantado.com/paquetes',
     images: [{ url: 'https://www.paraisoencantado.com/images/FLOR DE LIS 1/PORTADA.jpg', alt: 'Suite Flor de Liz con spa privado — Paraíso Encantado', width: 1200, height: 630 }],

@@ -6,9 +6,12 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './xilitla.module.css';
 
 export const metadata: Metadata = {
-  title: 'Qué Hacer en Xilitla, SLP · Guía Completa 2026 | Paraíso Encantado',
+  // "qué hacer en xilitla" ya es de los mejores CTR del sitio (3.91%): el
+  // título coincidía con la búsqueda pero se cortaba y perdía el año, que es
+  // justo lo que da confianza de contenido fresco.
+  title: 'Qué Hacer en Xilitla: Guía 2026 con Precios y Horarios',
   description:
-    'Guía definitiva de Xilitla, San Luis Potosí: Las Pozas de Edward James, Cascada Tamul, Puente de Dios, cuándo ir, cómo llegar y dónde hospedarse. Todo desde un solo hotel.',
+    'Las Pozas, Cascada de Tamul, Puente de Dios y Sótano de las Huahuas: cuánto cuesta cada uno, cuándo ir y cómo llegar. Arma aquí tu viaje a Xilitla.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/xilitla',
   },

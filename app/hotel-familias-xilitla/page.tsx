@@ -7,9 +7,9 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import styles from './familias.module.css';
 
 export const metadata: Metadata = {
-  title: 'Hotel para Familias en Xilitla · Piscina y Suites Familiares | Paraíso Encantado',
+  title: 'Hotel para Familias en Xilitla · Suites de 4 a 8 personas',
   description:
-    'Hotel boutique familiar en Xilitla con suites para 4-8 personas, piscina y a 5 min de Las Pozas de Edward James. Tours seguros para niños en la Huasteca Potosina. Desde $1,500 MXN.',
+    'Suites familiares, alberca y restaurante propio a 400 m de Las Pozas. Tours para niños desde el hotel. Reserva directa y cancela gratis hasta 7 días.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/hotel-familias-xilitla',
   },

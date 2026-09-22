@@ -8,6 +8,7 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import TrackingSetup from '@/components/TrackingSetup';
 import ExitIntentPopup from '@/components/ExitIntentPopup';
 import ScrollReveal from '@/components/ScrollReveal';
+import StickyBar from '@/components/StickyBar';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -74,6 +75,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isAdmin = pathname.startsWith('/admin');
   const lang = pathname.startsWith('/en') ? 'en' : 'es';
 
+  // La barra fija de WhatsApp + Reservar vivía solo en la portada, y el 88% de
+  // las visitas que llegan de Google son de celular: /restaurante, /xilitla,
+  // /habitaciones, el blog y las landings se quedaban sin ningún botón a la
+  // mano. Se excluyen las rutas que YA tienen su propia barra abajo, porque
+  // montar dos las tapa entre sí: el motor de reserva y la ficha de cada
+  // suite (que muestra el precio, mejor CTA que uno genérico).
+  const esReserva = pathname === '/reservar' || pathname.startsWith('/reservar/');
+  const esFichaSuite = /^\/habitaciones\/[^/]+/.test(pathname);
+  // El atributo `data-barra-movil` del <body> lo lee WhatsAppButton.module.css
+  // para esconder el botón flotante en celular justo donde la barra ya ofrece
+  // WhatsApp (si no, la barra se le encima y el mismo CTA sale dos veces).
+  const mostrarBarraMovil = !isAdmin && !esReserva && !esFichaSuite;
+
   return (
     <html lang={lang} className={`${cormorant.variable} ${jost.variable}`}>
       <head>
@@ -82,7 +96,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Sin JS: el contenido con animación de entrada se muestra igual */}
         <noscript dangerouslySetInnerHTML={{ __html: `<style>[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}</style>` }} />
       </head>
-      <body>
+      <body data-barra-movil={mostrarBarraMovil ? '1' : undefined}>
         {/* Google Tag Manager (noscript) */}
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N98DFD9V" height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe></noscript>
         <TrackingSetup />
@@ -91,6 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         {!isAdmin && <Footer />}
         {!isAdmin && <WhatsAppButton />}
+        {mostrarBarraMovil && <StickyBar />}
         {!isAdmin && <ExitIntentPopup />}
       </body>
     </html>

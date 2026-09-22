@@ -11,9 +11,9 @@ const URL = `${HOTEL.url}/mejor-hotel-huasteca-potosina`;
 const ACTUALIZADO = 'agosto de 2026';
 
 export const metadata: Metadata = {
-  title: 'El Mejor Hotel de la Huasteca Potosina: Cómo Elegirlo (Guía 2026)',
+  title: 'Mejor Hotel de la Huasteca Potosina: Cómo Elegir (2026)',
   description:
-    'Guía para elegir hotel en la Huasteca Potosina: qué criterios deciden tu viaje y por qué dormir en Xilitla. Paraíso Encantado, 4.5/5 en 523 reseñas, a 400 m de Las Pozas — donde pernoctó el presidente de México en 2023.',
+    'Xilitla o Ciudad Valles, cuánto manejas cada día y qué pagar de más vale la pena: los criterios que deciden tu viaje. Pide tu cotización sin costo.',
   keywords: ['mejor hotel huasteca potosina', 'hoteles huasteca potosina', 'donde hospedarse huasteca', 'que hotel elegir huasteca potosina'],
   alternates: { canonical: URL },
   openGraph: {
