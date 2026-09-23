@@ -13,7 +13,34 @@
 | 2 | Confirmación de identidad de Google | ✅ Manolo la hizo |
 | 3 | El sitio no avisaba de los clics a WhatsApp | ✅ **EN PROD** (commit `73876d9`): `lib/track.ts` y `lib/analytics.ts` empujan al `dataLayer` |
 | 4 | Ningún objetivo de conversión de Ads funciona | ⏳ **PENDIENTE**: la fuente de datos apunta a `www.kora-hotel.com` y la etiqueta nunca se instaló |
-| 5 | La campaña en sí | ⏳ **PENDIENTE de crear**. El borrador `Paraiso Encantado - WhatsApp 2026-09` se corrompió (perdió el grupo de anuncios y entró en bucle de error). **Hay que rehacerla de cero con esta guía** |
+| 5 | La campaña en sí | 🟡 **CASI LISTA**: se llama `Paraiso Encantado - WhatsApp v2` y le faltan 3 clics (ver abajo). El borrador viejo `...WhatsApp 2026-09` se corrompió: **descártalo** |
+
+### Estado exacto de `Paraiso Encantado - WhatsApp v2` (22 sep, 15:00)
+
+Verificado en pantalla, uno por uno:
+
+| Ajuste | Estado |
+|---|---|
+| Puja **Clics** con tope de **$12 MXN** | ✅ guardado |
+| **Presupuesto $120 MXN/día** | ✅ guardado |
+| **12 palabras clave** | ✅ guardadas |
+| **Anuncio: 7 titulares + 4 descripciones** | ✅ guardado |
+| URL final `/hoteles-en-xilitla` | ✅ guardada |
+| **Redes de socios de búsqueda y Display: APAGADAS** | ✅ guardado |
+| IA Max y expansión de URL: apagados | ✅ guardado |
+| Ubicación **México** | ⚠️ marcada, sin confirmar que guardó |
+| Opción **«Presencia»** | ❌ falta |
+| **Publicar** | ❌ falta |
+| **Palabras negativas** | ❌ faltan (se agregan DESPUÉS de publicar) |
+
+**Los 3 clics que faltan:**
+1. Configuración de la campaña → Ubicaciones: que diga **México**, no «Todos los países». Abrir **«Opciones de ubicación»** y marcar **«Presencia: usuarios que se encuentran o suelen encontrarse en las ubicaciones incluidas»**.
+2. **Revisar → Publicar**.
+3. Ya publicada: Palabras clave → **Palabras clave negativas** → pegar la lista de este documento.
+
+> 🔴 **Ojo con dos trampas que ya aparecieron al construirla:**
+> - Google mete solo un titular **«El Precio Más Bajo»**. Bórralo: es una promesa que el hotel no puede sostener.
+> - Al llegar al presupuesto, Google pide **«Confirme su identidad»**. Es normal; es su candado para los ajustes de dinero.
 
 Encender la campaña sin resolver el punto 4 repite exactamente lo que ya pasó: **$11,609 MXN gastados y 1 conversión registrada** en la campaña anterior. Pero como esta campaña puja por CLICS y no por conversiones, puede arrancar sin eso: la medición se añade después y sirve para decidir cuándo cambiar a puja por conversiones.
 
