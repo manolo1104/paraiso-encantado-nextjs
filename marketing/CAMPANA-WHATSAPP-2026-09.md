@@ -5,15 +5,19 @@
 
 ---
 
-## ⛔ Antes de encenderla: 3 cosas que la bloquean
+## Estado al 22 de septiembre de 2026
 
-| # | Bloqueo | Quién lo resuelve |
+| # | Asunto | Estado |
 |---|---|---|
-| 1 | **La cuenta tiene saldo vencido de $2,207.47 MXN.** Google muestra «No se están publicando sus anuncios». Mientras no se pague, ninguna campaña se publica. | **Manolo** (no puedo meter datos de tarjeta) |
-| 2 | **Ningún objetivo de conversión funciona.** Google marca «Compra» y «Visita a tienda» como *Configuración incorrecta*, y otros cuatro como *Requiere atención*. | Claude + Manolo en GTM |
-| 3 | **El sitio no avisaba de los clics a WhatsApp.** `lib/track.ts` mandaba todo a un `console.log` de Railway. Ya está arreglado: ahora también empuja al `dataLayer`. | ✅ hecho, falta desplegar |
+| 1 | Saldo vencido de $2,207.47 MXN | ✅ **PAGADO** el 22 sept (Mastercard ···8248). Queda $0.90 de crédito a favor |
+| 2 | Confirmación de identidad de Google | ✅ Manolo la hizo |
+| 3 | El sitio no avisaba de los clics a WhatsApp | ✅ **EN PROD** (commit `73876d9`): `lib/track.ts` y `lib/analytics.ts` empujan al `dataLayer` |
+| 4 | Ningún objetivo de conversión de Ads funciona | ⏳ **PENDIENTE**: la fuente de datos apunta a `www.kora-hotel.com` y la etiqueta nunca se instaló |
+| 5 | La campaña en sí | ⏳ **PENDIENTE de crear**. El borrador `Paraiso Encantado - WhatsApp 2026-09` se corrompió (perdió el grupo de anuncios y entró en bucle de error). **Hay que rehacerla de cero con esta guía** |
 
-Encender la campaña sin el punto 2 repite exactamente lo que ya pasó: **$11,609 MXN gastados y 1 conversión registrada** en la campaña anterior.
+Encender la campaña sin resolver el punto 4 repite exactamente lo que ya pasó: **$11,609 MXN gastados y 1 conversión registrada** en la campaña anterior. Pero como esta campaña puja por CLICS y no por conversiones, puede arrancar sin eso: la medición se añade después y sirve para decidir cuándo cambiar a puja por conversiones.
+
+> **Ojo con el borrador viejo.** Si aparece `Paraiso Encantado - WhatsApp 2026-09` en «Borradores en curso», descártalo: está incompleto y atorado.
 
 ---
 
@@ -194,3 +198,107 @@ Nunca se aplicaron en la campaña anterior. Estas son las que estaban quemando d
 Si conseguir una reserva por Google Ads te cuesta **menos que la comisión que te cobraría Booking** (15-18% del valor de la reserva), conviene meterle más dinero. Si cuesta más, conviene apagarlo y poner ese dinero en recuperar el tráfico gratis de Google.
 
 Hoy no puedes responder esa pregunta porque la medición nunca funcionó. Ese es el verdadero desbloqueo de esta campaña.
+
+---
+
+## Paso a paso para crearla a mano (10 minutos)
+
+Si la haces tú, este es el orden exacto en Google Ads (cuenta **Manolo, 414-322-5601**):
+
+1. **+ Crear → Campaña**
+2. Objetivo: baja hasta **«Crear una campaña sin orientación»** (no elijas «Ventas» ni «Clientes potenciales»: te fuerzan a pujar por conversiones que todavía no se pueden medir)
+3. Tipo: **Búsqueda**
+4. Marca **«Cree una campaña nueva»** y ponle de nombre `Paraiso Encantado - WhatsApp 2026-09`
+5. Resultados: marca **«Visitas al sitio web»** y pega `https://www.paraisoencantado.com/hoteles-en-xilitla`
+6. **Ofertas** → «¿En qué deseas enfocarte?» → cambia de «Maximiza las conversiones» a **Clics** → marca «Configurar un límite de oferta de costo por clic máximo» → **12**
+7. **Configuración de la campaña → Redes**: 🔴 **DESMARCA las dos**, «Red de socios de búsqueda» y «Red de Display». Vienen marcadas y son la fuga más común.
+8. **Ubicaciones**: elige **México** → abre «Opciones de ubicación» → marca **«Presencia: usuarios que se encuentran o suelen encontrarse en las ubicaciones incluidas»**
+9. **Idiomas**: Español (ya viene)
+10. **IA Max**: déjalo **apagado**
+11. **Palabras clave y anuncios**: pega las 12 palabras clave y crea el anuncio con los titulares y descripciones de abajo
+12. **Presupuesto** → «Establece un presupuesto personalizado» → **120**
+13. **Revisar → Publicar**
+14. **Inmediatamente después**: Campaña → Palabras clave → **Palabras clave negativas** → pega la lista de negativas
+
+### Para copiar y pegar — palabras clave
+
+```
+[hoteles en xilitla]
+[hotel en xilitla]
+[hoteles xilitla]
+[hotel xilitla]
+[xilitla hoteles]
+"hoteles en xilitla san luis potosi"
+"hoteles en xilitla slp"
+"hoteles en xilitla precios"
+"hotel en xilitla san luis potosi"
+"donde hospedarse en xilitla"
+"hospedaje en xilitla"
+"hotel boutique xilitla"
+```
+
+### Para copiar y pegar — negativas
+
+```
+tapasoli
+hotel tapasoli
+tour
+tours
+excursion
+excursión
+recorrido
+que hacer
+qué hacer
+como llegar
+cómo llegar
+mapa
+clima
+barato
+economico
+económico
+hostal
+camping
+airbnb
+renta
+rentar
+venta
+terreno
+trabajo
+empleo
+vacante
+ciudad valles
+tamasopo
+aquismon
+aquismón
+tamazunchale
+tampico
+```
+
+### Para copiar y pegar — titulares (uno por campo)
+
+```
+Hoteles en Xilitla
+Hotel en Xilitla
+A 5 Min de Las Pozas
+Escríbenos por WhatsApp
+Te Contestamos en Minutos
+Reserva Directo Sin Comisión
+4.5 Estrellas y 523 Reseñas
+Suites Desde $1,500 MXN
+Hotel Boutique en Xilitla
+```
+
+### Para copiar y pegar — descripciones (una por campo)
+
+```
+Pregunta precio y disponibilidad por WhatsApp. Te contestamos en minutos, sin compromiso.
+13 suites boutique a 5 minutos del Jardín de Edward James. Escríbenos y te cotizamos hoy.
+Reserva directo con el hotel: sin comisiones de intermediarios y con mejor precio.
+Alberca, restaurante huasteco y 4 suites con spa privado. Pregunta por WhatsApp.
+```
+
+> Google va a sugerir titulares automáticos como «El Precio Más Bajo». **Bórralos**: es una promesa que no puedes sostener y te expone.
+
+### Lo que proyectaba Google con esta configuración
+
+Con $120 MXN/día: **270 clics por semana a $3.11 cada uno** (~$840/semana). La campaña anterior pagaba $2.55 de CPC promedio pero en búsquedas sin intención de hospedaje.
