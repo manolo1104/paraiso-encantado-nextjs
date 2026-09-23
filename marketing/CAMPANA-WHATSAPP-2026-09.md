@@ -5,10 +5,38 @@
 
 ---
 
-## Estado al 22 de septiembre de 2026
+## ✅ PUBLICADA el 22 de septiembre de 2026
 
-| # | Asunto | Estado |
-|---|---|---|
+Campaña **`Paraiso Encantado - WhatsApp v2`** · cuenta Manolo 414-322-5601 · campaignId **24284826601**
+Primeras cifras ese mismo día: **10 impresiones, 1 clic, CTR 10%, CPC $8.10**. Estado del anuncio: **Apto**.
+
+| Ajuste | Estado |
+|---|---|
+| Puja **Clics**, tope $12 MXN | ✅ |
+| Presupuesto **$120 MXN/día** | ✅ |
+| 12 palabras clave (11 sacadas de Search Console, 4,234 impresiones) | ✅ |
+| Anuncio: 7 titulares + 4 descripciones | ✅ |
+| **32 palabras negativas** | ✅ |
+| Solo Búsqueda de Google (Display y socios apagados) | ✅ |
+| México con opción **«Presencia»** | ✅ |
+| IA Max y expansión de URL apagados | ✅ |
+| Saldo de la cuenta ($2,207.47) | ✅ pagado el 22 sep |
+
+### 🔴 Lo que falta (decisión de Manolo: «así la vamos a dejar para ver qué tal funciona»)
+
+1. **La conversión de WhatsApp en GTM.** El sitio ya empuja `contacto_whatsapp`; falta el activador y la etiqueta en `GTM-N98DFD9V` (pasos más abajo). **Sin esto la campaña mide clics pero no contactos** — es el mismo agujero que dejó la campaña anterior en $11,609 con 1 conversión.
+2. **El grupo de MARCA: 2,289 impresiones sin cubrir**, posición 3.8 y CTR 3.6% (el mejor del sitio). Clics de $1-2 y protege el nombre de la competencia. **Es lo primero que hay que agregar al retomar.**
+3. Cerca de Las Pozas (241 impr), Con alberca (220), Hospedaje Huasteca (219). Volumen bajo: pueden esperar.
+
+### Trampas que aparecieron al construirla (para la próxima)
+
+- Google agrega solo un titular **«El Precio Más Bajo»**: borrarlo, es una promesa que no se puede sostener.
+- Al tocar el presupuesto pide **«Confirme su identidad»**; hasta resolverlo NO guarda nada.
+- El resumen de revisión dice que la expansión de URL está activa **aunque esté apagada**: verificar en el paso de IA Max, no en el resumen.
+- Los avisos de facturación se quedan en caché horas después de pagar: recargar la página.
+- Las negativas solo se pueden agregar **después** de publicar.
+
+---|---|---|
 | 1 | Saldo vencido de $2,207.47 MXN | ✅ **PAGADO** el 22 sept (Mastercard ···8248). Queda $0.90 de crédito a favor |
 | 2 | Confirmación de identidad de Google | ✅ Manolo la hizo |
 | 3 | El sitio no avisaba de los clics a WhatsApp | ✅ **EN PROD** (commit `73876d9`): `lib/track.ts` y `lib/analytics.ts` empujan al `dataLayer` |
