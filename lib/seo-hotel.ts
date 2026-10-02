@@ -39,7 +39,8 @@ export const HOTEL = {
   spaClimatizado: true,
   spaAgua: 'Agua caliente climatizada, en la terraza privada de la suite',
 
-  // Distancias verificadas
+  // Distancias verificadas. Se publican tal cual ("a 400 m, 5 min a pie"), sin el
+  // superlativo "el hotel más cercano": Casa Caracol está a 300 m (2 oct 2026).
   metrosALasPozas: 400,
   minutosCaminandoALasPozas: 5,
 
@@ -55,13 +56,24 @@ export const HOTEL = {
   codigoDescuento: 'XILITLA2026PE',
 } as const;
 
-/** Tiempos de traslado desde el hotel, en auto salvo que se indique. */
+/**
+ * Tiempos de traslado desde el hotel, en auto salvo que se indique.
+ *
+ * Corregido el 2 oct 2026 con la hoja única de cifras: la versión anterior ponía
+ * El Meco a "1 h" (está en El Naranjo, a 3 h o más), Puente de Dios a 1 h 30,
+ * Tamul a 2 h 30 y el centro a "10 min caminando" (son ~2 km de subida). Además
+ * decía "el hotel más cercano de Xilitla", que contradice nuestra propia tabla de
+ * /hoteles-en-xilitla (Casa Caracol a 300 m). Los minutos son aproximados: en la
+ * sierra las curvas los alargan. El de Tamul falta confirmarlo con el chofer.
+ */
 export const DISTANCIAS = [
-  { destino: 'Las Pozas · Jardín Surrealista de Edward James', tiempo: '5 min caminando', nota: '400 metros — el hotel más cercano de Xilitla' },
-  { destino: 'Centro de Xilitla', tiempo: '10 min caminando', nota: 'Mercado, café de olla y artesanías' },
-  { destino: 'Cascada El Meco', tiempo: '1 h', nota: 'La cascada más accesible desde Xilitla' },
-  { destino: 'Puente de Dios', tiempo: '1 h 30 min', nota: 'Aguas turquesa; requiere caminata y escalones' },
-  { destino: 'Cascada de Tamul', tiempo: '2 h 30 min', nota: 'En canoa remontando el río; el tour ocupa el día completo' },
+  { destino: 'Las Pozas · Jardín Surrealista de Edward James', tiempo: `${HOTEL.minutosCaminandoALasPozas} min caminando`, nota: `${HOTEL.metrosALasPozas} metros, sobre el camino a Las Pozas. Cierra los martes; último acceso a las 16:00` },
+  { destino: 'Centro de Xilitla', tiempo: '5 min en auto', nota: 'Unos 2 km; a pie, unos 25 min de subida. Mercado, café de olla y el Museo Leonora Carrington' },
+  { destino: 'Nacimiento de Huichihuayán', tiempo: '30 min', nota: 'Manantial en Huehuetlán' },
+  { destino: 'Castillo de la Salud', tiempo: '30 min', nota: 'En Axtla' },
+  { destino: 'Cascada de Tamul', tiempo: '1 h a 1 h 30', nota: 'Hasta el embarcadero, en Aquismón; de ahí, en canoa. El tour ocupa el día completo (12 h)' },
+  { destino: 'Puente de Dios', tiempo: '2 h a 2 h 30', nota: 'En Tamasopo. Corriente fuerte: solo con chaleco y cuerda. Tour de día completo (12 h)' },
+  { destino: 'Cascada El Meco', tiempo: '3 h o más', nota: 'En El Naranjo: queda mejor desde Ciudad Valles. Tour de día completo (12 h)' },
 ] as const;
 
 /** Suites con piscina spa o tina de hidromasaje DENTRO de la suite. */

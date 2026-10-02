@@ -8,7 +8,7 @@ import { HOTEL, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hot
 import local from './hoteles-en-xilitla.module.css';
 
 const URL = `${HOTEL.url}/hoteles-en-xilitla`;
-const ACTUALIZADO = 'agosto de 2026';
+const ACTUALIZADO = 'octubre de 2026';
 
 // Título de 55 caracteres y descripción de 152: por encima de ~60 y ~155 Google
 // corta el texto en el resultado, y ese corte es la causa medida del CTR de 0.2%
@@ -75,11 +75,13 @@ const FAQS = [
   },
   {
     q: '¿Qué hotel de Xilitla está más cerca de Las Pozas?',
-    a: `El Hotel Paraíso Encantado, a ${HOTEL.metrosALasPozas} metros de la entrada del Jardín de Edward James: unos ${HOTEL.minutosCaminandoALasPozas} minutos caminando, sin necesidad de auto ni taxi.`,
+    // Respuesta alineada con la tabla de esta misma página (2 oct 2026): antes decía
+    // que el más cercano era Paraíso Encantado, y la tabla pone Casa Caracol a 300 m.
+    a: `Los tres que están sobre el camino a Las Pozas: Casa Caracol, a unos 300 metros; el Hotel Paraíso Encantado, a ${HOTEL.metrosALasPozas} metros de la entrada del Jardín de Edward James (unos ${HOTEL.minutosCaminandoALasPozas} minutos caminando), y Posada James, a unos 8 minutos a pie. Desde los tres llegas caminando, sin auto ni taxi.`,
   },
   {
     q: '¿Hace falta auto para quedarse en Xilitla?',
-    a: 'Para moverte dentro del pueblo, no: Xilitla es pequeño y se camina. Para las cascadas y Tamul, sí necesitas auto o contratar el tour con transporte, porque están a una y dos horas y medio del pueblo.',
+    a: 'Para moverte dentro del pueblo, no: Xilitla es pequeño y se camina. Para las cascadas y Tamul, sí necesitas auto o contratar el tour con transporte, porque están a entre una hora (Tamul) y tres o más (El Meco) del pueblo.',
   },
   {
     q: '¿Con cuánta anticipación hay que reservar en Xilitla?',
@@ -226,7 +228,6 @@ export default function HotelesEnXilitlaPage() {
               estancia: dónde están, cuánto cuestan y qué tan lejos queda Las Pozas.
             </p>
 
-            <p className={local.swipeHint}>Desliza la tabla para ver todas las columnas.</p>
             <div className={local.hotelesTable}>
               <CompareTable
                 headers={['Hotel', 'Zona', 'Desde (MXN/noche)', 'A Las Pozas', 'Alberca', 'Estacionamiento']}
@@ -283,13 +284,14 @@ export default function HotelesEnXilitlaPage() {
             <h3>Por qué La Conchita cambia el viaje</h3>
             <p>
               Las Pozas abren temprano y se llenan a media mañana, cuando llegan los autobuses de
-              excursión. Dormir en La Conchita te permite estar en la entrada al abrir y recorrer el
-              jardín con el sitio casi vacío. Desde el centro tendrías que bajar en auto o taxi; desde
-              la carretera, manejar. Es la diferencia entre ver Las Pozas y hacer fila en Las Pozas.
+              excursión. Dormir en La Conchita te permite llegar caminando al primer turno —que se
+              reserva antes— y recorrer el jardín antes de que lleguen los grupos. Desde el centro
+              tendrías que bajar en auto o taxi; desde la carretera, manejar. Es la diferencia entre
+              un turno tranquilo y uno lleno.
             </p>
             <p>
               El <Link href="/hotel-cerca-de-las-pozas">Hotel Paraíso Encantado</Link> está en esa
-              zona, a {HOTEL.metrosALasPozas} metros de la entrada — el más cercano del pueblo.
+              zona, a {HOTEL.metrosALasPozas} metros de la entrada.
             </p>
 
             <h3>Cómo elegir zona según el plan del viaje</h3>
@@ -300,9 +302,9 @@ export default function HotelesEnXilitlaPage() {
             </p>
             <p>
               <strong>Vas sobre todo por Las Pozas.</strong> Duerme en el camino a Las Pozas. El
-              jardín abre a las nueve y para las once ya llegaron los autobuses de excursión.
-              Dormir a pocos metros es lo único que te deja entrar al abrir, salir a desayunar y
-              volver por la tarde sin pagar taxi dos veces.
+              jardín abre a las nueve (cierra los martes) y para las once ya llegaron los autobuses
+              de excursión. Dormir a pocos metros te deja llegar caminando al primer turno —se
+              reserva antes en el sistema oficial— y regresar a comer sin pagar taxi.
             </p>
             <p>
               <strong>Vas por el pueblo: el mercado, el café, las artesanías.</strong> Duerme en el
@@ -376,9 +378,11 @@ export default function HotelesEnXilitlaPage() {
 
             <p>
               Hay dos gastos que la gente olvida al hacer cuentas. El primero es la entrada a Las
-              Pozas, que se paga en taquilla el día de la visita y no la vende ningún hotel. El
-              segundo es el transporte a las cascadas: Puente de Dios, Tamul o El Meco están a una y
-              dos horas y media de Xilitla, y sin auto propio hay que contratar tour. Si vas a
+              Pozas —$180 por adulto, más $30 de guía obligatoria—, que se paga en taquilla el día de
+              la visita, con el turno reservado antes, y no la vende ningún hotel. El segundo es el
+              transporte a las cascadas: Tamul está a una hora u hora y media de Xilitla, Puente de
+              Dios a dos o dos y media, y El Meco a tres o más; sin auto propio hay que contratar
+              tour. Si vas a
               hacerlo, comparar el paquete de hotel más tours contra armarlo por separado suele dar
               una diferencia de varios cientos de pesos por persona.
             </p>
@@ -414,10 +418,10 @@ export default function HotelesEnXilitlaPage() {
 
             <h3>Cuándo conviene venir si el precio importa</h3>
             <p>
-              De martes a jueves, fuera de puente, en septiembre, octubre o los primeros días de
-              noviembre. Es cuando hay tarifa baja, Las Pozas está casi vacío y el verde de la
-              sierra está en su mejor momento después de las lluvias. La contra es que en esos meses
-              puede llover por la tarde, aunque rara vez el día entero.
+              De martes a jueves, fuera de puente, en septiembre u octubre, antes de Xantolo. Es
+              cuando hay tarifa baja, Las Pozas tiene más turnos libres —ojo: cierra los martes— y
+              el verde de la sierra está en su mejor momento después de las lluvias. La contra es
+              que en esos meses puede llover por la tarde, aunque rara vez el día entero.
             </p>
 
             <h3>Con cuánta anticipación reservar</h3>
@@ -443,7 +447,7 @@ export default function HotelesEnXilitlaPage() {
               rows={[
                 { cells: ['Zona', 'La Conchita, camino a Las Pozas'], highlight: true },
                 { cells: ['A Las Pozas', `${HOTEL.metrosALasPozas} metros — ${HOTEL.minutosCaminandoALasPozas} min caminando`] },
-                { cells: ['Al centro de Xilitla', '10 min caminando'] },
+                { cells: ['Al centro de Xilitla', '5 min en auto (unos 2 km; a pie, ~25 min de subida)'] },
                 { cells: ['Suites', `${HOTEL.suites}, de 2 a ${HOTEL.capacidadMaxima} personas`] },
                 { cells: ['Con piscina spa privada en la suite', `${HOTEL.suitesConSpaPrivado} de ${HOTEL.suites}`] },
                 { cells: ['Restaurante', `${HOTEL.restaurante}, en el hotel`] },
@@ -460,7 +464,7 @@ export default function HotelesEnXilitlaPage() {
         <RelatedLinks links={[
           { href: '/mejor-hotel-xilitla', label: 'Por qué Paraíso Encantado es el mejor hotel de Xilitla' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca Potosina' },
-          { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas' },
+          { href: '/hotel-cerca-de-las-pozas', label: `Hotel a ${HOTEL.metrosALasPozas} m de Las Pozas` },
           { href: '/hotel-alberca-privada-xilitla', label: 'Hoteles con alberca privada en la habitación' },
           { href: '/hotel-familias-xilitla', label: 'Hotel para familias en Xilitla' },
           { href: '/hotel-luna-de-miel-xilitla', label: 'Luna de miel en Xilitla' },

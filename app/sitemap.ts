@@ -40,7 +40,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/donde-hospedarse-huasteca-potosina`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.86, images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`] },
     { url: `${BASE}/hotel-alberca-privada-xilitla`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.86, images: [`${BASE}/images/JUNGLA/PORTADA.JPG`] },
     { url: `${BASE}/que-hacer-huasteca-potosina-3-dias`, lastModified: SEO_UPDATED, changeFrequency: 'monthly', priority: 0.84, images: [`${BASE}/images/atracciones/cascada_de_tamul.jpg`] },
-    { url: `${BASE}/xilitla`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.80, images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`] },
+    // /xilitla es la guía principal de «qué hacer en Xilitla» desde oct 2026 (absorbió
+    // /blog/que-hacer-en-xilitla con un 301): fecha y prioridad propias.
+    { url: `${BASE}/xilitla`, lastModified: '2026-10-02', changeFrequency: 'monthly', priority: 0.88, images: [`${BASE}/images/atracciones/jardin-edward-james-aerial.png`] },
     { url: `${BASE}/sobre-nosotros`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.65 },
     { url: `${BASE}/reviews`, lastModified: SITE_UPDATED, changeFrequency: 'weekly', priority: 0.75 },
     { url: `${BASE}/contacto`, lastModified: SITE_UPDATED, changeFrequency: 'monthly', priority: 0.60 },
@@ -67,7 +69,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const blog: MetadataRoute.Sitemap = [
     {
       url: `${BASE}/blog`,
-      lastModified: SITE_UPDATED,
+      // El índice cambia cada vez que sale un artículo: su fecha es la del más nuevo.
+      lastModified: posts[0]?.date ?? SITE_UPDATED,
       changeFrequency: 'weekly' as const,
       priority: 0.80,
     },

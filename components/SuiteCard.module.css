@@ -178,7 +178,7 @@
   font-family: var(--font-jost);
   font-size: 11px;
   font-weight: 300;
-  color: rgba(168, 132, 42, 0.7);
+  color: #7a5c16; /* dorado al 70 % daba 2.2:1 */
   margin-left: 2px;
 }
 

@@ -57,6 +57,10 @@
 /* ---- ARTICLE ---- */
 .article {
   padding-top: 40px;
+  /* Sin esto, una tabla ancha agranda la columna de la rejilla en vez de deslizarse
+     dentro de su caja, y en celular el artículo entero se salía 30-50 px de la pantalla
+     (pasó al activar las tablas con remark-gfm, oct 2026). */
+  min-width: 0;
 }
 
 .articleHeader {
@@ -87,7 +91,7 @@
   display: flex;
   gap: 10px;
   font-size: 13px;
-  color: #aaa;
+  color: #6f6a62; /* #aaa daba 2.2:1 sobre crema: fechas y minutos de lectura casi no se leían */
   font-family: var(--font-jost, sans-serif);
 }
 
@@ -134,7 +138,7 @@
   padding-left: 16px;
 }
 
-.tocSubItem a { font-size: 13px; color: #888; }
+.tocSubItem a { font-size: 13px; color: #6f6a62; }
 
 /* ---- INLINE CTAs ---- */
 .inlineCta {
@@ -223,8 +227,9 @@
 
 .inlineCtaBottomPrimary {
   display: inline-block;
-  background: var(--gold);
-  color: white;
+  /* Mismo par que el «Reservar» del menú: blanco sobre dorado daba 3.5:1 */
+  background: var(--sand);
+  color: var(--forest);
   padding: 10px 20px;
   border-radius: 6px;
   font-size: 13px;
@@ -351,6 +356,66 @@
 
 .prose tr:nth-child(even) td { background: var(--parch); }
 
+/* En un teléfono de 360 px una tabla de tres columnas no cabe: que se deslice
+   ella sola en vez de empujar toda la página hacia los lados. */
+@media (max-width: 640px) {
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .prose th, .prose td { padding: 8px 12px; }
+
+  /* Sin aviso, las columnas que quedan a la derecha parecen no existir. data-desliza lo
+     pone TablaDeslizable solo si la tabla no cabe. El aviso va en el contenedor, que no
+     se desliza; la tabla sí. */
+  .prose .tabla[data-desliza]::before {
+    content: 'Desliza la tabla para ver todas las columnas →';
+    display: block;
+    margin: 0 0 6px;
+    font-family: var(--font-jost, sans-serif);
+    font-size: 12.5px;
+    color: #6f6a62;
+  }
+}
+
+.prose .tabla { margin: 28px 0; }
+.prose .tabla > table { margin: 0; }
+
+/* Fotos dentro del artículo. Las de terceros llevan su crédito en el pie
+   (las licencias Creative Commons lo exigen), así que el pie tiene que leerse. */
+.prose figure {
+  margin: 32px 0;
+}
+
+.prose figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.prose figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #6b6b6b;
+}
+
+.prose figcaption a { color: inherit; }
+
+/* Las fotos verticales a todo el ancho ocupan dos pantallas de celular. */
+.prose :global(.figura-vertical) img {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.prose :global(.figura-vertical) figcaption {
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* ---- INTERNAL LINKS ---- */
 .internalLinks {
   margin-top: 32px;
@@ -402,7 +467,7 @@
 
 .internalLinkDesc {
   font-size: 11px;
-  color: #888;
+  color: #6f6a62;
   font-family: var(--font-jost, sans-serif);
   line-height: 1.4;
 }
@@ -447,7 +512,7 @@
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--sage);
+  color: var(--jade);
   font-family: var(--font-jost, sans-serif);
   margin: 0;
 }
@@ -462,7 +527,7 @@
 
 .authorRole {
   font-size: 12px;
-  color: #888;
+  color: #6f6a62;
   font-family: var(--font-jost, sans-serif);
   letter-spacing: 0.04em;
   margin: 0 0 4px;
@@ -489,7 +554,7 @@
 
 .metaAuthor {
   font-weight: 500;
-  color: #777;
+  color: #57524a;
 }
 
 /* ---- SIDEBAR ---- */
@@ -567,7 +632,7 @@
 .sidebarWa {
   display: block;
   background: #25d366;
-  color: white;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   text-align: center;
   padding: 11px 16px;
   border-radius: 6px;

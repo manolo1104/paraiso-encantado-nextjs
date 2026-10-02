@@ -24,6 +24,7 @@
     "react": "^19",
     "react-dom": "^19",
     "recharts": "^3.8.1",
+    "remark-gfm": "^4.0.1",
     "resend": "^4.0.0",
     "stripe": "^17.0.0"
   },

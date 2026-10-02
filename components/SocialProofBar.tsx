@@ -27,7 +27,7 @@ export default function SocialProofBar() {
           </div>
           <div className={styles.content}>
             <strong>A 5 min de Las Pozas</strong>
-            <p>El hotel más cercano al Jardín de Edward James</p>
+            <p>400 metros, sobre el camino al Jardín de Edward James</p>
           </div>
         </div>
 

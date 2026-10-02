@@ -355,14 +355,14 @@
   font-family: var(--font-jost), sans-serif;
   font-size: 12px;
   font-weight: 300;
-  color: rgba(168, 132, 42, 0.75);
+  color: #7a5c16; /* antes dorado al 75 %: 2.2:1, se perdía */
   margin: -4px 0 4px;
 }
 
 .priceTiers em {
   font-style: normal;
   font-size: 11px;
-  color: rgba(168, 132, 42, 0.65);
+  color: #7a5c16; /* antes dorado al 65 %: 2:1 */
 }
 
 .priceTiers {
@@ -531,7 +531,7 @@
 
 .whatsappBtn:hover {
   background: #25d366;
-  color: white;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   border-color: #25d366;
 }
 
@@ -673,7 +673,7 @@
 
 .otherUsd {
   font-size: 11px;
-  color: rgba(168, 132, 42, 0.65);
+  color: #7a5c16; /* antes dorado al 65 %: 2:1 */
   font-weight: 300;
 }
 

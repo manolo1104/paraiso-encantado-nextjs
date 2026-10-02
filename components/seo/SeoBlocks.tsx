@@ -7,6 +7,7 @@
  */
 import Image from 'next/image';
 import Link from 'next/link';
+import TablaDeslizable from '@/components/TablaDeslizable';
 import styles from './seo-landing.module.css';
 
 export { styles as seoStyles };
@@ -99,7 +100,7 @@ export function CompareTable({
   rows: { cells: string[]; highlight?: boolean }[];
 }) {
   return (
-    <div className={styles.tableWrap}>
+    <TablaDeslizable className={styles.tableWrap}>
       <table className={styles.table}>
         {caption && <caption>{caption}</caption>}
         <thead>
@@ -115,7 +116,7 @@ export function CompareTable({
           ))}
         </tbody>
       </table>
-    </div>
+    </TablaDeslizable>
   );
 }
 

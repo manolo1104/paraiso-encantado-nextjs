@@ -48,7 +48,7 @@
 
 .whatsapp {
   background: #25d366;
-  color: var(--cream);
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
 }
 
 .reservar {

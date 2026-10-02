@@ -17,7 +17,7 @@ const jsonLdEn = {
     addressRegion: 'San Luis Potosí',
     addressCountry: 'MX',
   },
-  geo: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
+  geo: { '@type': 'GeoCoordinates', latitude: 21.395, longitude: -98.9915 },
   aggregateRating: {
     '@type': 'AggregateRating',
     ratingValue: 4.5,
@@ -61,18 +61,22 @@ const SUITES = [
 ];
 
 const AMENITIES = [
-  { icon: '🌿', title: '5-minute walk to Las Pozas', desc: 'The Edward James Surrealist Garden, a UNESCO-listed masterpiece.' },
+  // Las Pozas NO es "UNESCO-listed" (solo está en la Lista Indicativa desde 2009): es
+  // Monumento Artístico desde 2012. Hoja única de cifras, 2 oct 2026.
+  { icon: '🌿', title: '5-minute walk to Las Pozas', desc: 'The Edward James Surrealist Garden, declared an Artistic Monument of Mexico in 2012.' },
   { icon: '🛁', title: 'Private spa in 4 suites', desc: 'Outdoor plunge pools and jacuzzis surrounded by tropical jungle.' },
   { icon: '🍽️', title: 'Restaurant on-site', desc: 'El Papán Huasteco — regional cuisine with panoramic terrace views.' },
   { icon: '🚗', title: 'Free parking', desc: 'Secure private parking for all guests.' },
   { icon: '📶', title: 'High-speed WiFi', desc: 'Throughout the hotel and in every suite.' },
-  { icon: '🎯', title: 'Daily tours to Las Pozas', desc: 'Guided excursions departing directly from the hotel.' },
+  // "Daily tours to Las Pozas" era falso: el jardín cierra los martes y los tours los
+  // opera Huasteca Potosina Tours, no el hotel.
+  { icon: '🎯', title: 'Day tours of the Huasteca', desc: 'Run by Huasteca Potosina Tours, with pick-up at the hotel. Las Pozas needs no tour: you walk there.' },
 ];
 
 const FAQS = [
   {
     q: 'How far is the hotel from the Edward James Surrealist Garden?',
-    a: '400 meters — a 5-minute walk. We are the closest hotel to Las Pozas.',
+    a: '400 meters — a 5-minute walk, on the road to Las Pozas. Visits are guided (1 h 30 min) and need a time slot booked in advance; the garden is closed on Tuesdays and last entry is at 4:00 PM.',
   },
   {
     q: 'Do you have English-speaking staff?',
@@ -80,7 +84,7 @@ const FAQS = [
   },
   {
     q: 'What is the best time of year to visit Xilitla?',
-    a: 'October through April offers the driest and most comfortable weather. The gardens are lush year-round thanks to the tropical microclimate at 800m elevation.',
+    a: 'November through May is the dry season, with the most comfortable weather and the clearest rivers. The gardens are lush year-round thanks to the humid mountain microclimate.',
   },
   {
     q: 'Can I book directly without a commission fee?',
@@ -130,11 +134,11 @@ export default function EnglishPage() {
       <section className={styles.why}>
         <div className={styles.container}>
           <p className={styles.eyebrow}>Why Paraíso Encantado</p>
-          <h2 className={styles.sectionTitle}>The closest hotel<br /><em>to Edward James' masterpiece</em></h2>
+          <h2 className={styles.sectionTitle}>A 5-minute walk<br /><em>to Edward James' masterpiece</em></h2>
           <p className={styles.sectionSub}>
-            Edward James — the English surrealist patron who built Las Pozas — chose Xilitla for its magical
-            microclimate and lush jungle. We are 400 meters from the garden he created. No other hotel puts
-            you this close to one of the most extraordinary artistic environments in the world.
+            Edward James — the British surrealist patron who built Las Pozas — chose Xilitla for its magical
+            microclimate and lush jungle. We are 400 meters from the garden he created, on the road to its
+            entrance: a 5-minute walk to one of the most extraordinary artistic environments in the world.
           </p>
           <div className={styles.amenitiesGrid}>
             {AMENITIES.map(a => (
@@ -196,12 +200,21 @@ export default function EnglishPage() {
               <em>right here in the jungle</em>
             </h2>
             <p className={styles.contextBody}>
-              Las Pozas is a 32-hectare sculpture garden created by the British surrealist
-              patron Edward James (1907–1984), close friend of Salvador Dalí and René Magritte.
-              Nestled in the Sierra Madre Oriental at 800 meters elevation, it combines concrete
-              surrealist sculptures with natural turquoise pools and cascading waterfalls.
-              Today it is listed as Cultural Heritage of Mexico and draws visitors from Europe,
-              the United States, Japan and beyond.
+              Las Pozas is a sculpture garden of about 9 hectares, within a 37-hectare estate,
+              created by the British surrealist patron Edward James (1907–1984), close friend of
+              Salvador Dalí and René Magritte. He first came to Xilitla in 1945, bought the land in
+              1947 and, after the frost of 1962, began building more than 30 concrete structures
+              among natural pools and waterfalls, until his death in 1984. Nestled in the Sierra
+              Madre Oriental, it was declared an Artistic Monument of Mexico in 2012 and draws
+              visitors from Europe, the United States, Japan and beyond.
+            </p>
+            <p className={styles.contextBody}>
+              Visits are guided only (1 h 30 min, groups of up to 25), with English-language tours
+              at 10:00 and 15:00. There is no online ticket sale for now: you book a time slot on the
+              official website and pay at the gate — MXN $180 for adults, $120 for children aged 6
+              to 12 and seniors over 65, plus the mandatory guide (MXN $30 per person; $60 in another
+              language). Open Wednesday to Monday, 9:00 to 18:00, last entry at 16:00; closed on
+              Tuesdays. Swimming in the pools is not allowed.
             </p>
             <p className={styles.contextBody}>
               Paraíso Encantado sits 400 meters from the garden entrance — close enough to walk,
@@ -219,7 +232,7 @@ export default function EnglishPage() {
           <div className={styles.contextStats}>
             {[
               { value: '400m', label: 'walking distance to Las Pozas' },
-              { value: '800m', label: 'altitude — perfect cool climate year-round' },
+              { value: '675m', label: 'altitude of Xilitla — humid mountain climate' },
               { value: '13', label: 'unique suites, each individually designed' },
               { value: '4.5★', label: 'average rating — 523+ reviews' },
             ].map(s => (

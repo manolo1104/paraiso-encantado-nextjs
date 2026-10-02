@@ -6,7 +6,7 @@ import {
 import { HOTEL, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
 
 const URL = `${HOTEL.url}/donde-hospedarse-huasteca-potosina`;
-const ACTUALIZADO = 'agosto de 2026';
+const ACTUALIZADO = 'octubre de 2026';
 
 export const metadata: Metadata = {
   title: 'Dónde Hospedarse en la Huasteca Potosina · Xilitla o Valles',
@@ -34,7 +34,7 @@ const FAQS = [
   },
   {
     q: '¿Xilitla o Ciudad Valles?',
-    a: 'Xilitla si tu prioridad es el Jardín de Edward James, el paisaje de sierra y un pueblo con carácter. Ciudad Valles si vas por los ríos del norte y quieres cadenas de restaurantes, hospitales y más opciones de hotel. Entre ambas hay unos 140 km, cerca de 1 hora 45 minutos de carretera con curvas.',
+    a: 'Xilitla si tu prioridad es el Jardín de Edward James, el paisaje de sierra y un pueblo con carácter. Ciudad Valles si vas por los ríos del norte y quieres cadenas de restaurantes, hospitales y más opciones de hotel. Entre ambas hay unos 86 km, de 1 h 30 a 2 h de carretera con curvas.',
   },
   {
     q: '¿Cuántas noches se necesitan en la Huasteca Potosina?',
@@ -42,11 +42,11 @@ const FAQS = [
   },
   {
     q: '¿Se puede recorrer la Huasteca Potosina sin auto?',
-    a: 'Sí, pero contratando tours con transporte incluido. El transporte público entre pueblos existe pero es lento y no llega a las cascadas. Si no manejas, conviene elegir un hotel que organice los tours y hospedarte donde puedas caminar al menos a una atracción, como Xilitla.',
+    a: 'Sí, pero contratando tours con transporte incluido. El transporte público entre pueblos existe pero es lento y no llega a las cascadas. Si no manejas, conviene contratar tours que pasen por ti a tu hospedaje y quedarte donde puedas caminar al menos a una atracción, como Xilitla.',
   },
   {
     q: '¿Cuál es la mejor época para ir?',
-    a: 'De octubre a abril. En temporada de lluvias, de junio a septiembre, el agua de los ríos baja turbia y algunos tours de río se cancelan por seguridad; el paisaje está más verde, pero las fotos turquesa que la gente busca son de temporada seca.',
+    a: 'De noviembre a mayo. En temporada de lluvias, de junio a septiembre, el agua de los ríos baja turbia y algunos tours de río se cancelan por seguridad; el paisaje está más verde, pero las fotos turquesa que la gente busca son de temporada seca.',
   },
 ];
 
@@ -88,16 +88,17 @@ export default function DondeHospedarsePage() {
         <AnswerBlock label="Respuesta corta">
           <p>
             <strong>La Huasteca Potosina tiene dos bases principales: Xilitla y Ciudad Valles, a
-            unos 140 km una de otra.</strong> Xilitla es la base para Las Pozas, el pueblo mágico y
+            unos 86 km una de otra.</strong> Xilitla es la base para Las Pozas, el pueblo mágico y
             la sierra; Ciudad Valles, para Tamul, Micos y rafting. En un viaje de tres días o más lo
             más cómodo es dormir en ambas, en lugar de cruzar la sierra todos los días.
           </p>
         </AnswerBlock>
 
         <StatStrip stats={[
-          { num: '140 km', label: 'entre Xilitla y Ciudad Valles (≈ 1 h 45 min)' },
+          // Eran "140 km (≈ 1 h 45 min)": la distancia real por carretera son unos 86 km (hoja única, 2 oct 2026).
+          { num: '86 km', label: 'entre Xilitla y Ciudad Valles (1 h 30 a 2 h)' },
           { num: '3', label: 'noches mínimas para no vivir en el auto' },
-          { num: 'Oct–Abr', label: 'temporada con el agua más turquesa' },
+          { num: 'Nov–May', label: 'temporada con el agua más turquesa' },
         ]} />
 
         <section className={styles.section}>
@@ -112,22 +113,23 @@ export default function DondeHospedarsePage() {
               caption="Distancias aproximadas en auto. En la sierra el tiempo real varía con el clima y el estado del camino."
               headers={['Base', 'Lo que tienes cerca', 'Lo que te queda lejos']}
               rows={[
-                { cells: ['Xilitla', 'Las Pozas (caminando), el pueblo mágico, cafetales, El Meco y el paisaje de sierra.', 'Tamul y las cascadas del norte: entre 1 h 30 min y 2 h 30 min.'], highlight: true },
-                { cells: ['Ciudad Valles', 'Tamul, Cascadas de Micos, rafting y la mayor oferta de restaurantes y servicios.', 'Las Pozas: ≈ 1 h 45 min de curvas. Ir y volver en el día se come la mañana.'] },
+                { cells: ['Xilitla', 'Las Pozas (caminando), la Cascada Los Comales, el pueblo mágico, cafetales y el paisaje de sierra; a media hora, el Nacimiento de Huichihuayán y el Castillo de la Salud.', 'Tamul, a 1 h o 1 h 30; Micos, a unas 2 h; Puente de Dios, a 2 h o 2 h 30; El Meco, a 3 h o más.'], highlight: true },
+                { cells: ['Ciudad Valles', 'Tamul, Cascadas de Micos, rafting y la mayor oferta de restaurantes y servicios. También es mejor base que Xilitla para El Meco.', 'Las Pozas: 1 h 30 a 2 h de curvas. Ir y volver en el día se come la mañana.'] },
                 { cells: ['Aquismón', 'Sótano de las Golondrinas y el embarcadero desde donde sale el tour a Tamul.', 'Oferta de hoteles y restaurantes: es un pueblo pequeño.'] },
-                { cells: ['Tamasopo', 'Cascadas de Tamasopo y Puente de Dios, a 10 min del pueblo.', 'Está en el extremo opuesto a Xilitla: ≈ 2 h.'] },
+                { cells: ['Tamasopo', 'Cascadas de Tamasopo y Puente de Dios, a 10 min del pueblo.', 'Está en el extremo opuesto a Xilitla: 2 h a 2 h 30.'] },
               ]}
             />
 
             <h3>Cómo repartir las noches</h3>
             <ul>
-              <li><strong>3 noches:</strong> 2 en Xilitla (Las Pozas + pueblo + una cascada cercana) y 1 en Valles o Aquismón para Tamul.</li>
+              <li><strong>3 noches:</strong> 2 en Xilitla (Las Pozas + la Cascada Los Comales + pueblo) y 1 en Valles o Aquismón para Tamul.</li>
               <li><strong>4–5 noches:</strong> 3 en Xilitla y 2 en Valles. Suficiente para Tamul, Micos y un día sin manejar.</li>
               <li><strong>2 noches:</strong> elige una sola zona. Intentar las dos convierte el viaje en carretera.</li>
             </ul>
             <p>
-              Si empiezas por Xilitla tienes una ventaja: puedes ver Las Pozas a primera hora del día
-              siguiente a tu llegada, cuando el jardín está casi vacío, y salir después hacia el norte.
+              Si empiezas por Xilitla tienes una ventaja: puedes entrar a Las Pozas en el primer turno
+              del día siguiente a tu llegada, antes de que lleguen los grupos, y salir después hacia
+              el norte. El turno se reserva antes en el sistema oficial del jardín, que cierra los martes.
             </p>
           </div>
         </section>
@@ -146,7 +148,7 @@ export default function DondeHospedarsePage() {
                 { cells: ['Calificación', `${HOTEL.rating}/5 con ${HOTEL.reviewCount} reseñas en Google`], highlight: true },
                 { cells: ['A Las Pozas', `${HOTEL.metrosALasPozas} m — ${HOTEL.minutosCaminandoALasPozas} min caminando`] },
                 { cells: ['Suites', `${HOTEL.suites}, de 2 a ${HOTEL.capacidadMaxima} personas · ${HOTEL.suitesConSpaPrivado} con piscina spa privada`] },
-                { cells: ['Tours desde el hotel', 'Tamul, Puente de Dios y El Meco, con guía'] },
+                { cells: ['Tours que pasan por ti al hotel', 'Tamul y Puente de Dios, con guía (los opera Huasteca Potosina Tours)'] },
                 { cells: ['Desde', `$${HOTEL.precioDesde.toLocaleString('es-MX')} MXN/noche (2 personas)`] },
                 { cells: ['Cancelación', HOTEL.cancelacion] },
               ]}
@@ -167,7 +169,7 @@ export default function DondeHospedarsePage() {
         <SeoCta
           title="Empieza tu viaje"
           titleEm="por Xilitla"
-          body="Duerme a cinco minutos de Las Pozas, entra al jardín antes que los grupos y sal al norte con el día completo por delante."
+          body="Duerme a cinco minutos de Las Pozas, entra al jardín en el primer turno, antes que los grupos, y sal al norte con el día completo por delante."
           note={HOTEL.cancelacion}
         />
       </main>

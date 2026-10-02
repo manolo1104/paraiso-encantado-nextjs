@@ -129,7 +129,8 @@ export default function Footer() {
 
       </div>
 
-      {/* Reconocimientos — BoutiqueHotel.me + TripAdvisor */}
+      {/* Reconocimientos — BoutiqueHotel.me + TripAdvisor. Versión «dark» del sello: la
+          «light» es para fondo claro y aquí «Featured on boutique… .me» no se veía. */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '20px 24px' }}>
         <div style={{ display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
           <a
@@ -139,7 +140,7 @@ export default function Footer() {
             aria-label="Featured on Boutiquehotel.me"
           >
             <img
-              src="https://static.boutiquehotel.me/logo/boutique-featured-light.png"
+              src="https://static.boutiquehotel.me/logo/boutique-featured-dark.png"
               alt="Featured on Boutiquehotel.me"
               width={160}
               style={{ width: '160px', maxWidth: '100%', height: 'auto', display: 'inline-block' }}
@@ -152,7 +153,8 @@ export default function Footer() {
       <div className={styles.bottom}>
         <p>© {currentYear} Paraíso Encantado. Todos los derechos reservados.</p>
         <div className={styles.social}>
-          <a href="/admin/login" style={{ opacity: 0.35, fontSize: '0.7rem' }}>Admin</a>
+          {/* Antes iba con opacidad 0.35 y casi no se veía (contraste 1.9 de 4.5). */}
+          <a href="/admin/login" style={{ fontSize: '11px' }}>Admin</a>
           <a
             href="https://www.instagram.com/paraisoencantadoxilitla"
             target="_blank"

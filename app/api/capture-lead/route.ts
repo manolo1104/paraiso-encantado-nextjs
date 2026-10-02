@@ -63,8 +63,8 @@ function buildWelcomeEmail(): string {
       <tr><td style="padding:20px 24px;">
         <p style="margin:0 0 12px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9a8a74;font-family:inherit;">Xilitla sin filtros</p>
         <ul style="margin:0;padding:0 0 0 16px;font-size:13px;color:#5a5a4a;line-height:2.2;">
-          <li><strong>Las Pozas</strong> — entra de mañana temprano (9:00–10:00 AM) para evitar grupos y tener la luz perfecta para fotos.</li>
-          <li><strong>Mejor época</strong> — Octubre a Abril: clima fresco (18–24°C), menos lluvia, cascadas con buen nivel de agua.</li>
+          <li><strong>Las Pozas</strong> — aparta antes el primer turno de la mañana (9:00 AM) en el sistema oficial para evitar grupos y tener la luz perfecta para fotos. No hay venta en línea: se paga en taquilla, con guía obligatoria, y cierra los martes.</li>
+          <li><strong>Mejor época</strong> — Noviembre a mayo: clima fresco (18–24°C), menos lluvia, cascadas con buen nivel de agua.</li>
           <li><strong>Sendero secreto</strong> — a 10 min caminando del hotel está el mirador con la mejor vista panorámica de Xilitla. Pregúntanos en recepción.</li>
           <li><strong>Tarde perfecta</strong> — Regresa de Las Pozas a las 2 PM, come en nuestro restaurante El Papán Huasteco, y llega a tu spa privado con luz de tarde.</li>
           <li><strong>Tip local</strong> — el mercado de Xilitla los domingos (7–11 AM) tiene el mejor café de olla y tamales de la sierra.</li>

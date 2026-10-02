@@ -161,7 +161,7 @@ export default function ExitIntentPopup() {
               </h2>
               <ul className={styles.list}>
                 <li>Pozas ocultas que los tours no muestran</li>
-                <li>Mejor hora para entrar a Las Pozas sin turistas</li>
+                <li>Mejor turno para entrar a Las Pozas antes que los grupos</li>
                 <li>Senderos secretos cerca del hotel</li>
                 <li>Acceso anticipado a tarifas exclusivas</li>
               </ul>

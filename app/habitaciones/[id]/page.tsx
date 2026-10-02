@@ -161,7 +161,7 @@ export default async function SuitePage({ params, searchParams }: Props) {
         name: `¿A qué distancia está ${suite.name} del Jardín de Edward James (Las Pozas)?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'El Hotel Paraíso Encantado está a solo 400 metros del Jardín Surrealista de Edward James (Las Pozas), aproximadamente 5 minutos caminando. Es el hotel más cercano a esta atracción.',
+          text: 'El Hotel Paraíso Encantado está a solo 400 metros del Jardín Surrealista de Edward James (Las Pozas), aproximadamente 5 minutos caminando. Está sobre el camino al jardín, así que vas y vuelves a pie.',
         },
       },
     ],

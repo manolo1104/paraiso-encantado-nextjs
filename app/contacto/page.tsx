@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   // aun borrado ocupaba ancho. El número queda igual de visible.
   title: 'Contacto Hotel Paraíso Encantado · WhatsApp 489-100-7679',
   description:
-    'Escríbenos por WhatsApp y te contestamos en menos de 2 horas. Reserva directa sin comisiones en el hotel más cercano a Las Pozas, en Xilitla, SLP.',
+    'Escríbenos por WhatsApp y te contestamos en menos de 2 horas. Reserva directa sin comisiones, a 400 m de Las Pozas, en Xilitla, SLP.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/contacto',
   },
@@ -58,8 +58,8 @@ const contactSchema = {
       },
       geo: {
         '@type': 'GeoCoordinates',
-        latitude: 21.383,
-        longitude: -99.002,
+        latitude: 21.395,
+        longitude: -98.9915,
       },
       openingHoursSpecification: [
         {
@@ -71,7 +71,7 @@ const contactSchema = {
       ],
       areaServed: {
         '@type': 'GeoCircle',
-        geoMidpoint: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
+        geoMidpoint: { '@type': 'GeoCoordinates', latitude: 21.395, longitude: -98.9915 },
         geoRadius: '500000',
       },
       contactPoint: [
@@ -119,7 +119,7 @@ const contactSchema = {
 
 const BOOKING_URL = '/reservar';
 const WHATSAPP_URL = 'https://wa.me/524891007679';
-const MAPS_URL = 'https://www.google.com/maps/place/Hotel+Paraiso+Encantado/@21.3842,-99.0033,17z';
+const MAPS_URL = 'https://www.google.com/maps/place/Hotel+Paraiso+Encantado/@21.3950,-98.9915,17z';
 
 // FAQ de pre-llegada
 const faqs = [
@@ -129,7 +129,8 @@ const faqs = [
   },
   {
     q: '¿Cómo llego al hotel desde el centro de Xilitla?',
-    a: 'El hotel está a 5 minutos caminando del centro de Xilitla y a 400 metros de la entrada al Jardín de Edward James (Las Pozas). Al llegar al pueblo, sigue las señales hacia Las Pozas — el hotel está señalizado en la misma calle.',
+    // Antes decía "a 5 minutos caminando del centro": son unos 2 km (hoja única, 2 oct 2026).
+    a: 'El hotel está en La Conchita, a unos 2 km del centro de Xilitla: 5 minutos en auto o taxi (a pie, unos 25 minutos de subida). Está a 400 metros de la entrada al Jardín de Edward James (Las Pozas). Al llegar al pueblo, sigue las señales hacia Las Pozas — el hotel está señalizado en la misma calle.',
   },
   {
     q: '¿Aceptan mascotas?',
@@ -156,27 +157,29 @@ const faqs = [
 // Distancias con links a Google Maps
 const distances = [
   {
+    // Distancias de la hoja única de cifras (2 oct 2026); antes: CDMX 460 km,
+    // Monterrey 430 km / 7 h y SLP 250 km.
     city: 'CDMX',
-    time: '~7.5 hrs',
-    km: '460 km',
+    time: '~7 hrs',
+    km: '350 km',
     mapsUrl: 'https://www.google.com/maps/dir/Ciudad+de+Mexico,+CDMX/Hotel+Paraiso+Encantado,+Xilitla,+San+Luis+Potos%C3%AD',
   },
   {
     city: 'Monterrey',
-    time: '~7 hrs',
-    km: '430 km',
+    time: '8–9 hrs',
+    km: '600 km',
     mapsUrl: 'https://www.google.com/maps/dir/Monterrey,+Nuevo+Le%C3%B3n/Hotel+Paraiso+Encantado,+Xilitla,+San+Luis+Potos%C3%AD',
   },
   {
     city: 'SLP',
     time: '~5 hrs',
-    km: '250 km',
+    km: '334 km',
     mapsUrl: 'https://www.google.com/maps/dir/San+Luis+Potos%C3%AD,+S.L.P./Hotel+Paraiso+Encantado,+Xilitla,+San+Luis+Potos%C3%AD',
   },
   {
     city: 'Tampico',
     time: '~3.5 hrs',
-    km: '200 km',
+    km: '206 km',
     mapsUrl: 'https://www.google.com/maps/dir/Tampico,+Tamps./Hotel+Paraiso+Encantado,+Xilitla,+San+Luis+Potos%C3%AD',
   },
 ];

@@ -72,7 +72,7 @@ const gallerySchema = {
       '@type': 'ImageObject',
       url: 'https://www.paraisoencantado.com/images/atracciones/jardin-edward-james-aerial.png',
       name: 'Jardín de Edward James — Las Pozas, Xilitla',
-      description: 'Las Pozas de Edward James, jardín surrealista Patrimonio Cultural de México, a 5 min de Paraíso Encantado',
+      description: 'Las Pozas de Edward James, jardín surrealista declarado Monumento Artístico en 2012, a 5 min a pie de Paraíso Encantado',
     },
     {
       '@type': 'ImageObject',

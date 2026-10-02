@@ -11,8 +11,9 @@ const stats = [
   },
   {
     Icon: MountainIcon,
-    value: '800 msnm',
-    label: 'microclima fresco y perfecto todo el año',
+    // La cabecera de Xilitla está a 675 msnm (no 800 ni 1,100): hoja única, 2 oct 2026.
+    value: '675 msnm',
+    label: 'clima de sierra, húmedo y verde todo el año',
   },
   {
     Icon: CompassIcon,
@@ -34,8 +35,8 @@ export default function DestinoSection() {
           </h2>
           <p className={styles.body}>
             En la Sierra Madre Oriental, donde la selva tropical se encuentra con el arte,
-            existe un rincón que el escultor inglés Edward James transformó en su obra
-            maestra. Las Pozas —su jardín surrealista— son hoy Patrimonio Cultural de México.
+            existe un rincón que el poeta y mecenas británico Edward James transformó en su obra
+            maestra. Las Pozas —su jardín surrealista— fueron declaradas Monumento Artístico en 2012.
             A pasos de ellas, rodeado de pozas naturales turquesas, cascadas y fauna exótica,
             está Paraíso Encantado.
           </p>

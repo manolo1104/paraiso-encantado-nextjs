@@ -273,7 +273,7 @@
 
 .cardTagline {
   font-size: 13px;
-  color: #888;
+  color: #6f6a62;
   font-family: var(--font-jost, sans-serif);
   line-height: 1.5;
   margin: 0 0 16px;
@@ -352,7 +352,7 @@
 
 .priceFrom {
   font-size: 11px;
-  color: #999;
+  color: #6f6a62;
   font-family: var(--font-jost, sans-serif);
   display: block;
   margin-bottom: 2px;
@@ -367,14 +367,14 @@
 
 .priceCurrency {
   font-size: 14px;
-  color: #888;
+  color: #6f6a62;
   font-family: var(--font-jost, sans-serif);
   margin-left: 4px;
 }
 
 .priceNote {
   font-size: 12px;
-  color: #999;
+  color: #6f6a62;
   font-family: var(--font-jost, sans-serif);
   margin: 4px 0 0;
 }
@@ -696,9 +696,11 @@
   font-weight: 300;
   line-height: 1.2;
   margin: 12px 0 16px;
+  color: white; /* era verde sobre la franja verde: invisible (oct 2026) */
 }
 
-.ctaSection h2 em { color: var(--gold); font-style: italic; }
+/* --sand en vez de --gold: el dorado oscuro sobre verde daba 2:1 y «te espera» se perdía */
+.ctaSection h2 em { color: var(--sand); font-style: italic; }
 
 .ctaDesc {
   font-size: 14px;

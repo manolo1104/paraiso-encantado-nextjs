@@ -16,17 +16,26 @@ export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
   const shownRef = useRef(false);
 
   const show = useCallback(() => {
+    setVisible(true);
     if (shownRef.current) return;
     shownRef.current = true;
-    setVisible(true);
     trackEvent('STICKY_CTA_SHOWN', { suite: suiteId, suiteName });
   }, [suiteId, suiteName]);
 
   useEffect(() => {
     trackEvent('SUITE_ENTER', { suite: suiteId, suiteName });
 
-    const timer = setTimeout(show, 3000);
-    const handleScroll = () => { if (window.scrollY > 300) show(); };
+    // En computadora la barra va arriba (top: 64px) y tapaba la ruta «Inicio /
+    // Habitaciones / Suite» (oct 2026). Ahí solo se ve después de bajar 300 px y se
+    // esconde al volver arriba. En celular va abajo, no tapa nada y se queda.
+    const isDesktop = () => window.innerWidth >= 768;
+    const timer = setTimeout(() => {
+      if (!isDesktop() || window.scrollY > 300) show();
+    }, 3000);
+    const handleScroll = () => {
+      if (window.scrollY > 300) show();
+      else if (isDesktop()) setVisible(false);
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {

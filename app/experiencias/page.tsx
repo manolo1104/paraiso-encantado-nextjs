@@ -42,6 +42,8 @@ const TOURS_LIST_URL = `${TOURS_SITE_URL}/tours`;
 // (repo INTINERARIO HUASTECA, rama main: src/lib/tours.ts). Si cambian allá,
 // cámbialos aquí. `slug` es el de huasteca-potosina.com/tours/<slug>.
 // `durationRange` es [mín, máx] en horas: alimenta el JSON-LD.
+// Duraciones corregidas el 2 oct 2026 con tours.ts (hoja única de cifras): los cuatro
+// tours de día completo son de 12 h y la Ruta Surrealista de 8 h; aquí decía 8–10 y 10.
 const tours = [
   {
     id: 'expedicion-tamul',
@@ -52,12 +54,12 @@ const tours = [
     difficulty: 'Media',
     price: '$1,550',
     priceUnit: 'MXN / persona',
-    duration: '8–10 horas',
-    durationRange: [8, 10],
+    duration: '12 horas',
+    durationRange: [12, 12],
     image: '/images/atracciones/cascada_de_tamul.jpg',
     description:
-      'El tour más completo de la Huasteca en un solo día. Navega en canoa por el Cañón del Tampaón hasta la Cascada de Tamul —la más alta de México—, nada en el cenote de la Cueva del Agua y cierra al atardecer en el abismo del Sótano de las Huahuas.',
-    highlights: ['Cascada de Tamul en canoa', 'Cenote Cueva del Agua', 'Sótano de las Huahuas (abismo 512 m)', 'Guía certificado NOM-09', 'Recogida en tu hospedaje y desayuno buffet'],
+      'El tour más completo de la Huasteca en un solo día. Navega en canoa por el Cañón del Tampaón hasta la Cascada de Tamul —105 metros de caída—, nada en el cenote de la Cueva del Agua y cierra al atardecer en el abismo del Sótano de las Huahuas.',
+    highlights: ['Cascada de Tamul en canoa', 'Cenote Cueva del Agua', 'Sótano de las Huahuas (abismo de 478 m)', 'Guía certificado NOM-09', 'Recogida en tu hospedaje y desayuno buffet'],
   },
   {
     id: 'ruta-surrealista',
@@ -68,8 +70,8 @@ const tours = [
     difficulty: 'Fácil',
     price: '$1,400',
     priceUnit: 'MXN / persona',
-    duration: '8–10 horas',
-    durationRange: [8, 10],
+    duration: '8 horas',
+    durationRange: [8, 8],
     image: '/images/atracciones/jardin_de_edward_james.jpg',
     description:
       'Arte, agua y misterio en un día de contrastes. Las Pozas de Edward James, las aguas cristalinas del Nacimiento de Huichihuayán, la Cueva de las Quilas y el Castillo de la Salud.',
@@ -84,12 +86,12 @@ const tours = [
     difficulty: 'Media',
     price: '$1,600',
     priceUnit: 'MXN / persona',
-    duration: '10 horas',
-    durationRange: [10, 10],
+    duration: '12 horas',
+    durationRange: [12, 12],
     image: '/images/atracciones/puente_de_dios.jpg',
     description:
-      'El recorrido más refrescante de la región. Atraviesa la cueva natural del Puente de Dios y después elige: la Hacienda Los Gómez con las Siete Cascadas —están en el mismo lugar— o las pozas de Tamasopo. El día da para una de las dos.',
-    highlights: ['Puente de Dios', 'Hacienda Los Gómez y 7 Cascadas o Tamasopo (a elegir)', 'Pozas turquesas para nadar', 'Recogida en tu hospedaje y desayuno buffet'],
+      'El recorrido más refrescante de la región. Atraviesa la cueva natural del Puente de Dios y después elige: la Hacienda Los Gómez con las Siete Cascadas —están en el mismo lugar— o las pozas de Tamasopo. El día da para una de las dos. En el Puente de Dios hay corriente fuerte y remolinos: se entra solo con chaleco y siguiendo la cuerda, y no se recomienda para menores de 5 años.',
+    highlights: ['Puente de Dios', 'Hacienda Los Gómez y 7 Cascadas o Tamasopo (a elegir)', 'Nado con chaleco y cuerda (hay corriente)', 'Recogida en tu hospedaje y desayuno buffet'],
   },
   {
     id: 'cascadas-meco',
@@ -100,12 +102,12 @@ const tours = [
     difficulty: 'Fácil',
     price: '$1,700',
     priceUnit: 'MXN / persona',
-    duration: '10 horas',
-    durationRange: [10, 10],
+    duration: '12 horas',
+    durationRange: [12, 12],
     image: '/images/atracciones/cascada_el_salto.jpg',
     description:
-      'El recorrido más fotogénico de la región. Las pozas turquesa de la Cascada del Meco, un mirador panorámico que quita el aliento y la imponente Cascada del Salto de 40 metros.',
-    highlights: ['Cascada del Meco', 'Mirador panorámico', 'Cascada del Salto (40 m)', 'Pozas turquesas para nadar', 'Recogida en tu hospedaje y desayuno buffet'],
+      'El recorrido más fotogénico de la región. Las pozas turquesa de la Cascada del Meco, un mirador panorámico que quita el aliento y la Cascada El Salto, de unos 70 metros, que casi todo el año está seca porque el río se desvía a una hidroeléctrica. El Meco y El Salto están en El Naranjo, a 3 horas o más de Xilitla.',
+    highlights: ['Cascada del Meco', 'Mirador panorámico', 'Cascada El Salto (≈ 70 m, seca casi todo el año)', 'Pozas turquesas para nadar', 'Recogida en tu hospedaje y desayuno buffet'],
   },
   {
     id: 'paraiso-escalonado',
@@ -116,8 +118,8 @@ const tours = [
     difficulty: 'Fácil',
     price: '$1,600',
     priceUnit: 'MXN / persona',
-    duration: '10 horas',
-    durationRange: [10, 10],
+    duration: '12 horas',
+    durationRange: [12, 12],
     image: '/images/atracciones/cascadas_de_micos.jpg',
     description:
       'Dos joyas naturales para desconectar. Minas Viejas despliega terrazas de travertino color jade; las Cascadas de Micos encadenan pozas turquesa entre la selva. Aguas cristalinas y paz lejos del ruido.',
@@ -127,7 +129,7 @@ const tours = [
     id: 'rappel-tamul',
     slug: 'rappel-tamul',
     name: 'Rappel en Tamul',
-    subtitle: 'Descenso frente a la caída más alta de México',
+    subtitle: 'Descenso frente a los 105 m de Tamul',
     category: 'Aventura Extrema',
     difficulty: 'Alta',
     price: '$1,700',
@@ -161,12 +163,12 @@ const attractions = [
   {
     name: 'Sótano de las Golondrinas',
     image: '/images/atracciones/sotano_de_las_golondrinas.jpg',
-    desc: 'Una de las cuevas-foso más grandes del mundo. Al amanecer, miles de loros y golondrinas surgen en espiral. Espectáculo natural sin igual.',
+    desc: 'Una de las cuevas-foso más grandes del mundo: 376 m de caída libre, en Aquismón. Al amanecer, miles de vencejos y cotorras —no golondrinas— salen en espiral. Espectáculo natural sin igual.',
   },
   {
     name: 'Sótano de las Huahuas',
     image: '/images/atracciones/sotano_de_las_huahuas.jpg',
-    desc: 'Caverna de 450 metros de profundidad en Aquismón. La Expedición Tamul cierra aquí el día, al atardecer, cuando regresan los pericos.',
+    desc: 'Abismo de 478 metros de profundidad en Aquismón. La Expedición Tamul cierra aquí el día, al atardecer, cuando regresan los pericos.',
   },
   {
     name: 'Tamasopo',
@@ -176,7 +178,7 @@ const attractions = [
   {
     name: 'Cascada El Salto',
     image: '/images/atracciones/cascada_el_salto.jpg',
-    desc: 'Salto de agua de 40 metros encajado entre paredes de roca calcárea. Una de las cascadas más fotogénicas de la Huasteca.',
+    desc: 'Salto de agua de unos 70 metros en El Naranjo, encajado entre paredes de roca calcárea. Casi todo el año está seco, porque el río se desvía a una hidroeléctrica: pregunta antes de ir.',
   },
 ];
 

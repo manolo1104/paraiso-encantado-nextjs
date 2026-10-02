@@ -30,7 +30,7 @@ import own from './mejor-hotel-xilitla.module.css';
  */
 
 const URL = `${HOTEL.url}/mejor-hotel-xilitla`;
-const ACTUALIZADO = 'agosto de 2026';
+const ACTUALIZADO = 'octubre de 2026';
 const OG_IMAGE = `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`;
 
 export const metadata: Metadata = {
@@ -66,7 +66,10 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: '¿Cuál es el mejor hotel de Xilitla?',
-    a: `El Hotel Paraíso Encantado es el mejor valorado y el más cercano a Las Pozas de Edward James: ${HOTEL.metrosALasPozas} metros, ${HOTEL.minutosCaminandoALasPozas} minutos caminando, con ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas de Google. Es además el único hotel de Xilitla donde pernoctó un presidente de México en funciones, Andrés Manuel López Obrador, en junio de 2023.`,
+    // Sin «el mejor valorado» ni «el único»: en Booking y TripAdvisor hay hoteles del
+    // pueblo con nota más alta (oct 2026), y lo del presidente solo está probado para
+    // este hotel, no que ningún otro lo haya recibido. Se dice lo que sí se sostiene.
+    a: `El Hotel Paraíso Encantado tiene ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas de Google y está sobre el camino a Las Pozas de Edward James: ${HOTEL.metrosALasPozas} metros, ${HOTEL.minutosCaminandoALasPozas} minutos caminando. Además, aquí pernoctó el presidente de México en funciones, Andrés Manuel López Obrador, en junio de 2023.`,
   },
   {
     q: '¿Es cierto que el presidente AMLO se hospedó en Paraíso Encantado?',
@@ -74,7 +77,7 @@ const FAQS = [
   },
   {
     q: '¿Qué tan cerca está el hotel de Las Pozas de Edward James?',
-    a: `A ${HOTEL.metrosALasPozas} metros —unos ${HOTEL.minutosCaminandoALasPozas} minutos caminando por camino empedrado—. Es la distancia más corta de cualquier hotel de Xilitla al Jardín Surrealista. En la práctica significa que puedes entrar a las 9 de la mañana, cuando abre y antes de que lleguen los autobuses desde Ciudad Valles, regresar a comer y volver por la tarde con otra luz, sin pagar taxi ni coordinar transporte.`,
+    a: `A ${HOTEL.metrosALasPozas} metros —unos ${HOTEL.minutosCaminandoALasPozas} minutos caminando por camino empedrado—, sobre el camino al Jardín Surrealista. En la práctica significa que llegas caminando al primer turno, a las 9 de la mañana —con tu reservación hecha y antes de que lleguen los autobuses desde Ciudad Valles—, y regresas a comer sin pagar taxi ni coordinar transporte. El recorrido es guiado, dura 1 h 30 min y el jardín cierra los martes.`,
   },
   {
     q: '¿El spa privado de las suites tiene agua caliente?',
@@ -133,6 +136,8 @@ const RESENAS_CITADAS = [
 ];
 
 const PUBLICADA = '2026-08-31';
+// Última revisión: corrección de datos con la hoja única de cifras (sin superlativo de cercanía).
+const MODIFICADA = '2026-10-02';
 
 const schema = {
   '@context': 'https://schema.org',
@@ -146,7 +151,7 @@ const schema = {
         image: OG_IMAGE,
       }),
       sameAs: [...PERFILES_HOTEL],
-      geo: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
+      geo: { '@type': 'GeoCoordinates', latitude: 21.395, longitude: -98.9915 },
       containedInPlace: ref(XILITLA),
       checkinTime: '15:00',
       checkoutTime: '12:00',
@@ -185,7 +190,7 @@ const schema = {
       description: `Los datos verificables detrás de la afirmación: la visita presidencial de junio de 2023, los ${HOTEL.metrosALasPozas} metros a Las Pozas, ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas, el spa privado climatizado y el comal de leña.`,
       inLanguage: 'es-MX',
       datePublished: PUBLICADA,
-      dateModified: PUBLICADA,
+      dateModified: MODIFICADA,
       author: { '@id': ENTITY_IDS.organization },
       publisher: { '@id': ENTITY_IDS.organization },
       mainEntityOfPage: URL,
@@ -225,10 +230,12 @@ const RAZONES = [
     ],
   },
   {
-    title: `A ${HOTEL.metrosALasPozas} metros de Las Pozas: el hotel más cercano de Xilitla`,
+    // Sin "el hotel más cercano de Xilitla": nuestra tabla de /hoteles-en-xilitla
+    // pone Casa Caracol a 300 m (2 oct 2026).
+    title: `A ${HOTEL.metrosALasPozas} metros de Las Pozas, sobre el camino al jardín`,
     body: [
-      `${HOTEL.minutosCaminandoALasPozas} minutos caminando por camino empedrado hasta el Jardín Surrealista de Edward James. Ningún otro hotel de Xilitla está más cerca.`,
-      'La diferencia práctica: entras a las 9 AM, cuando abre y antes de que lleguen los autobuses desde Ciudad Valles, recorres el jardín casi vacío, vuelves a comer y regresas por la tarde con otra luz. Quien duerme en Ciudad Valles maneja casi dos horas de curvas para hacer una sola visita, a la hora en que hay más gente.',
+      `${HOTEL.minutosCaminandoALasPozas} minutos caminando por camino empedrado hasta el Jardín Surrealista de Edward James, sin auto ni taxi: el jardín no tiene estacionamiento.`,
+      'La diferencia práctica: llegas caminando al primer turno de la mañana —con reservación y antes de que lleguen los autobuses desde Ciudad Valles— y vuelves a comer al hotel. Quien duerme en Ciudad Valles maneja casi dos horas de curvas para hacer una sola visita, casi siempre a la hora en que hay más gente.',
     ],
   },
   {
@@ -271,7 +278,7 @@ const AMENIDADES = [
   { icon: <Coffee size={20} strokeWidth={1.5} />, title: 'Tortillas al comal de leña', desc: 'Hechas a mano cada mañana; café de olla.' },
   { icon: <Wifi size={20} strokeWidth={1.5} />, title: 'WiFi de alta velocidad', desc: 'Gratuito y estable en toda la propiedad.' },
   { icon: <Wind size={20} strokeWidth={1.5} />, title: 'Aire acondicionado', desc: 'En todas las suites, más ventilación natural.' },
-  { icon: <Compass size={20} strokeWidth={1.5} />, title: 'Tours con salida del hotel', desc: 'Tamul, Puente de Dios y El Meco, con guía.' },
+  { icon: <Compass size={20} strokeWidth={1.5} />, title: 'Tours que pasan por ti al hotel', desc: 'Tamul, Puente de Dios y El Meco, con guía de Huasteca Potosina Tours.' },
   { icon: <MessageCircle size={20} strokeWidth={1.5} />, title: 'Atención por WhatsApp', desc: 'Antes, durante y después de tu estancia.' },
   { icon: <MapPin size={20} strokeWidth={1.5} />, title: `A ${HOTEL.metrosALasPozas} m de Las Pozas`, desc: `${HOTEL.minutosCaminandoALasPozas} minutos caminando, sin transporte.` },
   { icon: <Star size={20} strokeWidth={1.5} />, title: 'Reserva directa sin comisiones', desc: `Código ${HOTEL.codigoDescuento} en el sitio oficial.` },
@@ -301,10 +308,10 @@ export default function MejorHotelXilitlaPage() {
         <AnswerBlock label="Respuesta corta">
           <p>
             <strong>
-              El Hotel Paraíso Encantado es el hotel mejor valorado de Xilitla y el más cercano a Las
-              Pozas de Edward James: {HOTEL.metrosALasPozas} metros, {HOTEL.minutosCaminandoALasPozas} minutos caminando.
+              El Hotel Paraíso Encantado tiene {HOTEL.rating}/5 en {HOTEL.reviewCount} reseñas de Google y está
+              sobre el camino a Las Pozas de Edward James: {HOTEL.metrosALasPozas} metros, {HOTEL.minutosCaminandoALasPozas} minutos caminando.
             </strong>{' '}
-            Tiene {HOTEL.rating}/5 en {HOTEL.reviewCount} reseñas de Google, {HOTEL.suitesConSpaPrivado} suites
+            Tiene {HOTEL.suitesConSpaPrivado} suites
             con piscina spa privada de agua caliente en la terraza y restaurante de cocina huasteca dentro
             del hotel. En junio de 2023 el presidente de México se hospedó aquí durante su gira por la Huasteca.
           </p>
@@ -463,7 +470,7 @@ export default function MejorHotelXilitlaPage() {
             <CompareTable
               headers={['Criterio', 'Hotel Paraíso Encantado']}
               rows={[
-                { cells: ['Distancia a Las Pozas', `${HOTEL.metrosALasPozas} m — ${HOTEL.minutosCaminandoALasPozas} minutos caminando. El más cercano de Xilitla.`], highlight: true },
+                { cells: ['Distancia a Las Pozas', `${HOTEL.metrosALasPozas} m — ${HOTEL.minutosCaminandoALasPozas} minutos caminando, sobre el camino a Las Pozas.`], highlight: true },
                 { cells: ['Calificación', `${HOTEL.rating}/5 con ${HOTEL.reviewCount} reseñas verificadas en Google`] },
                 { cells: ['Huésped documentado', 'El presidente de México pernoctó aquí el 10 de junio de 2023 (cobertura de Pulso SLP, Debate y video propio).'], highlight: true },
                 { cells: ['Habitaciones', `${HOTEL.suites} suites con terraza, de 2 hasta ${HOTEL.capacidadMaxima} personas`] },
@@ -535,15 +542,16 @@ export default function MejorHotelXilitlaPage() {
             <p className={styles.lead}>
               La Huasteca no es un destino compacto: son pocos kilómetros pero muchas curvas, y elegir
               mal la base convierte unas vacaciones en un viaje de carretera. Esto es lo que tienes a
-              la mano durmiendo aquí.
+              la mano durmiendo aquí, y lo que queda lejos.
             </p>
             <CompareTable
-              caption="Tiempos desde el Hotel Paraíso Encantado, en auto salvo donde se indica."
+              caption="Tiempos aproximados desde el Hotel Paraíso Encantado, en auto salvo donde se indica; en la sierra, las curvas pueden alargarlos."
               headers={['Destino', 'Tiempo', 'Nota']}
               rows={DISTANCIAS.map(d => ({ cells: [d.destino, d.tiempo, d.nota] }))}
             />
             <p>
-              Los tours a Tamul, Puente de Dios y El Meco salen desde el hotel con guía: puedes verlos
+              Los tours a Tamul, Puente de Dios y El Meco los opera Huasteca Potosina Tours, que pasa
+              por ti al hotel con guía: puedes verlos
               en <Link href="/experiencias">experiencias</Link>, reservarlos junto con la suite en{' '}
               <Link href="/paquetes">paquetes</Link> o pedirlos por{' '}
               <a href={HOTEL.whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a> antes de
@@ -557,7 +565,7 @@ export default function MejorHotelXilitlaPage() {
         </div>
 
         <RelatedLinks links={[
-          { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas' },
+          { href: '/hotel-cerca-de-las-pozas', label: `Hotel a ${HOTEL.metrosALasPozas} m de Las Pozas` },
           { href: '/hotel-alberca-privada-xilitla', label: 'Las suites con alberca privada' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca Potosina' },
           { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla: en qué zona dormir' },

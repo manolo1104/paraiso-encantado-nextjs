@@ -11,12 +11,15 @@ import type { NextConfig } from 'next';
 const LEGACY_REDIRECTS: Array<[source: string, destination: string]> = [
   // ── Familia /f/ y /blog/f/ del blog viejo — 43,550 impresiones ──────────
   ['/blog/f/cómo-llegar-a-la-huasteca-potosina-y-xilitla-2026',                '/blog/como-llegar-a-xilitla'],          // 18,430 imp · 146 clics
-  ['/blog/f/xilitla-más-allá-de-lo-surreal',                                   '/blog/que-hacer-en-xilitla'],           //  4,193 imp ·   6 clics
+  // Las dos de «Xilitla más allá de lo surreal» van directo a /xilitla desde
+  // oct 2026: /blog/que-hacer-en-xilitla se fusionó ahí (ver CONSOLIDADAS) y
+  // apuntarlas al blog dejaba dos saltos de 301 en cadena.
+  ['/blog/f/xilitla-más-allá-de-lo-surreal',                                   '/xilitla'],                             //  4,193 imp ·   6 clics
   ['/f/descubre-la-magia-5-imperdibles-de-la-huasteca-potosina',               '/blog/ruta-maestra-huasteca-potosina'],  //  4,136 imp ·   4 clics
   ['/blog/f/sabores-de-la-huasteca-platillos-que-tienes-que-probar-¿dónde',    '/blog/gastronomia-xilitla-huasteca'],    //  3,633 imp ·  13 clics
   ['/f/cómo-llegar-a-la-huasteca-potosina-y-xilitla-2026',                     '/blog/como-llegar-a-xilitla'],           //  3,257 imp ·  22 clics
   ['/f/sabores-de-la-huasteca-platillos-que-tienes-que-probar-¿dónde',         '/blog/gastronomia-xilitla-huasteca'],    //  2,248 imp ·  13 clics
-  ['/f/xilitla-más-allá-de-lo-surreal',                                        '/blog/que-hacer-en-xilitla'],            //  1,755 imp ·  13 clics
+  ['/f/xilitla-más-allá-de-lo-surreal',                                        '/xilitla'],                              //  1,755 imp ·  13 clics
   ['/blog/f/exploring-the-wonders-of-xilitla-a-visitors-guide',                '/en'],                                   //  1,308 imp · falta blog en inglés
   ['/f/ruta-maestra-huasteca-potosina-en-6-días-desde-cdmxqro',                '/blog/ruta-maestra-huasteca-potosina'],  //  1,126 imp ·   8 clics
   ['/blog/f/descubre-la-magia-5-imperdibles-de-la-huasteca-potosina',          '/blog/ruta-maestra-huasteca-potosina'],  //  1,008 imp
@@ -57,6 +60,15 @@ const LEGACY_REDIRECTS: Array<[source: string, destination: string]> = [
   // ── Las que ya estaban en el config y se conservan ──────────────────────
   ['/hotel-cerca-las-pozas',          '/hotel-cerca-de-las-pozas'],
   ['/ruta-maestra-huasteca-potosina', '/blog/ruta-maestra-huasteca-potosina'],
+
+  // ── CONSOLIDADAS (oct 2026): dos páginas propias peleaban la misma búsqueda ─
+  // /xilitla y el artículo «Qué hacer en Xilitla» tenían el mismo H1 y se
+  // contradecían en precios. En 90 días (jul–sep 2026, GA4) /xilitla trajo 441
+  // visitas de Google y el artículo 1: Google ya había elegido. Lo útil del
+  // artículo se pasó a /xilitla. Lo mismo con «tips sin multitudes», que repetía
+  // la guía de Las Pozas con consejos que el reglamento ya no permite.
+  ['/blog/que-hacer-en-xilitla',         '/xilitla'],
+  ['/blog/tips-las-pozas-sin-multitudes', '/blog/las-pozas-edward-james-guia'],
 ];
 
 // Next compara el `source` contra el pathname CRUDO de la petición, que sigue

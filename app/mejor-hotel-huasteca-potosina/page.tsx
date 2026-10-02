@@ -8,7 +8,7 @@ import HuespedDistinguidoSection, { huespedSchema } from '@/components/seo/Huesp
 import { HOTEL, DISTANCIAS, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
 
 const URL = `${HOTEL.url}/mejor-hotel-huasteca-potosina`;
-const ACTUALIZADO = 'agosto de 2026';
+const ACTUALIZADO = 'octubre de 2026';
 
 export const metadata: Metadata = {
   title: 'Mejor Hotel de la Huasteca Potosina: Cómo Elegir (2026)',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: '¿Cuál es el mejor hotel de la Huasteca Potosina?',
-    a: `No hay un "mejor hotel" único: depende de qué vayas a ver. Si tu viaje gira alrededor de Las Pozas y el pueblo de Xilitla, conviene dormir en Xilitla. Si vas por Tamul y las cascadas del norte, conviene Ciudad Valles. Dentro de Xilitla, el Hotel Paraíso Encantado es el más cercano al Jardín de Edward James —${HOTEL.metrosALasPozas} metros— y acumula ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas de Google.`,
+    a: `No hay un "mejor hotel" único: depende de qué vayas a ver. Si tu viaje gira alrededor de Las Pozas y el pueblo de Xilitla, conviene dormir en Xilitla. Si vas por Tamul y las cascadas del norte, conviene Ciudad Valles. Dentro de Xilitla, el Hotel Paraíso Encantado está sobre el camino a Las Pozas, a ${HOTEL.metrosALasPozas} metros (${HOTEL.minutosCaminandoALasPozas} min a pie) del Jardín de Edward James, y acumula ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas de Google.`,
   },
   {
     q: '¿Conviene hospedarse en Xilitla o en Ciudad Valles?',
@@ -45,11 +45,11 @@ const FAQS = [
   },
   {
     q: '¿Cuál es la mejor época para visitar la Huasteca Potosina?',
-    a: 'De octubre a abril: clima templado, menos lluvia y los ríos con el agua turquesa que la gente busca en las fotos. En temporada de lluvias (junio a septiembre) el agua puede bajar verdosa o marrón y algunos tours de río se suspenden por seguridad.',
+    a: 'De noviembre a mayo: clima templado, menos lluvia y los ríos con el agua turquesa que la gente busca en las fotos. En temporada de lluvias (junio a septiembre) el agua puede bajar verdosa o marrón y algunos tours de río se suspenden por seguridad.',
   },
   {
     q: '¿Cuántos días se necesitan para conocer la Huasteca Potosina?',
-    a: 'Tres días completos es el mínimo razonable: uno para Xilitla y Las Pozas, uno para cascadas cercanas y uno para Tamul, que consume el día entero. Con menos días vas a manejar más de lo que vas a disfrutar.',
+    a: 'Tres días completos es el mínimo razonable: uno para Xilitla y Las Pozas, uno para Tamul, que consume el día entero, y uno para lo que queda a media hora, como el Nacimiento de Huichihuayán y el Castillo de la Salud. Con menos días vas a manejar más de lo que vas a disfrutar.',
   },
   {
     q: '¿Es cierto que el presidente de México se hospedó en Paraíso Encantado?',
@@ -109,8 +109,8 @@ export default function MejorHotelHuastecaPage() {
         <AnswerBlock label="Respuesta corta">
           <p>
             <strong>No existe un solo &quot;mejor hotel&quot; de la Huasteca Potosina: existe el mejor para tu ruta.</strong>{' '}
-            Si tu viaje gira alrededor de Las Pozas y Xilitla, el hotel más cercano al Jardín de
-            Edward James es Paraíso Encantado — {HOTEL.metrosALasPozas} metros caminando, con{' '}
+            Si tu viaje gira alrededor de Las Pozas y Xilitla, Paraíso Encantado está sobre el camino
+            al Jardín de Edward James — {HOTEL.metrosALasPozas} metros caminando, con{' '}
             {HOTEL.rating}/5 en {HOTEL.reviewCount} reseñas de Google. Si tu viaje gira
             alrededor de Tamul y las cascadas del norte, te conviene una base en Ciudad Valles.
           </p>
@@ -137,17 +137,19 @@ export default function MejorHotelHuastecaPage() {
               headers={['Base', 'A Las Pozas / Xilitla', 'Para qué es la mejor base']}
               rows={[
                 { cells: ['Xilitla', '5 min caminando desde el hotel', 'Las Pozas, el pueblo mágico, la sierra y el café. La única base desde la que no manejas para ver el Jardín de Edward James.'], highlight: true },
-                { cells: ['Ciudad Valles', '≈ 1 h 45 min (140 km)', 'Tamul, Micos y rafting. Es la ciudad más grande: hospitales, bancos y cadenas de restaurantes.'] },
-                { cells: ['Aquismón', '≈ 1 h 15 min', 'Sótano de las Golondrinas y el embarcadero desde donde sale el tour a Tamul.'] },
-                { cells: ['Tamasopo', '≈ 2 h', 'Cascadas de Tamasopo y Puente de Dios, que queda a 10 minutos del pueblo.'] },
+                { cells: ['Ciudad Valles', '≈ 1 h 30 min a 2 h (86 km)', 'Tamul, Micos y rafting. Es la ciudad más grande: hospitales, bancos y cadenas de restaurantes.'] },
+                { cells: ['Aquismón', '≈ 45 min (40 km)', 'Sótano de las Golondrinas y el embarcadero desde donde sale el tour a Tamul.'] },
+                { cells: ['Tamasopo', '≈ 2 h a 2 h 30', 'Cascadas de Tamasopo y Puente de Dios, que queda a 10 minutos del pueblo.'] },
               ]}
             />
 
             <p>
               La conclusión práctica: <strong>si Las Pozas está en tu lista, duerme en Xilitla al
-              menos una noche.</strong> Es el único punto desde el que llegas caminando, y entrar
-              temprano —antes de que lleguen los autobuses de turistas— es la diferencia entre
-              recorrer el jardín surrealista con calma o hacer fila entre grupos.
+              menos una noche.</strong> Es el único punto desde el que llegas caminando, y apartar
+              el primer turno de la mañana —antes de que lleguen los autobuses de turistas— es la
+              diferencia entre recorrer el jardín surrealista con calma o en un turno lleno. El
+              recorrido es guiado (1 h 30 min) y se reserva antes: no hay venta en línea, se paga en
+              la taquilla.
             </p>
           </div>
         </section>
@@ -183,7 +185,7 @@ export default function MejorHotelHuastecaPage() {
             <CompareTable
               headers={['Criterio', 'Hotel Paraíso Encantado']}
               rows={[
-                { cells: ['Distancia a Las Pozas', `${HOTEL.metrosALasPozas} m — ${HOTEL.minutosCaminandoALasPozas} minutos caminando. El más cercano de Xilitla.`], highlight: true },
+                { cells: ['Distancia a Las Pozas', `${HOTEL.metrosALasPozas} m — ${HOTEL.minutosCaminandoALasPozas} minutos caminando, sobre el camino a Las Pozas.`], highlight: true },
                 { cells: ['Calificación', `${HOTEL.rating}/5 con ${HOTEL.reviewCount} reseñas verificadas en Google`] },
                 { cells: ['Huésped documentado', 'El presidente de México pernoctó aquí en junio de 2023, durante su gira por la Huasteca (cobertura de Pulso SLP y Debate).'] },
                 { cells: ['Habitaciones', `${HOTEL.suites} suites, desde 2 hasta ${HOTEL.capacidadMaxima} personas`] },
@@ -200,8 +202,9 @@ export default function MejorHotelHuastecaPage() {
             <p>
               No somos un resort todo incluido ni el hotel más barato de Xilitla, y no todas las
               suites traen spa privado. Si buscas la tarifa más baja de la zona, hay opciones más
-              económicas en el centro del pueblo. Lo que sí ofrecemos es la ubicación más cercana a
-              Las Pozas y suites en las que la tarde de descanso pasa dentro de tu propia terraza.
+              económicas en el centro del pueblo. Lo que sí ofrecemos es la ubicación sobre el camino
+              a Las Pozas, a {HOTEL.metrosALasPozas} metros del jardín, y suites en las que la tarde de
+              descanso pasa dentro de tu propia terraza.
             </p>
           </div>
         </section>
@@ -211,14 +214,15 @@ export default function MejorHotelHuastecaPage() {
         {/* DISTANCIAS DESDE EL HOTEL */}
         <section className={styles.sectionAlt}>
           <div className={styles.sectionInner}>
-            <h2>Qué tienes cerca si duermes aquí</h2>
+            <h2>Qué tienes cerca (y qué no) si duermes aquí</h2>
             <CompareTable
-              caption="Tiempos desde el Hotel Paraíso Encantado, en auto salvo donde se indica."
+              caption="Tiempos aproximados desde el Hotel Paraíso Encantado, en auto salvo donde se indica; en la sierra, las curvas pueden alargarlos."
               headers={['Destino', 'Tiempo', 'Nota']}
               rows={DISTANCIAS.map(d => ({ cells: [d.destino, d.tiempo, d.nota] }))}
             />
             <p>
-              Los tours a Tamul, Puente de Dios y El Meco salen desde el hotel con guía. Puedes
+              Los tours a Tamul, Puente de Dios y El Meco los opera Huasteca Potosina Tours: pasan
+              por ti al hotel y van con guía. Puedes
               verlos en <Link href="/experiencias">experiencias</Link> o pedirlos por{' '}
               <a href={HOTEL.whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a> antes
               de llegar: en temporada alta los cupos de Tamul se llenan con días de anticipación.
@@ -234,7 +238,7 @@ export default function MejorHotelHuastecaPage() {
           { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca Potosina' },
           { href: '/que-hacer-huasteca-potosina-3-dias', label: 'Qué hacer en la Huasteca en 3 días' },
           { href: '/hotel-alberca-privada-xilitla', label: 'Hoteles con alberca privada en la habitación' },
-          { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas' },
+          { href: '/hotel-cerca-de-las-pozas', label: `Hotel a ${HOTEL.metrosALasPozas} m de Las Pozas` },
           { href: '/xilitla', label: 'Guía de Xilitla' },
         ]} />
 

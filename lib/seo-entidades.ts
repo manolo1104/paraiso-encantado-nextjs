@@ -46,12 +46,15 @@ export const LAS_POZAS = {
   '@id': 'https://www.wikidata.org/wiki/Q11688402',
   name: 'Las Pozas — Jardín Escultórico Edward James',
   description:
-    'Conjunto surrealista de 37 hectáreas y 27 estructuras creado por Edward James en Xilitla entre 1962 y 1984. Abierto al público en 1991 y declarado patrimonio artístico nacional por el INBA en 2012.',
+    // Cifras de la hoja única (2 oct 2026): la declaratoria de 2012 fue de la SEP
+    // (Acuerdo 658), no del INBA; y "27 estructuras" es solo el área visitable.
+    'Jardín escultórico surrealista creado por Edward James en Xilitla: más de 30 estructuras de concreto levantadas entre 1962 y 1984, en un predio de 37 hectáreas (unas 9 de jardín). Abierto al público en 1991 y declarado Monumento Artístico en 2012 (Acuerdo 658 de la SEP).',
   sameAs: [
     'https://es.wikipedia.org/wiki/Las_Pozas',
     'https://www.wikidata.org/wiki/Q11688402',
   ],
-  geo: { '@type': 'GeoCoordinates', latitude: 21.387, longitude: -98.994 },
+  // Pin oficial de laspozasxilitla.org.mx (2 oct 2026); el anterior (21.387, -98.994) caía a 1.1 km.
+  geo: { '@type': 'GeoCoordinates', latitude: 21.3967, longitude: -98.9966 },
 } as const;
 
 /**

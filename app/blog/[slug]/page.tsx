@@ -3,8 +3,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
+import remarkGfm from 'remark-gfm';
 import { getAllSlugs, getAllPosts, getPost } from '@/lib/blog';
+import TablaDeslizable from '@/components/TablaDeslizable';
 import styles from './article.module.css';
+
+// Sin remark-gfm, MDX no reconoce las tablas de Markdown: hasta oct 2026 las 8
+// tablas del blog (precios de Las Pozas, tiempos de carretera…) se publicaban
+// como un párrafo con las rayas «|» a la vista. Las tablas son justo lo que
+// citan los buscadores con IA, así que perderlas costaba doble.
+const MDX_OPTIONS = { mdxOptions: { remarkPlugins: [remarkGfm] } };
 
 function slugify(text: string): string {
   return text
@@ -93,6 +101,10 @@ const mdxComponents = {
   h3: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h3 id={slugify(String(children))} {...props}>{children}</h3>
   ),
+  // El contenedor es para el aviso «Desliza la tabla» del celular (ver article.module.css).
+  table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
+    <TablaDeslizable className={styles.tabla}><table {...props} /></TablaDeslizable>
+  ),
 };
 
 const AUTHORS: Record<string, { name: string; role: string; bio: string; color: string; initial: string; sameAs: string }> = {
@@ -122,36 +134,13 @@ const HOWTO_SCHEMAS: Record<string, object> = {
       { '@type': 'HowToStep', position: 2, name: 'Pasar Pachuca y seguir a Huejutla y Tamazunchale', text: 'Pachuca en alrededor de 1 hora y Tamazunchale en cerca de 4. Es el tramo largo del viaje.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-6-a-7-horas' },
       { '@type': 'HowToStep', position: 3, name: 'Tomar la federal 120 en Huichihuayán', text: 'Poco después de Tamazunchale, en el entronque de Huichihuayán, toma la federal 120. Viniendo del sur no hace falta pasar por Ciudad Valles.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#desde-ciudad-de-mexico-6-a-7-horas' },
       { '@type': 'HowToStep', position: 4, name: 'Subir la sierra hasta Xilitla', text: 'La federal 120 sube la sierra con curvas cerradas y niebla frecuente. Son de 45 minutos a 1 hora más; conviene hacerlo de día.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#ultimos-kilometros-la-carretera-120-y-la-sierra' },
-      { '@type': 'HowToStep', position: 5, name: 'Llegar al Hotel Paraíso Encantado en Xilitla', text: 'El hotel está en el centro de Xilitla, a 400 metros de Las Pozas de Edward James. Estacionamiento privado incluido.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#al-llegar-donde-esta-el-hotel' },
+      { '@type': 'HowToStep', position: 5, name: 'Llegar al Hotel Paraíso Encantado en Xilitla', text: 'El hotel está en el barrio de La Conchita, sobre el camino a Las Pozas: a 400 metros de la entrada del jardín y a 5 minutos en carro del centro de Xilitla. Estacionamiento privado incluido.', url: 'https://www.paraisoencantado.com/blog/como-llegar-a-xilitla#al-llegar-donde-esta-el-hotel' },
     ],
   },
-  'puente-de-dios-xilitla': {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: 'Cómo Llegar al Puente de Dios desde Xilitla en Carro',
-    description: 'Ruta en carro desde Xilitla al Puente de Dios en Tamasopo, San Luis Potosí. Aproximadamente 45 a 60 minutos.',
-    totalTime: 'PT1H',
-    tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
-    step: [
-      { '@type': 'HowToStep', position: 1, name: 'Toma la carretera 120 hacia Ciudad Valles', text: 'Toma la carretera 120 desde Xilitla hacia Ciudad Valles.', url: 'https://www.paraisoencantado.com/blog/puente-de-dios-xilitla#como-llegar-desde-xilitla' },
-      { '@type': 'HowToStep', position: 2, name: 'Desvía hacia Tamasopo', text: 'Antes de Ciudad Valles, sigue hacia Tamasopo.', url: 'https://www.paraisoencantado.com/blog/puente-de-dios-xilitla#como-llegar-desde-xilitla' },
-      { '@type': 'HowToStep', position: 3, name: 'Llega al Puente de Dios', text: 'El Puente de Dios está en las afueras de Tamasopo, bien señalizado.', url: 'https://www.paraisoencantado.com/blog/puente-de-dios-xilitla#como-llegar-desde-xilitla' },
-    ],
-  },
-  'sotano-golondrinas-xilitla': {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: 'Cómo Llegar al Sótano de las Golondrinas desde Xilitla en Carro',
-    description: 'Ruta en carro desde Xilitla al Sótano de las Golondrinas en Aquismón, San Luis Potosí. Aproximadamente 1.5 a 2 horas.',
-    totalTime: 'PT2H',
-    tool: [{ '@type': 'HowToTool', name: 'GPS o Google Maps' }],
-    step: [
-      { '@type': 'HowToStep', position: 1, name: 'Toma la carretera 120 hacia Ciudad Valles', text: 'Toma la carretera 120 hacia Ciudad Valles (baja la sierra).', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
-      { '@type': 'HowToStep', position: 2, name: 'Sigue hacia Aquismón', text: 'En Ciudad Valles, sigue por la federal hacia Aquismón.', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
-      { '@type': 'HowToStep', position: 3, name: 'Sigue las señales hacia el sótano', text: 'En Aquismón, sigue las señales hacia el sótano.', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
-      { '@type': 'HowToStep', position: 4, name: 'Recorre los últimos kilómetros de terracería', text: 'Los últimos kilómetros son terracería. Recomendamos vehículo con buena guardia.', url: 'https://www.paraisoencantado.com/blog/sotano-golondrinas-xilitla#como-llegar-al-sotano-desde-xilitla' },
-    ],
-  },
+  // Oct 2026: se quitaron los HowTo de Puente de Dios y del Sótano de las Golondrinas.
+  // Decían «45 a 60 minutos» y «por Ciudad Valles», y el artículo corregido dice 2 a 2.5 h
+  // y por Aquismón: un dato estructurado que contradice la página es peor que ninguno.
+
 };
 
 interface Props {
@@ -303,17 +292,20 @@ export default async function ArticlePage({ params }: Props) {
     'las-pozas-edward-james-guia': {
       text: '¿Planeas visitar Las Pozas? Estamos a 5 min caminando:',
       links: [
-        { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas', desc: 'A 400 metros de la entrada · 5 min caminando' },
-        { href: '/habitaciones/jungla', label: 'Suite Jungla', desc: 'Spa privado · La más cercana a Las Pozas' },
-        { href: '/reservar', label: 'Reservar suite', desc: 'Check-in a 5 min de Las Pozas' },
+        { href: '/hotel-cerca-de-las-pozas', label: 'Hotel a 400 m de Las Pozas', desc: 'Sobre el mismo camino · 5 min caminando' },
+        { href: '/xilitla', label: 'Qué hacer en Xilitla', desc: '14 lugares y cuánto manejas a cada uno' },
+        { href: '/reservar', label: 'Reservar suite', desc: 'Llegas a pie a tu turno de la mañana' },
       ],
     },
-    'que-hacer-en-xilitla': {
-      text: 'Haz de Xilitla tu base de operaciones:',
+    // Artículo de temporada (oct 2026): las noches del 30 y 31 de octubre ya
+    // estaban llenas al publicarlo, por eso el primer enlace va directo a las
+    // fechas que sí tenían cuartos.
+    'xantolo-en-xilitla': {
+      text: 'Para vivir el Xantolo desde Xilitla:',
       links: [
-        { href: '/xilitla', label: 'Guía de Xilitla', desc: 'Qué ver, cómo moverte y qué esperar del pueblo' },
-        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas' },
-        { href: '/experiencias', label: 'Tours desde el hotel', desc: 'Tamul, Micos y Las Pozas con guía certificado' },
+        { href: '/reservar?checkin=2026-11-01&checkout=2026-11-03&adults=2', label: 'Suites del 1 al 3 de noviembre', desc: 'Disponibilidad real, sin comisiones' },
+        { href: '/blog/las-pozas-edward-james-guia', label: 'Las Pozas: reserva tu turno', desc: 'En días de fiesta los turnos se agotan' },
+        { href: '/hoteles-en-xilitla', label: 'Otros hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas' },
       ],
     },
     'cascada-tamul-guia-completa': {
@@ -354,14 +346,6 @@ export default async function ArticlePage({ params }: Props) {
         { href: '/hotel-familias-xilitla', label: 'Hotel para familias en Xilitla', desc: 'Suites de 4 a 8 personas · Piscina' },
         { href: '/habitaciones', label: 'Ver las suites familiares', desc: 'Helechos 1 y 2 · Hasta 8 personas' },
         { href: '/paquetes', label: 'Paquete Familiar', desc: 'Hotel y tours aptos para niños · 3 a 6 días' },
-      ],
-    },
-    'tips-las-pozas-sin-multitudes': {
-      text: 'El tip que más sirve es dormir al lado del jardín:',
-      links: [
-        { href: '/hotel-cerca-de-las-pozas', label: 'El hotel más cercano a Las Pozas', desc: 'A 400 metros · Entras a la hora de apertura' },
-        { href: '/habitaciones', label: 'Ver las 13 suites', desc: '4 con spa privado · Desde $1,500 MXN/noche' },
-        { href: '/reservar', label: 'Reservar suite', desc: 'Confirmación instantánea · Sin comisiones' },
       ],
     },
     'comparativa-cascadas-huasteca': {
@@ -481,7 +465,7 @@ export default async function ArticlePage({ params }: Props) {
             </div>
 
             <div className={styles.prose}>
-              <MDXRemote source={post.content} components={mdxComponents} />
+              <MDXRemote source={post.content} components={mdxComponents} options={MDX_OPTIONS} />
             </div>
 
             {/* CTA INFERIOR — al terminar de leer */}
@@ -533,7 +517,9 @@ export default async function ArticlePage({ params }: Props) {
           {/* SIDEBAR */}
           <aside className={styles.sidebar}>
             <div className={styles.sidebarCard}>
-              <p className={styles.sidebarEyebrow}>El Hotel Más Cercano</p>
+              {/* Sin «el más cercano»: la tabla de /hoteles-en-xilitla pone otro
+                  hotel a 300 m, y el sitio no puede contradecirse a sí mismo. */}
+              <p className={styles.sidebarEyebrow}>A 400 m de Las Pozas</p>
               <h3>Hotel Paraíso Encantado</h3>
               <p>A 5 minutos caminando de Las Pozas de Edward James. 13 suites boutique, 4 con spa privado.</p>
               <Link href="/reservar" className={styles.sidebarCta}>Reservar Ahora</Link>

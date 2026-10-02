@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Hotel Paraíso Encantado | Boutique Hotel near Edward James Garden · Xilitla, Mexico',
   description:
-    '13 boutique suites with private spa, 5 min walk from Las Pozas (Edward James Garden). Closest hotel in Xilitla, Huasteca Potosina. Book direct from $80/night.',
+    '13 boutique suites (4 with private spa), a 5-min walk from Las Pozas (Edward James Garden) in Xilitla, Huasteca Potosina. Book direct from $80/night.',
   keywords: [
     'hotel near edward james garden',
     'hotel las pozas xilitla',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     siteName: 'Hotel Paraíso Encantado',
     title: 'Hotel Paraíso Encantado | Xilitla, Mexico — Boutique Hotel near Las Pozas',
     description:
-      '13 boutique suites with private spa, 5 min walk from the Edward James Surrealist Garden. Direct booking, no commissions.',
+      '13 boutique suites, 4 with private spa, a 5-min walk from the Edward James Surrealist Garden. Direct booking, no commissions.',
     locale: 'en_US',
     type: 'website',
     url: 'https://www.paraisoencantado.com/en',

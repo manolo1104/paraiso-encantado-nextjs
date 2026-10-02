@@ -187,7 +187,7 @@
 }
 
 .pendingRow {
-  color: #888;
+  color: #6f6a62;
   font-size: 0.85rem;
   padding: 2px 8px;
 }
@@ -240,7 +240,7 @@
   justify-content: center;
   gap: 8px;
   background: #25d366;
-  color: #fff;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   border-radius: 8px;
   font-family: var(--font-jost), sans-serif;
   font-size: 0.9rem;

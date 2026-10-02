@@ -59,6 +59,10 @@
   font-weight: 300;
   line-height: 1.1;
   margin-bottom: 16px;
+  /* globals.css pinta todo h1 de verde bosque y le gana al blanco heredado: sin
+     esta línea, «Qué Hacer en» quedaba verde oscuro sobre la selva de la foto y
+     solo se leía «Xilitla» (pasaba en producción hasta oct 2026). */
+  color: white;
   text-shadow: 0 2px 20px rgba(0,0,0,0.7);
 }
 
@@ -298,6 +302,7 @@
   font-size: clamp(26px, 3.5vw, 38px);
   font-weight: 400;
   margin-bottom: 20px;
+  color: white; /* sin esto, verde bosque sobre verde: contraste 1.0, invisible */
 }
 
 .whenToInner > p {
@@ -540,6 +545,238 @@
   line-height: 1.75;
   color: #555;
   margin: 0;
+}
+
+/* ---- RESPUESTA DIRECTA (oct 2026) ----
+   El párrafo que responde la búsqueda antes que cualquier otra cosa: es el que
+   citan los buscadores con IA, así que va arriba y se distingue del resto. */
+.respuesta {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #333;
+  padding: 20px 24px;
+  margin-bottom: 40px;
+  background: var(--parch);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+}
+
+/* ---- LOS 14 LUGARES ---- */
+.lugares {
+  background: white;
+  padding: 72px 24px;
+}
+
+.lugaresInner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.lugaresInner > h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 400;
+  color: var(--forest);
+  margin-bottom: 12px;
+  /* Cormorant trae cifras de estilo antiguo: el «14» se leía como «I4». */
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
+}
+
+.grupo {
+  font-family: var(--font-jost, sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin: 40px 0 8px;
+}
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  position: relative;
+  padding: 22px 0 22px 52px;
+  border-bottom: 1px solid #eee;
+}
+
+/* El número va escrito en el HTML (no con contadores de CSS): así el segundo
+   grupo sigue en 11 en cualquier navegador, y Safari incluido. */
+.itemNum {
+  position: absolute;
+  left: 0;
+  top: 22px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--forest);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-cormorant), serif;
+  font-size: 18px;
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
+}
+
+.item:last-child { border-bottom: none; }
+
+.item h3 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(20px, 2.4vw, 25px);
+  font-weight: 500;
+  color: var(--forest);
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.item p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #555;
+  margin: 0 0 6px;
+}
+
+.itemDonde {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px !important;
+  color: #777 !important;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.itemDatos {
+  font-size: 13px !important;
+  font-weight: 600;
+  color: var(--forest) !important;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.itemLink {
+  font-size: 14px;
+  color: var(--forest);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.itemLink:hover { color: var(--sage); }
+
+.lejos {
+  margin-top: 32px;
+  padding: 20px 24px;
+  background: var(--parch);
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #555;
+}
+
+/* ---- CUÁNTO MANEJAS DESDE XILITLA ---- */
+.distancias {
+  background: var(--parch);
+  padding: 72px 24px;
+}
+
+.distanciasInner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.distanciasInner > h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 400;
+  color: var(--forest);
+  margin-bottom: 12px;
+}
+
+.distanciasInner > p {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+/* En un teléfono de 360 px la tabla se desliza sola en vez de empujar la página. */
+.tablaCaja {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla th {
+  background: var(--forest);
+  color: white;
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.tabla td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #eee;
+  color: #444;
+  vertical-align: top;
+}
+
+/* El tiempo en carro es lo que la gente viene a buscar: nunca se parte en dos
+   líneas ni se esconde detrás de un desplazamiento lateral. */
+.tabla td:last-child { white-space: nowrap; }
+
+@media (max-width: 480px) {
+  .tabla { font-size: 13px; }
+  .tabla th, .tabla td { padding: 8px 10px; }
+}
+
+.tabla tr:last-child td { border-bottom: none; }
+
+.tabla tbody tr:nth-child(even) td { background: #faf8f3; }
+
+.nota {
+  font-size: 13px !important;
+  color: #777 !important;
+  margin-top: 14px;
+  margin-bottom: 0 !important;
+}
+
+/* ---- AVISO DE XANTOLO (sobre fondo verde) ---- */
+.xantolo {
+  margin-top: 28px !important;
+  margin-bottom: 0 !important;
+}
+
+.xantolo a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.stayAlt {
+  font-size: 14px !important;
+}
+
+.stayAlt a {
+  color: var(--forest);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* Scroll-driven entrances (additive, calm) */

@@ -54,6 +54,9 @@
   font-weight: 300;
   line-height: 1.15;
   margin-bottom: 20px;
+  /* globals.css pinta todo h1 de verde bosque: sobre la foto solo se leía la
+     parte dorada del título (pasaba en producción hasta oct 2026). */
+  color: white;
   text-shadow: 0 2px 16px rgba(0,0,0,0.6);
 }
 
@@ -503,6 +506,7 @@
   font-weight: 300;
   line-height: 1.2;
   margin-bottom: 16px;
+  color: white; /* era verde sobre la franja verde: invisible (oct 2026) */
 }
 
 .finalCta > div > p {
@@ -538,7 +542,7 @@
 .finalCtaWa {
   display: inline-block;
   background: #25d366;
-  color: white;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   padding: 14px 32px;
   border-radius: 6px;
   font-size: 15px;

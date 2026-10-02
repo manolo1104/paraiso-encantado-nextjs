@@ -8,14 +8,14 @@ import styles from './sobre-nosotros.module.css';
 export const metadata: Metadata = {
   title: 'Sobre Paraíso Encantado · Hotel en Xilitla desde 2018',
   description:
-    'La historia del hotel boutique más cercano a Las Pozas de Edward James: 13 suites, restaurante huasteco y familia potosina. Conócenos y reserva.',
+    'La historia del hotel boutique a 400 m de Las Pozas de Edward James: 13 suites, restaurante huasteco y familia potosina. Conócenos y reserva.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/sobre-nosotros',
   },
   openGraph: {
     title: 'El hotel que nació de la selva — Paraíso Encantado, Xilitla',
     description:
-      'La historia detrás del hotel boutique más cercano al Jardín de Edward James. 13 suites, un restaurante auténtico y un compromiso real con la Huasteca Potosina.',
+      'La historia detrás del hotel boutique sobre el camino al Jardín de Edward James. 13 suites, un restaurante auténtico y un compromiso real con la Huasteca Potosina.',
     url: 'https://www.paraisoencantado.com/sobre-nosotros',
     images: [
       {
@@ -60,8 +60,8 @@ const aboutSchema = {
       },
       geo: {
         '@type': 'GeoCoordinates',
-        latitude: 21.383,
-        longitude: -99.002,
+        latitude: 21.395,
+        longitude: -98.9915,
       },
       sameAs: [
         'https://www.instagram.com/_paraiso_encantado/',
@@ -152,7 +152,7 @@ const timeline = [
   { year: '2019', event: 'Primeras suites', desc: 'Se abren las primeras suites: Jungla y Flor de Lis. El hotel abre sus puertas.' },
   { year: '2020', event: 'El Papán Huasteco', desc: 'Abre el restaurante con cocina auténtica de la Huasteca, ingredientes locales y tortillas hechas a mano.' },
   { year: '2022', event: '13 suites completas', desc: 'La última suite queda lista. 13 espacios únicos, cada uno con nombre e identidad propios.' },
-  { year: '2023', event: 'Visita presidencial', desc: 'El hotel recibe a un mandatario en funciones — único hotel boutique de la región en lograrlo.' },
+  { year: '2023', event: 'Visita presidencial', desc: 'El hotel recibe al presidente Andrés Manuel López Obrador, en funciones, durante su gira por la Huasteca.' },
   { year: '2024', event: '+500 reseñas', desc: 'Más de 500 reseñas verificadas con calificación de 4.5 estrellas en Google.' },
 ];
 
@@ -187,7 +187,7 @@ const aboutFaqSchema = {
       name: '¿Cuándo abrió el Hotel Paraíso Encantado?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'El Hotel Paraíso Encantado abrió sus puertas en 2018 con las primeras suites Jungla y Flor de Lis. Completó sus 13 suites en 2022 y en 2023 recibió una visita presidencial oficial, siendo el único hotel boutique de la región en lograrlo.',
+        text: 'El Hotel Paraíso Encantado abrió sus puertas en 2018 con las primeras suites Jungla y Flor de Lis. Completó sus 13 suites en 2022 y en 2023 recibió la visita del presidente de México en funciones, durante su gira por la Huasteca.',
       },
     },
     {
@@ -195,7 +195,9 @@ const aboutFaqSchema = {
       name: '¿Dónde está ubicado exactamente el hotel?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Estamos en Xilitla, San Luis Potosí, Huasteca Potosina, a 400 metros del Jardín Surrealista de Edward James (Las Pozas) — 5 minutos caminando. Somos el hotel boutique más cercano a esta atracción Patrimonio Cultural de México.',
+        // Sin "el más cercano" ni "Patrimonio Cultural de México" (2 oct 2026): Casa Caracol está a
+        // 300 m y la declaratoria de Las Pozas es de Monumento Artístico (SEP, 2012).
+        text: 'Estamos en La Conchita, Xilitla, San Luis Potosí, Huasteca Potosina, sobre el camino a Las Pozas: a 400 metros del Jardín Surrealista de Edward James —5 minutos caminando—, declarado Monumento Artístico en 2012. El centro del pueblo queda a unos 2 km, 5 minutos en auto.',
       },
     },
     {
@@ -261,7 +263,7 @@ export default function SobreNosotrosPage() {
               El hotel que <em>nació de la selva</em>
             </h1>
             <p className={styles.heroDesc}>
-              Paraíso Encantado es un hotel boutique en el corazón de Xilitla, San Luis Potosí,
+              Paraíso Encantado es un hotel boutique en La Conchita, Xilitla, San Luis Potosí,
               a 5 minutos caminando del Jardín Surrealista de Edward James. Nacimos con la convicción
               de que el turismo puede ser una fuerza positiva — para la comunidad y para la naturaleza.
             </p>
@@ -310,9 +312,9 @@ export default function SobreNosotrosPage() {
                 que una estancia memorable empieza desde que cruzas la puerta.
               </p>
               <p>
-                Hoy somos el hotel boutique más cercano al Jardín Surrealista de Edward James (Las Pozas),
-                a solo 5 minutos caminando. Nuestros huéspedes llegan antes que los tours organizados y
-                disfrutan la magia de Las Pozas casi en soledad — esa es nuestra ventaja real.
+                Hoy estamos sobre el camino al Jardín Surrealista de Edward James (Las Pozas), a solo
+                5 minutos caminando. Nuestros huéspedes llegan a pie al primer turno de la mañana, antes
+                que los tours organizados — esa es nuestra ventaja real.
               </p>
             </div>
             <div className={styles.historyImages}>
@@ -440,7 +442,7 @@ export default function SobreNosotrosPage() {
             <div className={styles.ecoImageWrap}>
               <Image
                 src="/images/atracciones/jardin-edward-james-aerial.png"
-                alt="Las Pozas de Edward James — Patrimonio Cultural de México, Xilitla"
+                alt="Las Pozas de Edward James — Monumento Artístico desde 2012, Xilitla"
                 fill
                 sizes="(max-width: 768px) 100vw, 45vw"
                 className={styles.ecoImage}

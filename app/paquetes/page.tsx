@@ -65,7 +65,8 @@ const PAQUETES = [
     badge: 'Adrenalina',
     badgeColor: 'sage' as const,
     name: 'Aventura Extrema',
-    tagline: 'Cuerda, rápidos y la caída más alta de México',
+    // Tamul mide 105 m: no es "la caída más alta de México" (2 oct 2026).
+    tagline: 'Cuerda, rápidos y los 105 metros de Tamul',
     duracion: '4 días / 3 noches',
     image: '/images/atracciones/rappel_tamul.jpg',
     imageAlt: 'Rappel en la Cascada de Tamul — Paquete Aventura Extrema',
@@ -340,7 +341,7 @@ export default function PaquetesPage() {
             <p className={styles.eyebrow}>¿Listo para reservar?</p>
             <h2>El Jardín de Edward James<br /><em>te espera</em></h2>
             <p className={styles.ctaDesc}>
-              Confirmación en menos de 2 horas · Sin comisiones de OTAs · Cancelación gratuita
+              Confirmación en menos de 2 horas · Sin comisiones de OTAs · Reembolso 100% hasta 7 días antes
             </p>
             <div className={styles.ctaButtons}>
               <a

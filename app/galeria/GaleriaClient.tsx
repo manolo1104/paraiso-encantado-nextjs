@@ -79,7 +79,7 @@ const images: GalleryImage[] = [
   { src: '/images/atracciones/tamasopo.jpg', alt: 'Cascadas de Tamasopo — joya de la Huasteca Potosina', category: 'Naturaleza', aspect: 'tall' },
   // Experiencias
   { src: '/images/atracciones/sotano_de_las_golondrinas.jpg', alt: 'Sótano de las Golondrinas — Aquismón, San Luis Potosí', category: 'Experiencias', aspect: 'wide' },
-  { src: '/images/atracciones/sotano_de_las_huahuas.jpg', alt: 'Sótano de las Huahuastecas — Huasteca Potosina', category: 'Experiencias' },
+  { src: '/images/atracciones/sotano_de_las_huahuas.jpg', alt: 'Sótano de las Huahuas — Aquismón, San Luis Potosí', category: 'Experiencias' },
   { src: '/images/atracciones/cascada_el_salto.jpg', alt: 'Cascada El Salto — tour desde Paraíso Encantado', category: 'Experiencias' },
 ];
 

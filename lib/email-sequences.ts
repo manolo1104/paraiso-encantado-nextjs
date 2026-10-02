@@ -214,10 +214,11 @@ export function buildToursEmailHtml(data: {
   const waUrl = `https://wa.me/${TOURS_WA_NUMBER}?text=${waText}`;
   // Los tres que más se reservan. Precios y duraciones vienen de /experiencias:
   // si cambian allá, cámbialos aquí — el correo no debe prometer otra cosa.
+  // 2 oct 2026: duraciones alineadas con tours.ts (12 h los de día completo, 8 h la Ruta Surrealista).
   const tours = [
-    { name: 'Expedición Tamul', url: TOURS_RESERVAR_URL, desc: 'La cascada más alta de San Luis Potosí, remontando el río en canoa', meta: '8–10 h · $1,550' },
-    { name: 'Ruta Acuática', url: TOURS_RESERVAR_URL, desc: 'Puente de Dios y, a elegir, Hacienda Los Gómez con las siete cascadas o Tamasopo', meta: '10 h · $1,600' },
-    { name: 'Ruta Surrealista', url: TOURS_RESERVAR_URL, desc: 'Jardín de Edward James, manantiales y selva — a 5 min del hotel', meta: '8–10 h · $1,400' },
+    { name: 'Expedición Tamul', url: TOURS_RESERVAR_URL, desc: 'La cascada más alta de San Luis Potosí, remontando el río en canoa', meta: '12 h · $1,550' },
+    { name: 'Ruta Acuática', url: TOURS_RESERVAR_URL, desc: 'Puente de Dios y, a elegir, Hacienda Los Gómez con las siete cascadas o Tamasopo', meta: '12 h · $1,600' },
+    { name: 'Ruta Surrealista', url: TOURS_RESERVAR_URL, desc: 'Jardín de Edward James, manantiales y selva — a 5 min del hotel', meta: '8 h · $1,400' },
   ].map(t => `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-bottom:1px solid #e4ddd3;margin-bottom:4px;">
       <tr>

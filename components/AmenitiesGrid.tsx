@@ -14,8 +14,10 @@ const amenities = [
   },
   {
     Icon: CompassIcon,
-    title: 'Tours a Las Pozas',
-    desc: 'Salidas diarias al Jardín de Edward James y la Huasteca.',
+    // Antes: "Salidas diarias al Jardín de Edward James". Falso: el jardín cierra los
+    // martes y los tours los opera Huasteca Potosina Tours, no el hotel (2 oct 2026).
+    title: 'Tours por la Huasteca',
+    desc: 'Los opera Huasteca Potosina Tours y pasan por ti al hotel. A Las Pozas llegas caminando.',
   },
   {
     Icon: SunriseIcon,

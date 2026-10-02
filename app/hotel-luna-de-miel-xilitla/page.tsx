@@ -157,7 +157,7 @@ export default function LunaDePageMielPage() {
             <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               {[
                 { mes: 'Oct – Dic', tipo: '✦ Temporada ideal', desc: 'Clima fresco (18-22°C), cascadas llenas, sin turistas masivos. Diciembre es mágico en el pueblo.' },
-                { mes: 'Ene – Mar', tipo: '✦ Temporada ideal', desc: 'Los meses más tranquilos del año. Las Pozas casi vacías en la mañana. Perfectas para fotos.' },
+                { mes: 'Ene – Mar', tipo: '✦ Temporada ideal', desc: 'Los meses más tranquilos del año. Las Pozas, más tranquilas en el primer turno de la mañana. Perfectas para fotos.' },
                 { mes: 'Abr – May', tipo: '★ Buena época', desc: 'Clima cálido, Semana Santa concurrida. Reserva con anticipación. Las cascadas aún tienen agua.' },
                 { mes: 'Jun – Sep', tipo: '— Temporada lluviosa', desc: 'Lluvia frecuente pero la selva está en su máximo esplendor. Pozas con agua cristalina.' },
               ].map(e => (

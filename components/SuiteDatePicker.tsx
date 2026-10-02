@@ -141,7 +141,7 @@ export default function SuiteDatePicker({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Users size={14} style={{ color: '#9a8a74', flexShrink: 0 }} />
           <span style={{ ...labelSx, flex: 1 }}>
-            {guests} persona{guests !== 1 ? 's' : ''} <span style={{ color: '#c4b8a8', fontWeight: 400 }}>(máx {maxGuests})</span>
+            {guests} persona{guests !== 1 ? 's' : ''} <span style={{ color: '#7a6e60', fontWeight: 400 }}>(máx {maxGuests})</span>
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: '1px solid #d4cec7', borderRadius: 4, overflow: 'hidden' }}>
             <button onClick={() => changeGuests(-1)} disabled={guests <= 1}

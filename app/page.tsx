@@ -3,6 +3,7 @@ import { HOTEL, POSTAL_ADDRESS } from '@/lib/seo-hotel';
 import Hero from '@/components/Hero';
 import PromoStrip from '@/components/PromoStrip';
 import SocialProofBar from '@/components/SocialProofBar';
+import XantoloSection from '@/components/XantoloSection';
 import WhyUs from '@/components/WhyUs';
 import SuitesGrid from '@/components/SuitesGrid';
 import AmenitiesGrid from '@/components/AmenitiesGrid';
@@ -108,15 +109,17 @@ const jsonLd = {
   '@id': 'https://www.paraisoencantado.com/#hotel',
   name: 'Hotel Paraíso Encantado',
   description:
-    '13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina. El hotel más cercano a Las Pozas.',
+    '13 suites boutique, 4 con spa privado, a 400 metros (5 minutos caminando) del Jardín Surrealista de Edward James (Las Pozas), sobre el camino al jardín, en Xilitla, Huasteca Potosina.',
   url: 'https://www.paraisoencantado.com',
   telephone: HOTEL.telefono,
   email: 'reservas@paraisoencantado.com',
   address: POSTAL_ADDRESS,
+  // Punto del hotel en OpenStreetMap (2 oct 2026); el anterior (21.383, -99.002)
+  // caía a 1.6 km, en otra parte del pueblo.
   geo: {
     '@type': 'GeoCoordinates',
-    latitude: 21.383,
-    longitude: -99.002,
+    latitude: 21.395,
+    longitude: -98.9915,
   },
   image: [
     'https://www.paraisoencantado.com/og/home.jpg',
@@ -534,8 +537,8 @@ const restaurantSchema = {
   },
   geo: {
     '@type': 'GeoCoordinates',
-    latitude: 21.383,
-    longitude: -99.002,
+    latitude: 21.395,
+    longitude: -98.9915,
   },
   containedInPlace: { '@id': 'https://www.paraisoencantado.com/#hotel' },
   menu: 'https://www.paraisoencantado.com/restaurante',
@@ -554,7 +557,7 @@ const homeFaqSchema = {
     {
       '@type': 'Question',
       name: '¿Qué tan cerca está del Jardín de Edward James?',
-      acceptedAnswer: { '@type': 'Answer', text: 'A 5 minutos caminando, unos 400 metros. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada de Las Pozas. Somos el hotel más cercano al Jardín de Edward James en Xilitla.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'A 5 minutos caminando, unos 400 metros: estamos sobre el camino a Las Pozas. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada para tu turno, que se reserva antes en el sistema oficial del jardín (cierra los martes).' },
     },
     {
       '@type': 'Question',
@@ -596,6 +599,8 @@ export default function HomePage() {
       <main data-sticky-bar>
         <Hero />
         <SocialProofBar />
+        {/* Temporada (oct 2026): se apaga sola el 3 de noviembre. */}
+        <XantoloSection />
         <WhyUs />
         <SuitesGrid />
         <PromoStrip />

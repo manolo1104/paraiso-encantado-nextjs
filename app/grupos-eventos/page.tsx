@@ -39,7 +39,7 @@ const gruposSchema = {
     postalCode: '79910',
     addressCountry: 'MX',
   },
-  geo: { '@type': 'GeoCoordinates', latitude: 21.383, longitude: -99.002 },
+  geo: { '@type': 'GeoCoordinates', latitude: 21.395, longitude: -98.9915 },
   containedInPlace: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' },
   amenityFeature: [
     { '@type': 'LocationFeatureSpecification', name: 'Jardín tropical privado', value: true },

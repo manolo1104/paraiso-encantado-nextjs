@@ -182,13 +182,17 @@
   font-family: var(--font-jost);
   font-size: 12px;
   font-weight: 300;
-  color: rgba(250, 248, 245, 0.5);
+  color: rgba(250, 248, 245, 0.66);
   margin: 0;
 }
 
+/* Con wrap: a 320 px los 4 enlaces no caben en una fila y, como el pie recorta lo
+   que se sale (overflow hidden por las hojas flotantes), se perdían. */
 .social {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 24px;
 }
 
 .social a {
@@ -235,6 +239,6 @@
   }
 
   .social {
-    gap: 20px;
+    gap: 10px 20px;
   }
 }

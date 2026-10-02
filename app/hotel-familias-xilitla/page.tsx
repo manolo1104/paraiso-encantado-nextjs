@@ -48,8 +48,8 @@ const schema = {
     {
       '@type': 'FAQPage',
       mainEntity: [
-        { '@type': 'Question', name: '¿Tienen suites para familias grandes (6-8 personas)?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Helechos 1 tiene 3 camas matrimoniales (hasta 6 personas) y Helechos 2 tiene 4 camas matrimoniales (hasta 8 personas). Ambas incluyen piscina spa y terraza.' } },
-        { '@type': 'Question', name: '¿Son seguros los tours para niños?', acceptedAnswer: { '@type': 'Answer', text: 'El Puente de Dios (pozas turquesas) y Cascadas de Micos son perfectos para niños mayores de 6 años. Tamul en canoa es ideal a partir de 8-10 años en temporada seca. Las Pozas de Edward James son fascinantes para cualquier edad.' } },
+        { '@type': 'Question', name: '¿Tienen suites para familias grandes (6-8 personas)?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Helechos 1 tiene 3 camas matrimoniales (hasta 6 personas) y Helechos 2 tiene 4 camas matrimoniales (hasta 8 personas). Ambas tienen terraza con vista a la piscina del hotel y acceso a ella; el spa privado está en otras 4 suites.' } },
+        { '@type': 'Question', name: '¿Son seguros los tours para niños?', acceptedAnswer: { '@type': 'Answer', text: 'Depende del lugar. Las Cascadas de Micos funcionan bien para niños mayores de 6 años. En el Puente de Dios hay corriente fuerte y remolinos: se entra solo con chaleco y cuerda, y no se recomienda para menores de 5 años. Tamul en canoa es ideal a partir de 8-10 años en temporada seca. Las Pozas de Edward James son fascinantes para cualquier edad, pero son escaleras: no entran carriolas y no se permite nadar en las pozas.' } },
         { '@type': 'Question', name: '¿Tiene el hotel área de juegos o actividades para niños?', acceptedAnswer: { '@type': 'Answer', text: 'El hotel tiene jardines amplios y los niños pueden explorar la vegetación tropical del entorno. El spa privado de las suites que lo incluyen es disfrutable para toda la familia.' } },
         { '@type': 'Question', name: '¿Cuál es el precio por persona adicional?', acceptedAnswer: { '@type': 'Answer', text: 'La tarifa base incluye 2 personas. La persona adicional tiene un costo de $300 MXN por noche. Las suites Helechos y Lajas están diseñadas para familias y tienen tarifas ya incluidas para mayor número de personas.' } },
       ],
@@ -64,8 +64,8 @@ const familySuites = suites.filter((s) =>
 const REASONS = [
   { icon: <Droplets size={22} strokeWidth={1.5} />, title: 'Piscina en tu Suite', body: 'Las suites con spa tienen piscina privada y las familiares tienen acceso directo a la piscina del hotel. Los niños pueden disfrutar el agua con supervisión.' },
   { icon: <Bed size={22} strokeWidth={1.5} />, title: 'Suites hasta 8 Personas', body: 'Helechos 1 (hasta 6) y Helechos 2 (hasta 8) tienen 3-4 camas matrimoniales. Toda la familia en el mismo espacio.' },
-  { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Naturaleza Segura', body: 'El hotel tiene jardines seguros, áreas comunes amplias y está en el centro de Xilitla — un pueblo tranquilo y familiar.' },
-  { icon: <Compass size={22} strokeWidth={1.5} />, title: 'Tours para Niños', body: 'El Puente de Dios, Cascadas de Micos y Las Pozas son ideales para familias con niños. Guía certificado en todos los tours.' },
+  { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Naturaleza Segura', body: 'El hotel tiene jardines seguros, áreas comunes amplias y está en La Conchita, sobre el camino a Las Pozas, en Xilitla — un pueblo tranquilo y familiar.' },
+  { icon: <Compass size={22} strokeWidth={1.5} />, title: 'Tours para Niños', body: 'Las Pozas y las Cascadas de Micos funcionan bien con niños. En el Puente de Dios hay corriente: solo con chaleco y cuerda, y no para menores de 5 años. Guía certificado en todos los tours.' },
   { icon: <Utensils size={22} strokeWidth={1.5} />, title: 'Restaurante en el Hotel', body: 'El Papán Huasteco tiene opciones para toda la familia. No necesitas salir del hotel para la primera comida del día.' },
   { icon: <MapPin size={22} strokeWidth={1.5} />, title: '5 Min de Las Pozas', body: 'Las Pozas de Edward James son fascinantes para los niños: estructuras enormes, pozas de agua y selva tropical. Un mundo de exploración.' },
 ];
@@ -88,7 +88,7 @@ export default function HotelFamiliasPage() {
             </nav>
             <p className={styles.eyebrow}>Familias · Grupos · Viaje con Niños</p>
             <h1>El Hotel <em>Ideal para Familias</em><br />en Xilitla, Huasteca Potosina</h1>
-            <p className={styles.heroSub}>Suites para hasta 8 personas, piscina privada y a 5 minutos caminando de Las Pozas de Edward James.</p>
+            <p className={styles.heroSub}>Suites para hasta 8 personas, piscina y a 5 minutos caminando de Las Pozas de Edward James.</p>
             <div className={styles.heroCtas}>
               <Link href="/reservar" className={styles.heroCtaPrimary}>Reservar Suite Familiar</Link>
               <Link href="/habitaciones" className={styles.heroCtaSecondary}>Ver las 13 Suites</Link>
@@ -164,7 +164,7 @@ export default function HotelFamiliasPage() {
             <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
               {[
                 { dia: 'Día 1 — Llegada y Las Pozas', actividades: 'Llegada al hotel, check-in, tarde en el spa privado de la suite. Al día siguiente temprano: Las Pozas de Edward James (5 min caminando) — los niños van a flipar con las estructuras gigantes y las pozas de agua.' },
-                { dia: 'Día 2 — Cascadas', actividades: 'Tour al Puente de Dios o Cascadas de Micos. Perfectas para niños mayores de 6 años. Pozas turquesas donde pueden nadar con supervisión. Comida en restaurante local y regreso al hotel.' },
+                { dia: 'Día 2 — Cascadas', actividades: 'Tour a las Cascadas de Micos o al Puente de Dios, de día completo. En Micos hay pozas turquesas donde los niños mayores de 6 años pueden nadar con supervisión; en el Puente de Dios la corriente es fuerte: solo con chaleco y cuerda, y no para menores de 5. Comida en restaurante local y regreso al hotel.' },
                 { dia: 'Día 3 — Pueblo y descanso', actividades: 'Mañana libre: mercado del pueblo, café de olla y artesanías. Tarde en el spa privado de la suite. Si se quedan más noches: tour Tamul en canoa (para mayores de 8 años).' },
               ].map(d => (
                 <div key={d.dia} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 8, padding: '16px 20px', border: '1px solid rgba(255,255,255,0.12)' }}>
@@ -203,8 +203,8 @@ export default function HotelFamiliasPage() {
             <h2>Preguntas Frecuentes para Familias</h2>
             <dl className={styles.faqList}>
               {[
-                { q: '¿Tienen suites para familias grandes (6-8 personas)?', a: 'Sí. Helechos 1 tiene 3 camas matrimoniales (hasta 6 personas) y Helechos 2 tiene 4 camas matrimoniales (hasta 8 personas). Ambas incluyen piscina spa y terraza.' },
-                { q: '¿Son seguros los tours para niños?', a: 'El Puente de Dios (pozas turquesas) y Cascadas de Micos son perfectos para niños mayores de 6 años. Tamul en canoa es ideal a partir de 8-10 años en temporada seca. Las Pozas de Edward James son fascinantes para cualquier edad.' },
+                { q: '¿Tienen suites para familias grandes (6-8 personas)?', a: 'Sí. Helechos 1 tiene 3 camas matrimoniales (hasta 6 personas) y Helechos 2 tiene 4 camas matrimoniales (hasta 8 personas). Ambas tienen terraza con vista a la piscina del hotel y acceso a ella; el spa privado está en otras 4 suites.' },
+                { q: '¿Son seguros los tours para niños?', a: 'Depende del lugar. Las Cascadas de Micos funcionan bien para niños mayores de 6 años. En el Puente de Dios hay corriente fuerte y remolinos: se entra solo con chaleco y cuerda, y no se recomienda para menores de 5 años. Tamul en canoa es ideal a partir de 8-10 años en temporada seca. Las Pozas de Edward James son fascinantes para cualquier edad, pero son escaleras: no entran carriolas y no se permite nadar en las pozas.' },
                 { q: '¿Tiene el hotel área de juegos o actividades para niños?', a: 'El hotel tiene jardines amplios y los niños pueden explorar la vegetación tropical del entorno. El spa privado de las suites que lo incluyen es disfrutable para toda la familia.' },
                 { q: '¿Cuál es el precio por persona adicional?', a: 'La tarifa base incluye 2 personas. La persona adicional tiene un costo de $300 MXN por noche. Las suites Helechos y Lajas están diseñadas para familias y tienen tarifas ya incluidas para mayor número de personas.' },
               ].map(({ q, a }) => (

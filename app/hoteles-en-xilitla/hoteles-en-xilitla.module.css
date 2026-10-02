@@ -24,22 +24,6 @@
   white-space: nowrap;
 }
 
-/* Aviso de deslizar. En pantallas donde la tabla sí cabe entera sobra, así que
-   solo aparece cuando el contenedor es más angosto que la tabla. */
-.swipeHint {
-  display: none;
-}
-
-@media (max-width: 800px) {
-  .swipeHint {
-    display: block;
-    font-family: var(--font-jost, sans-serif);
-    font-size: 12.5px;
-    color: #8a8a7a;
-    margin: 0 0 6px;
-  }
-}
-
 /* Nota al pie de la tabla: de dónde salen las cifras. Va en el flujo normal de
    la página, fuera del contenedor que hace scroll, para que se lea entera en
    móvil. */

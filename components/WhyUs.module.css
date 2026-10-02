@@ -52,7 +52,7 @@
   font-family: var(--font-cormorant);
   font-size: clamp(52px, 5.5vw, 76px);
   font-weight: 300;
-  color: rgba(201, 169, 122, 0.28);
+  color: rgba(201, 169, 122, 0.5); /* con 0.28 los números 01-03 casi desaparecían */
   line-height: 1;
   padding-top: 6px;
   user-select: none;

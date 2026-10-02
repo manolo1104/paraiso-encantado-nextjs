@@ -9,7 +9,9 @@ export default function LocationSection() {
         <div className={styles.infoCol}>
           <p className={styles.eyebrow}>Cómo Llegar</p>
           <h2 id="location-heading" className={styles.title}>
-            Estamos en el <em>corazón de Xilitla</em>
+            {/* Antes: "en el corazón de Xilitla". El hotel está en La Conchita, a ~2 km del
+                centro; distancias de la hoja única de cifras (2 oct 2026). */}
+            Estamos sobre el <em>camino a Las Pozas</em>
           </h2>
 
           <div className={styles.addressBlock}>
@@ -26,19 +28,19 @@ export default function LocationSection() {
             <ul className={styles.distList}>
               <li>
                 <span className={styles.distCity}>Ciudad de México</span>
-                <span className={styles.distTime}>~7.5 horas en auto · 450 km</span>
+                <span className={styles.distTime}>~7 horas en auto · 350 km</span>
               </li>
               <li>
                 <span className={styles.distCity}>Monterrey</span>
-                <span className={styles.distTime}>~7 horas en auto · 380 km</span>
+                <span className={styles.distTime}>8 a 9 horas en auto · 600 km</span>
               </li>
               <li>
                 <span className={styles.distCity}>San Luis Potosí</span>
-                <span className={styles.distTime}>~5 horas en auto · 210 km</span>
+                <span className={styles.distTime}>~5 horas en auto · 334 km</span>
               </li>
               <li>
                 <span className={styles.distCity}>Tampico</span>
-                <span className={styles.distTime}>~3.5 horas en auto · 170 km</span>
+                <span className={styles.distTime}>~3.5 horas en auto · 206 km</span>
               </li>
             </ul>
           </div>

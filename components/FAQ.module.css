@@ -149,7 +149,7 @@
 .whatsappBtn {
   display: inline-block;
   background: #25d366;
-  color: #ffffff;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   font-family: var(--font-jost);
   font-size: 13px;
   font-weight: 600;

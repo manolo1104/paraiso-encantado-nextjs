@@ -115,7 +115,7 @@
 .heroCtaWa {
   display: inline-block;
   background: #25D366;
-  color: white;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   padding: 13px 26px;
   border-radius: 7px;
   font-size: 14px;
@@ -652,7 +652,7 @@
 .testimonialDetail {
   display: block;
   font-size: 12px;
-  color: #999;
+  color: #6f6a62;
   margin-top: 3px;
   font-family: var(--font-jost, sans-serif);
 }
@@ -777,7 +777,7 @@
 
 .formNote {
   font-size: 12px;
-  color: #aaa;
+  color: #6f6a62;
   font-family: var(--font-jost, sans-serif);
   margin: 0;
 }
@@ -808,7 +808,7 @@
   display: inline-block;
   margin-top: 20px;
   background: #25D366;
-  color: white;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   padding: 12px 24px;
   border-radius: 7px;
   font-size: 14px;
@@ -859,7 +859,7 @@
 .ctaBtn {
   display: inline-block;
   background: #25D366;
-  color: white;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   padding: 13px 24px;
   border-radius: 7px;
   font-size: 14px;

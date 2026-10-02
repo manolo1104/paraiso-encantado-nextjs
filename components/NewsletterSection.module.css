@@ -102,7 +102,7 @@
   flex-shrink: 0;
 }
 .btn:hover:not(:disabled) { background: var(--gold); }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:disabled { opacity: 0.85; cursor: not-allowed; } /* con 0.6 el texto «Quiero la guía» se perdía (2.0:1) mientras el campo está vacío */
 
 .errorMsg {
   font-size: 0.8rem;
@@ -113,7 +113,7 @@
 .legal {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.72rem;
-  color: rgba(245, 240, 232, 0.3);
+  color: rgba(245, 240, 232, 0.62);
   letter-spacing: 0.03em;
 }
 

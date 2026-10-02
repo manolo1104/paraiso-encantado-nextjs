@@ -17,7 +17,7 @@ const guias = [
   },
   {
     href: '/hotel-cerca-de-las-pozas',
-    texto: 'Qué hotel queda más cerca de Las Pozas de Edward James',
+    texto: 'A qué distancia estamos de Las Pozas de Edward James',
     nota: 'Los 400 metros que nos separan del jardín y a qué hora conviene entrar.',
   },
   {
@@ -37,8 +37,8 @@ const benefits = [
     title: 'A pasos de Las Pozas',
     highlight: '5 minutos caminando al Jardín de Edward James',
     description:
-      'Sin traslados ni prisas. Desayunas en el hotel y caminas hasta la entrada de Las Pozas. Llegas temprano, cuando el jardín todavía está en calma.',
-    proof: 'El hotel más cercano al Jardín de Edward James en Xilitla.',
+      'Sin traslados ni prisas. Desayunas en el hotel y caminas hasta la entrada de Las Pozas. Llegas temprano a tu turno, cuando el jardín todavía está en calma.',
+    proof: 'A 400 metros, sobre el camino a Las Pozas.',
   },
   {
     title: 'Reserva directa',

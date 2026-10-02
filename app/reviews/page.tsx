@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://www.paraisoencantado.com/reviews' },
   openGraph: {
     title: 'Reseñas Reales — Hotel Paraíso Encantado · 4.5★ · 523 Opiniones',
-    description: 'Opiniones verificadas de huéspedes del hotel boutique más cercano a Las Pozas de Edward James en Xilitla.',
+    description: 'Opiniones verificadas de huéspedes del hotel boutique a 400 m de Las Pozas de Edward James en Xilitla.',
     url: 'https://www.paraisoencantado.com/reviews',
     images: [{ url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg', width: 1200, height: 630, alt: 'Hotel Paraíso Encantado — 4.5 estrellas en Google' }],
   },

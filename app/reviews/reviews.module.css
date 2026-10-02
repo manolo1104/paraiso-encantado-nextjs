@@ -6,8 +6,8 @@
 .breadcrumb { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 20px; font-family: var(--font-jost,sans-serif); }
 .breadcrumb a { color: rgba(255,255,255,0.55); text-decoration: none; }
 .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; font-family: var(--font-jost,sans-serif); }
-.header h1 { font-family: var(--font-cormorant),serif; font-size: clamp(36px,5vw,52px); font-weight: 300; line-height: 1.15; margin-bottom: 16px; }
-.header h1 em { font-style: italic; color: var(--gold); }
+.header h1 { font-family: var(--font-cormorant),serif; font-size: clamp(36px,5vw,52px); font-weight: 300; line-height: 1.15; margin-bottom: 16px; color: white; /* era verde sobre verde: invisible */ }
+.header h1 em { font-style: italic; color: var(--sand); }
 .headerSub { font-size: 16px; opacity: 0.82; font-family: var(--font-jost,sans-serif); line-height: 1.65; max-width: 520px; }
 
 /* SUMMARY */
@@ -17,17 +17,17 @@
 .summaryScore { display: flex; align-items: center; gap: 16px; }
 .scoreNum { font-family: var(--font-cormorant),serif; font-size: 56px; font-weight: 400; color: var(--forest); line-height: 1; }
 .stars { color: var(--gold); font-size: 18px; letter-spacing: 2px; display: block; margin-bottom: 4px; }
-.scoreTotal { font-size: 12px; color: #999; font-family: var(--font-jost,sans-serif); margin: 0; }
+.scoreTotal { font-size: 12px; color: #6f6a62; font-family: var(--font-jost,sans-serif); margin: 0; }
 .summaryBars { display: flex; flex-direction: column; gap: 8px; }
 .barRow { display: flex; align-items: center; gap: 10px; }
-.barLabel { font-size: 12px; color: #888; font-family: var(--font-jost,sans-serif); width: 20px; text-align: right; }
+.barLabel { font-size: 12px; color: #6f6a62; font-family: var(--font-jost,sans-serif); width: 20px; text-align: right; }
 .barTrack { flex: 1; height: 6px; background: #f0ece3; border-radius: 3px; overflow: hidden; }
 .barFill { height: 100%; background: var(--gold); border-radius: 3px; }
-.barCount { font-size: 12px; color: #aaa; font-family: var(--font-jost,sans-serif); width: 20px; }
+.barCount { font-size: 12px; color: #6f6a62; font-family: var(--font-jost,sans-serif); width: 20px; }
 .summaryCtas { display: flex; flex-direction: column; gap: 10px; }
 .summaryCtaPrimary { display: block; background: var(--forest); color: white; text-align: center; padding: 11px 24px; border-radius: 7px; font-size: 13px; font-weight: 500; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: background 0.2s; }
 .summaryCtaPrimary:hover { background: #1a3a2a; }
-.summaryCtaWa { display: block; background: #25D366; color: white; text-align: center; padding: 11px 24px; border-radius: 7px; font-size: 13px; font-weight: 500; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: opacity 0.2s; }
+.summaryCtaWa { display: block; background: #25D366; color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */ text-align: center; padding: 11px 24px; border-radius: 7px; font-size: 13px; font-weight: 500; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: opacity 0.2s; }
 .summaryCtaWa:hover { opacity: 0.9; }
 
 /* REVIEWS GRID */
@@ -41,7 +41,7 @@
 .reviewHeader { display: flex; align-items: center; gap: 12px; }
 .reviewAvatar { width: 40px; height: 40px; border-radius: 50%; background: var(--forest); color: white; display: flex; align-items: center; justify-content: center; font-family: var(--font-cormorant),serif; font-size: 18px; flex-shrink: 0; }
 .reviewName { font-size: 14px; font-weight: 600; color: var(--forest); font-family: var(--font-jost,sans-serif); margin: 0; }
-.reviewMeta { font-size: 11px; color: #aaa; font-family: var(--font-jost,sans-serif); margin: 2px 0 0; }
+.reviewMeta { font-size: 11px; color: #6f6a62; font-family: var(--font-jost,sans-serif); margin: 2px 0 0; }
 .stars { color: var(--gold); font-size: 14px; letter-spacing: 1px; }
 .reviewSuite { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage,#6b8c6b); font-family: var(--font-jost,sans-serif); margin: 0; }
 .reviewText { font-size: 13px; line-height: 1.75; color: #555; font-family: var(--font-jost,sans-serif); margin: 0; flex: 1; }
@@ -54,7 +54,7 @@
 /* CTA */
 .cta { background: var(--forest); color: white; padding: 72px 24px; text-align: center; position: relative; overflow: hidden; isolation: isolate; }
 .ctaInner { max-width: 480px; margin: 0 auto; }
-.cta h2 { font-family: var(--font-cormorant),serif; font-size: clamp(28px,4vw,38px); font-weight: 300; margin-bottom: 12px; }
+.cta h2 { font-family: var(--font-cormorant),serif; font-size: clamp(28px,4vw,38px); font-weight: 300; margin-bottom: 12px; color: white; /* era verde sobre verde: invisible */ }
 .cta p { font-size: 14px; opacity: 0.75; margin-bottom: 28px; font-family: var(--font-jost,sans-serif); }
 .ctaBtn { display: inline-block; background: var(--gold); color: white; padding: 13px 30px; border-radius: 7px; font-size: 14px; font-weight: 600; text-decoration: none; font-family: var(--font-jost,sans-serif); transition: opacity 0.2s; }
 .ctaBtn:hover { opacity: 0.88; }

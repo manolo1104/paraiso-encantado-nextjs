@@ -409,6 +409,7 @@
 .ctaBtnOutline:hover {
   background: #25d366;
   border-color: #25d366;
+  color: var(--forest); /* crema sobre el verde WhatsApp daba 1.9:1 */
 }
 
 /* ---- RESPONSIVE ---- */
@@ -448,7 +449,7 @@
   align-items: center;
   gap: 8px;
   background: #25D366;
-  color: #fff;
+  color: var(--forest); /* blanco sobre el verde WhatsApp daba 2:1 */
   font-family: var(--font-jost), sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
@@ -466,7 +467,7 @@
 .reserveTableNote {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.75rem;
-  color: rgba(255,255,255,0.7);
+  color: #6f6a62; /* iba en blanco sobre el fondo crema del hero: invisible */
   margin: 8px 0 0;
 }
 
@@ -503,6 +504,7 @@
   flex-direction: column;
   justify-content: center;
 }
+.zacahuilText .eyebrow { color: var(--sand); } /* café sobre este verde casi negro daba 2:1 */
 .zacahuilTitle {
   font-family: var(--font-cormorant), Georgia, serif;
   font-size: clamp(1.6rem, 2.8vw, 2.4rem);
@@ -561,7 +563,7 @@
   justify-content: center;
   gap: 8px;
 }
-.ratingStars { font-size: 1.1rem; color: #c9a97a; }
+.ratingStars { font-size: 1.1rem; color: var(--gold); }
 .ratingNum { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.4rem; font-weight: 500; color: #1a2e1a; }
 .ratingCount { font-size: 0.82rem; color: #9a9a82; font-family: var(--font-jost), sans-serif; }
 

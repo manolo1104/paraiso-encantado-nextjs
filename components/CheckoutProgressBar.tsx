@@ -35,9 +35,9 @@ export default function CheckoutProgressBar({ currentStep }: Props) {
           font-weight: 600;
           flex-shrink: 0;
           transition: all 0.25s;
-          border: 2px solid #ccc;
+          border: 2px solid #c4beb4;
           background: transparent;
-          color: #bbb;
+          color: #7a756d;
         }
         .progress-circle.done {
           background: #1e3012;
@@ -53,12 +53,12 @@ export default function CheckoutProgressBar({ currentStep }: Props) {
         .progress-label {
           font-size: 0.72rem;
           margin-left: 6px;
-          color: #bbb;
+          color: #7a756d; /* #bbb daba 1.8:1 */
           transition: color 0.25s;
           font-weight: 400;
         }
         .progress-label.done   { color: #1e3012; }
-        .progress-label.active { color: #c9a97a; font-weight: 600; }
+        .progress-label.active { color: #7a5c16; font-weight: 600; }
         .progress-line {
           width: 32px;
           height: 2px;

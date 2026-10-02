@@ -8,7 +8,9 @@ const faqs = [
   {
     question: '¿Qué tan cerca está del Jardín de Edward James?',
     answer:
-      'A 5 minutos caminando, unos 400 metros. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada de Las Pozas. Somos el hotel más cercano al Jardín de Edward James en Xilitla.',
+      // Mismo texto que el FAQPage de app/page.tsx (no se importa de aquí: este archivo
+      // es "use client"). Sin "el hotel más cercano": Casa Caracol está a 300 m.
+      'A 5 minutos caminando, unos 400 metros: estamos sobre el camino a Las Pozas. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada para tu turno, que se reserva antes en el sistema oficial del jardín (cierra los martes).',
   },
   {
     question: '¿El desayuno está incluido en el precio?',

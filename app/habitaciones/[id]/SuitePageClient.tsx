@@ -387,9 +387,9 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
             </p>
             <p>
               El hotel se encuentra a solo <strong>5 minutos caminando del Jardín Surrealista de Edward James</strong>{' '}
-              (Las Pozas), Patrimonio Cultural de México y la principal atracción de Xilitla. Eres el hotel boutique más
-              cercano a Las Pozas de todo Xilitla — puedes llegar antes que los grupos organizados y disfrutar la magia
-              del jardín casi en soledad por las mañanas.
+              (Las Pozas), declarado Monumento Artístico en 2012 y la principal atracción de Xilitla. Estamos sobre el
+              camino al jardín, a 400 metros: puedes llegar caminando al primer turno de la mañana, antes que los grupos
+              organizados.
             </p>
             <p>
               La {suite.name} forma parte de la categoría <em>{suite.categoryGroup}</em> y destaca por:{' '}

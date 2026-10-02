@@ -70,8 +70,8 @@ const restaurantSchema = {
   },
   geo: {
     '@type': 'GeoCoordinates',
-    latitude: 21.383,
-    longitude: -99.002,
+    latitude: 21.395,
+    longitude: -98.9915,
   },
   aggregateRating: {
     '@type': 'AggregateRating',

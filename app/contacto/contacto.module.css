@@ -269,7 +269,7 @@
 
 .km {
   font-size: 0.75rem !important;
-  color: #8a9a8a !important;
+  color: #5f6f5f !important;
   font-weight: 400 !important;
 }
 
@@ -444,7 +444,7 @@
 .formSuccessWa {
   font-family: var(--font-jost), sans-serif;
   font-size: 0.82rem;
-  color: #25D366;
+  color: #13773a; /* el verde WhatsApp como texto sobre claro daba 1.9:1 */
   text-decoration: none;
   font-weight: 500;
 }

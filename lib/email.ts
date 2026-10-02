@@ -491,7 +491,7 @@ export function buildEmailHtml(data: {
             <tr>
               <td style="width:50%;padding:20px;vertical-align:top;">
                 <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('map-pin')}Cómo Llegar</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A 7 min del centro. Paraíso Encantado, Xilitla, SLP 79910.</p>
+                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A 5 min en auto del centro, sobre el camino a Las Pozas. Paraíso Encantado, Xilitla, SLP 79910.</p>
               </td>
               <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-left:1px solid #e4ddd3;">
                 <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('leaf')}Cerca de Ti</p>

@@ -33,7 +33,8 @@ const packages = [
   {
     slug: 'aventura-extrema',
     name: 'Aventura Extrema',
-    description: 'Cuerda, rápidos y la caída más alta de México',
+    // Tamul mide 105 m: no es "la caída más alta de México" (2 oct 2026).
+    description: 'Cuerda, rápidos y los 105 metros de Tamul',
     duration: '4 días · 3 noches',
     image: '/images/atracciones/rappel_tamul.jpg',
     badge: 'Adrenalina',

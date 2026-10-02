@@ -163,7 +163,7 @@ export default function WhatsAppRecoveryWidget({ bookingData = {} }: Props) {
           gap: 8px;
           width: 100%;
           background: #25D366;
-          color: #fff;
+          color: #1e3012; /* blanco sobre este verde daba 2:1 */
           border: none;
           border-radius: 4px;
           padding: 14px 20px;
