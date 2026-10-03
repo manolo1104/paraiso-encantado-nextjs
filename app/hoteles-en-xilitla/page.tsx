@@ -14,7 +14,9 @@ const ACTUALIZADO = 'octubre de 2026';
 // corta el texto en el resultado, y ese corte es la causa medida del CTR de 0.2%
 // que traía esta página.
 export const metadata: Metadata = {
-  title: 'Hoteles en Xilitla: 10 opciones, precios y zonas (2026)',
+  // «Mejores»: para «mejor hotel en Xilitla» Google enseña comparativas (TripAdvisor,
+  // México Desconocido), no la página de un solo hotel; esta es nuestra comparativa.
+  title: 'Mejores Hoteles en Xilitla: 10 Opciones y Precios (2026)',
   description:
     'Los 10 hoteles de Xilitla comparados: zona, precio por noche, distancia a Las Pozas, alberca y estacionamiento. Cuál te conviene según tu plan de viaje.',
   keywords: [
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: URL },
   openGraph: {
-    title: 'Hoteles en Xilitla — 10 opciones comparadas',
+    title: 'Mejores hoteles en Xilitla — 10 opciones comparadas',
     description: 'Zona, precio por noche, distancia a Las Pozas, alberca y estacionamiento de los hoteles de Xilitla, en una sola tabla.',
     url: URL,
     type: 'article',

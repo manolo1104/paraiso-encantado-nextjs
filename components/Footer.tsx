@@ -85,6 +85,7 @@ export default function Footer() {
           <ul role="list">
             <li><a href="/blog">Blog de Viaje</a></li>
             <li><a href="/xilitla">Qué Hacer en Xilitla</a></li>
+            <li><a href="/blog/las-pozas-edward-james-guia">Las Pozas: Boletos y Horario</a></li>
             <li><a href="/que-hacer-huasteca-potosina-3-dias">La Huasteca en 3 Días</a></li>
             <li><a href="/hotel-cerca-de-las-pozas">Hotel cerca de Las Pozas</a></li>
             <li><a href="/hotel-luna-de-miel-xilitla">Hotel Romántico Xilitla</a></li>
