@@ -647,11 +647,28 @@ const client = new Client({
   } : {}),
   puppeteer: {
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    // Railway cobra por memoria y este Chromium es casi todo el recibo del bot.
+    // Medido el 6 oct 2026 (3 d 15 h tras arrancar): 1.07 GB de procesos + 0.54 GB
+    // de caché de disco. De lo de abajo, extensiones, sincronización, caché y el
+    // proceso de GPU no le sirven a un WhatsApp Web sin pantalla.
+    // NO usar --single-process ni topes de heap (--js-flags): tumban la pestaña.
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-gpu'
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--in-process-gpu',
+      '--no-zygote',
+      '--no-first-run',
+      '--disable-extensions',
+      '--disable-component-extensions-with-background-pages',
+      '--disable-background-networking',
+      '--disable-default-apps',
+      '--disable-sync',
+      '--mute-audio',
+      '--disk-cache-size=1',
+      '--media-cache-size=1'
     ],
     headless: true
   }
