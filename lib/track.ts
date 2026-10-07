@@ -1,3 +1,5 @@
+import { etiquetarClarity } from './clarity';
+
 // ── Capa de datos de Google Tag Manager (contenedor GTM-N98DFD9V) ─────────
 // Forma mínima de la capa de datos. GTM admite cualquier clave dentro del
 // objeto, pero `event` es la única que dispara activadores, así que es la
@@ -75,8 +77,10 @@ export function track(event: string, payload: Record<string, unknown> = {}, useB
   };
 
   // En paralelo, no en lugar de: el POST alimenta el log de Railway que lee
-  // Manolo, y el push alimenta GTM → GA4 → Google Ads.
+  // Manolo, el push alimenta GTM → GA4 → Google Ads, y la etiqueta deja la
+  // grabación de Clarity encontrable por el paso del embudo.
   empujarACapaDatos(event, datos);
+  etiquetarClarity(event, datos);
 
   const body = JSON.stringify({
     event,

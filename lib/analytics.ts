@@ -1,3 +1,5 @@
+import { etiquetarClarity } from './clarity';
+
 const ENDPOINT = '/api/analytics';
 const STORAGE_KEY = 'pe_analytics_queue';
 const SESSION_KEY = 'pe_session_id';
@@ -128,6 +130,10 @@ export function trackEvent(event: string, data?: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
 
   empujarACapaDatos(event, data);
+  // Fuera del filtro de arriba a propósito: a GTM sólo entran las conversiones
+  // (lo demás ensucia la cuenta de anuncios), pero a Clarity le interesan
+  // todos los pasos — son los que permiten filtrar las grabaciones.
+  etiquetarClarity(event, data ?? {});
 
   memQueue.push({
     event,

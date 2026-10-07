@@ -86,8 +86,10 @@ export default function ConfirmacionPage() {
           Cualquier duda, escríbenos por WhatsApp.
         </p>
 
+        {/* data-clarity-mask: el número va PINTADO como texto y el
+            enmascaramiento de Clarity sólo tapa campos de formulario. */}
         {confirmationNumber && (
-          <div className={styles.confirmationBadge}>
+          <div className={styles.confirmationBadge} data-clarity-mask="true">
             <span>Número de confirmación</span>
             <strong>{confirmationNumber}</strong>
           </div>

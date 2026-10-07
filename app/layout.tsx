@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import TrackingSetup from '@/components/TrackingSetup';
+import ClarityScript from '@/components/ClarityScript';
 import ExitIntentPopup from '@/components/ExitIntentPopup';
 import ScrollReveal from '@/components/ScrollReveal';
 import StickyBar from '@/components/StickyBar';
@@ -93,6 +94,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* Google Tag Manager */}
         <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N98DFD9V');` }} />
+        {/* Microsoft Clarity (grabaciones). Se monta también en /admin: es su
+            propia guarda la que sale temprano ahí y de paso marca el navegador
+            como interno, para no medir al hotel como si fuera un huésped. */}
+        <ClarityScript />
         {/* Sin JS: el contenido con animación de entrada se muestra igual */}
         <noscript dangerouslySetInnerHTML={{ __html: `<style>[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}</style>` }} />
       </head>

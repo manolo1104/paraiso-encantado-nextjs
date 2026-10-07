@@ -362,8 +362,13 @@ export default function PagoPage() {
 
       <div className={styles.layout}>
         <div className={styles.formCol}>
-          {/* Datos ya capturados en el paso anterior */}
-          <div className={styles.guestRecap}>
+          {/* Datos ya capturados en el paso anterior.
+              🔴 data-clarity-mask: estos datos van PINTADOS como texto, y el
+              enmascaramiento «equilibrado» de Clarity sólo tapa campos de
+              formulario. Sin esta marca, el nombre, el correo y el teléfono
+              del huésped se ven enteros en la grabación (pasó en Tours, con
+              los clientes del panel /admin). */}
+          <div className={styles.guestRecap} data-clarity-mask="true">
             <div>
               <span className={styles.guestRecapName}>{guest.name}</span>
               <span className={styles.guestRecapLine}>{guest.email} · {guest.phone}</span>

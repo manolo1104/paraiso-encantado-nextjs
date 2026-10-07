@@ -171,7 +171,11 @@ export default function GuestInfoPage() {
           <form onSubmit={handleSubmit} className={styles.form}>
             <h2 className={styles.formTitle}>Datos del Huésped</h2>
 
-            <div className={styles.formGrid}>
+            {/* 🔴 data-clarity-mask: nombre, correo y teléfono. Clarity ya tapa
+                los campos de formulario por omisión, pero la marca explícita
+                sobrevive a que alguien cambie el nivel de enmascaramiento en
+                el panel, que es un ajuste de la cuenta y no del código. */}
+            <div className={styles.formGrid} data-clarity-mask="true">
               <label className={styles.formLabel}>
                 <span>Nombre completo *</span>
                 <input
@@ -284,7 +288,9 @@ export default function GuestInfoPage() {
               </label>
             </fieldset>
 
-            <label className={styles.formLabel} style={{ marginTop: 8 }}>
+            {/* Texto libre del huésped: alergias, celebraciones, salud. Lo más
+                delicado del formulario. */}
+            <label className={styles.formLabel} style={{ marginTop: 8 }} data-clarity-mask="true">
               <span>Peticiones especiales (opcional)</span>
               <textarea
                 className={`${styles.formInput} ${styles.formTextarea}`}

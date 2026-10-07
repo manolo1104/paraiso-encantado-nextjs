@@ -103,6 +103,14 @@ Two parallel systems:
 - `lib/analytics.ts` + `trackEvent()` — client-side batching queue, POSTs to `/api/analytics`. Events include `BOOKING_START`, `CART_ABANDON` (fires at **180s**), `BOOKING_SUCCESS`.
 - `lib/track.ts` + `track()` — simpler, used only by `TrackingSetup` component.
 
+Both also push to the GTM dataLayer and tag the Clarity recording (`lib/clarity.ts`).
+
+**Microsoft Clarity** (session recordings + heatmaps), project `yu775klmdt`:
+- `components/ClarityScript.tsx` — inline `<script>` in the `<head>` of `app/layout.tsx`, same style as the GTM container. **The project id is hardcoded on purpose**: it is public anyway, and in Tours Huasteca a stray quote in the Railway env var left the tag with a syntax error and recorded *nothing* for two days without any warning.
+- Who is **not** recorded (guard inside the snippet): `localhost`/`127.0.0.1`/`*.local`, and `/admin` — which also sets `localStorage.pe_interno = '1'` so the hotel's own browser stops being counted as a guest anywhere on the site. To record from localhost on purpose: `localStorage.pe_clarity_debug = '1'`.
+- `lib/clarity.ts` — tags each recording with `paso_embudo` (`1·inicio_reserva` … `7·reservó`, `x·abandono`), `suite`, WhatsApp/phone contact events, and `clarity('upgrade')` on the expensive steps so Clarity never samples them away. Hooked into `track()` and `trackEvent()`; never forwards guest data.
+- 🔴 Clarity's "balanced" masking hides **form fields only, not text already rendered on screen**. Anything that paints guest data must carry `data-clarity-mask="true"` by hand — currently `/reservar/pago` (guest recap), `/reservar/confirmacion` (booking number) and the checkout form + notes textarea.
+
 ### Internationalization (SEO)
 
 Spanish homepage: `/` — `lang="es"`, JSON-LD in `app/page.tsx`.  
