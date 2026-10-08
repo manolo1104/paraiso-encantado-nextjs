@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Calendar, BookOpen, FileText, TrendingUp, Users, BarChart2, LogOut, Menu, X, LayoutDashboard, Receipt, ClipboardCheck, MessageSquareHeart } from 'lucide-react';
+import { Calendar, BookOpen, FileText, TrendingUp, Users, BarChart2, LogOut, Menu, X, LayoutDashboard, Receipt, ClipboardCheck, MessageSquareHeart, Tag } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './AdminSidebar.module.css';
 
@@ -11,6 +11,7 @@ const NAV = [
   { href: '/admin/reservas',     label: 'Reservas',      icon: BookOpen },
   { href: '/admin/cotizaciones', label: 'Cotizaciones',  icon: FileText },
   { href: '/admin/ingresos',     label: 'Ingresos',      icon: TrendingUp },
+  { href: '/admin/precios',      label: 'Precios',       icon: Tag },
   { href: '/admin/clientes',     label: 'Clientes',      icon: Users },
   { href: '/admin/operaciones',  label: 'Operaciones',   icon: ClipboardCheck },
   { href: '/admin/opinion',      label: 'Reseñas',       icon: MessageSquareHeart },

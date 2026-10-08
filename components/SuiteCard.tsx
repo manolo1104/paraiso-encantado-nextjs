@@ -55,6 +55,7 @@ export default function SuiteCard({ suite, showBadge = false }: SuiteCardProps) 
             </span>
             <span className={styles.priceUnit}>/noche</span>
             <span className={styles.priceUsd}>~${usd} USD</span>
+            <span className={styles.priceNota}>El precio varía según la fecha</span>
           </div>
 
           <span className={styles.viewBtn}>

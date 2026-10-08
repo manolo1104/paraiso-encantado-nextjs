@@ -30,8 +30,8 @@ const ROWS: {
   getValue: (s: (typeof suites)[0]) => string | boolean | null;
   highlight?: 'low' | 'high' | 'bool';
 }[] = [
-  { label: 'Precio 2 personas', getValue: (s) => `$${s.priceTiers[2].toLocaleString('es-MX')} MXN`, highlight: 'low' },
-  { label: 'Precio 3-4 personas', getValue: (s) => s.priceTiers[3] ? `$${s.priceTiers[3].toLocaleString('es-MX')} MXN` : '—', highlight: 'low' },
+  { label: 'Precio base 2 personas', getValue: (s) => `$${s.priceTiers[2].toLocaleString('es-MX')} MXN`, highlight: 'low' },
+  { label: 'Precio base 3-4 personas', getValue: (s) => s.priceTiers[3] ? `$${s.priceTiers[3].toLocaleString('es-MX')} MXN` : '—', highlight: 'low' },
   { label: 'Capacidad máxima', getValue: (s) => `${s.maxOccupancy} personas`, highlight: 'high' },
   { label: 'Categoría', getValue: (s) => s.category },
   { label: 'Piscina / Spa privado', getValue: (s) => s.features.some(f => f.toLowerCase().includes('piscina') || f.toLowerCase().includes('spa')), highlight: 'bool' },

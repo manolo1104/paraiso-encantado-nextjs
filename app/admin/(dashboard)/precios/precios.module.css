@@ -1,0 +1,201 @@
+/* Precios dinámicos — mismo vocabulario de clases que el resto del panel */
+.pageHeader { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+.pageTitle { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.8rem; font-weight: 400; color: var(--forest); margin: 0 0 4px; }
+.pageSub { font-size: 0.83rem; color: var(--sage); margin: 0; max-width: 60ch; }
+.primaryBtn { display: inline-flex; align-items: center; gap: 6px; background: var(--forest); color: var(--cream); border: none; border-radius: 4px; padding: 9px 16px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; font-weight: 600; cursor: pointer; }
+.primaryBtn:hover { background: var(--moss); }
+.primaryBtn:disabled { opacity: 0.5; cursor: default; }
+.secondaryBtn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid #e5e7eb; border-radius: 4px; padding: 9px 16px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; color: var(--clay); cursor: pointer; }
+.secondaryBtn:hover { border-color: var(--forest); color: var(--forest); }
+.secondaryBtn:disabled { opacity: 0.5; cursor: default; }
+.dangerBtn { background: none; border: 1px solid #f0d4d4; border-radius: 4px; padding: 6px 10px; font-size: 0.78rem; color: #a33; cursor: pointer; }
+.linkBtn { background: none; border: none; padding: 0; font-family: var(--font-jost), sans-serif; font-size: inherit; color: var(--forest); text-decoration: underline; cursor: pointer; }
+
+/* ── Interruptor maestro ── */
+.masterCard { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: #fff; border: 1px solid #e5e7eb; border-left: 4px solid var(--sage); border-radius: 8px; padding: 18px 22px; margin-bottom: 20px; flex-wrap: wrap; }
+.masterOff { border-left-color: #d9b166; }
+.masterLabel { font-size: 1rem; font-weight: 600; color: var(--forest); margin: 0 0 4px; }
+.masterHint { font-size: 0.8rem; color: var(--clay); margin: 0; max-width: 62ch; }
+.masterActions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--forest); background: none; border: none; font-family: var(--font-jost), sans-serif; }
+.switchTrack { width: 46px; height: 25px; border-radius: 13px; background: #d6d6d2; position: relative; transition: background 0.15s; flex: none; }
+.switchOn { background: var(--jade); }
+.switchKnob { position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+.switchOn .switchKnob { transform: translateX(21px); }
+
+/* ── ¿Esto está ganando dinero? ── */
+.impactoCard { background: #fff; border: 1px solid #e5e7eb; border-left: 4px solid #6b8fb5; border-radius: 8px; padding: 16px 22px; margin-bottom: 20px; }
+.impactoLabel { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); margin: 0 0 2px; }
+.impactoCifra { font-size: 1.9rem; font-weight: 600; color: var(--jade); margin: 0 0 4px; line-height: 1.1; }
+.impactoNeg { color: #b4603f; }
+.impactoHint { font-size: 0.8rem; color: var(--clay); margin: 0; max-width: 72ch; }
+
+/* ──────────────────────────────────────────────────────────────
+   LO QUE ESPERA SU RESPUESTA
+   Vive fuera de las pestañas: las propuestas están repartidas en
+   varios meses y como marca en la celda serían invisibles.
+   ────────────────────────────────────────────────────────────── */
+.pendientes { background: #fdf6e8; border: 1px solid #e8d9b5; border-left: 4px solid #d9b166; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+.pendientesHead { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.pendientesLabel { display: inline-flex; align-items: center; gap: 7px; font-size: 0.95rem; font-weight: 600; color: #6b5420; margin: 0; }
+.pendientesBtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.pendientesAlerta { font-size: 0.82rem; line-height: 1.45; color: #8a3d2a; background: #fdeeea; border: 1px solid #f0cfc6; border-radius: 6px; padding: 10px 13px; margin: 12px 0 0; }
+
+/* Tira de chips: una noche pendiente por chip, con scroll en el teléfono */
+.chipScroll { display: flex; gap: 8px; overflow-x: auto; padding: 14px 2px 4px; margin: 0 -2px; scrollbar-width: thin; }
+.chipPend { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; background: #fff; border: 1px solid #e8d9b5; border-radius: 6px; padding: 7px 12px; cursor: pointer; font-family: var(--font-jost), sans-serif; text-align: left; }
+.chipPend:hover { border-color: #d9b166; }
+.chipPendSel { outline: 2px solid var(--forest); outline-offset: -2px; }
+.chipPendPierde { border-color: #f0cfc6; background: #fffaf9; }
+.chipPendFecha { font-size: 0.78rem; font-weight: 600; color: var(--forest); white-space: nowrap; }
+.chipPendDelta { font-size: 0.7rem; color: var(--clay); white-space: nowrap; }
+.chipPendAviso { font-size: 0.66rem; font-weight: 700; color: #a4523a; white-space: nowrap; }
+
+/* ── Pestañas ── */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; flex-wrap: wrap; }
+.tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 16px; font-size: 0.875rem; font-family: var(--font-jost), sans-serif; color: var(--clay); cursor: pointer; }
+.tabActive { color: var(--forest); border-bottom-color: var(--forest); font-weight: 600; }
+
+/* ── Barra de acciones ── */
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+
+/* ── Navegación de mes (igual que /admin/calendario) ── */
+.monthNav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.navBtn { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid #e5e7eb; background: #fff; border-radius: 4px; color: var(--forest); cursor: pointer; }
+.navBtn:hover { border-color: var(--forest); background: #f6faf7; }
+.monthLabel { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.35rem; color: var(--forest); min-width: 170px; text-align: center; }
+
+/* ──────────────────────────────────────────────────────────────
+   UN CALENDARIO POR SUITE Y POR MES
+   Misma rejilla de mini-calendarios que /admin/calendario (gap de 1px
+   sobre un fondo gris = líneas de rejilla continuas), para que los dos
+   paneles del hotel se lean igual. Cada tarjeta enseña SUS pesos.
+   ────────────────────────────────────────────────────────────── */
+.suites { display: grid; grid-template-columns: repeat(auto-fill, minmax(252px, 1fr)); gap: 1px; background: #e5e7eb; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+.suiteCal { background: #fff; padding: 12px 12px 9px; }
+.suiteCalHead { margin-bottom: 7px; }
+.suiteCalName { font-family: var(--font-cormorant), Georgia, serif; font-size: 0.98rem; color: var(--forest); }
+.suiteCalPie { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 7px; border-top: 1px solid #f0f0ee; font-size: 0.66rem; color: var(--sage); }
+.dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px; }
+.dowCell { text-align: center; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sage); }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cell { position: relative; border: 1px solid #efefed; border-radius: 4px; background: #fff; padding: 3px 1px; min-height: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; cursor: pointer; font-family: var(--font-jost), sans-serif; }
+.cell:hover { border-color: var(--forest); }
+.cellPast { background: #fafafa; cursor: default; opacity: 0.4; }
+.cellPast:hover { border-color: #efefed; }
+.cellSel { outline: 2px solid var(--forest); outline-offset: -2px; }
+.cellRango { background: #f2f7f3; border-color: #cfe3d7; }
+.cellBlank { border: none; background: none; cursor: default; min-height: 0; }
+.cellDay { font-size: 0.55rem; color: var(--sage); line-height: 1.2; }
+.cellPesos { font-size: 0.6rem; font-weight: 600; color: var(--ink); line-height: 1.2; letter-spacing: -0.3px; }
+.cellUp { color: #1e6f4a; }
+.cellDown { color: #a4701f; }
+/* «Espera tu respuesta» no puede ser solo color: lleva borde punteado Y bandera. */
+.cellProp { border-style: dashed; border-color: #d9b166; background: #fffdf7; }
+.cellFlag { position: absolute; top: 1px; right: 1px; color: #d9b166; }
+
+/* ── Detalle de la noche (o de la estancia) ── */
+.dayCard { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px 22px; margin-bottom: 18px; }
+.dayHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.dayTitle { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.15rem; color: var(--forest); margin: 0; }
+.dayHeadBtns { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.daySub { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); margin: 20px 0 10px; }
+.personas { display: flex; flex-direction: column; gap: 4px; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); }
+.personas input { width: 62px; padding: 7px 9px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-family: var(--font-jost), sans-serif; color: var(--ink); outline: none; }
+.dayRow { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.field { display: flex; flex-direction: column; gap: 5px; font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); }
+.field input, .field select, .field textarea { padding: 9px 12px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 0.9rem; font-family: var(--font-jost), sans-serif; background: #fff; color: var(--ink); outline: none; }
+.field input:focus, .field select:focus { border-color: var(--forest); }
+.fieldNarrow input { width: 92px; }
+.preview { font-size: 0.85rem; color: var(--forest); font-weight: 600; }
+
+/* ──────────────────────────────────────────────────────────────
+   EL RECIBO: «¿por qué esta noche cuesta esto?»
+   Reemplazó a la leyenda de puntos de color, al párrafo del motivo
+   y a la tabla de historial: las tres contestaban esto a medias.
+   ────────────────────────────────────────────────────────────── */
+.recibo { background: #f8faf8; border: 1px solid #e3ebe5; border-radius: 6px; padding: 14px 16px; margin-bottom: 16px; }
+.reciboTotal { font-size: 0.95rem; color: var(--ink); margin: 0 0 2px; }
+.reciboTotal strong { font-size: 1.2rem; color: var(--forest); }
+.reciboQuien { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--sage); margin: 0 0 10px; }
+.reciboLineas { list-style: none; margin: 0 0 8px; padding: 0; max-width: 46ch; }
+.reciboLineas li { display: flex; justify-content: space-between; gap: 16px; font-size: 0.84rem; color: var(--ink); padding: 4px 0; border-bottom: 1px dotted #dfe7e1; }
+.reciboLineas li:last-child { border-bottom: none; }
+.reciboJuntas { font-weight: 600; color: var(--forest) !important; border-top: 1px solid #cfe3d7; }
+.reciboNada { font-size: 0.82rem; color: var(--clay); margin: 0 0 8px; }
+.reciboMotivo { font-size: 0.84rem; font-style: italic; color: var(--moss); margin: 0 0 8px; max-width: 64ch; }
+.reciboHint { font-size: 0.78rem; color: var(--clay); margin: 0 0 10px; max-width: 64ch; }
+.reciboDemanda { font-size: 0.76rem; color: var(--clay); margin: 10px 0 0; padding-top: 10px; border-top: 1px solid #e3ebe5; max-width: 72ch; }
+.reciboUp { color: #1e6f4a; }
+.reciboDown { color: #a4701f; }
+
+/* ── La propuesta de la IA, decidida en la noche que le toca ── */
+.propCard { background: #fffdf7; border: 1px solid #e8d9b5; border-radius: 6px; padding: 14px 16px; margin-bottom: 16px; }
+.propLabel { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #6b5420; margin: 0 0 6px; }
+.propMotivo { font-size: 0.86rem; font-style: italic; color: var(--moss); margin: 0 0 12px; max-width: 64ch; }
+.propComparar { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
+.propComparar > div { display: flex; flex-direction: column; gap: 2px; }
+.propComparar strong { font-size: 1.05rem; color: var(--forest); }
+.propCaso { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); }
+.propPierde { font-size: 0.72rem; font-weight: 700; color: #a4523a; }
+.propBtns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Lo que pagaría cada suite: filas de dos líneas, no una tabla ancha ── */
+.suiteRows { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 2px 24px; }
+.suiteRow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 7px 2px; border-bottom: 1px solid #f4f4f2; font-size: 0.85rem; }
+.suiteRowNo { opacity: 0.45; }
+.suiteRowName { font-family: var(--font-cormorant), Georgia, serif; font-size: 0.98rem; color: var(--forest); white-space: nowrap; }
+.suiteRowPrice { white-space: nowrap; color: var(--ink); }
+.suiteRowPrice s { color: var(--sage); font-size: 0.78rem; }
+.suiteRowDif { white-space: nowrap; font-size: 0.78rem; font-weight: 600; min-width: 62px; text-align: right; }
+
+/* ── Historial de ESTA noche ── */
+.histNoche { margin-top: 18px; padding-top: 14px; border-top: 1px solid #f0f0ee; }
+.histNocheLabel { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--clay); margin: 0 0 6px; }
+.histNocheFila { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.78rem; color: var(--clay); margin: 0 0 3px; }
+.histNocheMotivo { color: var(--sage); }
+
+/* ── Secciones plegadas: lo de una sola vez y lo de consulta ── */
+.avanzado { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0 16px; margin-bottom: 18px; }
+.avanzado > summary { cursor: pointer; padding: 13px 0; font-size: 0.84rem; font-weight: 600; color: var(--forest); font-family: var(--font-jost), sans-serif; }
+.avanzado[open] > summary { border-bottom: 1px solid #f0f0ee; margin-bottom: 14px; }
+.avanzado > *:last-child { margin-bottom: 14px; }
+
+/* ── Los límites: una frase, no tres cajitas ── */
+.limitesCard { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+.limitesFrase { font-size: 0.86rem; line-height: 1.6; color: var(--clay); margin: 0; max-width: 78ch; }
+.limitesFrase strong { color: var(--forest); }
+
+/* ── Tarjetas y tablas ── */
+.formCard { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 22px; margin-bottom: 20px; }
+.formTitle { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.2rem; font-weight: 400; color: var(--forest); margin: 0 0 14px; }
+.formGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; margin-bottom: 12px; align-items: end; }
+.formActions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid #e5e7eb; margin-top: 12px; flex-wrap: wrap; }
+.hint { font-size: 0.76rem; color: var(--clay); margin: 6px 0 0; }
+.tableWrap { background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; overflow-x: auto; margin-bottom: 18px; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+.table thead th { background: var(--forest); color: var(--cream); padding: 10px 14px; text-align: left; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; }
+.table tbody td { padding: 10px 14px; border-bottom: 1px solid #f4f4f2; vertical-align: middle; }
+.table tbody tr:last-child td { border-bottom: none; }
+.inactiva { opacity: 0.5; }
+.pill { display: inline-block; background: #f0f4f1; color: var(--moss); border-radius: 10px; padding: 2px 9px; font-size: 0.72rem; }
+.empty { text-align: center; padding: 48px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--sage); font-size: 0.88rem; max-width: 56ch; margin: 0 auto 18px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid #e5e7eb; background: #fff; border-radius: 14px; padding: 5px 11px; font-size: 0.76rem; color: var(--clay); cursor: pointer; font-family: var(--font-jost), sans-serif; }
+.chip:disabled { opacity: 0.5; cursor: default; }
+.chipOn { background: var(--forest); color: #fff; border-color: var(--forest); }
+
+/* Aviso de éxito en la página (sustituye a los alert() de confirmación) */
+.flash { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: #eef5f0; border: 1px solid #cfe3d7; border-left: 4px solid var(--jade); border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem; color: var(--moss); }
+.flashClose { background: none; border: none; color: var(--moss); cursor: pointer; display: flex; padding: 2px; }
+
+/* ── Teléfono ── */
+@media (max-width: 560px) {
+  .suites { grid-template-columns: 1fr; }
+  .cell { min-height: 42px; }
+  .cellPesos { font-size: 0.68rem; }
+  .cellDay { font-size: 0.6rem; }
+  .dayCard, .limitesCard, .pendientes { padding: 14px 15px; }
+  .monthLabel { font-size: 1.15rem; min-width: 128px; }
+  .suiteRows { grid-template-columns: 1fr; }
+}

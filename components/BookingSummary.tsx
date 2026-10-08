@@ -42,7 +42,7 @@ export default function BookingSummary({ booking }: { booking: BookingState }) {
       <div className={styles.summaryRooms}>
         {booking.cart.map(item => {
           const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-          const roomTotal = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout);
+          const roomTotal = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout, booking.factores);
           return (
             <div key={item.roomId} className={styles.summaryRoom}>
               <div className={styles.summaryRoomImg}>

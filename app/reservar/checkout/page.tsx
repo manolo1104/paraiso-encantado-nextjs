@@ -25,6 +25,7 @@ import {
   LATE_CHECKOUT_REGLA,
   CANCELACION_FLEX_REGLA,
 } from '@/lib/booking';
+import { recortarFactores } from '@/lib/precios';
 import styles from './checkout.module.css';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
 import BookingSummary from '@/components/BookingSummary';
@@ -60,6 +61,26 @@ export default function GuestInfoPage() {
       return;
     }
     setBooking(withAmounts(state));
+
+    // Precio dinámico vigente: si cambió desde que armó el carrito, se adopta
+    // aquí para que el resumen, el correo de recuperación y el cobro coincidan.
+    fetch(`${API}/api/precios`)
+      .then(r => r.json())
+      .then(d => {
+        // Solo las noches de ESTA estancia. Sin recortar, el estado guardaba el
+        // calendario del año entero y la comparación con los factores recortados
+        // del servidor (en /reservar/pago) nunca empataba: la detección de
+        // "el precio se movió" no detectaba nada y el estado se reescribía en
+        // cada carga.
+        const vigentes = d?.activo && d?.factores
+          ? recortarFactores(d.factores, state.checkin, state.checkout)
+          : {};
+        if (JSON.stringify(vigentes) === JSON.stringify(state.factores || {})) return;
+        const actualizado = withAmounts({ ...state, factores: vigentes });
+        saveBookingState(actualizado);
+        setBooking(actualizado);
+      })
+      .catch(() => {});
 
     // Recuperar datos ya escritos (si volvió desde el paso de pago)
     const saved = loadGuestInfo();

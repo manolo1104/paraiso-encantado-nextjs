@@ -106,6 +106,8 @@ export interface AdminBooking {
   anticipo: number;
   promoCode: string;
   promoDiscount: number;
+  /** Columna R: pesos que el precio dinámico sumó (o restó) a esta reserva. */
+  deltaPrecioDinamico: number;
 }
 
 export interface AdminQuote {
@@ -161,7 +163,7 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
   if (!client) return [];
   try {
     const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${RESERVAS_SHEET}!A:Q` })
+      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${RESERVAS_SHEET}!A:R` })
     );
     const rows = res.data.values || [];
     if (rows.length < 2) return [];
@@ -185,6 +187,9 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
       anticipo: parseTotal(row[14] || '0'),
       promoCode: row[15] || '',
       promoDiscount: parseTotal(row[16] || '0'),
+      // Columna R: 0 en las reservas anteriores a los precios dinámicos, en las
+      // capturadas a mano y en las que se cobraron al precio de lista.
+      deltaPrecioDinamico: Number(row[17]) || 0,
       estado: row[12] === 'CANCELADA' ? 'CANCELADA'
             : row[12] === 'MANUAL' ? 'MANUAL'
             : 'CONFIRMADA',

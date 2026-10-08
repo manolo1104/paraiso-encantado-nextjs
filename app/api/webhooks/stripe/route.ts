@@ -114,6 +114,7 @@ export async function POST(req: NextRequest) {
       how_did_you_hear: '',
       promo_code: md.promoCode || '',
       promo_discount: Number(md.promoDiscount) || 0,
+      delta_precio_dinamico: Number(md.dynamicPriceDelta) || 0,
       created_at: new Date().toISOString(),
     });
 

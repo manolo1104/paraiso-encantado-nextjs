@@ -92,6 +92,9 @@ export async function POST(req: NextRequest) {
       how_did_you_hear: howDidYouHear || '',
       promo_code: md.promoCode || '',
       promo_discount: Number(md.promoDiscount) || 0,
+      // Del PaymentIntent, no del navegador: es una cifra de medición y tiene
+      // que venir de la misma fuente que el monto cobrado.
+      delta_precio_dinamico: Number(md.dynamicPriceDelta) || 0,
       created_at: new Date().toISOString(),
     };
 

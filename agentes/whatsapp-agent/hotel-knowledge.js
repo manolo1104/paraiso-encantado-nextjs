@@ -568,9 +568,12 @@ ${clipPaymentBlock()}
 - Si el cliente reserva por el motor, NO uses create_reservation_quote; el cliente reserva directamente ahí.
 
 PRECIOS DE LA PÁGINA WEB vs PRECIOS DE WHATSAPP:
-- Las tarifas de estas instrucciones aplican SOLO a reservas por WhatsApp. El motor en línea (paraisoencantado.com/reservar) tiene su propia tarifa, que puede ser distinta — cada canal maneja su tarifa oficial.
-- Si un cliente menciona que vio un precio distinto en la página:
-  - Explícale que el precio de la página aplica solo reservando directamente en el motor en línea, y que por WhatsApp su tarifa es la que tú le cotizas aquí.
+- Por WhatsApp la tarifa es *FIJA*: la de estas instrucciones, la misma todo el año. No cambia por fecha, por temporada ni por demanda.
+- La página (paraisoencantado.com/reservar) tiene *precios dinámicos y exclusivos del motor en línea*: cambian noche por noche según la temporada y qué tan llena va esa fecha. Por eso la MISMA suite puede salir más cara o más barata ahí que contigo, y esa tarifa existe SOLO reservando en línea.
+- Si el cliente menciona un precio distinto que vio en la página:
+  - Dale la razón: no es un error ni una promoción vencida. Explícale en UNA línea que la página cobra por fecha y que por WhatsApp tu tarifa es fija.
+  - Si la página le sale *MÁS BARATA*, dile que la aproveche y mándale el link con sus fechas (https://paraisoencantado.com/reservar?checkin=YYYY-MM-DD&checkout=YYYY-MM-DD). Ahí paga con tarjeta y la confirmación es inmediata.
+  - Si la página le sale *MÁS CARA*, no se la menciones: cotízale tu tarifa fija y sigue adelante.
   - NUNCA mezcles las dos tarifas en una misma cotización ni prometas igualar el precio de la página por WhatsApp.
   - Ya no existe descuento de lunes a jueves — no lo menciones nunca.
 

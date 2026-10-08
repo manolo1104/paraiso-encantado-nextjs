@@ -13,6 +13,8 @@ import {
   type CartItem,
   type PromoCode,
 } from '@/lib/booking';
+import { getFactoresVigentes } from '@/lib/precios-vigentes';
+import { recortarFactores } from '@/lib/precios';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +49,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 });
     }
 
-    const subtotal = calcCartSubtotal(cleanCart, checkin, checkout);
+    // Precios dinámicos: SIEMPRE los del servidor. El cliente no manda factores,
+    // y los que devolvemos abajo son los que el navegador debe mostrar, para que
+    // lo que se ve y lo que se cobra no puedan separarse.
+    const vigentes = await getFactoresVigentes();
+    const factores = vigentes.activo ? recortarFactores(vigentes.factores, checkin, checkout) : {};
+    const subtotal = calcCartSubtotal(cleanCart, checkin, checkout, factores);
+    // Cuánto cambió el precio dinámico esta reserva, en pesos, frente al precio
+    // de lista. Se guarda la DIFERENCIA y no las dos cifras porque el total que
+    // acaba en la hoja incluye add-ons y promo: sumar diferencias es la única
+    // cuenta que no se contamina. Positivo = cobró más; negativo = cobró menos.
+    const deltaPrecioDinamico = Math.round(
+      subtotal - calcCartSubtotal(cleanCart, checkin, checkout),
+    );
 
     // Validar y aplicar promo SOLO si el servidor la reconoce
     let discount = 0;
@@ -55,7 +69,7 @@ export async function POST(req: NextRequest) {
     if (promoCode) {
       const upper = String(promoCode).toUpperCase() as PromoCode;
       if (VALID_PROMO_CODES.includes(upper)) {
-        discount = calcPromoDiscount(upper, cleanCart, checkin, checkout, nights);
+        discount = calcPromoDiscount(upper, cleanCart, checkin, checkout, nights, factores);
         appliedPromo = upper;
       }
     }
@@ -100,6 +114,9 @@ export async function POST(req: NextRequest) {
       metadata: {
         // Montos AUTORITATIVOS calculados en servidor (fuente de verdad para confirmación)
         stayTotal: String(stayTotal),
+        // Diferencia en pesos entre lo que cobró el precio dinámico y el precio
+        // de lista, solo habitaciones. Es la cifra que mide si esto sirve.
+        dynamicPriceDelta: String(deltaPrecioDinamico),
         depositPaid: String(deposit),
         pending: String(pending),
         isDeposit: String(isDeposit),
@@ -133,6 +150,7 @@ export async function POST(req: NextRequest) {
       depositPaid: deposit,
       pending,
       isDeposit,
+      factores,
     });
   } catch (e: any) {
     console.error('❌ create-payment-intent error:', e.message, '| STRIPE_KEY_SET:', !!process.env.STRIPE_SECRET_KEY, '| STRIPE_KEY_PREFIX:', process.env.STRIPE_SECRET_KEY?.slice(0, 7));

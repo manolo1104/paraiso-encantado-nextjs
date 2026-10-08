@@ -28,3 +28,52 @@ export function mexicoTodayParts(): { year: number; month: number; day: number }
   const [y, m, d] = mexicoTodayStr().split('-').map(Number);
   return { year: y, month: m - 1, day: d };
 }
+
+const MESES_MX = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+
+/**
+ * Lee la fecha de alta de la columna A de `Reservas`.
+ *
+ * Hay DOS formatos conviviendo y hay que aguantar los dos:
+ *  - `"7/10/2026, 14:23:45"` — lo que escribe `addBookingToSheet` (es-MX).
+ *  - `"sábado, 14 de febrero de 2026"` — como lo devuelve Sheets cuando la celda
+ *    quedó con formato de fecha larga. **Son 92 de las 93 filas** (oct 2026): el
+ *    parser viejo solo entendía el primero, así que el ritmo de reservas de los
+ *    precios dinámicos valía 0 siempre y la prueba social de /reservar contaba
+ *    casi nada, sin que nadie se enterara.
+ *
+ * México ≈ UTC-6: se suman 6 h para aproximar UTC. Precisión de horas, que es
+ * toda la que necesitan el ritmo de reservas y la prueba social.
+ */
+export function parseFechaHojaMx(s: string): Date | null {
+  const texto = String(s || '').trim();
+  if (!texto) return null;
+
+  // ISO, por si alguna fila viene de un script
+  const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const dt = new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3], 18));
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  // "14 de febrero de 2026" (con o sin el día de la semana delante)
+  const largo = texto.toLowerCase().match(/(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})/);
+  if (largo) {
+    const mes = MESES_MX.indexOf(largo[2]);
+    if (mes >= 0) {
+      const hm = texto.match(/(\d{1,2}):(\d{2})/);
+      const dt = new Date(Date.UTC(+largo[3], mes, +largo[1], (hm ? +hm[1] : 12) + 6, hm ? +hm[2] : 0));
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+  }
+
+  // "7/10/2026, 14:23:45"
+  const m = texto.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2}):(\d{2}))?/);
+  if (!m) return null;
+  const [, d, mo, y, h, mi] = m;
+  const dt = new Date(Date.UTC(+y, +mo - 1, +d, +(h ?? '12') + 6, +(mi ?? '0')));
+  return isNaN(dt.getTime()) ? null : dt;
+}

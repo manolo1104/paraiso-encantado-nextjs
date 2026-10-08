@@ -109,10 +109,36 @@ export async function sheetsCall<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * Escapa los saltos de línea que estén DENTRO de una cadena del JSON.
+ *
+ * El JSON de la cuenta de servicio trae la llave privada con `\n` escapados. Si
+ * alguien copia el archivo tal cual a una variable de entorno, los saltos quedan
+ * reales y `JSON.parse` truena con "Bad control character" → `getSheetsClient()`
+ * devuelve null y **todo Sheets deja de funcionar sin un solo error visible**:
+ * disponibilidad vacía, panel en blanco, precios en base. Ya pasó en el servicio
+ * del bot. Se recorre carácter por carácter para no tocar los saltos que separan
+ * campos en un JSON con formato.
+ */
+function escaparSaltosEnCadenas(raw: string): string {
+  let out = '';
+  let dentro = false;
+  let escapado = false;
+  for (const c of raw) {
+    if (escapado) { out += c; escapado = false; continue; }
+    if (c === '\\') { out += c; escapado = dentro; continue; }
+    if (c === '"') { dentro = !dentro; out += c; continue; }
+    if (dentro && (c === '\n' || c === '\r')) { out += c === '\n' ? '\\n' : '\\r'; continue; }
+    out += c;
+  }
+  return out;
+}
+
 function loadCredentials() {
   const raw = process.env.GOOGLE_SHEETS_CREDENTIALS;
   if (raw) {
     try { return JSON.parse(raw); } catch {}
+    try { return JSON.parse(escaparSaltosEnCadenas(raw)); } catch {}
     try { return JSON.parse(raw.replace(/\\n/g, '\n')); } catch {}
   }
   return null;
@@ -183,13 +209,17 @@ export async function addBookingToSheet(bookingData: any) {
   try {
     const { confirmation_number, customer_name, customer_phone, email, total,
             payment_intent_id, booking_details, rooms, how_did_you_hear, created_at,
-            anticipo, promo_code, promo_discount } = bookingData;
+            anticipo, promo_code, promo_discount, delta_precio_dinamico } = bookingData;
 
     const roomsStr = (rooms || []).map((r: any) => `${r.name} (${r.guestCount} personas)`).join(', ') || 'Estándar';
     const ts = new Date(created_at || new Date()).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
 
     // Columna O = anticipo (lo realmente cobrado ahora). 0 si no se especifica.
     // Columna P = código de descuento aplicado; Q = monto descontado (MXN).
+    // Columna R = cuántos pesos cambió el precio dinámico esta reserva frente
+    // al precio de lista (solo habitaciones). Positivo cobró más, negativo
+    // menos, 0 las reservas sin precio dinámico. Sin esta columna no hay forma
+    // de saber si el sistema gana o pierde dinero.
     const row = [
       ts, confirmation_number, asText(customer_name), asText(customer_phone || 'N/A'), asText(email),
       `$${Number(total).toLocaleString('es-MX')} MXN`,
@@ -198,12 +228,13 @@ export async function addBookingToSheet(bookingData: any) {
       roomsStr, asText(booking_details?.notes || ''), payment_intent_id || 'N/A',
       how_did_you_hear || '', Number(anticipo) || 0,
       promo_code || '', Number(promo_discount) || 0,
+      Number(delta_precio_dinamico) || 0,
     ];
 
     await sheetsCall(() =>
       client.spreadsheets.values.append({
         spreadsheetId: sid,
-        range: `${SHEET_NAME}!A:Q`,
+        range: `${SHEET_NAME}!A:R`,
         valueInputOption: 'USER_ENTERED',
         requestBody: { values: [row] },
       })

@@ -14,6 +14,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { ShieldCheck, Lock, ChevronLeft, Pencil } from 'lucide-react';
 import {
   loadBookingState,
+  saveBookingState,
   BookingState,
   BOOKING_ROOMS,
   calcRoomStayTotal,
@@ -81,7 +82,7 @@ function PaymentForm({
     if (paymentIntent?.status === 'succeeded') {
       const rooms = booking.cart.map(item => {
         const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-        const totalPrice = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout);
+        const totalPrice = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout, booking.factores);
         return { name: room.name, guestCount: item.guestCount, totalPrice };
       });
 
@@ -183,7 +184,7 @@ function PaymentForm({
         onClick={() => {
           const rooms = booking.cart.map(item => {
             const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-            const roomTotal = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout);
+            const roomTotal = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout, booking.factores);
             return `• ${room.name} (${item.guestCount} persona${item.guestCount > 1 ? 's' : ''}) — ${formatMXN(roomTotal)}`;
           }).join('\n');
 
@@ -301,6 +302,24 @@ export default function PagoPage() {
         if (d.clientSecret) {
           setClientSecret(d.clientSecret);
           setPaymentIntentId(d.paymentIntentId);
+          // Si el precio dinámico se movió mientras el huésped llenaba sus datos,
+          // adoptamos el del servidor ANTES de que vea el monto: el número que
+          // lee en esta pantalla es exactamente el que va a pagar.
+          const delServidor = JSON.stringify(d.factores || {});
+          if (delServidor !== JSON.stringify(state.factores || {})) {
+            const conPrecioFresco: BookingState = { ...state, factores: d.factores || {} };
+            const tf = calcStayTotals(conPrecioFresco);
+            const actualizado: BookingState = {
+              ...conPrecioFresco,
+              amountTotal: tf.total,
+              amountPaid: tf.deposit,
+              amountPending: tf.pending,
+              isDeposit: tf.isDeposit,
+            };
+            setBooking(actualizado);
+            bookingRef.current = actualizado;
+            saveBookingState(actualizado);
+          }
         } else {
           setLoadError('No se pudo iniciar el pago. Intenta de nuevo.');
         }

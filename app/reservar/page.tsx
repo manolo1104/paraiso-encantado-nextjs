@@ -11,6 +11,7 @@ import {
   BookingRoom,
   CartItem,
   BookingState,
+  FactoresPorFecha,
   PromoCode,
   calcRoomStayTotal,
   calcRoomStayNormal,
@@ -22,6 +23,7 @@ import {
   saveBookingState,
   formatMXN,
 } from '@/lib/booking';
+import { recortarFactores } from '@/lib/precios';
 import styles from './reservar.module.css';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
 import TrustBadgesReservar from '@/components/TrustBadgesReservar';
@@ -80,6 +82,7 @@ function RoomDrawer({
   checkin,
   checkout,
   nights,
+  factores,
 }: {
   room: BookingRoom;
   onClose: () => void;
@@ -91,9 +94,12 @@ function RoomDrawer({
   checkin: string;
   checkout: string;
   nights: number;
+  factores: FactoresPorFecha;
 }) {
   const [imgIdx, setImgIdx] = useState(0);
-  const total = searched ? calcRoomStayTotal(room, guestCount, checkin, checkout) : null;
+  const total = searched ? calcRoomStayTotal(room, guestCount, checkin, checkout, factores) : null;
+  // `normal` es el precio de lista (base x noches). Cuando el precio dinámico
+  // BAJA, `total` queda por debajo y reaparecen el precio tachado y la insignia.
   const normal = searched ? calcRoomStayNormal(room, guestCount, checkin, checkout) : null;
   const hasDiscount = normal != null && total != null && normal > total;
 
@@ -227,6 +233,8 @@ function ReservarPageInner() {
   const [unavailableDetail, setUnavailableDetail] = useState<UnavailableDetail[]>([]);
   const [availabilityDegraded, setAvailabilityDegraded] = useState(false);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  // Calendario de precios dinámicos ('YYYY-MM-DD' → factor). Vacío = precios base.
+  const [factores, setFactores] = useState<FactoresPorFecha>({});
   const [datesOverlapBlocked, setDatesOverlapBlocked] = useState(false);
   const [checkinError, setCheckinError] = useState('');
   const [autoSelectUnavailable, setAutoSelectUnavailable] = useState<string | null>(null);
@@ -383,6 +391,16 @@ function ReservarPageInner() {
       .catch(() => {});
   }, []);
 
+  // ── Precios dinámicos ─────────────────────────────────
+  // Si falla, `factores` se queda vacío y todo cobra el precio base: nunca se
+  // deja de poder reservar porque la hoja de precios no respondió.
+  useEffect(() => {
+    fetch(`${API}/api/precios`)
+      .then(r => r.json())
+      .then(d => setFactores(d?.activo && d?.factores ? d.factores : {}))
+      .catch(() => {});
+  }, []);
+
   // Suite a agregar automáticamente al carrito después de la búsqueda
   const pendingAutoSelectId = useRef<number | null>(null);
   // Carrito completo a restaurar (enlace "Terminar mi reserva" del correo de
@@ -521,7 +539,7 @@ function ReservarPageInner() {
         const res = await fetch(`${API}/api/check-availability`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames, sessionId: holdSessionRef.current || undefined }),
+          body: JSON.stringify({ checkin: ci, checkout: co, rooms: roomNames, guests: adults + children, sessionId: holdSessionRef.current || undefined }),
         });
         const data = await res.json();
         currentUnavailable = data.unavailableRooms || [];
@@ -660,7 +678,7 @@ function ReservarPageInner() {
     const next = [...cart, { roomId: room.id, guestCount }];
     setCart(next);
     // Recalcular descuento de promo con el carrito actualizado (consistente con quitar/editar)
-    if (promoCode) setPromoDiscount(calcPromoDiscount(promoCode, next, checkin, checkout, nights));
+    if (promoCode) setPromoDiscount(calcPromoDiscount(promoCode, next, checkin, checkout, nights, factores));
     // Usuario eligió habitación — ya no es abandono
     if (cartAbandonTimer.current) { clearTimeout(cartAbandonTimer.current); cartAbandonTimer.current = null; }
   }
@@ -673,7 +691,7 @@ function ReservarPageInner() {
     });
     setCart(next);
     if (promoCode) {
-      setPromoDiscount(calcPromoDiscount(promoCode, next, checkin, checkout, nights));
+      setPromoDiscount(calcPromoDiscount(promoCode, next, checkin, checkout, nights, factores));
     }
   }
 
@@ -681,7 +699,7 @@ function ReservarPageInner() {
     const next = cart.filter(c => c.roomId !== roomId);
     setCart(next);
     if (promoCode) {
-      const disc = calcPromoDiscount(promoCode, next, checkin, checkout, nights);
+      const disc = calcPromoDiscount(promoCode, next, checkin, checkout, nights, factores);
       setPromoDiscount(disc);
     }
   }
@@ -693,7 +711,7 @@ function ReservarPageInner() {
     if (!valid) { setPromoError(error!); return; }
     setPromoCode(code as PromoCode);
     setPromoError('');
-    const disc = calcPromoDiscount(code as PromoCode, cart, checkin, checkout, nights);
+    const disc = calcPromoDiscount(code as PromoCode, cart, checkin, checkout, nights, factores);
     setPromoDiscount(disc);
     trackEvent('PROMO_APPLIED', { code, source });
   }
@@ -703,7 +721,7 @@ function ReservarPageInner() {
   }
 
   // ── Totals ────────────────────────────────────────────
-  const subtotal = calcCartSubtotal(cart, checkin, checkout);
+  const subtotal = calcCartSubtotal(cart, checkin, checkout, factores);
   const total = Math.max(0, subtotal - promoDiscount);
   // Mismo cálculo que el checkout: 50% hoy si son 2+ noches
   const payToday = calcDepositAmount(total, nights);
@@ -711,7 +729,7 @@ function ReservarPageInner() {
   const isDeposit = nights >= 2 && cart.length > 0;
   // Ahorro potencial si aplica la promo de 3ª noche gratis (para sugerirla con monto exacto)
   const potential3xSaving = cart.length > 0 && nights === 3 && !promoCode
-    ? calcPromoDiscount('XILITLA3MX', cart, checkin, checkout, nights)
+    ? calcPromoDiscount('XILITLA3MX', cart, checkin, checkout, nights, factores)
     : 0;
 
   // ── Proceed to checkout ───────────────────────────────
@@ -726,6 +744,7 @@ function ReservarPageInner() {
     const state: BookingState = {
       checkin, checkout, nights, adults, children,
       cart, promoCode, promoDiscount,
+      factores: recortarFactores(factores, checkin, checkout),
     };
     saveBookingState(state);
     trackEvent('CHECKOUT_STEP_1', { rooms: cart.length, checkin, checkout, guests: adults });
@@ -985,7 +1004,7 @@ function ReservarPageInner() {
             const unavail = isUnavailable(room);
             const added = inCart(room.id);
             const guestCount = getRoomGuests(room.id);
-            const total_room = searched ? calcRoomStayTotal(room, guestCount, checkin, checkout) : null;
+            const total_room = searched ? calcRoomStayTotal(room, guestCount, checkin, checkout, factores) : null;
             const normal_room = searched ? calcRoomStayNormal(room, guestCount, checkin, checkout) : null;
             const hasDiscount = normal_room != null && total_room != null && normal_room > total_room;
             const discPct = hasDiscount ? Math.round(((normal_room! - total_room!) / normal_room!) * 100) : 0;
@@ -1175,7 +1194,7 @@ function ReservarPageInner() {
               <div className={styles.cartItems}>
                 {cart.map(item => {
                   const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-                  const roomTotal = calcRoomStayTotal(room, item.guestCount, checkin, checkout);
+                  const roomTotal = calcRoomStayTotal(room, item.guestCount, checkin, checkout, factores);
                   return (
                     <div key={item.roomId} className={styles.cartItem}>
                       <div className={styles.cartItemHeader}>
@@ -1477,6 +1496,7 @@ function ReservarPageInner() {
           checkin={checkin}
           checkout={checkout}
           nights={nights}
+          factores={factores}
         />
       )}
 

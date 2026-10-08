@@ -10,6 +10,8 @@ import {
   type PromoCode,
 } from '@/lib/booking';
 import { saveIncompleteBooking } from '@/lib/abandoned';
+import { getFactoresVigentes } from '@/lib/precios-vigentes';
+import { recortarFactores } from '@/lib/precios';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,13 +54,17 @@ export async function POST(req: NextRequest) {
     const nights = calcNights(checkin, checkout);
     if (nights <= 0) return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 });
 
-    const subtotal = calcCartSubtotal(cleanCart, checkin, checkout);
+    // Mismos factores de precio dinámico que usa el cobro: si el correo de
+    // recuperación anuncia un total, tiene que ser el que se va a cobrar.
+    const vigentes = await getFactoresVigentes();
+    const factores = vigentes.activo ? recortarFactores(vigentes.factores, checkin, checkout) : {};
+    const subtotal = calcCartSubtotal(cleanCart, checkin, checkout, factores);
     let discount = 0;
     let appliedPromo = '';
     if (promoCode) {
       const upper = String(promoCode).toUpperCase() as PromoCode;
       if (VALID_PROMO_CODES.includes(upper)) {
-        discount = calcPromoDiscount(upper, cleanCart, checkin, checkout, nights);
+        discount = calcPromoDiscount(upper, cleanCart, checkin, checkout, nights, factores);
         appliedPromo = upper;
       }
     }

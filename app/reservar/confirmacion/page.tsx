@@ -45,7 +45,7 @@ export default function ConfirmacionPage() {
               item_id: it.roomId,
               item_name: room?.name ?? it.roomId,
               quantity: 1,
-              price: room ? calcRoomStayTotal(room, it.guestCount, b.checkin, b.checkout) : 0,
+              price: room ? calcRoomStayTotal(room, it.guestCount, b.checkin, b.checkout, b.factores) : 0,
             };
           }),
         },
@@ -127,7 +127,7 @@ export default function ConfirmacionPage() {
             <div className={styles.rooms}>
               {booking.cart.map(item => {
                 const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-                const rt = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout);
+                const rt = calcRoomStayTotal(room, item.guestCount, booking.checkin, booking.checkout, booking.factores);
                 return (
                   <div key={item.roomId} className={styles.roomRow}>
                     <span>{room.name}</span>

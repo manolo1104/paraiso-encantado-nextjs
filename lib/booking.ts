@@ -2,6 +2,9 @@
 // BOOKING ENGINE — types, room data, pricing logic
 // Mirrors the JS logic in hotel-paraiso-encantado-reservas.html
 // ============================================================
+import { FactoresPorFecha, aplicarFactor, factorSeguro } from './precios';
+
+export type { FactoresPorFecha };
 
 export interface RoomAttributes {
   wifi: boolean;
@@ -262,19 +265,32 @@ export function getRoomBasePrice(room: BookingRoom, guests: number): number {
   return room.price;
 }
 
-/** Mon–Thu get -$300 MXN/night; from Jun 15, 2026 onwards: same price all week */
-export function getRoomNightPrice(room: BookingRoom, guests: number, dateStr: string): number {
+/**
+ * Precio de UNA noche. Único punto del código donde el precio depende de la fecha.
+ *
+ * `factores` es el calendario de precios dinámicos ('YYYY-MM-DD' → factor) que
+ * sirve /api/precios. Sin ese parámetro devuelve el precio base de siempre, así
+ * que todo lo que no lo pase sigue funcionando igual que antes.
+ *
+ * (Histórico: aquí vivía el descuento de -$300 de lunes a jueves, apagado para
+ * toda fecha posterior al 15 jun 2026 — o sea, muerto. Lo reemplaza esta capa.)
+ */
+export function getRoomNightPrice(
+  room: BookingRoom,
+  guests: number,
+  dateStr: string,
+  factores?: FactoresPorFecha,
+): number {
   const base = getRoomBasePrice(room, guests);
-  const d = new Date(`${dateStr}T12:00:00`);
-  if (isNaN(d.getTime())) return base;
-  // From June 15, 2026: no weekday discount — weekend prices apply all week
-  if (d >= new Date('2026-06-15T12:00:00')) return base;
-  const day = d.getDay(); // 0=Sun, 1=Mon … 4=Thu
-  const isWeekdayDiscount = day >= 1 && day <= 4;
-  return isWeekdayDiscount ? Math.max(0, base - 300) : base;
+  if (!factores) return base;
+  const factor = factorSeguro(factores[dateStr]);
+  if (factor === 1) return base;
+  // `aplicarFactor` es LA definición de "precio final de una noche". Antes este
+  // cuerpo la duplicaba inline y había dos versiones de la misma cuenta.
+  return aplicarFactor(base, factor);
 }
 
-export function calcRoomStayTotal(room: BookingRoom, guests: number, checkin: string, checkout: string): number {
+export function calcRoomStayTotal(room: BookingRoom, guests: number, checkin: string, checkout: string, factores?: FactoresPorFecha): number {
   const start = new Date(`${checkin}T12:00:00`);
   const end = new Date(`${checkout}T12:00:00`);
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
@@ -286,7 +302,7 @@ export function calcRoomStayTotal(room: BookingRoom, guests: number, checkin: st
     const y = cursor.getFullYear();
     const m = String(cursor.getMonth() + 1).padStart(2, '0');
     const d = String(cursor.getDate()).padStart(2, '0');
-    total += getRoomNightPrice(room, guests, `${y}-${m}-${d}`);
+    total += getRoomNightPrice(room, guests, `${y}-${m}-${d}`, factores);
     cursor.setDate(cursor.getDate() + 1);
   }
   return total;
@@ -352,10 +368,11 @@ export function calcPromoDiscount(
   checkin: string,
   checkout: string,
   nights: number,
+  factores?: FactoresPorFecha,
 ): number {
   const subtotal = cart.reduce((sum, item) => {
     const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-    return sum + calcRoomStayTotal(room, item.guestCount, checkin, checkout);
+    return sum + calcRoomStayTotal(room, item.guestCount, checkin, checkout, factores);
   }, 0);
 
   if (code === 'XILITLA50') {
@@ -364,7 +381,7 @@ export function calcPromoDiscount(
     if (!thirdNightDate || nights !== 3) return 0;
     return cart.reduce((sum, item) => {
       const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-      return sum + getRoomNightPrice(room, item.guestCount, thirdNightDate) * 0.5;
+      return sum + getRoomNightPrice(room, item.guestCount, thirdNightDate, factores) * 0.5;
     }, 0);
   }
   if (code === 'XILITLA3MX') {
@@ -373,7 +390,7 @@ export function calcPromoDiscount(
     if (!thirdNightDate || nights !== 3) return 0;
     return cart.reduce((sum, item) => {
       const room = BOOKING_ROOMS.find(r => r.id === item.roomId)!;
-      return sum + getRoomNightPrice(room, item.guestCount, thirdNightDate);
+      return sum + getRoomNightPrice(room, item.guestCount, thirdNightDate, factores);
     }, 0);
   }
   if (code === 'XILITLA2026PE') return Math.round(subtotal * 0.10);
@@ -453,6 +470,13 @@ export interface BookingState {
   promoCode: PromoCode | null;
   promoDiscount: number;
   addons?: BookingAddons;
+  /**
+   * Factores de precio dinámico que vio el huésped al armar su carrito. Viajan
+   * con él en sessionStorage a checkout/pago/confirmación para que el número no
+   * cambie entre pantallas, y el servidor los compara con los suyos antes de
+   * cobrar (nunca se cobra más de lo mostrado).
+   */
+  factores?: FactoresPorFecha;
   // Deposit info (50% for 2+ nights)
   amountTotal?: number;
   amountPaid?: number;
@@ -484,11 +508,11 @@ export function loadBookingState(): BookingState | null {
   }
 }
 
-export function calcCartSubtotal(cart: CartItem[], checkin: string, checkout: string): number {
+export function calcCartSubtotal(cart: CartItem[], checkin: string, checkout: string, factores?: FactoresPorFecha): number {
   return cart.reduce((sum, item) => {
     const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
     if (!room) return sum;
-    return sum + calcRoomStayTotal(room, item.guestCount, checkin, checkout);
+    return sum + calcRoomStayTotal(room, item.guestCount, checkin, checkout, factores);
   }, 0);
 }
 
@@ -504,7 +528,7 @@ export interface StayTotals {
 
 /** Totales de la reserva en el navegador (checkout, pago, resumen y confirmación). */
 export function calcStayTotals(state: BookingState): StayTotals {
-  const subtotal = calcCartSubtotal(state.cart, state.checkin, state.checkout);
+  const subtotal = calcCartSubtotal(state.cart, state.checkin, state.checkout, state.factores);
   const discount = state.promoDiscount || 0;
   const base = Math.max(0, subtotal - discount);
   const addons = calcAddonTotals(state.addons, state.adults + state.children, state.nights, base, state.cart.length);

@@ -18,5 +18,10 @@ export async function register() {
     // Ver lib/recovery-scheduler.ts.
     const { startRecoveryScheduler } = await import('@/lib/recovery-scheduler');
     startRecoveryScheduler();
+
+    // Precios dinámicos: reglas + análisis de demanda, 1x/día a las 6:00 MX.
+    // Ver lib/precios-scheduler.ts.
+    const { startPreciosScheduler } = await import('@/lib/precios-scheduler');
+    startPreciosScheduler();
   }
 }

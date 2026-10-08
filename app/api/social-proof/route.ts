@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAllBookings } from '@/lib/admin/sheets-admin';
 import { getSheetsClient, sheetsCall } from '@/lib/sheets';
 import { BOOKING_ROOMS } from '@/lib/booking';
+import { parseFechaHojaMx as parseFechaMx } from '@/lib/date-mx';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,16 +25,6 @@ interface Payload {
 
 let cache: { at: number; payload: Payload } | null = null;
 const TTL_MS = 10 * 60 * 1000;
-
-// La hoja guarda la fecha de creación como "10/07/2026, 14:23:45" (es-MX, hora de México).
-// México ≈ UTC-6: sumamos 6h para aproximar UTC; precisión de horas es suficiente aquí.
-function parseFechaMx(s: string): Date | null {
-  const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2}):(\d{2}))?/);
-  if (!m) return null;
-  const [, d, mo, y, h, mi] = m;
-  const dt = new Date(Date.UTC(+y, +mo - 1, +d, +(h ?? '12') + 6, +(mi ?? '0')));
-  return isNaN(dt.getTime()) ? null : dt;
-}
 
 function anonymizeName(full: string): string | null {
   const clean = (full || '').trim().replace(/\s+/g, ' ');
