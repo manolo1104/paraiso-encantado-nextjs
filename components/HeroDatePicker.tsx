@@ -3,67 +3,52 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { track } from '@/lib/track';
+import StayDateField from '@/components/calendario/StayDateField';
 import styles from './HeroDatePicker.module.css';
 
 export default function HeroDatePicker() {
   const router = useRouter();
-  const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-  const [checkin, setCheckin] = useState(today);
-  const [checkout, setCheckout] = useState(tomorrow);
+  // Sin fechas por omisión. Antes arrancaba en «hoy → mañana» (y calculado en
+  // UTC: después de las 6 pm de México ya era mañana); quien pulsaba «Ver
+  // disponibilidad» sin tocar nada llegaba a /reservar buscando una noche que
+  // nunca eligió. El 53% de las sesiones del motor empezaba así (12 oct 2026).
+  const [fechas, setFechas] = useState({ checkin: '', checkout: '' });
   const [guests, setGuests] = useState(2);
+  const [calendarioAbierto, setCalendarioAbierto] = useState(false);
 
-  function handleCheckinChange(value: string) {
-    setCheckin(value);
-    let newCheckout = checkout;
-    if (value >= checkout) {
-      const next = new Date(value);
-      next.setDate(next.getDate() + 1);
-      newCheckout = next.toISOString().split('T')[0];
-      setCheckout(newCheckout);
-    }
-    track('seleccionar_fecha', { field: 'checkin', checkin: value, checkout: newCheckout });
-  }
-
-  function handleCheckoutChange(value: string) {
-    setCheckout(value);
-    track('seleccionar_fecha', { field: 'checkout', checkin, checkout: value });
+  function handleFechas(v: { checkin: string; checkout: string }) {
+    setFechas(v);
+    track('seleccionar_fecha', { field: 'rango', checkin: v.checkin, checkout: v.checkout });
   }
 
   function handleSubmit() {
-    track('ir_reservar', { checkin, checkout, guests });
-    router.push(`/reservar?checkin=${checkin}&checkout=${checkout}&adults=${guests}`);
+    if (!fechas.checkin || !fechas.checkout) {
+      setCalendarioAbierto(true);
+      return;
+    }
+    track('ir_reservar', { checkin: fechas.checkin, checkout: fechas.checkout, guests });
+    router.push(`/reservar?checkin=${fechas.checkin}&checkout=${fechas.checkout}&adults=${guests}`);
   }
 
   return (
     <div className={styles.picker} role="search" aria-label="Buscar disponibilidad">
       <div className={styles.fields}>
-        <label className={styles.field}>
-          <span className={styles.label}>Check-in</span>
-          <input
-            type="date"
-            className={styles.input}
-            value={checkin}
-            min={today}
-            onChange={(e) => handleCheckinChange(e.target.value)}
-            aria-label="Fecha de llegada"
-          />
-        </label>
-
-        <div className={styles.divider} aria-hidden="true" />
-
-        <label className={styles.field}>
-          <span className={styles.label}>Check-out</span>
-          <input
-            type="date"
-            className={styles.input}
-            value={checkout}
-            min={checkin ? (() => { const d = new Date(checkin); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })() : tomorrow}
-            onChange={(e) => handleCheckoutChange(e.target.value)}
-            aria-label="Fecha de salida"
-          />
-        </label>
+        <StayDateField
+          valor={fechas}
+          onChange={handleFechas}
+          grupo={{ adultos: guests }}
+          abierto={calendarioAbierto}
+          onAbiertoChange={setCalendarioAbierto}
+          etiquetas={{ llegada: 'Check-in', salida: 'Check-out', vacio: 'Elegir fecha' }}
+          clases={{
+            contenedor: styles.fechas,
+            campo: `${styles.field} ${styles.campoFecha}`,
+            etiqueta: styles.label,
+            valor: styles.valor,
+            vacio: styles.valorVacio,
+            separador: styles.divider,
+          }}
+        />
 
         <div className={styles.divider} aria-hidden="true" />
 

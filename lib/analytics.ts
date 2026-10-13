@@ -89,15 +89,25 @@ function scheduleFlush() {
  * Eventos de este sistema que Google Ads debe contar como conversión, y el
  * nombre con el que entran a GTM.
  *
- * Los WHATSAPP_CLICK de /reservar son los de mayor intención de todo el sitio:
- * los dispara quien ya buscó fechas y no encontró lugar, o vio disponibilidad
- * incompleta. Comparten nombre en GTM con el botón flotante para que una sola
- * conversión («Contacto WhatsApp») los cuente todos.
+ * Hay DOS conversiones de WhatsApp a propósito, y la diferencia es si el
+ * huésped ya eligió fechas:
+ *
+ *  - `contacto_whatsapp_con_fechas` — el mensaje le llega a Camila con las
+ *    fechas puestas y lo puede cotizar en una sola respuesta. Son los de
+ *    /reservar (no encontró lugar o la disponibilidad vino incompleta), el de
+ *    /reservar/pago y el del widget de recuperación. **Esta es la conversión
+ *    principal de Google Ads.**
+ *  - `contacto_whatsapp` — el botón flotante, el pie, el blog, las suites.
+ *    Vale menos: quien lo pulsa todavía no dijo cuándo viene.
+ *
+ * Antes compartían nombre, así que Google no podía distinguirlos y, al pujar
+ * por conversiones, se iba a comprar el clic más barato: el del pie de página.
  */
 const NOMBRE_EN_GTM: Record<string, string> = {
   WHATSAPP_CLICK: 'contacto_whatsapp',
-  WHATSAPP_PAY_CLICK: 'contacto_whatsapp',
-  WHATSAPP_RECOVERY_CLICK: 'contacto_whatsapp',
+  WHATSAPP_CLICK_CON_FECHAS: 'contacto_whatsapp_con_fechas',
+  WHATSAPP_PAY_CLICK: 'contacto_whatsapp_con_fechas',
+  WHATSAPP_RECOVERY_CLICK: 'contacto_whatsapp_con_fechas',
   BOOKING_START: 'inicio_reserva',
 };
 

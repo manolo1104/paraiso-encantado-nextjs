@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
+import { urlReservarSuite } from '@/lib/ultimas-fechas';
 
 interface Props {
   suiteName: string;
@@ -45,15 +46,10 @@ export default function StickySuiteCTA({ suiteName, suiteId, price }: Props) {
     };
   }, [suiteId, suiteName, show]);
 
+  // Sin fechas elegidas, /reservar abre el calendario de esta suite (antes
+  // mandaba «hoy → mañana» en hora UTC). Ver lib/ultimas-fechas.ts.
   function buildReservarUrl() {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    let ci = today, co = tomorrow, adults = '2';
-    try {
-      const raw = sessionStorage.getItem('pe_last_dates');
-      if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; adults = d.adults || '2'; }
-    } catch { /* ignore */ }
-    return `/reservar?checkin=${ci}&checkout=${co}&adults=${adults}&suiteId=${suiteId}&autoselect=1`;
+    return urlReservarSuite(suiteId);
   }
 
   const handleClick = () => {

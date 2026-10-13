@@ -88,7 +88,10 @@ export default function WhatsAppRecoveryWidget({ bookingData = {} }: Props) {
 
   const handleClose = () => {
     setShow(false);
-    trackEvent('WHATSAPP_CLICK', { action: 'dismissed_popup', reason });
+    // Cerrar NO es escribir: hasta el 12 oct 2026 esto mandaba WHATSAPP_CLICK y
+    // 26 de los 30 «contactos por WhatsApp» de una semana eran gente cerrando
+    // esta ventana (inflaba el evento contacto_whatsapp de Clarity).
+    trackEvent('EXIT_POPUP_DISMISS', { reason });
   };
 
   if (!show) return null;

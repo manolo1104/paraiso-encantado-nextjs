@@ -1,4 +1,7 @@
 import { google } from 'googleapis';
+import { BOOKING_ROOMS } from './booking';
+import { bitSuite, CALENDARIO_DIAS, MASCARA_TODAS } from './calendario';
+import { sumarDias } from './precios';
 
 const SHEET_NAME = process.env.GOOGLE_SHEET_TAB || 'Reservas';
 const AVAILABILITY_SHEET = 'Disponibilidad';
@@ -25,9 +28,24 @@ export const WA_HOLD_MINUTES = 180;
  */
 let availabilityWriteChain: Promise<unknown> = Promise.resolve();
 export function withAvailabilityLock<T>(fn: () => Promise<T>): Promise<T> {
-  const run = availabilityWriteChain.then(fn, fn); // corre pase lo que pase con la anterior
+  const run = availabilityWriteChain.then(fn, fn) // corre pase lo que pase con la anterior
+    .finally(marcarDisponibilidadCambiada);
   availabilityWriteChain = run.then(() => {}, () => {}); // la cadena nunca se rompe por un error
   return run as Promise<T>;
+}
+
+/**
+ * Versión de lo que sabe el calendario público (/api/calendario). Sube con cada
+ * escritura de la matriz (todas pasan por el candado de arriba) y con cada
+ * reserva nueva, así la caché del calendario se tira sola en vez de esperar
+ * sus 3 minutos cuando el hotel bloquea una noche o alguien reserva.
+ */
+let versionDisponibilidad = 0;
+function marcarDisponibilidadCambiada(): void {
+  versionDisponibilidad++;
+}
+export function versionDeDisponibilidad(): number {
+  return versionDisponibilidad;
 }
 
 /**
@@ -240,6 +258,7 @@ export async function addBookingToSheet(bookingData: any) {
       })
     );
     console.log('✅ Reserva guardada en Google Sheets');
+    marcarDisponibilidadCambiada();
   } catch (e: any) {
     console.error('❌ addBookingToSheet error:', e.message);
   }
@@ -323,6 +342,96 @@ export async function getFullyBookedDates(monthsAhead = 6): Promise<string[]> {
     console.error('❌ getFullyBookedDates error:', e.message);
     return [];
   }
+}
+
+/** Lo mismo que cuenta como ocupado en checkAvailability y getFullyBookedDates. */
+function celdaOcupada(valor: unknown): boolean {
+  const v = String(valor ?? '').toUpperCase().trim();
+  return v === 'RESERVADO' || v === 'BLOQUEADO' || v === 'MANTENIMIENTO' || v.startsWith('OTA');
+}
+
+/**
+ * Disponibilidad de las próximas `dias` noches para el calendario público:
+ * una máscara por noche con un bit por suite (ver lib/calendario.ts), 1 = libre.
+ *
+ * Lee `Disponibilidad` y `Reservas` en paralelo (dos lecturas, sin importar
+ * cuántas noches): la segunda es la misma red de seguridad que usa
+ * checkAvailability para reservas que todavía no llegaron a la matriz. Los
+ * apartados de 10 min (`BloqueosTemporal`) NO cuentan: duran menos que la caché
+ * y harían ver ocupada su propia suite a quien la tiene apartada; la búsqueda
+ * del motor los sigue respetando.
+ *
+ * Sin hoja configurada (local) todo sale libre. Si la matriz no se puede leer,
+ * LANZA: quien llama decide (servir la copia anterior o «sin verificar»), nunca
+ * se inventa un «Lleno».
+ */
+export async function leerCalendario(dias = CALENDARIO_DIAS): Promise<{ desde: string; libres: number[] }> {
+  const desde = mexicoTodayStr();
+  const fechas = Array.from({ length: dias }, (_, i) => sumarDias(desde, i));
+  const libres = fechas.map(() => MASCARA_TODAS);
+  if (!process.env.GOOGLE_SHEET_ID) return { desde, libres };
+
+  const client = await getSheetsClient();
+  if (!client) throw new Error('leerCalendario: Sheets configurado pero cliente nulo');
+  const sid = process.env.GOOGLE_SHEET_ID;
+  const indice = new Map(fechas.map((f, i) => [f, i]));
+
+  const [matriz, reservas] = await Promise.allSettled([
+    sheetsCall(() => client.spreadsheets.values.get({ spreadsheetId: sid, range: `${AVAILABILITY_SHEET}!A:Z` })),
+    sheetsCall(() => client.spreadsheets.values.get({ spreadsheetId: sid, range: `${SHEET_NAME}!A:N` })),
+  ]);
+  if (matriz.status === 'rejected') throw matriz.reason;
+
+  const data = matriz.value.data.values || [];
+  const headers = (data[0] || []).map((h: unknown) => String(h ?? '').trim());
+  const columnas = BOOKING_ROOMS
+    .map((r) => ({ bit: bitSuite(r.id), col: headers.indexOf(r.name) }))
+    .filter((c) => c.col !== -1);
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row?.[0]) continue;
+    const raw = String(row[0]).trim();
+    let fecha = raw.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) continue;
+      fecha = ymd(d);
+    }
+    const k = indice.get(fecha);
+    if (k === undefined) continue;
+    for (const { bit, col } of columnas) {
+      if (celdaOcupada(row[col])) libres[k] &= ~bit;
+    }
+  }
+
+  if (reservas.status === 'fulfilled') {
+    const filas = reservas.value.data.values || [];
+    for (let i = 1; i < filas.length; i++) {
+      const row = filas[i];
+      if (!row || row.length < 11) continue;
+      const bCheckin = String(row[6] ?? '').trim();
+      const bCheckout = String(row[7] ?? '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(bCheckin) || !/^\d{4}-\d{2}-\d{2}$/.test(bCheckout)) continue;
+      const estado = String(row[12] ?? '').toUpperCase();
+      if (estado === 'CANCELADA' || estado === 'CANCELADO') continue;
+      if (bCheckout <= desde) continue;
+      const suites = suitesDeReserva(row[10]);
+      if (suites.length === 0) continue;
+      const bits = BOOKING_ROOMS
+        .filter((r) => reservaIncluyeSuite(suites, r.name))
+        .reduce((m, r) => m | bitSuite(r.id), 0);
+      if (!bits) continue;
+      for (let f = bCheckin > desde ? bCheckin : desde, guard = 0; f < bCheckout && guard < 400; f = sumarDias(f, 1), guard++) {
+        const k = indice.get(f);
+        if (k !== undefined) libres[k] &= ~bits;
+      }
+    }
+  } else {
+    console.warn('⚠️ leerCalendario: no se pudo leer Reservas, solo matriz:', reservas.reason?.message);
+  }
+
+  return { desde, libres };
 }
 
 export type UnavailableReason = 'reservado' | 'bloqueado' | 'mantenimiento' | 'ota' | 'apartado';
@@ -432,6 +541,26 @@ export async function checkAvailability(
  * Columnas: A=timestamp, B=confirmacion, C=cliente, D=tel, E=email,
  *           F=total, G=checkin, H=checkout, I=noches, J=huespedes, K=habitaciones
  */
+/**
+ * Suites de la columna K de Reservas: "Jungla (2 personas), Bromelias (2 personas)"
+ * → ["jungla", "bromelias"]. Sin segmentos vacíos: con una coma de más
+ * ("Jungla (2 personas), ") quedaba un "" y `nombre.includes("")` es verdadero,
+ * así que esa reserva marcaba ocupadas LAS 13 suites.
+ */
+function suitesDeReserva(celda: unknown): string[] {
+  return String(celda ?? '')
+    .toLowerCase()
+    .split(',')
+    .map((r) => r.replace(/\s*\([^)]*\)/g, '').trim())
+    .filter(Boolean);
+}
+
+/** Coincidencia exacta o contenida (p. ej. "jungla" ⊂ "suite jungla"). */
+function reservaIncluyeSuite(suites: string[], nombreSuite: string): boolean {
+  const n = nombreSuite.toLowerCase();
+  return suites.some((r) => r === n || r.includes(n) || n.includes(r));
+}
+
 async function checkReservasForConflicts(
   checkin: string,
   checkout: string,
@@ -463,7 +592,7 @@ async function checkReservasForConflicts(
 
       const bCheckin  = String(row[6]  ?? '').trim();
       const bCheckout = String(row[7]  ?? '').trim();
-      const bRooms    = String(row[10] ?? '').trim().toLowerCase();
+
       // Saltar filas sin fechas o canceladas
       if (!bCheckin || !bCheckout || bCheckin === 'n/a' || bCheckout === 'n/a') continue;
       const bState = String(row[12] ?? '').toUpperCase();
@@ -473,18 +602,10 @@ async function checkReservasForConflicts(
       if (bCheckin >= checkout || bCheckout <= checkin) continue;
 
       // Comprobar si alguna suite solicitada está en esta reserva
-      // "Jungla (2 personas)" → "jungla" | "Suite Flor de Liz 1 (2 personas)" → "suite flor de liz 1"
-      const roomsInBooking = bRooms
-        .split(',')
-        .map((r) => r.replace(/\s*\([^)]*\)/g, '').trim());
+      const roomsInBooking = suitesDeReserva(row[10]);
 
       for (const room of rooms) {
-        const normalizedReq = room.name.toLowerCase();
-        // Coincidencia exacta o contenida (p.ej. "jungla" ⊂ "suite jungla")
-        const match = roomsInBooking.some(
-          (r) => r === normalizedReq || r.includes(normalizedReq) || normalizedReq.includes(r)
-        );
-        if (match && !conflicting.find(c => c.room === room.name)) {
+        if (reservaIncluyeSuite(roomsInBooking, room.name) && !conflicting.find(c => c.room === room.name)) {
           // Primera noche en conflicto: la más tardía entre los dos check-ins
           conflicting.push({ room: room.name, date: bCheckin > checkin ? bCheckin : checkin });
         }

@@ -118,8 +118,16 @@ export async function POST(req: NextRequest) {
 
       // ── CTAs & contacto ──
       case 'WHATSAPP_CLICK':
+      case 'WHATSAPP_CLICK_CON_FECHAS':
       case 'clic_whatsapp':
         console.log(`💬 WHATSAPP  src=${payload.source ?? '-'}  ip=${ip}  sid=${sessionId?.slice(0, 12)}`);
+        break;
+      // Los otros dos negocios con enlace de WhatsApp en este sitio: se miden
+      // aparte para que no entren a la conversión del hotel en Google Ads.
+      case 'clic_whatsapp_tours':
+      case 'clic_whatsapp_restaurante':
+      case 'clic_whatsapp_otro':
+        console.log(`💬 WHATSAPP(${payload.negocio ?? '?'})  num=${payload.numero ?? '-'}  ip=${ip}  sid=${sessionId?.slice(0, 12)}`);
         break;
       case 'PHONE_CLICK':
       case 'clic_telefono':

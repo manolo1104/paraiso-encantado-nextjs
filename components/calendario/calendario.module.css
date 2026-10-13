@@ -1,0 +1,341 @@
+/* Calendario de estancia — ver StayCalendar.tsx.
+   Colores y letras del sitio (app/globals.css). Celular primero: el 64% de
+   las visitas llega desde el teléfono. */
+
+.capa {
+  position: fixed;
+  inset: 0;
+  z-index: 9500; /* sobre la barra, el widget de WhatsApp (999) y la galería (9000) */
+  background: rgba(30, 48, 18, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: capaEntra 0.2s ease-out;
+}
+
+.hoja {
+  width: 100%;
+  max-height: 92dvh;
+  background: var(--cream);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: hojaSube 0.28s var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  color: var(--ink);
+  font-family: var(--font-jost), 'Jost', sans-serif;
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 16px 10px;
+  border-bottom: 1px solid rgba(61, 43, 20, 0.08);
+}
+
+.titulo {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--forest);
+  margin: 0;
+}
+
+.leyenda {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--clay);
+}
+
+.leyenda strong { color: var(--bark); font-weight: 600; }
+.leyendaAviso { color: #8a4b12; }
+
+.cerrar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--bark);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.cerrar:hover { background: var(--parch); }
+.cerrar:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 8px 12px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--sage);
+  text-align: center;
+  border-bottom: 1px solid rgba(61, 43, 20, 0.06);
+}
+
+.cuerpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 12px 16px;
+}
+
+.mes { padding-top: 14px; }
+
+.mesTitulo {
+  margin: 0 4px 8px;
+  font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--forest);
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 4px;
+}
+
+.vacio { min-height: 52px; }
+
+.dia {
+  position: relative;
+  min-height: 52px;
+  padding: 5px 1px 4px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1px;
+  border-radius: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dia:hover:not([aria-disabled='true']) { background: var(--parch); }
+.dia:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+
+.diaNumero {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.diaPrecio {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--jade);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.diaPrecioCargando {
+  width: 70%;
+  height: 8px;
+  margin-top: 3px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--parch), #e6dfd3, var(--parch));
+  background-size: 200% 100%;
+  animation: brillo 1.2s linear infinite;
+}
+
+.diaQuedan {
+  font-size: 0.56rem;
+  font-weight: 600;
+  color: #9a4a10;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.diaEtiqueta {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: rgba(42, 34, 24, 0.55);
+  line-height: 1.1;
+}
+
+/* Sin lugar: tachado Y con texto (el color nunca es la única señal). */
+.diaLleno .diaNumero {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  color: rgba(42, 34, 24, 0.4);
+}
+
+.diaApagado {
+  cursor: default;
+  color: rgba(42, 34, 24, 0.32);
+}
+
+.diaLejos { opacity: 0.45; }
+
+.diaEnRango {
+  background: rgba(201, 169, 122, 0.22);
+  border-radius: 0;
+}
+
+.diaLlegada,
+.diaSalida {
+  background: var(--forest) !important;
+  color: var(--cream);
+}
+.diaLlegada { border-radius: 10px 0 0 10px; }
+.diaSalida { border-radius: 0 10px 10px 0; }
+.diaLlegada .diaPrecio,
+.diaSalida .diaPrecio,
+.diaLlegada .diaEtiqueta,
+.diaSalida .diaEtiqueta { color: var(--sand); }
+.diaSalida.diaLleno .diaNumero { color: var(--cream); text-decoration: none; }
+
+/* Noche llena que sí sirve como día de SALIDA. */
+.diaSoloSalida { cursor: pointer; }
+.diaSoloSalida .diaNumero { text-decoration: none; color: var(--ink); }
+
+.masMeses {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 16px;
+  min-height: 44px;
+  border: 1px solid rgba(61, 43, 20, 0.15);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--moss);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(61, 43, 20, 0.1);
+  background: var(--cream);
+}
+
+.resumen {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.82rem;
+  color: var(--clay);
+  line-height: 1.3;
+}
+.resumen strong { color: var(--forest); font-weight: 600; }
+.resumenAviso { color: #8a4b12; }
+
+.pieAcciones {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.borrar {
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--bark);
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.listo {
+  min-height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 8px;
+  background: var(--forest);
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.listo:hover { background: var(--moss); }
+.listo:focus-visible,
+.borrar:focus-visible,
+.masMeses:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Escritorio: ventana centrada con dos meses por fila. */
+@media (min-width: 720px) {
+  .capa { align-items: center; padding: 24px; }
+  .hoja {
+    max-width: 760px;
+    max-height: min(720px, 90vh);
+    border-radius: 16px;
+    animation: hojaAparece 0.22s ease-out;
+  }
+  .cuerpo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 28px;
+    align-content: start;
+    padding: 4px 20px 20px;
+  }
+  .semana { display: none; }
+  .masMeses { grid-column: 1 / -1; }
+  .cabecera { padding: 22px 24px 12px; }
+  .pie { padding: 14px 24px; }
+  .diaPrecio { font-size: 0.7rem; }
+}
+
+/* En escritorio cada mes lleva sus propias iniciales de día. */
+.mesSemana {
+  display: none;
+}
+@media (min-width: 720px) {
+  .mesSemana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--sage);
+    text-align: center;
+  }
+}
+
+@keyframes capaEntra { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hojaSube { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes hojaAparece { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .capa, .hoja { animation: none; }
+  .diaPrecioCargando { animation: none; }
+}

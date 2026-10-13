@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { track } from '@/lib/track';
+import { eventoDeNumeroWa, negocioDeNumero } from '@/lib/whatsapp-numeros';
 
 const SECTIONS = [
   'hero', 'experiencias', 'habitaciones', 'restaurante',
@@ -30,10 +31,14 @@ export default function TrackingSetup() {
       if (enlace.dataset.waMedido === '1') return;
 
       // El número distingue a quién le escriben: el hotel, el restaurante o tours.
+      // Cada negocio entra con su propio evento (ver lib/whatsapp-numeros.ts):
+      // antes los tres caían en `clic_whatsapp` y Google Ads contaba como
+      // contacto del hotel a quien pedía informes de un tour o del restaurante.
       const numero = enlace.getAttribute('href')?.match(/(?:wa\.me\/|phone=)(\d+)/)?.[1] ?? null;
-      track('clic_whatsapp', {
+      track(eventoDeNumeroWa(numero), {
         origen: 'enlace_en_pagina',
         numero,
+        negocio: negocioDeNumero(numero),
         texto: enlace.textContent?.trim().slice(0, 40) || null,
       }, true);
     };

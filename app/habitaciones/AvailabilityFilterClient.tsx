@@ -4,6 +4,8 @@ import { useState, useCallback, useMemo } from 'react';
 import { Search, Loader2, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { Suite } from '@/data/suites';
 import HabitacionesClient from './HabitacionesClient';
+import StayDateField from '@/components/calendario/StayDateField';
+import filtroStyles from './AvailabilityFilter.module.css';
 
 interface Props {
   groups: Record<string, Suite[]>;
@@ -23,8 +25,6 @@ function hasSpa(s: Suite): boolean {
 }
 
 export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
-  const today = new Date().toISOString().split('T')[0];
-
   const [checkin, setCheckin]       = useState('');
   const [checkout, setCheckout]     = useState('');
   const [guestCount, setGuestCount] = useState(2); // actual count for checkout URL
@@ -44,8 +44,8 @@ export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
     return true;
   };
 
-  async function checkDates() {
-    if (!checkin || !checkout || checkin >= checkout) return;
+  async function checkDates(ci = checkin, co = checkout) {
+    if (!ci || !co || ci >= co) return;
     setChecking(true);
     setChecked(false);
     try {
@@ -53,7 +53,7 @@ export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          checkin, checkout,
+          checkin: ci, checkout: co,
           rooms: allSuites.map(s => ({ name: s.name })),
         }),
       });
@@ -157,18 +157,27 @@ export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
           }}>
             {/* Fechas */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-end', minWidth: 0, overflow: 'hidden' }}>
-              <label style={{ ...labelStyle, minWidth: 0 }}>
-                <span style={labelTextStyle}>Check-in</span>
-                <input type="date" value={checkin} min={today}
-                  onChange={e => { setCheckin(e.target.value); setChecked(false); setUnavailable([]); if (checkout && e.target.value >= checkout) setCheckout(''); }}
-                  style={{ ...inputStyle, width: 140 }} />
-              </label>
-              <label style={{ ...labelStyle, minWidth: 0 }}>
-                <span style={labelTextStyle}>Check-out</span>
-                <input type="date" value={checkout} min={checkin || today}
-                  onChange={e => { setCheckout(e.target.value); setChecked(false); setUnavailable([]); }}
-                  style={{ ...inputStyle, width: 140 }} />
-              </label>
+              {/* Calendario propio: cada noche dice si hay lugar y desde cuánto.
+                  Al elegir el rango se verifica solo. */}
+              <StayDateField
+                valor={{ checkin, checkout }}
+                onChange={(v) => {
+                  setCheckin(v.checkin);
+                  setCheckout(v.checkout);
+                  setChecked(false);
+                  setUnavailable([]);
+                  checkDates(v.checkin, v.checkout);
+                }}
+                grupo={{ adultos: guestCount }}
+                etiquetas={{ llegada: 'Check-in', salida: 'Check-out', vacio: 'Elegir' }}
+                clases={{
+                  contenedor: filtroStyles.fechas,
+                  campo: filtroStyles.campo,
+                  etiqueta: filtroStyles.etiqueta,
+                  valor: filtroStyles.valor,
+                  vacio: filtroStyles.vacio,
+                }}
+              />
               <label style={{ ...labelStyle, minWidth: 0 }}>
                 <span style={labelTextStyle}>Personas</span>
                 <select value={guestCount} onChange={e => setGuestCount(Number(e.target.value))} style={{ ...inputStyle, minWidth: 60, width: 70 }}>
@@ -176,7 +185,7 @@ export default function AvailabilityFilterClient({ groups, allSuites }: Props) {
                 </select>
               </label>
               <button
-                onClick={checkDates}
+                onClick={() => checkDates()}
                 disabled={!checkin || !checkout || checkin >= checkout || checking}
                 style={{
                   height: 38, padding: '0 16px',

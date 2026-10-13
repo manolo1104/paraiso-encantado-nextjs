@@ -28,8 +28,11 @@ const EVENT_EMOJI: Record<string, string> = {
   EXIT_INTENT_TRIGGER:     '👀',
   EXIT_POPUP_SHOWN:        '💬',
   EXIT_POPUP_CONVERT:      '✅',
+  EXIT_POPUP_DISMISS:      '✖️',
+  ALTERNATIVE_DATES_CLICK: '🔁',
   // WhatsApp
   WHATSAPP_CLICK:          '📱',
+  WHATSAPP_CLICK_CON_FECHAS: '📱',
   WHATSAPP_RECOVERY_SHOWN: '💬',
   WHATSAPP_RECOVERY_CLICK: '📲',
   // Suite

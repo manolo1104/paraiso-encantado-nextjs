@@ -44,6 +44,7 @@ export default function FinalCTA() {
             target="_blank"
             rel="noopener noreferrer"
             className={styles.altLink}
+            data-wa-medido="1"
             onClick={() => track('clic_whatsapp', { source: 'final_cta' }, true)}
           >
             <MessageCircle size={15} strokeWidth={1.5} />

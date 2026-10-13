@@ -18,6 +18,12 @@ type VentanaConCapaDatos = Window & { dataLayer?: EventoCapaDatos[] };
  */
 const NOMBRE_EN_GTM: Record<string, string> = {
   clic_whatsapp: 'contacto_whatsapp',
+  // Los otros dos negocios que tienen enlaces de WhatsApp en este sitio entran
+  // con nombre propio, para que el activador de Google Ads (que escucha
+  // `contacto_whatsapp`) deje de contarlos como contacto del hotel.
+  clic_whatsapp_tours: 'contacto_whatsapp_tours',
+  clic_whatsapp_restaurante: 'contacto_whatsapp_restaurante',
+  clic_whatsapp_otro: 'contacto_whatsapp_otro',
   ir_reservar: 'inicio_reserva',
 };
 

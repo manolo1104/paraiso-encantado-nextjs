@@ -50,6 +50,19 @@ export default function ConfirmacionPage() {
           }),
         },
       });
+      // La conversión «Reserva Exitosa» de Google Ads NO escucha `purchase`:
+      // en el contenedor GTM-N98DFD9V su activador es el evento personalizado
+      // `reserva_confirmada` y lee `transaction_id`, `value` y `currency` del
+      // primer nivel de la capa de datos (sin `ecommerce.`). Hasta el 12 oct
+      // 2026 solo existía el push de arriba, así que Ads nunca vio una reserva
+      // web y solo podía optimizar hacia clics a WhatsApp. Va dentro del mismo
+      // `if`, que ya corre una sola vez (abajo se borra el sessionStorage).
+      w.dataLayer.push({
+        event: 'reserva_confirmada',
+        transaction_id: cn,
+        value: totalValue,
+        currency: 'MXN',
+      });
     }
 
     // Clear so back navigation doesn't re-show confirmation
@@ -193,14 +206,21 @@ export default function ConfirmacionPage() {
 
         {/* Actions */}
         <div className={styles.actions}>
-          <a
-            href={`${WHATSAPP_URL}?text=Hola,%20tengo%20la%20confirmaci%C3%B3n%20${confirmationNumber || ''}%20y%20quisiera%20coordinar%20mi%20llegada`}
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* Botón y no enlace a propósito: el activador de WhatsApp de Google
+              Ads cuenta cualquier clic a un enlace `wa.me`, y aquí escribe
+              alguien que YA reservó. Como enlace inflaba esa conversión y le
+              enseñaba a Ads a buscar a quien ya pagó. */}
+          <button
+            type="button"
+            onClick={() => window.open(
+              `${WHATSAPP_URL}?text=Hola,%20tengo%20la%20confirmaci%C3%B3n%20${confirmationNumber || ''}%20y%20quisiera%20coordinar%20mi%20llegada`,
+              '_blank',
+              'noopener,noreferrer',
+            )}
             className={styles.btnWhatsApp}
           >
             <MessageCircle size={16} strokeWidth={1.5} /> Coordinar llegada por WhatsApp
-          </a>
+          </button>
           <a href="tel:+524891007679" className={styles.btnPhone}>
             <Phone size={16} strokeWidth={1.5} /> +52 489-100-7679
           </a>

@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       available: result.available,
       unavailableRooms: result.unavailableRooms,
-      unavailableDetail: result.unavailableDetail ?? [],
+      // Solo suite y noche. El motivo (`ota`, `bloqueado`, `apartado`…) es
+      // operación interna del hotel y esta ruta es pública.
+      unavailableDetail: (result.unavailableDetail ?? []).map(({ room, date }) => ({ room, date })),
       degraded: result.degraded ?? false,
       message: result.degraded
         ? 'No se pudo verificar la disponibilidad — reintenta'

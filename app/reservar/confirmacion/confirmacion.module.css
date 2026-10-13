@@ -248,6 +248,9 @@
   padding: 14px 24px;
   text-decoration: none;
   transition: background 0.2s;
+  /* Ahora es <button> (ver page.tsx): sin el borde ni la letra por omisión. */
+  border: none;
+  cursor: pointer;
 }
 
 .btnWhatsApp:hover { background: #1da855; }

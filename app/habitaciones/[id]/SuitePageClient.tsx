@@ -13,6 +13,7 @@ import type { Suite } from '@/data/suites';
 import StickySuiteCTA from '@/components/StickySuiteCTA';
 import SuiteTestimonials from '@/components/SuiteTestimonials';
 import SuiteDatePicker from '@/components/SuiteDatePicker';
+import { urlReservarSuite } from '@/lib/ultimas-fechas';
 import { mxnToUsd } from '@/lib/config';
 import { suites } from '@/data/suites';
 import styles from './suite.module.css';
@@ -170,19 +171,14 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
     setSelectedGuests(guestsCount);
   }, []);
 
+  // Sin fechas, /reservar abre el calendario de ESTA suite en vez de buscar
+  // «hoy → mañana» (que además se calculaba en UTC). Ver lib/ultimas-fechas.ts.
   const handleReservar = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    let ci = selectedCheckin || today;
-    let co = selectedCheckout || tomorrow;
-    const adults = selectedGuests || 2;
-    if (!selectedCheckin) {
-      try {
-        const raw = sessionStorage.getItem('pe_last_dates');
-        if (raw) { const d = JSON.parse(raw); ci = d.checkin || today; co = d.checkout || tomorrow; }
-      } catch { /* ignore */ }
-    }
-    router.push(`/reservar?checkin=${ci}&checkout=${co}&adults=${adults}&suiteId=${suite.id}&autoselect=1`);
+    router.push(urlReservarSuite(suite.id, {
+      checkin: selectedCheckin || undefined,
+      checkout: selectedCheckout || undefined,
+      adults: selectedGuests || 2,
+    }));
   }, [suite.id, router, selectedCheckin, selectedCheckout, selectedGuests]);
 
   return (
@@ -312,6 +308,7 @@ export default function SuitePageClient({ suite, initialCheckin = '', initialChe
 
           {/* Date picker — pre-llenado con fechas del listado si vienen en la URL */}
           <SuiteDatePicker
+            suiteId={suite.id}
             suiteName={suite.name}
             maxGuests={suite.maxOccupancy}
             initialCheckin={initialCheckin}

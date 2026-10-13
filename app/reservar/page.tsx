@@ -32,6 +32,9 @@ import RecentBookingsLive, { LiveBookingItem } from '@/components/RecentBookings
 import { getQuoteForRoom, getStripQuotes } from '@/lib/review-quotes';
 import { trackEvent } from '@/lib/analytics';
 import { getHoldSessionId } from '@/lib/hold-session';
+import StayDateField from '@/components/calendario/StayDateField';
+import { cargarCalendario, useCalendario } from '@/hooks/useCalendario';
+import { alternativas } from '@/lib/calendario';
 
 const API = '';
 const WA_NUMBER = '524891007679';
@@ -49,7 +52,7 @@ function fmtCountdown(totalSeconds: number): string {
 }
 
 // Por qué una suite no está disponible, y desde qué noche (viene del motor)
-type UnavailableDetail = { room: string; date: string; reason: string };
+type UnavailableDetail = { room: string; date: string };
 
 // "2026-08-15" → "sáb 15 de ago"
 function fmtNight(date: string): string {
@@ -62,13 +65,6 @@ function fmtNight(date: string): string {
 function hotelToday(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
 }
-// Suma días a una fecha YYYY-MM-DD con aritmética pura (sin desfase de zona horaria)
-function addDays(dateStr: string, days: number): string {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().split('T')[0];
-}
 
 // ── Room Detail Drawer ────────────────────────────────────
 function RoomDrawer({
@@ -76,6 +72,7 @@ function RoomDrawer({
   onClose,
   onAdd,
   onRemove,
+  onBookNow,
   inCart,
   searched,
   guestCount,
@@ -88,6 +85,8 @@ function RoomDrawer({
   onClose: () => void;
   onAdd: (room: BookingRoom) => void;
   onRemove: (id: number) => void;
+  /** Ir directo al checkout con esta suite (carrito vacío y el grupo cabe). */
+  onBookNow?: (room: BookingRoom) => void;
   inCart: boolean;
   searched: boolean;
   guestCount: number;
@@ -201,13 +200,24 @@ function RoomDrawer({
               </>
             )}
           </div>
-          <button
-            className={`${styles.drawerCta} ${inCart ? styles.drawerCtaAdded : ''}`}
-            onClick={() => inCart ? onRemove(room.id) : onAdd(room)}
-            disabled={!searched}
-          >
-            {!searched ? 'Selecciona fechas para reservar' : inCart ? <><Check size={14} strokeWidth={2} /> Quitar del carrito</> : `Agregar al carrito — ${formatMXN(total ?? room.price)}`}
-          </button>
+          {onBookNow ? (
+            <>
+              <button className={styles.drawerCta} onClick={() => onBookNow(room)}>
+                Reservar esta suite — {formatMXN(total ?? room.price)}
+              </button>
+              <button className={styles.drawerSecondary} onClick={() => onAdd(room)}>
+                + Agregar y elegir otra suite
+              </button>
+            </>
+          ) : (
+            <button
+              className={`${styles.drawerCta} ${inCart ? styles.drawerCtaAdded : ''}`}
+              onClick={() => inCart ? onRemove(room.id) : onAdd(room)}
+              disabled={!searched}
+            >
+              {!searched ? 'Selecciona fechas para reservar' : inCart ? <><Check size={14} strokeWidth={2} /> Quitar del carrito</> : `Agregar al carrito — ${formatMXN(total ?? room.price)}`}
+            </button>
+          )}
           {!searched && <p className={styles.drawerCtaNote}>Elige tus fechas arriba y busca disponibilidad</p>}
         </div>
       </div>
@@ -232,11 +242,14 @@ function ReservarPageInner() {
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const [unavailableDetail, setUnavailableDetail] = useState<UnavailableDetail[]>([]);
   const [availabilityDegraded, setAvailabilityDegraded] = useState(false);
-  const [blockedDates, setBlockedDates] = useState<string[]>([]);
   // Calendario de precios dinámicos ('YYYY-MM-DD' → factor). Vacío = precios base.
   const [factores, setFactores] = useState<FactoresPorFecha>({});
-  const [datesOverlapBlocked, setDatesOverlapBlocked] = useState(false);
-  const [checkinError, setCheckinError] = useState('');
+  // Calendario de estancia (components/calendario). Se abre solo al entrar sin
+  // fechas: antes la página buscaba «hoy → mañana» sin que nadie lo pidiera.
+  const [calendarioAbierto, setCalendarioAbierto] = useState(false);
+  // Cada búsqueda lleva un número; la respuesta de una búsqueda vieja (dos
+  // rangos elegidos seguidos) se descarta en vez de pisar a la nueva.
+  const searchSeqRef = useRef(0);
   const [autoSelectUnavailable, setAutoSelectUnavailable] = useState<string | null>(null);
 
   // ── Cart ──────────────────────────────────────────────
@@ -381,15 +394,8 @@ function ReservarPageInner() {
 
   const nights = calcNights(checkin, checkout);
   const today = hotelToday();
-  const minCheckout = checkin ? addDays(checkin, 1) : today;
-
-  // ── Fetch blocked dates from Sheets on mount ──────────
-  useEffect(() => {
-    fetch(`${API}/api/fully-booked-dates`)
-      .then(r => r.json())
-      .then(d => setBlockedDates(d.blockedDates || []))
-      .catch(() => {});
-  }, []);
+  // Ocupación y precios por noche para el calendario y las fechas cercanas.
+  const { cal } = useCalendario(true);
 
   // ── Precios dinámicos ─────────────────────────────────
   // Si falla, `factores` se queda vacío y todo cobra el precio base: nunca se
@@ -415,17 +421,23 @@ function ReservarPageInner() {
     const suiteSlug = searchParams.get('suiteId');
     const autoselect = searchParams.get('autoselect') === '1';
 
-    // Leer fechas guardadas en sessionStorage si no vienen en la URL
+    // Fechas: las de la liga, o las últimas que eligió en esta visita. Si no
+    // hay unas válidas (de hoy en adelante), NO se inventan: se abre el
+    // calendario. Hasta oct 2026 se buscaba «hoy → mañana» por omisión y el 53%
+    // de las sesiones del motor arrancaba en una noche que nadie eligió.
     const today = hotelToday();
-    const tomorrow = addDays(today, 1);
+    const validas = (x?: string | null, y?: string | null): x is string =>
+      !!x && !!y && x >= today && calcNights(x, y) > 0;
     let saved: { checkin: string; checkout: string; adults: string } | null = null;
     try {
       const raw = sessionStorage.getItem('pe_last_dates');
       if (raw) saved = JSON.parse(raw);
     } catch { /* ignore */ }
 
-    const finalCi = ci || saved?.checkin || today;
-    const finalCo = co || saved?.checkout || tomorrow;
+    let finalCi = '';
+    let finalCo = '';
+    if (validas(ci, co)) { finalCi = ci; finalCo = co as string; }
+    else if (saved && validas(saved.checkin, saved.checkout)) { finalCi = saved.checkin; finalCo = saved.checkout; }
     const finalA  = a  || saved?.adults  || '2';
 
     setCheckin(finalCi);
@@ -433,9 +445,11 @@ function ReservarPageInner() {
     setAdults(Math.max(1, Math.min(12, parseInt(finalA, 10) || 2)));
 
     // Guardar fechas para que las páginas de suite puedan leerlas
-    try {
-      sessionStorage.setItem('pe_last_dates', JSON.stringify({ checkin: finalCi, checkout: finalCo, adults: finalA }));
-    } catch { /* ignore */ }
+    if (finalCi) {
+      try {
+        sessionStorage.setItem('pe_last_dates', JSON.stringify({ checkin: finalCi, checkout: finalCo, adults: finalA }));
+      } catch { /* ignore */ }
+    }
 
     // Si viene con suiteId + autoselect, preparar auto-agregar al carrito
     if (autoselect && suiteSlug && SUITE_ID_TO_ROOM_ID[suiteSlug]) {
@@ -458,32 +472,13 @@ function ReservarPageInner() {
       if (restored.length > 0) pendingRestoreCart.current = restored;
     }
 
-    // Auto-buscar si hay fechas válidas
-    if (calcNights(finalCi, finalCo) > 0) {
+    // Auto-buscar si hay fechas válidas; si no, pedirlas con el calendario.
+    if (finalCi && calcNights(finalCi, finalCo) > 0) {
       triggerSearch(finalCi, finalCo);
+    } else {
+      setCalendarioAbierto(true);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Warn when selected dates overlap fully-booked ────
-  useEffect(() => {
-    if (!checkin || !checkout || blockedDates.length === 0) {
-      setDatesOverlapBlocked(false);
-      return;
-    }
-    // Build list of nights in the selected range
-    const start = new Date(`${checkin}T12:00:00`);
-    const end = new Date(`${checkout}T12:00:00`);
-    const cursor = new Date(start);
-    while (cursor < end) {
-      const ds = cursor.toISOString().split('T')[0];
-      if (blockedDates.includes(ds)) {
-        setDatesOverlapBlocked(true);
-        return;
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    setDatesOverlapBlocked(false);
-  }, [checkin, checkout, blockedDates]);
 
   // ── Señal para que el botón flotante de WhatsApp no tape la barra móvil ──
   useEffect(() => {
@@ -521,6 +516,7 @@ function ReservarPageInner() {
   async function triggerSearch(ci: string, co: string) {
     const n = calcNights(ci, co);
     if (!ci || !co || n <= 0) return;
+    const seq = ++searchSeqRef.current;
     setSearching(true);
     setCart([]);
     setPromoCode(null);
@@ -547,14 +543,22 @@ function ReservarPageInner() {
         degraded = Boolean(data.degraded);
         if (!degraded) break;
         if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+        if (seq !== searchSeqRef.current) return;
       }
+      if (seq !== searchSeqRef.current) return;
       setUnavailable(currentUnavailable);
       setUnavailableDetail(degraded ? [] : currentDetail);
       setAvailabilityDegraded(degraded);
     } catch {
+      if (seq !== searchSeqRef.current) return;
       setUnavailable([]);
       setUnavailableDetail([]);
     } finally {
+      // Una búsqueda más nueva ya está en curso: que ella pinte los resultados.
+      if (seq === searchSeqRef.current) finishSearch();
+    }
+
+    function finishSearch() {
       setSearching(false);
       setSearched(true);
       // Scroll to results after short delay
@@ -620,6 +624,10 @@ function ReservarPageInner() {
   }
 
   async function handleSearch() {
+    if (!checkin || !checkout || nights <= 0) {
+      setCalendarioAbierto(true);
+      return;
+    }
     await triggerSearch(checkin, checkout);
   }
 
@@ -627,40 +635,24 @@ function ReservarPageInner() {
     try { sessionStorage.setItem('pe_last_dates', JSON.stringify({ checkin: ci, checkout: co, adults: String(a) })); } catch { /* ignore */ }
   }
 
-  function handleCheckinChange(v: string) {
-    if (v && v < today) {
-      setCheckinError('Esta fecha ya pasó. Selecciona una fecha futura.');
-      setCheckin('');
-      return;
-    }
-    setCheckinError('');
-    setCheckin(v);
-    let newCo = checkout;
-    if (checkout && v >= checkout) {
-      const next = addDays(v, 1);
-      setCheckout(next);
-      newCo = next;
-    }
-    saveDatesToSession(v, newCo, adults);
+  /**
+   * Rango elegido en el calendario (o en «Fechas cercanas con lugar»): busca
+   * solo, sin tener que pulsar otro botón. Cambiar de fechas suelta el apartado
+   * y vacía el carrito, igual que antes con los dos campos de fecha.
+   */
+  function handleRangeChange(v: { checkin: string; checkout: string }) {
+    if (!v.checkin || !v.checkout || calcNights(v.checkin, v.checkout) <= 0) return;
     releaseHoldNow();
+    setCheckin(v.checkin);
+    setCheckout(v.checkout);
+    saveDatesToSession(v.checkin, v.checkout, adults);
     setSearched(false);
     setUnavailable([]);
     setUnavailableDetail([]);
     setCart([]);
     setPromoCode(null);
     setPromoDiscount(0);
-  }
-
-  function handleCheckoutChange(v: string) {
-    setCheckout(v);
-    saveDatesToSession(checkin, v, adults);
-    releaseHoldNow();
-    setSearched(false);
-    setUnavailable([]);
-    setUnavailableDetail([]);
-    setCart([]);
-    setPromoCode(null);
-    setPromoDiscount(0);
+    triggerSearch(v.checkin, v.checkout);
   }
 
   // ── Cart helpers ──────────────────────────────────────
@@ -733,23 +725,51 @@ function ReservarPageInner() {
     : 0;
 
   // ── Proceed to checkout ───────────────────────────────
-  function goToCheckout() {
-    if (cart.length === 0 || !checkin || !checkout) return;
+  /**
+   * `carrito` permite ir directo al checkout con UNA suite («Reservar esta»),
+   * sin pasar por el carrito: la mayoría reserva una sola suite y antes eran
+   * dos toques más (Seleccionar → Continuar). La promo se recalcula para ese
+   * carrito y se descarta si deja de aplicar.
+   */
+  function goToCheckout(opciones?: { carrito?: CartItem[]; origen?: 'carrito' | 'reservar_esta' }) {
+    const c = opciones?.carrito ?? cart;
+    if (c.length === 0 || !checkin || !checkout || searching) return;
     // Block if any cart room is unavailable for current dates
-    const hasUnavailableInCart = cart.some(item => {
+    const hasUnavailableInCart = c.some(item => {
       const room = BOOKING_ROOMS.find(r => r.id === item.roomId);
       return room && unavailable.includes(room.name);
     });
     if (hasUnavailableInCart) return;
+    const capacidad = c.reduce((sum, item) => sum + (BOOKING_ROOMS.find(r => r.id === item.roomId)?.maxGuests ?? 0), 0);
+    if (capacidad < adults + children) return;
+    let pc = promoCode;
+    let pd = promoDiscount;
+    if (opciones?.carrito) {
+      pc = promoCode && validatePromo(promoCode, nights, c.length).valid ? promoCode : null;
+      pd = pc ? calcPromoDiscount(pc, c, checkin, checkout, nights, factores) : 0;
+    }
     const state: BookingState = {
       checkin, checkout, nights, adults, children,
-      cart, promoCode, promoDiscount,
+      cart: c, promoCode: pc, promoDiscount: pd,
       factores: recortarFactores(factores, checkin, checkout),
     };
     saveBookingState(state);
-    trackEvent('CHECKOUT_STEP_1', { rooms: cart.length, checkin, checkout, guests: adults });
+    trackEvent('CHECKOUT_STEP_1', { rooms: c.length, checkin, checkout, guests: adults, source: opciones?.origen ?? 'carrito' });
     if (cartAbandonTimer.current) clearTimeout(cartAbandonTimer.current);
     router.push('/reservar/checkout');
+  }
+
+  /** «Reservar esta»: solo si el carrito está vacío y todo el grupo cabe en esa suite. */
+  function puedeReservarDirecto(room: BookingRoom): boolean {
+    return searched && !searching && !availabilityDegraded && cart.length === 0
+      && !unavailable.includes(room.name) && adults + children <= room.maxGuests;
+  }
+
+  function reservarEsta(room: BookingRoom) {
+    if (!puedeReservarDirecto(room)) return;
+    const guestCount = Math.max(1, Math.min(adults, room.maxGuests));
+    trackEvent('SUITE_SELECTED', { suite: room.name, guests: guestCount, source: 'reservar_esta' });
+    goToCheckout({ carrito: [{ roomId: room.id, guestCount }], origen: 'reservar_esta' });
   }
 
   // ── Capacity validation ───────────────────────────────
@@ -783,6 +803,17 @@ function ReservarPageInner() {
   const sortedRooms = searched
     ? [...visibleRooms].sort((a, b) => Number(isUnavailable(a)) - Number(isUnavailable(b)))
     : visibleRooms;
+
+  // Fechas cercanas con lugar para el aviso de «Estamos llenos».
+  const alternativasCerca = allUnavailable && cal && nights > 0
+    ? alternativas(cal, checkin, nights, { adultos: adults, menores: children }, today)
+    : [];
+
+  // Al chocar con «Estamos llenos», refrescar el calendario: si la búsqueda
+  // contradice lo que tenía en caché, las fechas cercanas salen de datos al día.
+  useEffect(() => {
+    if (allUnavailable) cargarCalendario(true);
+  }, [allUnavailable]);
 
   // WhatsApp de rescate cuando no hay disponibilidad
   const waFullMsg = `Hola, quiero reservar en Paraíso Encantado del ${checkin} al ${checkout} para ${adults} adulto${adults !== 1 ? 's' : ''}${children > 0 ? ` y ${children} menor${children !== 1 ? 'es' : ''}` : ''}, pero el sitio marca todo ocupado. ¿Tienen alguna opción o lista de espera?`;
@@ -825,47 +856,35 @@ function ReservarPageInner() {
         </div>
       )}
 
-      {/* ── Checkin error ── */}
-      {checkinError && (
-        <div style={{ maxWidth: 1100, margin: '0 auto 8px', padding: '0 24px' }}>
-          <p role="alert" style={{ background: '#fff3cd', border: '1px solid #f5c542', borderRadius: 8, padding: '10px 16px', fontSize: '0.85rem', color: '#7a4f00', margin: 0 }}>
-            ⚠️ {checkinError}
-          </p>
-        </div>
-      )}
-
       {/* ── Search bar (selectores) ── */}
       <div className={styles.searchBar}>
         <div className={styles.searchFields}>
-          <label className={styles.fieldCell}>
-            <span className={styles.fieldIcon}><CalendarDays size={18} strokeWidth={1.5} /></span>
-            <span className={styles.fieldText}>
-              <span className={styles.fieldLabel}>Llegada</span>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={checkin}
-                min={today}
-                onChange={e => handleCheckinChange(e.target.value)}
-                aria-label="Fecha de llegada"
-              />
-            </span>
-          </label>
-
-          <label className={styles.fieldCell}>
-            <span className={styles.fieldIcon}><CalendarDays size={18} strokeWidth={1.5} /></span>
-            <span className={styles.fieldText}>
-              <span className={styles.fieldLabel}>Salida</span>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={checkout}
-                min={minCheckout}
-                onChange={e => handleCheckoutChange(e.target.value)}
-                aria-label="Fecha de salida"
-              />
-            </span>
-          </label>
+          {/* Llegada y Salida abren el calendario propio: cada noche dice si
+              hay lugar y desde cuánto (components/calendario). */}
+          <StayDateField
+            valor={{ checkin, checkout }}
+            onChange={handleRangeChange}
+            grupo={{
+              adultos: adults,
+              menores: children,
+              // Viene de la página de una suite sin fechas: el calendario
+              // enseña la ocupación y el precio de ESA suite.
+              suiteId: !checkin && pendingAutoSelectId.current ? pendingAutoSelectId.current : undefined,
+            }}
+            abierto={calendarioAbierto}
+            onAbiertoChange={setCalendarioAbierto}
+            icono={<CalendarDays size={18} strokeWidth={1.5} />}
+            etiquetas={{ vacio: 'Elegir fecha' }}
+            clases={{
+              contenedor: styles.datePair,
+              campo: `${styles.fieldCell} ${styles.dateBtn}`,
+              icono: styles.fieldIcon,
+              texto: styles.fieldText,
+              etiqueta: styles.fieldLabel,
+              valor: styles.dateValue,
+              vacio: styles.dateValueEmpty,
+            }}
+          />
 
           <div className={styles.fieldCell}>
             <span className={styles.fieldIcon}><Users size={18} strokeWidth={1.5} /></span>
@@ -894,10 +913,10 @@ function ReservarPageInner() {
         <button
           className={styles.searchBtn}
           onClick={handleSearch}
-          disabled={!checkin || !checkout || nights <= 0 || searching}
+          disabled={searching}
           aria-busy={searching}
         >
-          {searching ? 'Verificando…' : searched ? 'Actualizar' : 'Ver disponibilidad'}
+          {searching ? 'Verificando…' : !checkin || !checkout ? 'Elegir fechas' : searched ? 'Actualizar' : 'Ver disponibilidad'}
         </button>
       </div>
 
@@ -908,12 +927,6 @@ function ReservarPageInner() {
             <CalendarDays size={14} strokeWidth={1.5} />
             {' '}{nights} noche{nights !== 1 ? 's' : ''} · {new Date(`${checkin}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} → {new Date(`${checkout}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
           </p>
-          {datesOverlapBlocked && (
-            <p className={styles.blockedWarning} role="alert">
-              <AlertTriangle size={13} strokeWidth={2} />
-              {' '}Algunas noches en este rango están completamente reservadas. Podría haber disponibilidad limitada.
-            </p>
-          )}
         </div>
       )}
 
@@ -923,7 +936,12 @@ function ReservarPageInner() {
           {!searched && !searching && (
             <div className={styles.promptBanner}>
               <CalendarDays size={20} strokeWidth={1.5} />
-              <span>Selecciona tus fechas y haz clic en <strong>Ver disponibilidad</strong> para ver precios exactos y disponibilidad en tiempo real.</span>
+              <span>
+                Elige tus fechas en el calendario: cada noche te dice si hay lugar y desde cuánto.{' '}
+                <button type="button" className={styles.promptLink} onClick={() => setCalendarioAbierto(true)}>
+                  Abrir calendario
+                </button>
+              </span>
             </div>
           )}
           {searching && (
@@ -955,7 +973,8 @@ function ReservarPageInner() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.degradedWa}
-                onClick={() => trackEvent('WHATSAPP_CLICK', { action: 'availability_degraded', checkin, checkout })}
+                data-wa-medido="1"
+                onClick={() => trackEvent('WHATSAPP_CLICK_CON_FECHAS', { action: 'availability_degraded', checkin, checkout })}
               >
                 Reservar por WhatsApp
               </a>
@@ -971,21 +990,46 @@ function ReservarPageInner() {
                 {new Date(`${checkout}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}.
                 Prueba otras fechas, o escríbenos: a veces se libera espacio por cambios de última hora.
               </p>
+              {/* Fechas cercanas con lugar, del mismo largo. El 12 oct 2026, las
+                  20 sesiones que nunca vieron un cuarto libre tenían noches
+                  libres a 3 días o menos, y este aviso no se las enseñaba. */}
+              {alternativasCerca.length > 0 && (
+                <div className={styles.altDates}>
+                  <p className={styles.altDatesTitle}>Fechas cercanas con lugar</p>
+                  <div className={styles.altDatesList}>
+                    {alternativasCerca.map(alt => (
+                      <button
+                        key={alt.checkin}
+                        type="button"
+                        className={styles.altDateBtn}
+                        onClick={() => {
+                          trackEvent('ALTERNATIVE_DATES_CLICK', { from: checkin, to: alt.checkin, nights });
+                          handleRangeChange({ checkin: alt.checkin, checkout: alt.checkout });
+                        }}
+                      >
+                        <span className={styles.altDateRange}>{fmtNight(alt.checkin)} → {fmtNight(alt.checkout)}</span>
+                        {alt.desde ? <span className={styles.altDatePrice}>desde {fmtShort(alt.desde)}</span> : null}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className={styles.noAvailActions}>
                 <a
                   href={waFullHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.noAvailWa}
-                  onClick={() => trackEvent('WHATSAPP_CLICK', { action: 'no_availability', checkin, checkout })}
+                  data-wa-medido="1"
+                  onClick={() => trackEvent('WHATSAPP_CLICK_CON_FECHAS', { action: 'no_availability', checkin, checkout })}
                 >
                   Preguntar por WhatsApp
                 </a>
                 <button
                   className={styles.noAvailDates}
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  onClick={() => setCalendarioAbierto(true)}
                 >
-                  Probar otras fechas
+                  Ver calendario
                 </button>
               </div>
             </div>
@@ -1017,9 +1061,15 @@ function ReservarPageInner() {
                 style={{ cursor: 'pointer' }}
               >
                 {/* Image */}
+                {/* Tocar la foto abre la galería. Antes este clic se tragaba
+                    (stopPropagation sin acción): 13 de los 32 clics «muertos»
+                    del motor en celular eran aquí (Clarity, 6-12 oct 2026). */}
                 <div
-                  className={styles.roomImageWrap}
-                  onClick={e => e.stopPropagation()}
+                  className={`${styles.roomImageWrap} ${room.images.length > 0 ? styles.roomImageZoom : ''}`}
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (room.images.length > 0) { setLightboxRoom(room); setLightboxIdx(0); }
+                  }}
                 >
                   <Image
                     src={room.image}
@@ -1114,6 +1164,21 @@ function ReservarPageInner() {
 
                     {unavail ? (
                       <span className={styles.unavailTag}>Agotada</span>
+                    ) : puedeReservarDirecto(room) ? (
+                      <div className={styles.cardActions}>
+                        <button
+                          className={styles.bookNowBtn}
+                          onClick={e => { e.stopPropagation(); reservarEsta(room); }}
+                        >
+                          Reservar
+                        </button>
+                        <button
+                          className={styles.addAnotherBtn}
+                          onClick={e => { e.stopPropagation(); addToCart(room); }}
+                        >
+                          + Agregar otra suite
+                        </button>
+                      </div>
                     ) : searched ? (
                       <button
                         className={`${styles.addBtn} ${added ? styles.addBtnAdded : ''}`}
@@ -1360,7 +1425,7 @@ function ReservarPageInner() {
             <button
               className={styles.checkoutBtn}
               disabled={cart.length === 0 || !checkin || !checkout || !capacityOk || cartHasUnavailable}
-              onClick={goToCheckout}
+              onClick={() => goToCheckout()}
             >
               {cart.length === 0
                 ? 'Elige tu habitación'
@@ -1490,6 +1555,7 @@ function ReservarPageInner() {
           onClose={() => setDetailRoom(null)}
           onAdd={(r) => { addToCart(r); setDetailRoom(null); }}
           onRemove={(id) => { removeFromCart(id); setDetailRoom(null); }}
+          onBookNow={puedeReservarDirecto(detailRoom) ? (r) => { setDetailRoom(null); reservarEsta(r); } : undefined}
           inCart={inCart(detailRoom.id)}
           searched={searched}
           guestCount={getRoomGuests(detailRoom.id)}

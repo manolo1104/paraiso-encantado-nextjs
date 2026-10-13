@@ -65,6 +65,38 @@
   box-shadow: 0 0 0 2px rgba(201, 169, 122, 0.18);
 }
 
+/* Fechas: botones que abren el calendario propio (components/calendario). */
+.fechas {
+  display: contents;
+}
+
+.campoFecha {
+  background: transparent;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  min-height: 44px;
+}
+
+.campoFecha:focus-visible {
+  outline: 2px solid rgba(201, 169, 122, 0.8);
+  outline-offset: -2px;
+}
+
+.valor,
+.valorVacio {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--cream);
+  white-space: nowrap;
+}
+
+.valorVacio {
+  color: rgba(250, 248, 245, 0.62);
+}
+
 .input::-webkit-calendar-picker-indicator {
   filter: invert(1) opacity(0.6);
   cursor: pointer;

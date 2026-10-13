@@ -48,6 +48,7 @@ const GRABAR_SIEMPRE = new Set([
   'CART_ABANDON',
   'BOOKING_SUCCESS',
   'WHATSAPP_PAY_CLICK',
+  'WHATSAPP_CLICK_CON_FECHAS',
 ]);
 
 /**
@@ -58,8 +59,13 @@ const GRABAR_SIEMPRE = new Set([
 const CONTACTOS: Record<string, string> = {
   clic_whatsapp: 'contacto_whatsapp',
   WHATSAPP_CLICK: 'contacto_whatsapp',
-  WHATSAPP_PAY_CLICK: 'contacto_whatsapp',
-  WHATSAPP_RECOVERY_CLICK: 'contacto_whatsapp',
+  // Mismo corte que en lib/analytics.ts: con fechas vale más que sin fechas.
+  WHATSAPP_CLICK_CON_FECHAS: 'contacto_whatsapp_con_fechas',
+  WHATSAPP_PAY_CLICK: 'contacto_whatsapp_con_fechas',
+  WHATSAPP_RECOVERY_CLICK: 'contacto_whatsapp_con_fechas',
+  // Los otros dos negocios del sitio, para poder filtrarlos aparte.
+  clic_whatsapp_tours: 'contacto_whatsapp_tours',
+  clic_whatsapp_restaurante: 'contacto_whatsapp_restaurante',
   clic_telefono: 'contacto_telefono',
 };
 

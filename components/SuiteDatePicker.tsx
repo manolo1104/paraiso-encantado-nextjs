@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { CalendarDays, CheckCircle, AlertTriangle, Loader2, Users, Minus, Plus } from 'lucide-react';
+import StayDateField from '@/components/calendario/StayDateField';
+import { SUITE_ID_TO_ROOM_ID } from '@/lib/booking';
+import styles from './SuiteDatePicker.module.css';
 
 interface Props {
+  /** Slug de la suite (data/suites.ts): con él, el calendario enseña SU ocupación y SU precio. */
+  suiteId?: string;
   suiteName: string;
   maxGuests?: number;
   initialCheckin?: string;
@@ -26,6 +31,7 @@ function fmt(d: string) {
 }
 
 export default function SuiteDatePicker({
+  suiteId,
   suiteName,
   maxGuests = 8,
   initialCheckin = '',
@@ -33,8 +39,6 @@ export default function SuiteDatePicker({
   initialGuests = 2,
   onDatesSelected,
 }: Props) {
-  const today = new Date().toISOString().split('T')[0];
-
   const [checkin, setCheckin]   = useState(initialCheckin);
   const [checkout, setCheckout] = useState(initialCheckout);
   const [guests, setGuests]     = useState(Math.min(maxGuests, Math.max(1, initialGuests)));
@@ -72,17 +76,14 @@ export default function SuiteDatePicker({
     }
   }
 
-  function handleCheckin(v: string) {
-    setCheckin(v);
+  // El calendario ya solo deja elegir noches libres de esta suite; la consulta
+  // al servidor se conserva como verificación final (apartados de otros
+  // huéspedes y reservas que aún no llegan a la matriz).
+  function handleRange(v: { checkin: string; checkout: string }) {
+    setCheckin(v.checkin);
+    setCheckout(v.checkout);
     setStatus('idle');
-    if (v && checkout && v < checkout) checkAvailability(v, checkout);
-    if (checkout && v >= checkout) setCheckout('');
-  }
-
-  function handleCheckout(v: string) {
-    setCheckout(v);
-    setStatus('idle');
-    if (checkin && v && checkin < v) checkAvailability(checkin, v);
+    if (v.checkin && v.checkout && v.checkin < v.checkout) checkAvailability(v.checkin, v.checkout);
   }
 
   function changeGuests(delta: number) {
@@ -121,21 +122,21 @@ export default function SuiteDatePicker({
       </div>
 
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {/* Date inputs */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, overflow: 'hidden' }}>
-            <span style={labelSx}>Check-in</span>
-            <input type="date" value={checkin} min={today}
-              onChange={e => handleCheckin(e.target.value)}
-              style={inputSx} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, overflow: 'hidden' }}>
-            <span style={labelSx}>Check-out</span>
-            <input type="date" value={checkout} min={checkin || today}
-              onChange={e => handleCheckout(e.target.value)}
-              style={inputSx} />
-          </label>
-        </div>
+        {/* Fechas: calendario propio en modo suite (precio y ocupación de ESTA suite) */}
+        <StayDateField
+          valor={{ checkin, checkout }}
+          onChange={handleRange}
+          grupo={{ adultos: guests, suiteId: suiteId ? SUITE_ID_TO_ROOM_ID[suiteId] : undefined }}
+          titulo={`¿Cuándo vienes a ${suiteName}?`}
+          etiquetas={{ llegada: 'Check-in', salida: 'Check-out', vacio: 'Elegir fecha' }}
+          clases={{
+            contenedor: styles.fechas,
+            campo: styles.campo,
+            etiqueta: styles.etiqueta,
+            valor: styles.valor,
+            vacio: styles.vacio,
+          }}
+        />
 
         {/* Personas */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -196,12 +197,6 @@ const labelSx: React.CSSProperties = {
   fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase',
   letterSpacing: '0.08em', color: '#9a8a74',
   fontFamily: 'var(--font-jost, sans-serif)',
-};
-const inputSx: React.CSSProperties = {
-  padding: '8px 10px', border: '1px solid #d4cec7', borderRadius: 4,
-  fontSize: '0.875rem', fontFamily: 'var(--font-jost, sans-serif)',
-  background: '#fff', color: '#1a2218', outline: 'none', cursor: 'pointer',
-  width: '100%', boxSizing: 'border-box', minWidth: 0, display: 'block',
 };
 const statusBase: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 7,

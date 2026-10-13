@@ -3,6 +3,7 @@ import { getAllBookings } from '@/lib/admin/sheets-admin';
 import { getSheetsClient, sheetsCall } from '@/lib/sheets';
 import { BOOKING_ROOMS } from '@/lib/booking';
 import { parseFechaHojaMx as parseFechaMx } from '@/lib/date-mx';
+import { contarReservasCalendario } from '@/lib/admin/reservas-calendario';
 
 export const dynamic = 'force-dynamic';
 
@@ -101,7 +102,14 @@ export async function GET() {
     return NextResponse.json(cache.payload);
   }
   try {
-    const [bookings, occupancyPct] = await Promise.all([getAllBookings(), calcOccupancyPct()]);
+    const [bookings, occupancyPct, delCalendario] = await Promise.all([
+      getAllBookings(),
+      calcOccupancyPct(),
+      // Reservas que el hotel cerró desde /admin/calendario (WhatsApp,
+      // teléfono…): cuentan para «N reservas confirmadas este mes», pero NO
+      // entran en `recent` (el aviso de reserva verificada necesita un nombre).
+      contarReservasCalendario(30).catch(() => 0),
+    ]);
     const now = Date.now();
     const DAY = 86_400_000;
 
@@ -127,6 +135,8 @@ export async function GET() {
         }
       }
     }
+
+    count30d += delCalendario;
 
     const payload: Payload = { count30d, recent, occupancyPct };
     cache = { at: Date.now(), payload };

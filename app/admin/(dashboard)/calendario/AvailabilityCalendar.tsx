@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Lock, Unlock, RefreshCw, Loader2, X, CalendarCheck, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, Unlock, RefreshCw, Loader2, X, CalendarCheck, Plus, MessageCircle } from 'lucide-react';
 import type { AdminBooking } from '@/lib/admin/sheets-admin';
 import ReservationModal from '@/components/admin/ReservationModal';
 
@@ -40,6 +40,17 @@ interface ClickedDay {
 
 interface Props { bookings: AdminBooking[]; onRefresh: () => void }
 
+/** Reserva cerrada desde este calendario (ver lib/admin/reservas-calendario.ts). */
+interface ReservaCal { registrada: string; id: string; suite: string; llegada: string; salida: string; noches: number; canal: string }
+
+const CANALES_RESERVA = ['WhatsApp', 'Teléfono', 'Booking.com', 'En persona', 'Otro'];
+
+function sumarDiasISO(ds: string, n: number): string {
+  const d = new Date(`${ds}T12:00:00`);
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
 export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
@@ -54,15 +65,32 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
   const [saveError, setSaveError] = useState('');
   const [editBooking, setEditBooking] = useState<AdminBooking | null>(null);
   const [newBookingParams, setNewBookingParams] = useState<{ room: string; date: string } | null>(null);
+  // Cerrar noches: primero el motivo (¿reserva o solo bloqueo?), luego cuántas.
+  // Una reserva cuenta en «N reservas confirmadas este mes» de /reservar.
+  const [cierre, setCierre] = useState<'reserva' | 'bloqueo' | null>(null);
+  const [cierreNoches, setCierreNoches] = useState(1);
+  const [cierreCanal, setCierreCanal] = useState('WhatsApp');
+  const [reservasCal, setReservasCal] = useState<ReservaCal[]>([]);
 
   const loadSheet = useCallback(async () => {
     setLoadingSheet(true);
     try {
-      const res = await fetch('/api/admin/disponibilidad');
+      const [res, resCal] = await Promise.all([
+        fetch('/api/admin/disponibilidad'),
+        fetch('/api/admin/reservas-calendario').catch(() => null),
+      ]);
       if (res.ok) setSheetData(await res.json());
+      if (resCal?.ok) setReservasCal((await resCal.json()).reservas || []);
     } catch {}
     setLoadingSheet(false);
   }, []);
+
+  // Cada vez que se abre (o cierra) otra noche, el cierre empieza de cero.
+  useEffect(() => { setCierre(null); setCierreNoches(1); setCierreCanal('WhatsApp'); }, [clicked]);
+
+  function reservaCalDe(room: string, ds: string): ReservaCal | undefined {
+    return reservasCal.find(r => r.suite === room && ds >= r.llegada && ds < r.salida);
+  }
 
   useEffect(() => { loadSheet(); }, [loadSheet]);
 
@@ -104,20 +132,39 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
     return n;
   }
 
-  async function handleBlock() {
-    if (!clicked) return;
+  /** Cierra 1..14 noches desde la fecha tocada, como reserva o como bloqueo. */
+  async function handleCerrar() {
+    if (!clicked || !cierre) return;
     setSaving(true); setSaveError('');
-    const res = await fetch('/api/admin/disponibilidad', {
+    const res = await fetch('/api/admin/reservas-calendario', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ room: clicked.room, date: clicked.date }),
+      body: JSON.stringify({ suite: clicked.room, llegada: clicked.date, noches: cierreNoches, tipo: cierre, canal: cierreCanal }),
     });
     if (res.ok) {
       await loadSheet();
       setClicked(null);
     } else {
-      const d = await res.json();
-      setSaveError(d.error || 'Error al bloquear');
+      const d = await res.json().catch(() => ({}));
+      setSaveError(d.error || 'No se pudo cerrar la fecha');
+    }
+    setSaving(false);
+  }
+
+  /** Cancela una reserva hecha desde el calendario y libera sus noches. */
+  async function handleCancelarReservaCal(id: string) {
+    setSaving(true); setSaveError('');
+    const res = await fetch('/api/admin/reservas-calendario', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) {
+      await loadSheet();
+      setClicked(null);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setSaveError(d.error || 'No se pudo cancelar');
     }
     setSaving(false);
   }
@@ -178,6 +225,66 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
       setSaveError(d.error || 'Error al restaurar el bloqueo');
     }
     setSaving(false);
+  }
+
+  /**
+   * «Cerrar esta fecha»: pregunta primero si es una reserva o solo un bloqueo
+   * (antes solo existía «Bloquear» y las reservas de WhatsApp se perdían para
+   * la prueba social de la web), y deja cerrar varias noches de un jalón.
+   */
+  function panelCierre() {
+    if (!clicked) return null;
+    const btn: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)' };
+    if (!cierre) {
+      return (
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: 10, background: '#fff' }}>
+          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-jost,sans-serif)' }}>
+            Cerrar esta fecha: ¿es una reserva o solo un bloqueo?
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button onClick={() => setCierre('reserva')} style={{ ...btn, background: '#1a1a1a', color: '#fff' }}>
+              <MessageCircle size={14} /> Es una reserva (WhatsApp, teléfono…)
+            </button>
+            <button onClick={() => setCierre('bloqueo')} style={{ ...btn, background: '#fff', color: '#1a1a1a', border: '1px solid #d1d5db' }}>
+              <Lock size={14} /> Solo bloqueo (mantenimiento, uso del hotel…)
+            </button>
+          </div>
+        </div>
+      );
+    }
+    const salida = sumarDiasISO(clicked.date, cierreNoches);
+    const campo: React.CSSProperties = { width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', background: '#fff', color: '#1a1a1a' };
+    const etiqueta: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: '#6b7280', margin: '0 0 4px', fontFamily: 'var(--font-jost,sans-serif)' };
+    return (
+      <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: 10, background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#374151', fontFamily: 'var(--font-jost,sans-serif)' }}>
+          {cierre === 'reserva' ? 'Reserva que llegó por otro canal' : 'Bloqueo (no cuenta como reserva)'}
+        </p>
+        <label>
+          <span style={etiqueta}>Noches</span>
+          <select value={cierreNoches} onChange={e => setCierreNoches(Number(e.target.value))} style={campo}>
+            {Array.from({ length: 14 }, (_, i) => i + 1).map(n => (
+              <option key={n} value={n}>{n} noche{n !== 1 ? 's' : ''} · sale el {fmtDay(sumarDiasISO(clicked.date, n))}</option>
+            ))}
+          </select>
+        </label>
+        {cierre === 'reserva' && (
+          <label>
+            <span style={etiqueta}>¿Por dónde llegó?</span>
+            <select value={cierreCanal} onChange={e => setCierreCanal(e.target.value)} style={campo}>
+              {CANALES_RESERVA.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+        )}
+        <button onClick={handleCerrar} disabled={saving} style={{ ...btn, background: cierre === 'reserva' ? '#2d7a34' : '#1a1a1a', color: '#fff', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+          {saving ? <Loader2 size={14} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Lock size={14} />}
+          {cierre === 'reserva' ? `Guardar reserva (${fmtDay(clicked.date)} → ${fmtDay(salida)})` : `Bloquear ${cierreNoches} noche${cierreNoches !== 1 ? 's' : ''}`}
+        </button>
+        <button onClick={() => setCierre(null)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-jost,sans-serif)', textDecoration: 'underline' }}>
+          Atrás
+        </button>
+      </div>
+    );
   }
 
   const dim = new Date(year, month + 1, 0).getDate();
@@ -373,8 +480,20 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                 </div>
               )}
 
+              {/* Reserva cerrada desde este calendario (WhatsApp, teléfono…) */}
+              {clicked.state.status === 'booking' && !clicked.state.booking && reservaCalDe(clicked.room, clicked.date) && (() => {
+                const rc = reservaCalDe(clicked.room, clicked.date)!;
+                return (
+                  <div style={{ background: '#EAF3DE', borderLeft: '3px solid #2d7a34', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#374151', lineHeight: 1.6, fontFamily: 'var(--font-jost,sans-serif)' }}>
+                    <strong>Reserva por {rc.canal}</strong>, cerrada desde el calendario el {fmtDay(rc.registrada.slice(0, 10))}.<br />
+                    {fmtDay(rc.llegada)} → {fmtDay(rc.salida)} · {rc.noches} noche{rc.noches !== 1 ? 's' : ''}.<br />
+                    <span style={{ color: '#6b7280' }}>Cuenta en «reservas confirmadas este mes» de la web.</span>
+                  </div>
+                );
+              })()}
+
               {/* Booking without admin record */}
-              {clicked.state.status === 'booking' && !clicked.state.booking && (
+              {clicked.state.status === 'booking' && !clicked.state.booking && !reservaCalDe(clicked.room, clicked.date) && (
                 <div style={{ background: '#fde8e8', borderRadius: 6, padding: '10px 12px', marginBottom: 14, fontSize: 12, color: '#791F1F', fontFamily: 'var(--font-jost,sans-serif)' }}>
                   Esta fecha está marcada como RESERVADO en Google Sheets. No se encontró reserva en el panel admin (puede ser una reserva de la web pública o creada directamente en Sheets).
                 </div>
@@ -420,14 +539,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                     >
                       <Plus size={14} /> Nueva Reserva
                     </button>
-                    <button
-                      onClick={handleBlock}
-                      disabled={saving}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
-                    >
-                      {saving ? <Loader2 size={14} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Lock size={14} />}
-                      Bloquear esta fecha
-                    </button>
+                    {panelCierre()}
                   </>
                 )}
 
@@ -461,14 +573,7 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                     >
                       <Plus size={14} /> Nueva Reserva
                     </button>
-                    <button
-                      onClick={handleBlock}
-                      disabled={saving}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
-                    >
-                      {saving ? <Loader2 size={14} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Lock size={14} />}
-                      Bloquear esta fecha
-                    </button>
+                    {panelCierre()}
                     <button
                       onClick={handleRestoreOta}
                       disabled={saving}
@@ -477,6 +582,17 @@ export default function AvailabilityCalendar({ bookings, onRefresh }: Props) {
                       Restaurar bloqueo de OTA
                     </button>
                   </>
+                )}
+
+                {clicked.state.status === 'booking' && !clicked.state.booking && reservaCalDe(clicked.room, clicked.date) && (
+                  <button
+                    onClick={() => handleCancelarReservaCal(reservaCalDe(clicked.room, clicked.date)!.id)}
+                    disabled={saving}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px', background: 'transparent', color: '#8a1a1a', border: '1px solid #e8b4b4', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, fontFamily: 'var(--font-jost,sans-serif)', opacity: saving ? 0.6 : 1 }}
+                  >
+                    {saving ? <Loader2 size={14} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Unlock size={14} />}
+                    Cancelar esta reserva y liberar sus noches
+                  </button>
                 )}
 
                 {clicked.state.status === 'booking' && clicked.state.booking && (

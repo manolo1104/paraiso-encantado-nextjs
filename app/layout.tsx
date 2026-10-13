@@ -92,8 +92,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} className={`${cormorant.variable} ${jost.variable}`}>
       <head>
-        {/* Google Tag Manager */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N98DFD9V');` }} />
+        {/* Google Tag Manager — fuera de /admin.
+            El panel metía 451 vistas y 1,200 eventos de 6 usuarios en GA4 (un
+            tercio de las páginas vistas del sitio) y falseaba rebote, duración
+            y páginas más vistas. Clarity ya se excluía solo; GA4 no.
+            Se decide aquí, en el servidor, con la ruta de la PRIMERA petición:
+            quien entra por /admin no carga GTM en toda la sesión, que es justo
+            lo que hace `pe_interno` en Clarity. */}
+        {!isAdmin && <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N98DFD9V');` }} />}
         {/* Microsoft Clarity (grabaciones). Se monta también en /admin: es su
             propia guarda la que sale temprano ahí y de paso marca el navegador
             como interno, para no medir al hotel como si fuera un huésped. */}
@@ -103,8 +109,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body data-barra-movil={mostrarBarraMovil ? '1' : undefined}>
         {/* Google Tag Manager (noscript) */}
-        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N98DFD9V" height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe></noscript>
-        <TrackingSetup />
+        {!isAdmin && <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N98DFD9V" height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe></noscript>}
+        {/* Fuera de /admin: su detector global de enlaces a wa.me contaba como
+            contacto de huésped los clics del propio panel (p. ej. el de
+            /admin/opinion), que entran a Google Ads como conversión. */}
+        {!isAdmin && <TrackingSetup />}
         {!isAdmin && <ScrollReveal />}
         {!isAdmin && <Navbar />}
         {children}
