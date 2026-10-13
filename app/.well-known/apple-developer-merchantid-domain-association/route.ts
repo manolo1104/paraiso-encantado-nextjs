@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-static';
+// Dinámica a propósito: con 'force-static' el archivo se generaba al COMPILAR y,
+// si Railway no pasaba la variable al build, quedaba un 404 fijo hasta el
+// siguiente despliegue (pasó el 12 oct 2026). Así se lee en cada visita.
+export const dynamic = 'force-dynamic';
 
 /**
  * Apple Pay domain verification.
