@@ -61,6 +61,34 @@
 .leyenda strong { color: var(--bark); font-weight: 600; }
 .leyendaAviso { color: #8a4b12; }
 
+/* «$ Noches con precio más bajo»: la muestra es la misma pastilla que llevan
+   esas noches en la rejilla (.diaMasBarata). */
+.leyendaBarata {
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--clay);
+}
+/* Mientras cargan los precios, o si no hay ninguna noche así, el renglón se
+   queda (invisible y fuera del lector de pantalla) para que nada salte. */
+.leyendaOculta { visibility: hidden; }
+
+.muestraBarata {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: rgba(74, 110, 46, 0.14);
+  color: var(--forest);
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .cerrar {
   flex: none;
   width: 44px;
@@ -158,6 +186,26 @@
   background: linear-gradient(90deg, var(--parch), #e6dfd3, var(--parch));
   background-size: 200% 100%;
   animation: brillo 1.2s linear infinite;
+}
+
+/* Noche más barata que el precio de lista (ver entreSemana.ts): el precio va
+   en una pastilla verde y más grueso. No es solo color: cambia la forma, la
+   leyenda lo explica y el lector de pantalla dice «precio más bajo».
+   Contraste del texto sobre la pastilla: 11:1. Sin relleno vertical para que
+   la fila no crezca; 2 px a los lados para que «$1,400» quepa a 320 px. */
+.diaMasBarata .diaPrecio {
+  padding: 0 2px;
+  border-radius: 4px;
+  background: rgba(74, 110, 46, 0.14);
+  color: var(--forest);
+  font-weight: 600;
+}
+/* En la llegada y la salida (fondo verde oscuro) la pastilla se aclara; sin
+   esta regla el precio quedaría verde oscuro sobre verde oscuro. */
+.diaLlegada.diaMasBarata .diaPrecio,
+.diaSalida.diaMasBarata .diaPrecio {
+  background: rgba(250, 248, 245, 0.16);
+  color: var(--cream);
 }
 
 .diaQuedan {

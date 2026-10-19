@@ -30,11 +30,15 @@ import TrustBadgesReservar from '@/components/TrustBadgesReservar';
 import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
 import RecentBookingsLive, { LiveBookingItem } from '@/components/RecentBookingsLive';
 import { getQuoteForRoom, getStripQuotes } from '@/lib/review-quotes';
+// Las cifras de la ficha de Google (540 el 13 oct 2026). Módulo normal, sin
+// «use client» ni nada de servidor: se puede importar aquí.
+import { HOTEL } from '@/lib/seo-hotel';
 import { trackEvent } from '@/lib/analytics';
 import { getHoldSessionId } from '@/lib/hold-session';
 import StayDateField from '@/components/calendario/StayDateField';
 import { cargarCalendario, useCalendario } from '@/hooks/useCalendario';
 import { alternativas } from '@/lib/calendario';
+import EntreSemanaDesde from '@/components/EntreSemanaDesde';
 
 const API = '';
 const WA_NUMBER = '524891007679';
@@ -181,7 +185,8 @@ function RoomDrawer({
               <blockquote className={styles.drawerQuote}>
                 <div className={styles.reviewStars} aria-label={`${q.rating} de 5 estrellas`}>{'★'.repeat(q.rating)}</div>
                 <p>“{q.text}”</p>
-                <footer>{q.name} · {q.location} · reseña de Google</footer>
+                {/* Sin «reseña de Google» (17 oct 2026): las de /reviews no tienen enlace a la ficha. */}
+                <footer>{q.name} · {q.location}</footer>
               </blockquote>
             );
           })()}
@@ -920,6 +925,24 @@ function ReservarPageInner() {
         </button>
       </div>
 
+      {/* Precio real de lunes a jueves contra viernes y sábado, del mismo
+          calendario (components/EntreSemanaDesde); el botón abre el
+          calendario. Solo mientras no hay fechas: a quien ya eligió un fin de
+          semana no se le ofrece cambiarlo por uno más barato. Tampoco a quien
+          viene de la ficha de una suite: su calendario enseña ESA suite y el
+          «desde» del hotel (otra suite) lo confundiría.
+          Tampoco con el calendario abierto (17 oct 2026): al llegar sin fechas se abre
+          solo, la vitrina aparecía debajo cuando respondía /api/calendario y empujaba
+          los resultados sin que nadie tocara nada (salto de diseño, CLS). Con el
+          calendario cerrado aparece justo después del clic, y ese salto no cuenta. */}
+      {!checkin && !checkout && !pendingAutoSelectId.current && !calendarioAbierto && (
+        <EntreSemanaDesde
+          origen="reservar"
+          grupo={{ adultos: adults, menores: children }}
+          onVerFechas={() => setCalendarioAbierto(true)}
+        />
+      )}
+
       {/* ── Date summary + blocked warning ── */}
       {nights > 0 && checkin && checkout && (
         <div className={styles.dateSummaryRow}>
@@ -1197,24 +1220,27 @@ function ReservarPageInner() {
             );
           })}
 
-          {/* ── Reseñas reales (de /reviews) ── */}
+          {/* ── Reseñas (de /reviews) ──
+              17 oct 2026: la calificación sale de lib/seo-hotel.ts (decía 523 «verificadas»;
+              Google no comprueba estancias) y las citas ya no se firman «Google»: las 25 de
+              /reviews no tienen enlace a la ficha (app/reviews/page.tsx). */}
           <div className={styles.reviewsStrip}>
             <div className={styles.reviewsStripHeader}>
               <span className={styles.ratingStars} aria-hidden="true">
                 <Star size={15} strokeWidth={0} fill="currentColor" />
               </span>
-              <span><strong>4.5/5</strong> · 523 reseñas verificadas en Google</span>
+              <span><strong>{HOTEL.rating}/5</strong> · {HOTEL.reviewCount} reseñas en Google</span>
             </div>
             <div className={styles.reviewsStripGrid}>
               {getStripQuotes().map(q => (
                 <blockquote key={q.name} className={styles.reviewCard}>
                   <div className={styles.reviewStars} aria-label={`${q.rating} de 5 estrellas`}>{'★'.repeat(q.rating)}</div>
                   <p>“{q.text}”</p>
-                  <footer>{q.name} · {q.location} · Google</footer>
+                  <footer>{q.name} · {q.location}</footer>
                 </blockquote>
               ))}
             </div>
-            <Link href="/reviews" className={styles.reviewsLink}>Leer las 523 reseñas →</Link>
+            <Link href="/reviews" className={styles.reviewsLink}>Leer las {HOTEL.reviewCount} reseñas →</Link>
           </div>
         </div>
 
@@ -1445,12 +1471,12 @@ function ReservarPageInner() {
               <span className={styles.ratingStars} aria-hidden="true">
                 <Star size={13} strokeWidth={0} fill="currentColor" />
               </span>
-              <span><strong>4.5/5</strong> · 523 reseñas verificadas en Google</span>
+              <span><strong>{HOTEL.rating}/5</strong> · {HOTEL.reviewCount} reseñas en Google</span>
             </div>
 
             <blockquote className={styles.sidebarQuote}>
               <p>“{getStripQuotes()[0].text}”</p>
-              <footer>— {getStripQuotes()[0].name} · Google</footer>
+              <footer>— {getStripQuotes()[0].name}</footer>
             </blockquote>
 
             <div className={styles.payMethods} aria-label="Métodos de pago aceptados">

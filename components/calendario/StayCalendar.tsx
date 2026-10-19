@@ -30,6 +30,7 @@ import {
 import { BOOKING_ROOMS } from '@/lib/booking';
 import { sumarDias } from '@/lib/precios';
 import type { EstadoCalendario } from '@/hooks/useCalendario';
+import { nochesMasBaratas } from './entreSemana';
 import styles from './calendario.module.css';
 
 export interface Rango {
@@ -96,7 +97,11 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
 
   // Datos vacíos mientras carga: la rejilla se pinta igual (sin precios) y se
   // puede elegir; nunca se bloquea al huésped por una descarga lenta.
-  const datos: DatosCalendario = cal && cal.desde ? cal : { desde: hoy, libres: null, factores: {} };
+  // Memorizado para que los cálculos de abajo no se repitan en cada render.
+  const datos: DatosCalendario = useMemo(
+    () => (cal && cal.desde ? cal : { desde: hoy, libres: null, factores: {} }),
+    [cal, hoy],
+  );
   const cargando = estado === 'cargando';
 
   const limite = useMemo(
@@ -106,6 +111,20 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
 
   const totalMeses = Math.min(13, Math.ceil(CALENDARIO_DIAS / 30) + 1);
   const listaMeses = useMemo(() => meses(hoy, Math.min(nMeses, totalMeses)), [hoy, nMeses, totalMeses]);
+
+  // Noches con precio más bajo que el de lista (16 oct 2026: que el huésped
+  // VEA cuándo cuesta menos). No se recalcula ningún precio: se compara el
+  // mismo «desde» que pinta la celda (ver ./entreSemana.ts). Mientras carga no
+  // se marca nada, y sin precios dinámicos no sale ninguna. Depende de los
+  // números del grupo y no del objeto: los buscadores lo crean en cada render.
+  const finListado = meses(hoy, listaMeses.length + 1)[listaMeses.length];
+  const { adultos, menores, suiteId } = grupo;
+  const masBaratas = useMemo(
+    () => (cargando
+      ? new Set<string>()
+      : nochesMasBaratas(datos, { adultos, menores, suiteId }, hoy, diasEntre(hoy, finListado))),
+    [cargando, datos, adultos, menores, suiteId, hoy, finListado],
+  );
 
   // Abrir en el mes de la llegada elegida (o de la primera noche con lugar).
   useEffect(() => {
@@ -192,6 +211,12 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
               ? <span className={styles.leyendaAviso}> · No pudimos revisar la ocupación; la confirmamos al buscar.</span>
               : null}
           </p>
+          {/* Siempre ocupa su renglón (invisible si no hay ninguna): al llegar
+              los precios no empuja la rejilla bajo el dedo del huésped. */}
+          <p className={`${styles.leyendaBarata} ${masBaratas.size > 0 ? '' : styles.leyendaOculta}`}>
+            <span className={styles.muestraBarata} aria-hidden="true">$</span>
+            Noches con precio más bajo
+          </p>
         </div>
         <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar calendario">
           <X size={20} strokeWidth={1.6} />
@@ -227,12 +252,14 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
                   const sinLugar = info.estado === 'lleno' || info.estado === 'sinCupo';
                   const apagado = pasado || fuera || (sinLugar && !salidaValida);
                   const lejos = eligiendoSalida && f > limite && !sinLugar && !pasado;
+                  const masBarata = !apagado && !sinLugar && masBaratas.has(f);
 
                   const etiquetaLugar = info.estado === 'lleno'
                     ? (suite ? 'Ocupada' : 'Lleno')
                     : info.estado === 'sinCupo' ? 'Sin cupo' : '';
                   const partesAria = [fechaLarga(f)];
                   if (info.desde && !sinLugar && !pasado) partesAria.push(`desde ${formatoPrecio(info.desde)}`);
+                  if (masBarata) partesAria.push('precio más bajo');
                   if (info.quedan) partesAria.push(`quedan ${info.quedan} suites`);
                   if (etiquetaLugar) partesAria.push(etiquetaLugar.toLowerCase());
                   if (esLlegada) partesAria.push('llegada');
@@ -248,6 +275,7 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
                         apagado ? styles.diaApagado : '',
                         sinLugar ? styles.diaLleno : '',
                         lejos ? styles.diaLejos : '',
+                        masBarata ? styles.diaMasBarata : '',
                         enRango ? styles.diaEnRango : '',
                         esLlegada ? styles.diaLlegada : '',
                         esSalida ? styles.diaSalida : '',
