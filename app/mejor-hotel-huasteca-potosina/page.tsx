@@ -4,8 +4,18 @@ import { MapPin, Droplets, Star, Utensils, Wallet, MessageCircle } from 'lucide-
 import {
   SeoHero, AnswerBlock, StatStrip, CompareTable, SeoFaq, RelatedLinks, SeoCta, seoStyles as styles,
 } from '@/components/seo/SeoBlocks';
-import HuespedDistinguidoSection, { huespedSchema } from '@/components/seo/HuespedDistinguido';
 import { HOTEL, DISTANCIAS, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
+
+/**
+ * Guía para elegir dónde dormir en la Huasteca (no la página del hotel).
+ *
+ * 17 oct 2026 (SEO-04, una URL por búsqueda): el H1 decía «El Mejor Hotel de la
+ * Huasteca Potosina» sobre la foto de una de nuestras suites, que se lee como si lo
+ * afirmáramos de nosotros; ahora dice «Cómo elegir…», que es lo que la página hace.
+ * Y se quitó lo que repetía con /mejor-hotel-xilitla (el 26 % de las frases): el
+ * bloque del presidente, su pregunta y la ficha del hotel. Aquí queda un resumen
+ * con enlace; la tabla de tiempos de la Huasteca se queda AQUÍ y sale de allá.
+ */
 
 const URL = `${HOTEL.url}/mejor-hotel-huasteca-potosina`;
 const ACTUALIZADO = 'octubre de 2026';
@@ -17,7 +27,7 @@ export const metadata: Metadata = {
   keywords: ['mejor hotel huasteca potosina', 'hoteles huasteca potosina', 'donde hospedarse huasteca', 'que hotel elegir huasteca potosina'],
   alternates: { canonical: URL },
   openGraph: {
-    title: 'El Mejor Hotel de la Huasteca Potosina — Guía para Elegir Bien',
+    title: 'Cómo Elegir el Mejor Hotel de la Huasteca Potosina — Guía',
     description:
       'Los criterios que de verdad deciden tu viaje a la Huasteca: dónde te conviene dormir, cuánto manejas cada día y qué pagar de más vale la pena.',
     url: URL,
@@ -45,16 +55,16 @@ const FAQS = [
   },
   {
     q: '¿Cuál es la mejor época para visitar la Huasteca Potosina?',
-    a: 'De noviembre a mayo: clima templado, menos lluvia y los ríos con el agua turquesa que la gente busca en las fotos. En temporada de lluvias (junio a septiembre) el agua puede bajar verdosa o marrón y algunos tours de río se suspenden por seguridad.',
+    // Lluvias de junio a OCTUBRE (17 oct 2026): decía «junio a septiembre» y dejaba
+    // octubre sin temporada; la hoja de datos fija la seca de noviembre a mayo.
+    a: 'De noviembre a mayo: clima templado, menos lluvia y los ríos con el agua turquesa que la gente busca en las fotos. En temporada de lluvias (junio a octubre) el agua puede bajar verdosa o marrón y algunos tours de río se suspenden por seguridad.',
   },
   {
     q: '¿Cuántos días se necesitan para conocer la Huasteca Potosina?',
     a: 'Tres días completos es el mínimo razonable: uno para Xilitla y Las Pozas, uno para Tamul, que consume el día entero, y uno para lo que queda a media hora, como el Nacimiento de Huichihuayán y el Castillo de la Salud. Con menos días vas a manejar más de lo que vas a disfrutar.',
   },
-  {
-    q: '¿Es cierto que el presidente de México se hospedó en Paraíso Encantado?',
-    a: 'Sí. El 10 de junio de 2023, durante su gira por la Huasteca, el entonces presidente Andrés Manuel López Obrador pernoctó en el hotel y desayunó aquí antes de seguir hacia Tamazunchale y Huejutla. Lo cubrieron medios como Pulso SLP y Debate, y él mismo lo grabó y publicó esa mañana: "este es un hotel muy bueno, como pocos hoteles de todo el país".',
-  },
+  // La pregunta de la visita presidencial se contesta en /mejor-hotel-xilitla, con el
+  // video; aquí era una copia casi textual (17 oct 2026).
   {
     q: '¿Conviene reservar directo o por una OTA?',
     a: `Directo. En el sitio oficial la tarifa no lleva comisión de intermediario, se puede aplicar el código ${HOTEL.codigoDescuento} y en estancias de dos noches o más solo se paga el 50% al reservar. ${HOTEL.cancelacion}`,
@@ -69,12 +79,12 @@ const schema = {
       url: URL,
       image: `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`,
     }),
+    // Mismo nombre que las migas visibles del SeoHero.
     breadcrumbSchema([
       { name: 'Inicio', url: HOTEL.url },
-      { name: 'Mejor hotel de la Huasteca Potosina', url: URL },
+      { name: 'Cómo elegir hotel en la Huasteca', url: URL },
     ]),
     faqSchema(FAQS),
-    ...(huespedSchema() ? [huespedSchema()] : []),
   ],
 };
 
@@ -96,13 +106,13 @@ export default function MejorHotelHuastecaPage() {
         <SeoHero
           image="/images/JUNGLA/PORTADA.JPG"
           imageAlt="Suite Jungla con piscina spa privada y vista a la selva — Hotel Paraíso Encantado, Xilitla, Huasteca Potosina"
-          breadcrumb="Mejor hotel de la Huasteca Potosina"
+          breadcrumb="Cómo elegir hotel en la Huasteca"
           eyebrow="Guía para elegir · Huasteca Potosina"
-          title="El Mejor Hotel de la"
+          title="Cómo Elegir el Mejor Hotel de la"
           titleEm="Huasteca Potosina"
           sub="Empieza por elegir bien el pueblo. Estos son los criterios que de verdad deciden si tu viaje sale bien — y por qué, si vas a Las Pozas, dormir en Xilitla te ahorra horas de carretera cada día."
           ctaPrimary={{ href: '/reservar', label: 'Ver disponibilidad' }}
-          ctaSecondary={{ href: '/habitaciones', label: 'Ver las 13 suites' }}
+          ctaSecondary={{ href: '/habitaciones', label: `Ver las ${HOTEL.suites} suites` }}
           updated={ACTUALIZADO}
         />
 
@@ -117,7 +127,7 @@ export default function MejorHotelHuastecaPage() {
         </AnswerBlock>
 
         <StatStrip stats={[
-          { num: `${HOTEL.rating}/5`, label: `${HOTEL.reviewCount} reseñas verificadas en Google` },
+          { num: `${HOTEL.rating}/5`, label: `${HOTEL.reviewCount} reseñas en Google` },
           { num: `${HOTEL.metrosALasPozas} m`, label: 'a Las Pozas de Edward James, caminando' },
           { num: `${HOTEL.suites}`, label: `suites · ${HOTEL.suitesConSpaPrivado} con piscina spa privada` },
         ]} />
@@ -136,7 +146,7 @@ export default function MejorHotelHuastecaPage() {
               caption="Distancias aproximadas en auto. Confírmalas antes de salir: en la sierra el tiempo real depende del clima y del estado del camino."
               headers={['Base', 'A Las Pozas / Xilitla', 'Para qué es la mejor base']}
               rows={[
-                { cells: ['Xilitla', '5 min caminando desde el hotel', 'Las Pozas, el pueblo mágico, la sierra y el café. La única base desde la que no manejas para ver el Jardín de Edward James.'], highlight: true },
+                { cells: ['Xilitla', `${HOTEL.minutosCaminandoALasPozas} min caminando desde el hotel`, 'Las Pozas, el pueblo mágico, la sierra y el café. La única base desde la que no manejas para ver el Jardín de Edward James.'], highlight: true },
                 { cells: ['Ciudad Valles', '≈ 1 h 30 min a 2 h (86 km)', 'Tamul, Micos y rafting. Es la ciudad más grande: hospitales, bancos y cadenas de restaurantes.'] },
                 { cells: ['Aquismón', '≈ 45 min (40 km)', 'Sótano de las Golondrinas y el embarcadero desde donde sale el tour a Tamul.'] },
                 { cells: ['Tamasopo', '≈ 2 h a 2 h 30', 'Cascadas de Tamasopo y Puente de Dios, que queda a 10 minutos del pueblo.'] },
@@ -179,24 +189,20 @@ export default function MejorHotelHuastecaPage() {
           <div className={styles.sectionInner}>
             <h2>Dónde encaja Paraíso Encantado</h2>
             <p className={styles.lead}>
-              Para no marearte con adjetivos, aquí va lo verificable — incluido lo que no tenemos.
+              Para no marearte con adjetivos, aquí van los datos — incluido lo que no tenemos.
             </p>
 
-            <CompareTable
-              headers={['Criterio', 'Hotel Paraíso Encantado']}
-              rows={[
-                { cells: ['Distancia a Las Pozas', `${HOTEL.metrosALasPozas} m — ${HOTEL.minutosCaminandoALasPozas} minutos caminando, sobre el camino a Las Pozas.`], highlight: true },
-                { cells: ['Calificación', `${HOTEL.rating}/5 con ${HOTEL.reviewCount} reseñas verificadas en Google`] },
-                { cells: ['Huésped documentado', 'El presidente de México pernoctó aquí en junio de 2023, durante su gira por la Huasteca (cobertura de Pulso SLP y Debate).'] },
-                { cells: ['Habitaciones', `${HOTEL.suites} suites, desde 2 hasta ${HOTEL.capacidadMaxima} personas`] },
-                { cells: ['Piscina spa privada en la suite', `Sí, en ${HOTEL.suitesConSpaPrivado} de las ${HOTEL.suites} suites. Las otras ${HOTEL.suites - HOTEL.suitesConSpaPrivado} tienen acceso a la piscina del hotel.`] },
-                { cells: ['Restaurante propio', `Sí — ${HOTEL.restaurante}, cocina huasteca en el hotel`] },
-                { cells: ['Tarifa desde', `$${HOTEL.precioDesde.toLocaleString('es-MX')} MXN por noche para 2 personas`] },
-                { cells: ['Pago al reservar', HOTEL.anticipo] },
-                { cells: ['Cancelación', HOTEL.cancelacion] },
-                { cells: ['Check-in / check-out', `${HOTEL.checkIn} / ${HOTEL.checkOut}`] },
-              ]}
-            />
+            {/* Era la misma ficha completa de /mejor-hotel-xilitla, y después el bloque del
+                presidente con su video (17 oct 2026): las dos páginas competían con el mismo
+                texto. Aquí va el resumen; la ficha y el video, allá. */}
+            <p>
+              Está sobre el camino a Las Pozas, a {HOTEL.metrosALasPozas} metros del jardín. Tiene
+              {' '}{HOTEL.suites} suites, de 2 hasta {HOTEL.capacidadMaxima} personas, y {HOTEL.suitesConSpaPrivado} de
+              ellas con piscina spa privada en la terraza; restaurante propio ({HOTEL.restaurante}) y
+              {' '}{HOTEL.rating}/5 en {HOTEL.reviewCount} reseñas de Google. En junio de 2023 se hospedó
+              aquí el presidente de México. La ficha completa, con tarifas, pagos y cancelación, está
+              en <Link href="/mejor-hotel-xilitla">por qué elegir Paraíso Encantado</Link>.
+            </p>
 
             <h3>Lo que no somos</h3>
             <p>
@@ -208,8 +214,6 @@ export default function MejorHotelHuastecaPage() {
             </p>
           </div>
         </section>
-
-        <HuespedDistinguidoSection />
 
         {/* DISTANCIAS DESDE EL HOTEL */}
         <section className={styles.sectionAlt}>
@@ -233,17 +237,17 @@ export default function MejorHotelHuastecaPage() {
         <SeoFaq faqs={FAQS} />
 
         <RelatedLinks links={[
-          { href: '/mejor-hotel-xilitla', label: 'Por qué Paraíso Encantado es el mejor hotel de Xilitla' },
+          { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado en Xilitla' },
           { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla: en qué zona conviene dormir' },
           { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca Potosina' },
           { href: '/que-hacer-huasteca-potosina-3-dias', label: 'Qué hacer en la Huasteca en 3 días' },
-          { href: '/hotel-alberca-privada-xilitla', label: 'Hoteles con alberca privada en la habitación' },
+          { href: '/hotel-alberca-privada-xilitla', label: 'Suites con spa privado y alberca en Xilitla' },
           { href: '/hotel-cerca-de-las-pozas', label: `Hotel a ${HOTEL.metrosALasPozas} m de Las Pozas` },
           { href: '/xilitla', label: 'Guía de Xilitla' },
         ]} />
 
         <SeoCta
-          title="Duerme a cinco minutos"
+          title={`Duerme a ${HOTEL.minutosCaminandoALasPozas} minutos`}
           titleEm="de Las Pozas"
           body={`${HOTEL.suites} suites en Xilitla, ${HOTEL.suitesConSpaPrivado} con piscina spa privada en la propia terraza. Reserva directa, sin comisiones de intermediarios.`}
           note={`${HOTEL.cancelacion} · Código ${HOTEL.codigoDescuento} para reserva directa.`}

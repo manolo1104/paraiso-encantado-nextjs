@@ -15,6 +15,7 @@ import {
   formatMXN,
   CANCELACION_FLEX_CORTO,
 } from '@/lib/booking';
+import { HOTEL } from '@/lib/seo-hotel';
 import styles from '@/app/reservar/checkout/checkout.module.css';
 
 function fmtDate(d: string): string {
@@ -119,12 +120,13 @@ export default function BookingSummary({ booking }: { booking: BookingState }) {
         }
       </div>
 
-      {/* Reseña real (de /reviews) — refuerzo de confianza */}
-      <blockquote className={styles.summaryReview}>
-        <div className={styles.summaryReviewStars} aria-label="5 de 5 estrellas">★★★★★</div>
-        <p>“El mejor hotel de Xilitla sin ninguna duda. Habitación impecable, restaurante excelente y ubicación perfecta.”</p>
-        <footer>Jorge Mendoza · Monterrey · Google — <strong>4.5/5</strong> · 523 reseñas</footer>
-      </blockquote>
+      {/* Refuerzo de confianza: la calificación REAL de la ficha de Google (lib/seo-hotel.ts).
+          Hasta el 17 oct 2026 aquí iba una cita de /reviews firmada «· Google»; esas 25
+          reseñas no tienen enlace a la ficha ni están comprobadas (app/reviews/page.tsx),
+          así que en el pago no se cita ninguna hasta que Manolo las confirme. */}
+      <p className={styles.summaryReview}>
+        <strong>{HOTEL.rating}/5</strong> · {HOTEL.reviewCount} reseñas en Google
+      </p>
     </aside>
   );
 }

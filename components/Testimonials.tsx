@@ -1,5 +1,7 @@
 import Image from 'next/image';
-import { Star, CheckCircle } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { HOTEL } from '@/lib/seo-hotel';
+import { PERFIL_GOOGLE } from '@/lib/seo-entidades';
 import styles from './Testimonials.module.css';
 
 const testimonials = [
@@ -59,15 +61,17 @@ export default function Testimonials() {
           Lo Que Dicen <em>Quienes Ya Lo Vivieron</em>
         </h2>
         <div className={styles.ratingSummary}>
-          <div className={styles.ratingNumber} aria-label="Calificación 4.5 de 5">
-            4.5
+          {/* Cifras de Google de lib/seo-hotel.ts (17 oct 2026): decía 523 a mano y
+              «verificadas», y Google no comprueba que quien reseña se haya hospedado. */}
+          <div className={styles.ratingNumber} aria-label={`Calificación ${HOTEL.rating} de 5`}>
+            {HOTEL.rating}
           </div>
           <div className={styles.ratingStars} aria-hidden="true">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star key={i} size={18} strokeWidth={0} fill="currentColor" />
             ))}
           </div>
-          <p>Basado en 523 reseñas verificadas en Google</p>
+          <p>Basado en {HOTEL.reviewCount} reseñas en Google</p>
         </div>
       </div>
 
@@ -87,12 +91,9 @@ export default function Testimonials() {
                 <span className={styles.location}>{t.location}</span>
                 <StarRating count={t.rating} />
                 <span className={styles.date}>{t.date}</span>
-                {t.verified && (
-                  <span className={styles.verified} aria-label="Estancia verificada">
-                    <CheckCircle size={12} strokeWidth={2} />
-                    Estancia Verificada
-                  </span>
-                )}
+                {/* Sin la etiqueta «Estancia Verificada» (17 oct 2026): nadie comprobó
+                    estas estancias, y la etiqueta lo afirmaba. Vuelve si Manolo enlaza
+                    cada testimonio con su reseña real. */}
               </div>
             </header>
 
@@ -108,13 +109,15 @@ export default function Testimonials() {
       </div>
 
       <div className={styles.cta}>
+        {/* El perfil del hotel por su cid: la búsqueda por nombre podía abrir la OTRA
+            ficha («Posada Paraiso Encantado», ver lib/seo-entidades.ts). */}
         <a
-          href="https://www.google.com/search?q=Hotel+Paraíso+Encantado+Xilitla+reseñas"
+          href={PERFIL_GOOGLE}
           target="_blank"
           rel="noopener noreferrer"
           className={styles.reviewsLink}
         >
-          Ver las 523 reseñas en Google →
+          Ver las {HOTEL.reviewCount} reseñas en Google →
         </a>
       </div>
     </section>

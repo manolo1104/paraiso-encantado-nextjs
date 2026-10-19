@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { HOTEL, POSTAL_ADDRESS } from '@/lib/seo-hotel';
+import { HOTEL, POSTAL_ADDRESS, AGGREGATE_RATING, GEO_HOTEL } from '@/lib/seo-hotel';
+import { ENTITY_IDS, PERFIL_GOOGLE, PERFILES_HOTEL, XILITLA } from '@/lib/seo-entidades';
 import Hero from '@/components/Hero';
 import PromoStrip from '@/components/PromoStrip';
 import SocialProofBar from '@/components/SocialProofBar';
@@ -26,11 +27,14 @@ import FinalCTA from '@/components/FinalCTA';
  * —4,898 impresiones con 0.31% de clic— así que el título arranca con la frase
  * que la gente teclea y cierra con la prueba social. Medido: 56 caracteres,
  * 507 px en Arial 20 px, el tipo de letra con el que Google pinta los títulos.
+ *
+ * 16 oct 2026: las cifras salen de lib/seo-hotel.ts (540 reseñas de Google el 13 oct;
+ * antes decía 523). Sigue midiendo 56 caracteres y 503 px.
  */
 export const metadata: Metadata = {
-  title: 'Hotel en Xilitla a 5 min de Las Pozas · 4.5★ 523 reseñas',
+  title: `Hotel en Xilitla a ${HOTEL.minutosCaminandoALasPozas} min de Las Pozas · ${HOTEL.rating}★ ${HOTEL.reviewCount} reseñas`,
   description:
-    '13 suites en Xilitla a 400 metros del Jardín de Edward James, 4 con spa privado en la terraza. Desde $1,500 MXN la noche. Reserva directo, sin comisiones.',
+    `${HOTEL.suites} suites en Xilitla a ${HOTEL.metrosALasPozas} metros del Jardín de Edward James, ${HOTEL.suitesConSpaPrivado} con spa privado en la terraza. Desde $${HOTEL.precioDesde.toLocaleString('es-MX')} MXN la noche. Reserva directo, sin comisiones.`,
   alternates: {
     canonical: HOTEL.url,
     languages: {
@@ -41,9 +45,9 @@ export const metadata: Metadata = {
   },
   openGraph: {
     siteName: HOTEL.nombre,
-    title: 'Hotel en Xilitla a 5 minutos de Las Pozas de Edward James',
+    title: `Hotel en Xilitla a ${HOTEL.minutosCaminandoALasPozas} minutos de Las Pozas de Edward James`,
     description:
-      '13 suites boutique, 4 con spa privado en la terraza, a 400 metros del Jardín de Edward James. Reserva directo con el hotel, sin comisiones.',
+      `${HOTEL.suites} suites boutique, ${HOTEL.suitesConSpaPrivado} con spa privado en la terraza, a ${HOTEL.metrosALasPozas} metros del Jardín de Edward James. Reserva directo con el hotel, sin comisiones.`,
     url: HOTEL.url,
     type: 'website',
     locale: 'es_MX',
@@ -58,9 +62,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Hotel en Xilitla a 5 minutos de Las Pozas de Edward James',
+    title: `Hotel en Xilitla a ${HOTEL.minutosCaminandoALasPozas} minutos de Las Pozas de Edward James`,
     description:
-      '13 suites boutique, 4 con spa privado en la terraza, a 400 metros del Jardín de Edward James. Reserva directo con el hotel.',
+      `${HOTEL.suites} suites boutique, ${HOTEL.suitesConSpaPrivado} con spa privado en la terraza, a ${HOTEL.metrosALasPozas} metros del Jardín de Edward James. Reserva directo con el hotel.`,
     images: ['/og/home.jpg'],
   },
 };
@@ -102,84 +106,55 @@ const homeSchema = {
  *    el mismo `@id` es justo lo que hace que Google no arme la ficha del negocio.
  * 3. **Un solo `aggregateRating`, el de esta entidad.** Los 13 que colgaban de cada
  *    suite se quitaron (ver `roomsSchema`).
+ *
+ * Y lo que se corrigió el 16 oct 2026:
+ * 4. **Sin `starRating` 4.** Ninguna clasificación oficial lo respalda; la ficha de
+ *    Google y las agencias lo ponen como hotel de 3 estrellas.
+ * 5. **Sin `review`.** Eran 3 reseñas que no se ven en la portada (Google exige que el
+ *    marcado describa lo visible y no da estrellas a reseñas que publica el propio
+ *    negocio), y una decía «el hotel más cercano a Las Pozas», que nuestra propia
+ *    comparativa desmiente (Casa Caracol está más cerca).
+ * 6. **`hasMap` y `sameAs` al perfil de Google** (el cid comprobado), en vez de una
+ *    búsqueda genérica de Maps y de redes que no coinciden con las del pie (ver
+ *    PERFILES_HOTEL en lib/seo-entidades.ts).
+ * 7. **Sin la amenidad «Tours to Las Pozas»**: a Las Pozas se llega a pie y los tours
+ *    de la Huasteca los opera Huasteca Potosina Tours, otra empresa.
+ * 8. **`currenciesAccepted` solo MXN** hasta que Manolo confirme que aceptan dólares.
  */
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Hotel',
-  '@id': 'https://www.paraisoencantado.com/#hotel',
+  '@id': ENTITY_IDS.hotel,
   name: 'Hotel Paraíso Encantado',
   description:
-    '13 suites boutique, 4 con spa privado, a 400 metros (5 minutos caminando) del Jardín Surrealista de Edward James (Las Pozas), sobre el camino al jardín, en Xilitla, Huasteca Potosina.',
+    `${HOTEL.suites} suites boutique, ${HOTEL.suitesConSpaPrivado} con spa privado, a ${HOTEL.metrosALasPozas} metros (${HOTEL.minutosCaminandoALasPozas} minutos caminando) del Jardín Surrealista de Edward James (Las Pozas), sobre el camino al jardín, en Xilitla, Huasteca Potosina.`,
   url: 'https://www.paraisoencantado.com',
   telephone: HOTEL.telefono,
   email: 'reservas@paraisoencantado.com',
   address: POSTAL_ADDRESS,
-  // Punto del hotel en OpenStreetMap (2 oct 2026); el anterior (21.383, -99.002)
-  // caía a 1.6 km, en otra parte del pueblo.
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 21.395,
-    longitude: -98.9915,
-  },
+  geo: GEO_HOTEL,
+  containedInPlace: { '@id': XILITLA['@id'] },
   image: [
     'https://www.paraisoencantado.com/og/home.jpg',
     'https://www.paraisoencantado.com/images/JUNGLA/PORTADA.JPG',
   ],
-  hasMap: 'https://maps.google.com/?q=Hotel+Paraíso+Encantado+Xilitla',
-  starRating: { '@type': 'Rating', ratingValue: 4 },
-  numberOfRooms: 13,
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: 4.5,
-    reviewCount: 523,
-    bestRating: 5,
-    worstRating: 1,
-  },
-  review: [
-    {
-      '@type': 'Review',
-      author: { '@type': 'Person', name: 'Fernanda Obregón' },
-      datePublished: '2025-04-15',
-      reviewBody: 'No es solo un hotel. Es el lugar donde entendí por qué Edward James eligió Xilitla para su obra de vida. El Paraíso tiene esa misma magia inexplicable. La suite con spa privado al amanecer es una experiencia que no se puede describir con palabras.',
-      reviewRating: { '@type': 'Rating', ratingValue: 5, bestRating: 5 },
-      publisher: { '@type': 'Organization', name: 'Google Reviews' },
-    },
-    {
-      '@type': 'Review',
-      author: { '@type': 'Person', name: 'Pablo Guerrero' },
-      datePublished: '2025-03-22',
-      reviewBody: 'Llevan años compitiendo con cadenas internacionales sin perder su alma local. El restaurante, los guías, la forma en que cuidan la naturaleza — todo grita "aquí trabajamos personas de aquí". Eso es lo que busco cuando viajo.',
-      reviewRating: { '@type': 'Rating', ratingValue: 5, bestRating: 5 },
-      publisher: { '@type': 'Organization', name: 'Google Reviews' },
-    },
-    {
-      '@type': 'Review',
-      author: { '@type': 'Person', name: 'Diana Muñiz' },
-      datePublished: '2025-02-10',
-      reviewBody: 'Vine tres veces ya. No es la piscina ni las vistas (aunque son increíbles). Es que cada vez que llego me reciben como si hubiera faltado tiempo. El hotel más cercano a Las Pozas y sin duda el mejor.',
-      reviewRating: { '@type': 'Rating', ratingValue: 5, bestRating: 5 },
-      publisher: { '@type': 'Organization', name: 'Google Reviews' },
-    },
-  ],
+  hasMap: PERFIL_GOOGLE,
+  numberOfRooms: HOTEL.suites,
+  aggregateRating: { ...AGGREGATE_RATING, worstRating: 1 },
   priceRange: '$$',
   amenityFeature: [
     { '@type': 'LocationFeatureSpecification', name: 'Private spa pool', value: true },
     { '@type': 'LocationFeatureSpecification', name: 'Free WiFi', value: true },
     { '@type': 'LocationFeatureSpecification', name: 'Free parking', value: true },
     { '@type': 'LocationFeatureSpecification', name: 'On-site restaurant', value: true },
-    { '@type': 'LocationFeatureSpecification', name: 'Tours to Las Pozas', value: true },
     { '@type': 'LocationFeatureSpecification', name: 'Panoramic terrace', value: true },
     { '@type': 'LocationFeatureSpecification', name: 'Air conditioning', value: true },
   ],
   checkinTime: '15:00',
   checkoutTime: '12:00',
-  currenciesAccepted: 'MXN, USD',
+  currenciesAccepted: 'MXN',
   paymentAccepted: 'Cash, Credit Card',
-  sameAs: [
-    'https://www.instagram.com/_paraiso_encantado/',
-    'https://www.facebook.com/cabanas.encantado/',
-    'https://www.youtube.com/@hotelparaisoencantadoxilit8111',
-  ],
+  sameAs: [...PERFILES_HOTEL],
 };
 
 const PRICE_VALID_UNTIL = '2026-12-31';
@@ -188,7 +163,7 @@ const BASE_AMENITIES = [
   { '@type': 'LocationFeatureSpecification', name: 'Aire acondicionado', value: true },
   { '@type': 'LocationFeatureSpecification', name: 'Baño privado', value: true },
 ];
-const HOTEL_REF = { '@id': 'https://www.paraisoencantado.com/#hotel' };
+const HOTEL_REF = { '@id': ENTITY_IDS.hotel };
 
 const RETURN_POLICY = {
   '@type': 'MerchantReturnPolicy',
@@ -209,7 +184,9 @@ function roomOffer(price: number, slug: string) {
     price,
     priceValidUntil: PRICE_VALID_UNTIL,
     availability: 'https://schema.org/InStock',
-    url: `https://www.paraisoencantado.com/reservar?room=${slug}`,
+    // `suiteId` con `autoselect=1` es lo que lee /reservar (sin `autoselect` ignora la
+    // suite); `?room=` (hasta el 17 oct 2026) se ignoraba.
+    url: `https://www.paraisoencantado.com/reservar?suiteId=${slug}&autoselect=1`,
     hasMerchantReturnPolicy: RETURN_POLICY,
     priceSpecification: {
       '@type': 'UnitPriceSpecification',
@@ -235,9 +212,13 @@ function floorSize(m2: number) {
 /**
  * Cada suite traía su propio `aggregateRating` inventado (4.9 con 48 reseñas, 4.8 con
  * 52…). Eran 13 calificaciones que no salen de ningún lado: las reseñas reales son las
- * 523 de Google y son del hotel entero, no de la suite Jungla. Google ignora un rating
+ * de Google y son del hotel entero, no de la suite Jungla. Google ignora un rating
  * cuyo objeto no tiene reseñas propias y ese marcado puede leerse como engañoso, así
  * que la única calificación del sitio es la del Hotel, arriba.
+ *
+ * Las dos Flor de Liz apuntaban a /habitaciones/flor-de-lis-1 y -2, que dan 404: la
+ * ficha real es flor-de-liz (data/suites.ts). Corregido el 17 oct 2026, en la `url` y
+ * en la oferta.
  */
 const roomsSchema = {
   '@context': 'https://schema.org',
@@ -246,7 +227,7 @@ const roomsSchema = {
       '@type': 'HotelRoom',
       name: 'Suite Flor de Liz 1',
       description: 'Vistas panorámicas a la montaña y spa privado al aire libre para detener el tiempo.',
-      url: 'https://www.paraisoencantado.com/habitaciones/flor-de-lis-1',
+      url: 'https://www.paraisoencantado.com/habitaciones/flor-de-liz-1',
       containedInPlace: HOTEL_REF,
       numberOfRooms: 1,
       occupancy: { '@type': 'QuantitativeValue', maxValue: 4, minValue: 1 },
@@ -260,13 +241,13 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Spa privado al aire libre', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
-      offers: roomOffer(2000, 'flor-de-lis-1'),
+      offers: roomOffer(2000, 'flor-de-liz-1'),
     },
     {
       '@type': 'HotelRoom',
       name: 'Suite Flor de Liz 2',
       description: 'Relajación profunda con tu propio spa privado y atardeceres incomparables sobre el pueblo.',
-      url: 'https://www.paraisoencantado.com/habitaciones/flor-de-lis-2',
+      url: 'https://www.paraisoencantado.com/habitaciones/flor-de-liz-2',
       containedInPlace: HOTEL_REF,
       numberOfRooms: 1,
       occupancy: { '@type': 'QuantitativeValue', maxValue: 4, minValue: 1 },
@@ -280,7 +261,7 @@ const roomsSchema = {
         { '@type': 'LocationFeatureSpecification', name: 'Spa privado al aire libre', value: true },
         { '@type': 'LocationFeatureSpecification', name: 'Terraza con vista panorámica', value: true },
       ],
-      offers: roomOffer(2000, 'flor-de-lis-2'),
+      offers: roomOffer(2000, 'flor-de-liz-2'),
     },
     {
       '@type': 'HotelRoom',
@@ -519,29 +500,25 @@ const hotelSchema = {
   containsPlace: roomNodes.map(room => ({ '@id': room['@id'] })),
 };
 
+/**
+ * El restaurante (17 oct 2026): cerraba a las 21:00 aquí y a las 20:00 en /restaurante,
+ * en su texto visible, en `HOTEL.restauranteHorario` y en llms.txt. Manda el de 20:00.
+ * La dirección y el punto son los del hotel (está dentro), de lib/seo-hotel.ts.
+ * `menu` se quitó: schema.org lo reemplazó por `hasMenu`, que ya estaba.
+ */
 const restaurantSchema = {
   '@context': 'https://schema.org',
   '@type': 'Restaurant',
-  name: 'El Papán Huasteco',
+  name: HOTEL.restaurante,
   description: 'Restaurante de cocina huasteca auténtica en el Hotel Paraíso Encantado. Tortillas hechas a mano en comal, zacahuil, bocoles y café de olla.',
   url: 'https://www.paraisoencantado.com/restaurante',
   telephone: '+524891007679',
   servesCuisine: ['Cocina Huasteca', 'Cocina Mexicana', 'Gastronomía Potosina'],
   priceRange: '$',
-  openingHours: ['Mo-Su 08:00-21:00'],
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Xilitla',
-    addressRegion: 'San Luis Potosí',
-    addressCountry: 'MX',
-  },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 21.395,
-    longitude: -98.9915,
-  },
-  containedInPlace: { '@id': 'https://www.paraisoencantado.com/#hotel' },
-  menu: 'https://www.paraisoencantado.com/restaurante',
+  openingHours: ['Mo-Su 08:00-20:00'],
+  address: POSTAL_ADDRESS,
+  geo: GEO_HOTEL,
+  containedInPlace: HOTEL_REF,
   hasMenu: {
     '@type': 'Menu',
     name: 'Menú El Papán Huasteco',
@@ -557,7 +534,8 @@ const homeFaqSchema = {
     {
       '@type': 'Question',
       name: '¿Qué tan cerca está del Jardín de Edward James?',
-      acceptedAnswer: { '@type': 'Answer', text: 'A 5 minutos caminando, unos 400 metros: estamos sobre el camino a Las Pozas. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada para tu turno, que se reserva antes en el sistema oficial del jardín (cierra los martes).' },
+      // Mismo texto que components/FAQ.tsx; las cifras salen de HOTEL en los dos.
+      acceptedAnswer: { '@type': 'Answer', text: `A ${HOTEL.minutosCaminandoALasPozas} minutos caminando, unos ${HOTEL.metrosALasPozas} metros: estamos sobre el camino a Las Pozas. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada para tu turno, que se reserva antes en el sistema oficial del jardín (cierra los martes).` },
     },
     {
       '@type': 'Question',

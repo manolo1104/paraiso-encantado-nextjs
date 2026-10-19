@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MessageCircle, Plus, Minus } from 'lucide-react';
+import { HOTEL } from '@/lib/seo-hotel';
 import styles from './FAQ.module.css';
 
 const faqs = [
@@ -10,7 +11,9 @@ const faqs = [
     answer:
       // Mismo texto que el FAQPage de app/page.tsx (no se importa de aquí: este archivo
       // es "use client"). Sin "el hotel más cercano": Casa Caracol está a 300 m.
-      'A 5 minutos caminando, unos 400 metros: estamos sobre el camino a Las Pozas. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada para tu turno, que se reserva antes en el sistema oficial del jardín (cierra los martes).',
+      // Las cifras salen de HOTEL (lib/seo-hotel.ts) aquí y allá, así que si la
+      // distancia medida cambia, el FAQ visible y el del JSON-LD cambian juntos.
+      `A ${HOTEL.minutosCaminandoALasPozas} minutos caminando, unos ${HOTEL.metrosALasPozas} metros: estamos sobre el camino a Las Pozas. Puedes desayunar en El Papán y a las 9 de la mañana ya estar en la entrada para tu turno, que se reserva antes en el sistema oficial del jardín (cierra los martes).`,
   },
   {
     question: '¿El desayuno está incluido en el precio?',

@@ -6,12 +6,15 @@ import GruposForm from './GruposForm';
 import GaleriaGrupos, { type GaleriaImg } from './GaleriaGrupos';
 import StatCounter from '@/components/StatCounter';
 import FloatingLeaves from '@/components/FloatingLeaves';
+import { HOTEL, POSTAL_ADDRESS, GEO_HOTEL } from '@/lib/seo-hotel';
+import { HOTEL_REF } from '@/lib/seo-entidades';
 import styles from './grupos-eventos.module.css';
 
 export const metadata: Metadata = {
   title: 'Grupos, Bodas y Eventos en Xilitla | Paraíso Encantado',
+  // 153 caracteres (17 oct 2026; eran 185 y Google la cortaba).
   description:
-    'Renta exclusiva del hotel para bodas, eventos corporativos y celebraciones familiares en Xilitla, Huasteca Potosina. 13 suites, hasta 60 personas, jardín tropical. Cotización sin costo.',
+    'Bodas, retiros y celebraciones con el hotel completo en Xilitla, Huasteca Potosina: 13 suites, hasta 60 personas y jardín tropical. Cotización sin costo.',
   alternates: {
     canonical: 'https://www.paraisoencantado.com/grupos-eventos',
   },
@@ -32,15 +35,11 @@ const gruposSchema = {
   telephone: '+524891007679',
   email: 'reservas@paraisoencantado.com',
   maximumAttendeeCapacity: 60,
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Xilitla',
-    addressRegion: 'San Luis Potosí',
-    postalCode: '79910',
-    addressCountry: 'MX',
-  },
-  geo: { '@type': 'GeoCoordinates', latitude: 21.395, longitude: -98.9915 },
-  containedInPlace: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' },
+  // Dirección, punto y hotel de lib/seo-hotel.ts (17 oct 2026): decía CP 79910 y
+  // colgaba de un hotel anónimo, no del mismo `#hotel` de todo el sitio.
+  address: POSTAL_ADDRESS,
+  geo: GEO_HOTEL,
+  containedInPlace: HOTEL_REF,
   amenityFeature: [
     { '@type': 'LocationFeatureSpecification', name: 'Jardín tropical privado', value: true },
     { '@type': 'LocationFeatureSpecification', name: 'Piscina spa', value: true },
@@ -103,7 +102,7 @@ export default function GruposEventosPage() {
             name: 'Venue para Bodas — Hotel Paraíso Encantado',
             serviceType: 'Wedding venue',
             description: 'Alquiler exclusivo del hotel para bodas y celebraciones privadas en Xilitla, Huasteca Potosina. Jardín tropical, 13 suites boutique y restaurante de cocina huasteca.',
-            provider: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' },
+            provider: HOTEL_REF,
             areaServed: { '@type': 'Place', name: 'Xilitla, San Luis Potosí, México' },
             offers: { '@type': 'Offer', priceCurrency: 'MXN', priceSpecification: { '@type': 'UnitPriceSpecification', price: 45000, priceCurrency: 'MXN', unitText: 'per night' } },
           },
@@ -112,7 +111,7 @@ export default function GruposEventosPage() {
             name: 'Retiro Corporativo — Hotel Paraíso Encantado',
             serviceType: 'Corporate retreat',
             description: 'Hotel completo para retiros corporativos, team building y reuniones de trabajo en la naturaleza de Xilitla. Hasta 60 personas hospedadas.',
-            provider: { '@type': 'Hotel', name: 'Hotel Paraíso Encantado', url: 'https://www.paraisoencantado.com' },
+            provider: HOTEL_REF,
             areaServed: { '@type': 'Place', name: 'Xilitla, San Luis Potosí, México' },
             offers: { '@type': 'Offer', priceCurrency: 'MXN', priceSpecification: { '@type': 'UnitPriceSpecification', price: 38000, priceCurrency: 'MXN', unitText: 'per night' } },
           },
@@ -149,8 +148,9 @@ export default function GruposEventosPage() {
           {[
             { num: '13', label: 'Suites disponibles' },
             { num: '60', label: 'Personas de hospedaje' },
-            { num: '4.5★', label: 'Google · 523 reseñas' },
-            { num: '5 min', label: 'A Las Pozas' },
+            // Cifras de Google de lib/seo-hotel.ts (540 el 13 oct 2026; decía 523).
+            { num: `${HOTEL.rating}★`, label: `Google · ${HOTEL.reviewCount} reseñas` },
+            { num: `${HOTEL.minutosCaminandoALasPozas} min`, label: 'A Las Pozas' },
           ].map((s, i) => (
             <div
               key={s.label}

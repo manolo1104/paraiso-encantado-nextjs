@@ -27,10 +27,14 @@ export const metadata: Metadata = {
   },
 };
 
-// Schema Offer vinculado a las suites — permite precios en rich snippets de Google
+// Schema Offer vinculado a las suites — permite precios en rich snippets de Google.
+// 17 oct 2026: es el mismo `#hotel` de todo el sitio (antes un LodgingBusiness sin
+// @id, que para Google era un segundo hotel) y los vendedores apuntan a él.
+const HOTEL_ID = { '@id': 'https://www.paraisoencantado.com/#hotel' };
 const reservaSchema = {
   '@context': 'https://schema.org',
-  '@type': 'LodgingBusiness',
+  '@type': 'Hotel',
+  '@id': 'https://www.paraisoencantado.com/#hotel',
   name: 'Hotel Paraíso Encantado',
   url: 'https://www.paraisoencantado.com',
   hasOfferCatalog: {
@@ -40,12 +44,13 @@ const reservaSchema = {
       {
         '@type': 'Offer',
         name: 'Suite con Spa Privado — desde $2,000 MXN/noche',
-        description: 'Suites Jungla, Flor de Lis 1 & 2 con piscina spa privada al aire libre. Vista a la selva y montaña.',
+        // Las 4 con spa privado según la hoja de datos (§2); decía «Flor de Lis 1 & 2» y faltaba LindaVista.
+        description: 'Suites Jungla, LindaVista y Flor de Liz 1 y 2, con piscina spa o tina de hidromasaje privada. Vista a la selva y montaña.',
         price: '2000',
         priceCurrency: 'MXN',
         availability: 'https://schema.org/InStock',
         url: 'https://www.paraisoencantado.com/reservar',
-        seller: { '@type': 'Organization', name: 'Hotel Paraíso Encantado' },
+        seller: HOTEL_ID,
       },
       {
         '@type': 'Offer',
@@ -55,7 +60,7 @@ const reservaSchema = {
         priceCurrency: 'MXN',
         availability: 'https://schema.org/InStock',
         url: 'https://www.paraisoencantado.com/reservar',
-        seller: { '@type': 'Organization', name: 'Hotel Paraíso Encantado' },
+        seller: HOTEL_ID,
       },
       {
         '@type': 'Offer',
@@ -65,7 +70,7 @@ const reservaSchema = {
         priceCurrency: 'MXN',
         availability: 'https://schema.org/InStock',
         url: 'https://www.paraisoencantado.com/reservar',
-        seller: { '@type': 'Organization', name: 'Hotel Paraíso Encantado' },
+        seller: HOTEL_ID,
       },
     ],
   },

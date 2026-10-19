@@ -500,7 +500,7 @@ body { background: #e8e4dc; font-family: 'Jost', sans-serif; font-weight: 300; c
     <p class="footer-tagline">La casa en la Huasteca</p>
     <div class="footer-divider"></div>
     <p class="footer-address">
-      Xilitla, San Luis Potosí 79910 · México<br>
+      Xilitla, San Luis Potosí 79900 · México<br>
       A 5 minutos caminando del Jardín Surrealista de Edward James<br>
       <a href="https://paraisoencantado.com">paraisoencantado.com</a>
     </p>

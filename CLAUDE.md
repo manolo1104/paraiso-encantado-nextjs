@@ -34,8 +34,11 @@ One **factor per night shared by the 13 suites** (a %, never a price per suite):
 - `lib/precios.ts` — pure logic, no I/O (the client imports it through `lib/booking.ts`). Rule types: `temporada` (absolute inclusive date range — `hasta` is the **last night charged**, not a check-out), `finde` (weekdays, ignores `desde`/`hasta` so it spans the whole horizon), `ocupacion`, `ultimahora`. Within a type only the lowest `prioridad` wins; **across types the factors multiply**, then get clipped to the owner's piso/techo.
 - `lib/calendario-mx.ts` — the verified Mexican calendar (LFT art. 74 + SEP school calendar, CTE Fridays included). Single source for both the seeded `temporada` rules (`/api/admin/precios/sembrar`) and the text handed to the model, so the AI never has to recall dates from memory.
 - `lib/precios-vigentes.ts` — **the only accessor** of the factors actually charged (60 s cache, invalidated on save). Used by `/api/precios` (public), `create-payment-intent` and `guest-info`, so what the guest sees and what is charged cannot diverge. The server never accepts factors from the client.
-- `lib/admin/precios-sheets.ts` — tabs `PreciosReglas`, `PreciosDias`, `PreciosHistorial` + `Config` keys `precios_activo`, `precios_piso_pct`, `precios_techo_pct`, `precios_banda_pct`, `precios_ultima_corrida`. Writes overwrite in place and only clear the tail — never `clear` first.
-- `lib/admin/precios-motor.ts` (`aplicarReglas`) and `lib/admin/precios-ia.ts` (`analizarDemanda`) are the **two writers of `PreciosDias`**, and their invariants must stay in sync: the past, `origen:'manual'`, pending `propuesto` rows and non-expired `rechazado` rows survive both. `aplicarReglas` additionally never touches any `origen:'ia'` row (hierarchy: manual > IA > rules); `planificarAjustes` is the one that recomputes `ia+aplicado` daily, which is what makes `UMBRAL_ESTABILIDAD` work.
+- `lib/admin/precios-sheets.ts` — tabs `PreciosReglas`, `PreciosDias`, `PreciosHistorial` + `Config` keys `precios_activo`, `precios_piso_pct`, `precios_techo_pct`, `precios_banda_pct`, `precios_ultima_corrida`, and two switches (Oct 2026, both **off** by default, changed by hand in the sheet):
+  - `precios_ia_sube_entre_semana` — off: on Sun–Thu nights that carry the owner's weekday discount **outside a rising season** (`nocheProtegida` in `lib/precios.ts`) the AI can only *lower* the price, never raise it or remove the discount. Inside a season (Christmas, New Year, Easter, long weekends) a Tuesday can rise like a Saturday. On: the AI behaves as before Oct 2026.
+  - `precios_semana_cede_a_temporada` — off: weekday discounts multiply with seasons (Christmas Tuesday = +15% × −8%). On: inside any season the weekday and last-minute discounts don't apply (`factorPorReglas`).
+  Writes overwrite in place and only clear the tail — never `clear` first.
+- `lib/admin/precios-motor.ts` (`aplicarReglas`) and `lib/admin/precios-ia.ts` (`analizarDemanda`) are the **two writers of `PreciosDias`**, and their invariants must stay in sync: the past, `origen:'manual'`, pending `propuesto` rows and non-expired `rechazado` rows survive both. `aplicarReglas` additionally never touches an `origen:'ia'` row (hierarchy: manual > IA > rules) — with one exception: with `precios_ia_sube_entre_semana` off, an applied AI row *above* the rule on a protected night goes back to the rule (both writers use `nocheProtegida`). `planificarAjustes` is the one that recomputes `ia+aplicado` daily, which is what makes `UMBRAL_ESTABILIDAD` (6 points) work; a "stable" night is clipped to today's piso/techo.
 - Read → compute → write runs inside a single `withPreciosLock`. The Anthropic call stays **outside** it (it would hold the lock for a minute).
 - `lib/precios-scheduler.ts` fires `/api/cron/precios?auto=1` at 06:00 MX in-process (the Railway cron died silently once). `?auto=1` honours and writes `precios_ultima_corrida` in the sheet, so a redeploy does not pay for a second analysis the same day; the route also refuses concurrent runs with a 409.
 - `lib/admin/demanda.ts` — occupancy per night, 7-day booking pace, intent (`ReservasIncompletas`, last 7 days only) and searches (`lib/busquedas.ts`, tab `Busquedas`). A read failure is logged, never degraded to 0 in silence: `ocupacionFiable()` aborts the AI run rather than analyse a hotel that merely *looks* empty.
@@ -50,9 +53,16 @@ One **factor per night shared by the 13 suites** (a %, never a price per suite):
   labels them with `factorPorReglas().aplicadas`. Re-deriving would drift via `redondear50`, via the
   empty-signals call, and via stale stored factors. A cell's % likewise comes from the **factor**,
   never from dividing the rounded price (rounding lands differently on each suite's base).
-- 🔴 The sheet holds **one row per night**, so a night with a `propuesto` row has no `aplicado` row
-  and is charged at **list price** while it waits — the owner's own season is not charged. Approving
-  *or* rejecting fixes it; leaving it pending is the only losing move. The panel says so out loud.
+- 🔴 The sheet holds **one row per night**. Since Oct 2026 a pending `propuesto` row carries the
+  owner's rule for that night in column **G** (`FactorVigente`, written `factor@fecha`), and that is
+  what the web charges while it waits (`factoresAplicados`), not list price. A G cell that names
+  another date is ignored (the pre-Oct-2026 code rewrites and clears only A:F, so after a revert and
+  a redeploy G could belong to another night): that night charges list price until the next run.
+  **Approving** turns the row into an `origen:'manual'` row whose motivo starts with «Aprobado:»
+  (`MARCA_APROBADO`), so neither the AI nor the rules undo it the next morning; «Volver a automático»
+  removes it. **Rejecting** removes the proposal and writes the rule row at once; the "no" lives in
+  the history (`getRechazosRecientes`, 45 days). «Fijar esta noche» sends `fijar: true`, so 0% leaves
+  a manual row at list price; «Quitar ajuste» sends the night back to its rules.
 
 ### Reservation flow (4 pages)
 
@@ -142,7 +152,10 @@ Both also push to the GTM dataLayer and tag the Clarity recording (`lib/clarity.
 
 Spanish homepage: `/` — `lang="es"`, JSON-LD in `app/page.tsx`.  
 English landing page: `/en` — separate route in `app/en/`, targets keywords like "hotel near Edward James surrealist garden". `hreflang` set via `alternates.languages` in both layouts.  
-JSON-LD schema (`LodgingBusiness`) lives **only** in `app/page.tsx` (not duplicated in layout).
+JSON-LD: the hotel is **one entity with one type** — `'@type': 'Hotel'`, `'@id': 'https://www.paraisoencantado.com/#hotel'` (`ENTITY_IDS.hotel` / `HOTEL_REF` in `lib/seo-entidades.ts`, `lodgingSchema()` in `lib/seo-hotel.ts`). The full node lives in `app/page.tsx`; every other page either reuses `lodgingSchema()` or points to it by `@id` (publisher, seller, provider, author…). Never an anonymous `LodgingBusiness`/`Organization` with the hotel's name: for Google and the AI engines that is a second hotel. Review markup: only the Google profile's `aggregateRating` (4.5/540, `HOTEL.rating`/`reviewCount`); the 25 quotes in `/reviews` are NOT verified against the profile and must not be marked up or signed «Google».
+- **Sitemap `lastmod`** (`app/sitemap.ts`): one real date per route in `LASTMOD` (articles use their frontmatter `dateModified`); the commit that changes a page's text, photos or JSON-LD changes its date, never the build date. If a batch ships on a later day than its `LOTE`, set `LOTE` to the deploy day.
+- **IndexNow — after EVERY deploy that changes content**: `node scripts/indexnow.mjs` (dry run: lists the production-sitemap URLs with the newest `lastmod`), then the same with `--enviar`. First time `--todas`; also `--desde AAAA-MM-DD` or explicit URLs. Feeds Bing (ChatGPT/Copilot) and Yandex; Google ignores it.
+- Key file `public/6d0b1dd477612baee5a29ad11c55eea8.txt` is public by design; the script refuses to send until production serves it. Don't resend unchanged URLs (429 = spam).
 
 ### Public homepage section order
 

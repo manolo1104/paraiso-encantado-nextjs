@@ -769,6 +769,26 @@
   text-underline-offset: 3px;
 }
 
+/* ---- ENLACE A «MEJOR ÉPOCA» (sobre el mismo fondo verde, oct 2026) ----
+   Igual que el de Xantolo: dorado y subrayado, o se confunde con el texto blanco. */
+.epoca {
+  margin-top: 28px !important;
+  margin-bottom: 0 !important;
+}
+
+.epoca a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---- ¿DÓNDE QUEDA XILITLA? (oct 2026) ----
+   Usa el mismo fondo blanco y los mismos títulos que la intro (verde sobre blanco: se
+   lee). Sin padding arriba para que no queden dos huecos de sección juntos. */
+.dondeQueda {
+  padding-top: 0;
+}
+
 .stayAlt {
   font-size: 14px !important;
 }

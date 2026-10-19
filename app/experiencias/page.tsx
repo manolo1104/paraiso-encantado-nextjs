@@ -228,17 +228,9 @@ const toursSchema = {
           url: TOURS_SITE_URL,
         },
       },
-      containedInPlace: {
-        '@type': 'LodgingBusiness',
-        name: 'Hotel Paraíso Encantado',
-        url: 'https://www.paraisoencantado.com',
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: 'Xilitla',
-          addressRegion: 'San Luis Potosí',
-          addressCountry: 'MX',
-        },
-      },
+      // Sin `containedInPlace` (17 oct 2026): era un LodgingBusiness anónimo con el
+      // nombre del hotel —para Google, otro hotel más— y decía que el tour «está
+      // dentro» del hotel. El tour lo opera Huasteca Potosina Tours (el `seller`).
     },
   })),
 };

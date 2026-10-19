@@ -2,13 +2,21 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Leaf, Target, Eye, Heart, TreePine, Users, Play, Quote } from 'lucide-react';
+import { HOTEL, lodgingSchema } from '@/lib/seo-hotel';
+import { ENTITY_IDS } from '@/lib/seo-entidades';
 import styles from './sobre-nosotros.module.css';
+
+const URL = `${HOTEL.url}/sobre-nosotros`;
+
+// Foto real de Las Pozas (CC0, Wikimedia Commons), la misma de /xilitla. Hasta el
+// 17 oct 2026 aquí iba jardin-edward-james-aerial.png, hecha con IA.
+const FOTO_LAS_POZAS = '/images/las-pozas/columnas-las-pozas-edward-james-xilitla.jpg';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: 'Sobre Paraíso Encantado · Hotel en Xilitla desde 2018',
   description:
-    'La historia del hotel boutique a 400 m de Las Pozas de Edward James: 13 suites, restaurante huasteco y familia potosina. Conócenos y reserva.',
+    `La historia del hotel boutique a ${HOTEL.metrosALasPozas} m de Las Pozas de Edward James: ${HOTEL.suites} suites, restaurante huasteco y familia potosina. Conócenos y reserva.`,
   alternates: {
     canonical: 'https://www.paraisoencantado.com/sobre-nosotros',
   },
@@ -28,56 +36,48 @@ export const metadata: Metadata = {
   },
 };
 
-// ── Schema AboutPage + Organization + Person (fundador) ───────────────────────
+// ── Schema AboutPage + el hotel + Person (fundador) ───────────────────────────
+/**
+ * Una sola entidad (17 oct 2026). Hasta esta fecha la página declaraba un segundo
+ * negocio, `#organization` de tipo [Organization, LodgingBusiness], con el mismo
+ * nombre, otra dirección (CP 79910) y sus propias reseñas: para Google y las IA eran
+ * dos hoteles. Ahora es el MISMO `#hotel` de la portada, armado con `lodgingSchema()`
+ * (dirección, punto, Xilitla y perfil de Google de un solo lugar), más lo que solo
+ * cuenta esta página: fundación, fundador y correo.
+ *
+ * Del fundador se quitaron dos cosas que no eran suyas: el `sameAs` (eran las
+ * cuentas del HOTEL, y así la persona y el negocio quedaban como la misma cosa) y la
+ * `image` (era la foto de la fachada, no de él).
+ *
+ * El FAQPage que había aquí no se veía en la página y además contradecía la línea
+ * del tiempo visible (decía que el hotel abrió en 2018; la línea del tiempo, que
+ * abrió en 2019): se quitó.
+ */
 const aboutSchema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'AboutPage',
+      '@id': `${URL}#webpage`,
       name: 'Sobre Nosotros — Hotel Paraíso Encantado',
       description: 'Historia, misión y valores del Hotel Paraíso Encantado en Xilitla, Huasteca Potosina.',
-      url: 'https://www.paraisoencantado.com/sobre-nosotros',
-      mainEntity: { '@id': 'https://www.paraisoencantado.com/#organization' },
+      url: URL,
+      inLanguage: 'es-MX',
+      mainEntity: { '@id': ENTITY_IDS.hotel },
       author: { '@id': 'https://www.paraisoencantado.com/#founder' },
+      isPartOf: { '@id': ENTITY_IDS.website },
     },
     {
-      '@type': ['Organization', 'LodgingBusiness'],
-      '@id': 'https://www.paraisoencantado.com/#organization',
-      name: 'Hotel Paraíso Encantado',
-      url: 'https://www.paraisoencantado.com',
-      description: '13 suites boutique, 4 con spa privado a 5 minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina, México.',
-      telephone: '+524891007679',
+      ...lodgingSchema({
+        description: `${HOTEL.suites} suites boutique, ${HOTEL.suitesConSpaPrivado} con spa privado, a ${HOTEL.minutosCaminandoALasPozas} minutos caminando del Jardín Surrealista de Edward James (Las Pozas) en Xilitla, Huasteca Potosina, México.`,
+        url: URL,
+        // La página enseña el 4.5 y las reseñas de Google en la franja de cifras.
+        calificacion: true,
+      }),
       email: 'reservas@paraisoencantado.com',
       foundingDate: '2018',
       founder: { '@id': 'https://www.paraisoencantado.com/#founder' },
       numberOfEmployees: { '@type': 'QuantitativeValue', value: 15 },
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Xilitla',
-        addressRegion: 'San Luis Potosí',
-        postalCode: '79910',
-        addressCountry: 'MX',
-      },
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: 21.395,
-        longitude: -98.9915,
-      },
-      sameAs: [
-        'https://www.instagram.com/_paraiso_encantado/',
-        'https://www.facebook.com/cabanas.encantado/',
-        'https://www.youtube.com/@hotelparaisoencantadoxilit8111',
-      ],
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: 4.5,
-        reviewCount: 523,
-        bestRating: 5,
-      },
-      hasOfferCatalog: {
-        '@type': 'OfferCatalog',
-        name: '13 suites boutique, 4 con spa privado en Xilitla',
-      },
     },
     {
       // Person — fundador del hotel. Permite a Google mostrar card de entidad
@@ -89,18 +89,7 @@ const aboutSchema = {
       familyName: 'Covarrubias',
       jobTitle: 'Fundador y Director',
       description: 'Fundador del Hotel Paraíso Encantado en Xilitla. Nació en la Huasteca Potosina y decidió que el turismo debía enriquecer el territorio, no extractarlo. Lleva años construyendo el hotel con su equipo local.',
-      image: {
-        '@type': 'ImageObject',
-        url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg',
-        description: 'Manolo Covarrubias — Fundador Hotel Paraíso Encantado, Xilitla',
-      },
-      worksFor: { '@id': 'https://www.paraisoencantado.com/#organization' },
-      sameAs: [
-        'https://www.instagram.com/_paraiso_encantado/',
-        'https://www.facebook.com/cabanas.encantado/',
-        'https://www.youtube.com/@hotelparaisoencantadoxilit8111',
-        'https://www.linkedin.com/company/hotel-paraiso-encantado-xilitla/',
-      ],
+      worksFor: { '@id': ENTITY_IDS.hotel },
       knowsAbout: [
         'Huasteca Potosina',
         'Xilitla',
@@ -131,10 +120,13 @@ const team = [
     color: '#5a4e3c',
   },
   {
-    initial: 'G',
-    name: 'Equipo de Guías',
-    role: 'Guías Certificados Locales',
-    bio: 'Xilitlecos que conocen cada cascada, cada ruta y cada historia de la sierra. La diferencia entre un tour y una experiencia real.',
+    // Era «Equipo de Guías · Guías Certificados Locales», como si el hotel operara los
+    // tours. No los opera: los opera Huasteca Potosina Tours, otra entidad (hoja de
+    // datos verificados, §2). 17 oct 2026.
+    initial: 'H',
+    name: 'Huasteca Potosina Tours',
+    role: 'Los tours de la región',
+    bio: 'No es parte del hotel: es la operadora, con guías de la sierra, que lleva los tours a Tamul, Puente de Dios y las cascadas, y pasa por ti al hotel.',
     color: '#2e6b8a',
   },
   {
@@ -149,11 +141,12 @@ const team = [
 // Timeline de historia
 const timeline = [
   { year: '2018', event: 'Nace el proyecto', desc: 'El sueño de un hotel boutique en Xilitla que estuviera a la altura de su naturaleza.' },
-  { year: '2019', event: 'Primeras suites', desc: 'Se abren las primeras suites: Jungla y Flor de Lis. El hotel abre sus puertas.' },
+  { year: '2019', event: 'Primeras suites', desc: 'Se abren las primeras suites: Jungla y Flor de Liz. El hotel abre sus puertas.' },
   { year: '2020', event: 'El Papán Huasteco', desc: 'Abre el restaurante con cocina auténtica de la Huasteca, ingredientes locales y tortillas hechas a mano.' },
   { year: '2022', event: '13 suites completas', desc: 'La última suite queda lista. 13 espacios únicos, cada uno con nombre e identidad propios.' },
   { year: '2023', event: 'Visita presidencial', desc: 'El hotel recibe al presidente Andrés Manuel López Obrador, en funciones, durante su gira por la Huasteca.' },
-  { year: '2024', event: '+500 reseñas', desc: 'Más de 500 reseñas verificadas con calificación de 4.5 estrellas en Google.' },
+  // Sin «verificadas»: Google no comprueba que quien reseña se haya hospedado.
+  { year: '2024', event: '+500 reseñas', desc: 'Más de 500 reseñas en Google, con una calificación de 4.5 de 5.' },
 ];
 
 // Reseñas emocionales de identidad
@@ -178,39 +171,6 @@ const identityReviews = [
   },
 ];
 
-const aboutFaqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: '¿Cuándo abrió el Hotel Paraíso Encantado?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'El Hotel Paraíso Encantado abrió sus puertas en 2018 con las primeras suites Jungla y Flor de Lis. Completó sus 13 suites en 2022 y en 2023 recibió la visita del presidente de México en funciones, durante su gira por la Huasteca.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿Dónde está ubicado exactamente el hotel?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        // Sin "el más cercano" ni "Patrimonio Cultural de México" (2 oct 2026): Casa Caracol está a
-        // 300 m y la declaratoria de Las Pozas es de Monumento Artístico (SEP, 2012).
-        text: 'Estamos en La Conchita, Xilitla, San Luis Potosí, Huasteca Potosina, sobre el camino a Las Pozas: a 400 metros del Jardín Surrealista de Edward James —5 minutos caminando—, declarado Monumento Artístico en 2012. El centro del pueblo queda a unos 2 km, 5 minutos en auto.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '¿El hotel tiene algún compromiso ambiental?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Sí. Distribuimos nuestras 13 suites para causar el menor impacto posible en la flora nativa de Xilitla. La mayoría de los árboles y plantas que existían antes de la construcción siguen en pie. También trabajamos exclusivamente con productores locales en nuestro restaurante El Papán Huasteco.',
-      },
-    },
-  ],
-};
-
 const aboutBreadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -226,7 +186,6 @@ export default function SobreNosotrosPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutBreadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutFaqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'VideoObject',
@@ -237,10 +196,13 @@ export default function SobreNosotrosPage() {
         duration: 'PT3M',
         contentUrl: 'https://www.youtube.com/watch?v=hD7LbX9Xoqw',
         embedUrl: 'https://www.youtube.com/embed/hD7LbX9Xoqw',
+        // El mismo `#hotel` de arriba, no una organización anónima con el mismo nombre,
+        // y con el mismo tipo (Hotel, que para schema.org también es Organization).
         publisher: {
-          '@type': 'Organization',
-          name: 'Hotel Paraíso Encantado',
-          url: 'https://www.paraisoencantado.com',
+          '@type': 'Hotel',
+          '@id': ENTITY_IDS.hotel,
+          name: HOTEL.nombre,
+          url: HOTEL.url,
           logo: { '@type': 'ImageObject', url: 'https://www.paraisoencantado.com/logo.png' },
         },
         inLanguage: 'es-MX',
@@ -264,7 +226,7 @@ export default function SobreNosotrosPage() {
             </h1>
             <p className={styles.heroDesc}>
               Paraíso Encantado es un hotel boutique en La Conchita, Xilitla, San Luis Potosí,
-              a 5 minutos caminando del Jardín Surrealista de Edward James. Nacimos con la convicción
+              a {HOTEL.minutosCaminandoALasPozas} minutos caminando del Jardín Surrealista de Edward James. Nacimos con la convicción
               de que el turismo puede ser una fuerza positiva — para la comunidad y para la naturaleza.
             </p>
           </div>
@@ -285,10 +247,12 @@ export default function SobreNosotrosPage() {
         <section className={styles.statsSection}>
           <div className={styles.statsGrid}>
             {[
-              { num: '13', label: 'Suites únicas' },
-              { num: '4.5★', label: 'Estrellas en Google' },
-              { num: '523+', label: 'Reseñas verificadas' },
-              { num: '5 min', label: 'A pie del Jardín de Edward James' },
+              // Las cifras de Google salen de HOTEL (540 reseñas el 13 oct 2026; decía «523+»
+              // y «verificadas», y Google no comprueba que quien reseña se haya hospedado).
+              { num: `${HOTEL.suites}`, label: 'Suites únicas' },
+              { num: `${HOTEL.rating}★`, label: 'Calificación en Google' },
+              { num: `${HOTEL.reviewCount}`, label: 'Reseñas en Google' },
+              { num: `${HOTEL.minutosCaminandoALasPozas} min`, label: 'A pie del Jardín de Edward James' },
               { num: '2018', label: 'Año de fundación' },
             ].map((s) => (
               <div key={s.label} className={styles.statItem}>
@@ -313,7 +277,7 @@ export default function SobreNosotrosPage() {
               </p>
               <p>
                 Hoy estamos sobre el camino al Jardín Surrealista de Edward James (Las Pozas), a solo
-                5 minutos caminando. Nuestros huéspedes llegan a pie al primer turno de la mañana, antes
+                {' '}{HOTEL.minutosCaminandoALasPozas} minutos caminando. Nuestros huéspedes llegan a pie al primer turno de la mañana, antes
                 que los tours organizados — esa es nuestra ventaja real.
               </p>
             </div>
@@ -369,7 +333,7 @@ export default function SobreNosotrosPage() {
               <h3>Visión</h3>
               <p>
                 Ser el hotel que prueba que el turismo puede enriquecer, no extractar, la Huasteca
-                Potosina. Con 13 suites únicas, un restaurante auténtico y guías locales certificados,
+                Potosina. Con 13 suites únicas, un restaurante auténtico y tours con guías de la región,
                 queremos que Xilitla sea conocida en el mundo sin perder su alma.
               </p>
             </div>
@@ -441,8 +405,8 @@ export default function SobreNosotrosPage() {
             </div>
             <div className={styles.ecoImageWrap}>
               <Image
-                src="/images/atracciones/jardin-edward-james-aerial.png"
-                alt="Las Pozas de Edward James — Monumento Artístico desde 2012, Xilitla"
+                src={FOTO_LAS_POZAS}
+                alt="Columnas de concreto de Las Pozas, el jardín surrealista de Edward James, entre la selva de Xilitla"
                 fill
                 sizes="(max-width: 768px) 100vw, 45vw"
                 className={styles.ecoImage}
@@ -463,7 +427,8 @@ export default function SobreNosotrosPage() {
                 en nuestra mesa representa el trabajo de familias de la región.
               </p>
               <p>
-                Nuestros tours los operan guías certificados locales, generando empleo directo.
+                Los tours de la región no los opera el hotel: los opera Huasteca Potosina Tours,
+                con guías de la sierra, y así el viaje deja trabajo en la región.
                 Creemos que el turismo responsable es la única forma de preservar la Huasteca
                 para las generaciones que vienen.
               </p>

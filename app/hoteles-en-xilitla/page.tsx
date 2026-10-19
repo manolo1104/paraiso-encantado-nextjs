@@ -5,6 +5,7 @@ import {
   SeoHero, AnswerBlock, StatStrip, CompareTable, SeoFaq, RelatedLinks, SeoCta, seoStyles as styles,
 } from '@/components/seo/SeoBlocks';
 import { HOTEL, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
+import { HOTELES_XILITLA, CAMINO_A_LAS_POZAS } from '@/lib/hoteles-xilitla';
 import local from './hoteles-en-xilitla.module.css';
 
 const URL = `${HOTEL.url}/hoteles-en-xilitla`;
@@ -79,7 +80,8 @@ const FAQS = [
     q: '¿Qué hotel de Xilitla está más cerca de Las Pozas?',
     // Respuesta alineada con la tabla de esta misma página (2 oct 2026): antes decía
     // que el más cercano era Paraíso Encantado, y la tabla pone Casa Caracol a 300 m.
-    a: `Los tres que están sobre el camino a Las Pozas: Casa Caracol, a unos 300 metros; el Hotel Paraíso Encantado, a ${HOTEL.metrosALasPozas} metros de la entrada del Jardín de Edward James (unos ${HOTEL.minutosCaminandoALasPozas} minutos caminando), y Posada James, a unos 8 minutos a pie. Desde los tres llegas caminando, sin auto ni taxi.`,
+    // Las distancias salen de lib/hoteles-xilitla.ts, igual que en /hotel-cerca-de-las-pozas.
+    a: `Los tres que están sobre el camino a Las Pozas: Casa Caracol, ${CAMINO_A_LAS_POZAS.casaCaracol}; el Hotel Paraíso Encantado, ${CAMINO_A_LAS_POZAS.paraisoEncantado}, y Posada James, ${CAMINO_A_LAS_POZAS.posadaJames}. Desde los tres llegas caminando, sin auto ni taxi.`,
   },
   {
     q: '¿Hace falta auto para quedarse en Xilitla?',
@@ -114,6 +116,8 @@ const schema = {
       description: `Hotel boutique en la zona de La Conchita, Xilitla, a ${HOTEL.metrosALasPozas} metros de Las Pozas de Edward James.`,
       url: URL,
       image: `${HOTEL.url}/images/Areas comunes/DSC09456-HDR.jpg`,
+      // La página muestra el 4.5 y las reseñas en la franja de cifras.
+      calificacion: true,
     }),
     breadcrumbSchema([
       { name: 'Inicio', url: HOTEL.url },
@@ -125,32 +129,11 @@ const schema = {
 
 /**
  * Los hoteles del pueblo, con Paraíso Encantado dentro de la misma tabla y no
- * aparte.
- *
- * Dos reglas que no se rompen aquí:
- *
- * 1. **Ningún dato inventado.** Tarifas y distancias salen de lo que cada hotel
- *    o los buscadores de hospedaje publicaban en septiembre de 2026. Donde no
- *    hubo fuente fiable va "Consultar", no una cifra aproximada: este es el
- *    sitio de un negocio real y publicar un precio falso de un competidor es un
- *    problema serio, no un detalle de SEO.
- * 2. **Sin enlaces a la competencia.** Se les nombra, igual que hacen las guías
- *    de viaje, porque una página que solo nombra un hotel no puede ser la
- *    respuesta a una búsqueda en plural. Pero los enlaces salientes hacia
- *    reservas de otros hoteles se regalarían sin recibir nada.
+ * aparte. Los datos y sus dos reglas (nada inventado, sin enlaces a la
+ * competencia) viven en lib/hoteles-xilitla.ts desde el 16 oct 2026, porque
+ * /hotel-cerca-de-las-pozas responde con las mismas distancias.
  */
-const HOTELES: { cells: string[]; highlight?: boolean }[] = [
-  { cells: ['Hotel Paraíso Encantado', 'La Conchita, camino a Las Pozas', `$${HOTEL.precioDesde.toLocaleString('es-MX')}`, `${HOTEL.metrosALasPozas} m · ${HOTEL.minutosCaminandoALasPozas} min a pie`, `Sí — y ${HOTEL.suitesConSpaPrivado} suites con spa privado`, 'Sí, gratuito'], highlight: true },
-  { cells: ['Casa Caracol', 'Camino a Las Pozas', 'Consultar', '300 m · a pie', 'Sí', 'Consultar'] },
-  { cells: ['Posada James', 'Camino a Las Pozas', '≈ $1,550', '8 min a pie', 'Sí', 'Sí, gratuito'] },
-  { cells: ['Posada El Castillo', 'Centro, junto a la plaza', '≈ $1,900', 'Unos 2 km', 'Sí', 'Sí'] },
-  { cells: ['Hotel Casablanca', 'Centro, a pie de la plaza', '≈ $1,300', 'Unos 2 km', 'Sí', 'Sí, gratuito'] },
-  { cells: ['Hotel Sierra Linda', 'Centro, 5 min a pie de la plaza', '≈ $650', 'Unos 2 km', 'Sí', 'Sí, a una cuadra'] },
-  { cells: ['Roof Top Hotel Xilitla', 'Centro, tras la plaza', '≈ $560', 'Unos 3 km', 'Sí, en la azotea', 'Sí'] },
-  { cells: ['Hotel Real de Lua', 'Afueras, camino a Apetzco', '≈ $1,600', 'Unos 3 km', 'Sí', 'Sí, gratuito'] },
-  { cells: ["Hotel Monte Ixk'al", 'Afueras, camino a San Antonio', '≈ $860', 'Unos 5 km', 'Sí', 'Sí, gratuito'] },
-  { cells: ['Hotel Tapasoli', 'Apetzco, afueras', 'Desde $1,200', '15 min en auto', 'Sí', 'Sí, gratuito'] },
-];
+const HOTELES = HOTELES_XILITLA;
 
 const CONSEJOS = [
   { icon: <MapPin size={22} strokeWidth={1.5} />, title: 'Mide la distancia a Las Pozas, no al centro', body: 'Muchos hoteles se anuncian como "cerca de Las Pozas" estando a 15 minutos en auto por camino de terracería. Pregunta metros, no adjetivos.' },
@@ -216,7 +199,7 @@ export default function HotelesEnXilitlaPage() {
         <StatStrip stats={[
           { num: '10', label: 'hoteles del pueblo comparados aquí' },
           { num: `${HOTEL.metrosALasPozas} m`, label: 'de Paraíso Encantado a Las Pozas, caminando' },
-          { num: `${HOTEL.rating}/5`, label: `${HOTEL.reviewCount} reseñas verificadas en Google` },
+          { num: `${HOTEL.rating}/5`, label: `${HOTEL.reviewCount} reseñas en Google` },
         ]} />
 
         <section className={styles.section}>
@@ -464,10 +447,13 @@ export default function HotelesEnXilitlaPage() {
         <SeoFaq faqs={FAQS} />
 
         <RelatedLinks links={[
-          { href: '/mejor-hotel-xilitla', label: 'Por qué Paraíso Encantado es el mejor hotel de Xilitla' },
+          // Una URL por búsqueda (16 oct 2026): esta página es la comparativa; las
+          // demás se enlazan con lo suyo y sin «el mejor hotel», que no se sostiene
+          // (Posada James tiene mejor nota y Tapasoli más reseñas).
+          { href: '/mejor-hotel-xilitla', label: 'Paraíso Encantado: por qué elegirlo y sus datos' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca Potosina' },
           { href: '/hotel-cerca-de-las-pozas', label: `Hotel a ${HOTEL.metrosALasPozas} m de Las Pozas` },
-          { href: '/hotel-alberca-privada-xilitla', label: 'Hoteles con alberca privada en la habitación' },
+          { href: '/hotel-alberca-privada-xilitla', label: 'Suites con spa privado y alberca en Xilitla' },
           { href: '/hotel-familias-xilitla', label: 'Hotel para familias en Xilitla' },
           { href: '/hotel-luna-de-miel-xilitla', label: 'Luna de miel en Xilitla' },
           { href: '/xilitla', label: 'Qué ver en Xilitla' },

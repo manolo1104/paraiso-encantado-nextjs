@@ -108,6 +108,107 @@
 
 .heroCtaSecondary:hover { background: rgba(255,255,255,0.15); }
 
+/* Enlace al par en inglés (/en), debajo de los botones */
+.heroLang {
+  margin-top: 18px;
+  font-size: 14px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.heroLang a {
+  color: white;
+  opacity: 0.85;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.heroLang a:hover { opacity: 1; }
+
+/* ---- QUÉ HOTEL ESTÁ MÁS CERCA (17 oct 2026) ---- */
+.cercania {
+  background: var(--parch);
+  padding: 64px 24px;
+}
+
+.cercaniaInner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.cercaniaInner h2 {
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(26px, 3.5vw, 38px);
+  font-weight: 400;
+  line-height: 1.2;
+  /* globals.css ya pinta los h2 de verde; se deja explícito por si cambia el fondo. */
+  color: var(--forest);
+  margin-bottom: 18px;
+}
+
+.cercaniaInner > p {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #555;
+  margin-bottom: 24px;
+}
+
+.cercaniaTableWrap {
+  margin-bottom: 20px;
+}
+
+.cercaniaTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: var(--font-jost, sans-serif);
+  font-size: 15px;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.05);
+}
+
+.cercaniaTable caption {
+  caption-side: bottom;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #777;
+  padding-top: 10px;
+}
+
+.cercaniaTable th,
+.cercaniaTable td {
+  padding: 14px 18px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #eee;
+}
+
+.cercaniaTable thead th {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage);
+}
+
+.cercaniaTable tbody th {
+  font-weight: 600;
+  color: var(--forest);
+}
+
+.cercaniaTable tbody tr:last-child th,
+.cercaniaTable tbody tr:last-child td { border-bottom: none; }
+
+.cercaniaPropio { background: rgba(168, 132, 42, 0.10); }
+
+@media (max-width: 480px) {
+  .cercania { padding: 48px 16px; }
+  .cercaniaTable th,
+  .cercaniaTable td { padding: 12px; font-size: 14px; }
+}
+
 /* ---- DISTANCIA ---- */
 .distance {
   background: var(--forest);

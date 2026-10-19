@@ -22,23 +22,46 @@
  * Identificadores canónicos del sitio. TODAS las páginas deben referirse al
  * hotel con el mismo `@id`: si cada página declara un `LodgingBusiness`
  * anónimo, el modelo ve N hoteles distintos en vez de uno con N páginas.
+ *
+ * `organization` es un ALIAS del hotel, no otra entidad (16 oct 2026). Hasta
+ * esa fecha era `#organization` y /sobre-nosotros y /mejor-hotel-xilitla lo
+ * declaraban como un negocio aparte, con el mismo nombre, la misma dirección y
+ * las mismas reseñas: para Google y las IA eran dos hoteles. El hotel ES la
+ * organización que firma y publica las páginas, así que el alias deja que el
+ * código que firma con `ENTITY_IDS.organization` apunte al único hotel.
  */
 export const ENTITY_IDS = {
   hotel: 'https://www.paraisoencantado.com/#hotel',
   website: 'https://www.paraisoencantado.com/#website',
-  organization: 'https://www.paraisoencantado.com/#organization',
+  organization: 'https://www.paraisoencantado.com/#hotel',
 } as const;
 
 export const HOTEL_REF = { '@id': ENTITY_IDS.hotel } as const;
 
-/** Perfiles públicos del hotel, para `sameAs`. */
-export const PERFILES_HOTEL = [
-  'https://www.instagram.com/_paraiso_encantado/',
-  'https://www.facebook.com/cabanas.encantado/',
-  'https://www.youtube.com/@hotelparaisoencantadoxilit8111',
-  'https://www.linkedin.com/company/hotel-paraiso-encantado-xilitla/',
-  'https://g.page/r/CY84xO7VaxDbEBM',
-] as const;
+/**
+ * El perfil de Google del hotel (Maps). El cid sale de decodificar el enlace de
+ * reseñas g.page/r/CY84xO7VaxDbEBM: es el mismo negocio (comprobado el 13 oct
+ * 2026). Es la ficha con 4.5 y 540 reseñas y teléfono 489 100 7679; la del
+ * 489 100 7601 («Posada Paraiso Encantado», Matamoros 205) es OTRA ficha.
+ */
+export const PERFIL_GOOGLE = 'https://maps.google.com/?cid=15785235260511631503';
+
+/**
+ * Perfiles públicos del hotel, para `sameAs`.
+ *
+ * Por ahora SOLO el de Google (16 oct 2026). Las redes que se declaraban aquí no
+ * coinciden con las del pie de página (el pie enlaza instagram.com/
+ * paraisoencantadoxilitla y facebook.com/paraisoencantadoxilitla), la página de
+ * Facebook declarada lleva el nombre viejo «Cabañas», la bio de Instagram dice
+ * «15 habitaciones» y la de LinkedIn respondía 404. Un `sameAs` a la cuenta
+ * equivocada le pega al hotel los datos de otra entidad. Cuando Manolo confirme
+ * cuáles son las oficiales, se agregan aquí y en el pie (components/Footer.tsx):
+ *   'https://www.instagram.com/_paraiso_encantado/'
+ *   'https://www.facebook.com/cabanas.encantado/'
+ *   'https://www.youtube.com/@hotelparaisoencantadoxilit8111'
+ *   'https://www.linkedin.com/company/hotel-paraiso-encantado-xilitla/'
+ */
+export const PERFILES_HOTEL = [PERFIL_GOOGLE] as const;
 
 /** Las Pozas / Jardín Escultórico Edward James — Wikidata Q11688402. */
 export const LAS_POZAS = {
@@ -49,8 +72,11 @@ export const LAS_POZAS = {
     // Cifras de la hoja única (2 oct 2026): la declaratoria de 2012 fue de la SEP
     // (Acuerdo 658), no del INBA; y "27 estructuras" es solo el área visitable.
     'Jardín escultórico surrealista creado por Edward James en Xilitla: más de 30 estructuras de concreto levantadas entre 1962 y 1984, en un predio de 37 hectáreas (unas 9 de jardín). Abierto al público en 1991 y declarado Monumento Artístico en 2012 (Acuerdo 658 de la SEP).',
+  // La Wikipedia en inglés entró el 17 oct 2026 (la página /en también la cita):
+  // Wikidata Q11688402 enlaza «Las_Pozas» en las dos Wikipedias (comprobado el 13 oct).
   sameAs: [
     'https://es.wikipedia.org/wiki/Las_Pozas',
+    'https://en.wikipedia.org/wiki/Las_Pozas',
     'https://www.wikidata.org/wiki/Q11688402',
   ],
   // Pin oficial de laspozasxilitla.org.mx (2 oct 2026); el anterior (21.387, -98.994) caía a 1.1 km.
@@ -82,8 +108,10 @@ export const EDWARD_JAMES = {
   '@id': 'https://www.wikidata.org/wiki/Q196055',
   name: 'Edward James',
   description: 'Poeta, escultor y mecenas británico del surrealismo, creador de Las Pozas en Xilitla.',
+  // En inglés desde el 17 oct 2026: en.wikipedia «Edward_James» resuelve a Q196055.
   sameAs: [
     'https://es.wikipedia.org/wiki/Edward_James',
+    'https://en.wikipedia.org/wiki/Edward_James',
     'https://www.wikidata.org/wiki/Q196055',
   ],
 } as const;

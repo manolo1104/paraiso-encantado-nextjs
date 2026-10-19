@@ -1,27 +1,39 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import FloatingLeaves from '@/components/FloatingLeaves';
+import { HOTEL, AGGREGATE_RATING } from '@/lib/seo-hotel';
+import { PERFIL_GOOGLE } from '@/lib/seo-entidades';
 import styles from './reviews.module.css';
 
+// 17 oct 2026: las cifras de Google salen de lib/seo-hotel.ts (540 el 13 oct; aquí
+// decía 523 en seis lugares) y sin «verificadas»: Google no comprueba que quien
+// reseña se haya hospedado.
 export const metadata: Metadata = {
   // Esta página no tiene demanda propia: en las 1,010 consultas exportadas de
   // Search Console no aparece ni una con "reseñas", "opiniones" o "reviews".
   // Sus impresiones son de marca, así que el título es honesto y va con la
   // marca al frente; no se le pelea tráfico que no existe. Sin el símbolo ★
   // porque Google lo borra a veces y el texto tiene que leerse igual.
-  title: 'Reseñas del Hotel Paraíso Encantado · 4.5 de 5 en Google',
+  title: `Reseñas del Hotel Paraíso Encantado · ${HOTEL.rating} de 5 en Google`,
   description:
-    '523 reseñas con 4.5 de 5 en Google: lo que dicen familias y parejas que ya durmieron a 400 m de Las Pozas, en Xilitla. Léelas y reserva directo.',
+    `${HOTEL.reviewCount} reseñas con ${HOTEL.rating} de 5 en Google: lo que dicen familias y parejas que ya durmieron a ${HOTEL.metrosALasPozas} m de Las Pozas, en Xilitla. Léelas y reserva directo.`,
   alternates: { canonical: 'https://www.paraisoencantado.com/reviews' },
   openGraph: {
-    title: 'Reseñas Reales — Hotel Paraíso Encantado · 4.5★ · 523 Opiniones',
-    description: 'Opiniones verificadas de huéspedes del hotel boutique a 400 m de Las Pozas de Edward James en Xilitla.',
+    title: `Reseñas — Hotel Paraíso Encantado · ${HOTEL.rating}★ · ${HOTEL.reviewCount} opiniones en Google`,
+    description: `Opiniones de huéspedes del hotel boutique a ${HOTEL.metrosALasPozas} m de Las Pozas de Edward James en Xilitla.`,
     url: 'https://www.paraisoencantado.com/reviews',
     images: [{ url: 'https://www.paraisoencantado.com/images/Areas comunes/DSC09456-HDR.jpg', width: 1200, height: 630, alt: 'Hotel Paraíso Encantado — 4.5 estrellas en Google' }],
   },
 };
 
-// 25 reseñas reales de Google (publicadas con consentimiento implícito por ser reseñas públicas)
+// 25 reseñas SIN enlace a Google (commit 470f6b4, 19 may 2026): NO comprobadas.
+// 🔴 17 oct 2026: hay indicios de que no son de la ficha. El mismo commit que las
+// subió como «25 reseñas reales de Google» puso un 4.8 con 514 reseñas que después
+// se corrigió como inventado (93f91d9); Google no publica la ciudad ni la suite del
+// autor y aquí las 25 las traen; la #10 dice «Huahuastecas». Por eso ya no van en el
+// JSON-LD ni se firman «Google». Hasta que Manolo enlace cada una con la reseña real
+// de la ficha (PERFIL_GOOGLE), o las cambie por reseñas copiadas de ahí, no se
+// agregan más ni se citan en otras páginas como de Google.
 const REVIEWS = [
   { id: 1,  name: 'Fernanda Obregón',    location: 'CDMX',        date: '2025-04-15', rating: 5, suite: 'Suite Jungla',          text: 'No es solo un hotel. Es el lugar donde entendí por qué Edward James eligió Xilitla para su obra de vida. El Paraíso tiene esa misma magia inexplicable. La suite Jungla con el spa privado al amanecer es una experiencia que no se puede describir con palabras.', source: 'Google' },
   { id: 2,  name: 'Pablo Guerrero',      location: 'Guadalajara', date: '2025-03-22', rating: 5, suite: 'Suite LindaVista',      text: 'Llevan años compitiendo con cadenas internacionales sin perder su alma local. El restaurante, los guías, la forma en que cuidan la naturaleza — todo grita "aquí trabajamos personas de aquí". La tina de hidromasaje con vista a la sierra es literalmente el lujo que esperaba.', source: 'Google' },
@@ -51,7 +63,6 @@ const REVIEWS = [
 ];
 
 const RATING_DIST = { 5: 22, 4: 3, 3: 0, 2: 0, 1: 0 };
-const AVG = 4.5;
 
 const reviewsSchema = {
   '@context': 'https://schema.org',
@@ -59,39 +70,10 @@ const reviewsSchema = {
   '@id': 'https://www.paraisoencantado.com/#hotel',
   name: 'Hotel Paraíso Encantado',
   url: 'https://www.paraisoencantado.com',
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: AVG,
-    reviewCount: 523,
-    bestRating: 5,
-    worstRating: 1,
-  },
-  review: REVIEWS.map((r) => ({
-    '@type': 'Review',
-    '@id': `https://www.paraisoencantado.com/reviews#review-${r.id}`,
-    author: {
-      '@type': 'Person',
-      name: r.name,
-      address: { '@type': 'PostalAddress', addressLocality: r.location, addressCountry: 'MX' },
-    },
-    datePublished: r.date,
-    reviewBody: r.text,
-    reviewRating: {
-      '@type': 'Rating',
-      ratingValue: r.rating,
-      bestRating: 5,
-      worstRating: 1,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: r.source,
-    },
-    itemReviewed: {
-      '@type': 'Hotel',
-      '@id': 'https://www.paraisoencantado.com/#hotel',
-      name: 'Hotel Paraíso Encantado',
-    },
-  })),
+  // La calificación del perfil de Google, la misma de la portada (lib/seo-hotel.ts).
+  // Sin `review` (17 oct 2026): eran las 25 de abajo, sin comprobar, declaradas
+  // como reseñas del hotel publicadas por Google.
+  aggregateRating: { ...AGGREGATE_RATING, worstRating: 1 },
 };
 
 const breadcrumb = {
@@ -129,10 +111,13 @@ export default function ReviewsPage() {
               <span aria-hidden="true"> › </span>
               <span>Reseñas</span>
             </nav>
-            <p className={styles.eyebrow}>Opiniones verificadas · Google Reviews</p>
+            {/* Era «Opiniones verificadas · Google Reviews» y «Reseñas reales»: Google no
+                verifica estancias, y estas 25 aún no tienen el enlace a cada reseña
+                (por eso tampoco dice «· Google» desde el 17 oct 2026). */}
+            <p className={styles.eyebrow}>Opiniones de huéspedes</p>
             <h1>Lo que dicen <em>nuestros huéspedes</em></h1>
             <p className={styles.headerSub}>
-              Reseñas reales de viajeros que se hospedaron en el Hotel Paraíso Encantado en Xilitla, Huasteca Potosina.
+              Reseñas de viajeros que se hospedaron en el Hotel Paraíso Encantado en Xilitla, Huasteca Potosina.
             </p>
           </div>
         </section>
@@ -141,10 +126,10 @@ export default function ReviewsPage() {
         <section className={styles.summary}>
           <div className={styles.summaryInner}>
             <div className={styles.summaryScore}>
-              <span className={styles.scoreNum}>{AVG.toFixed(1)}</span>
+              <span className={styles.scoreNum}>{HOTEL.rating.toFixed(1)}</span>
               <div>
                 <StarRating rating={5} />
-                <p className={styles.scoreTotal}>{totalReviews} reseñas seleccionadas · 523 en Google</p>
+                <p className={styles.scoreTotal}>{totalReviews} reseñas seleccionadas · {HOTEL.reviewCount} en Google</p>
               </div>
             </div>
             <div className={styles.summaryBars}>
@@ -183,7 +168,8 @@ export default function ReviewsPage() {
                     </div>
                     <div>
                       <p className={styles.reviewName}>{r.name}</p>
-                      <p className={styles.reviewMeta}>{r.location} · {r.date.slice(0, 7).replace('-', '/')} · {r.source}</p>
+                      {/* Sin «· Google» (17 oct 2026): ninguna tiene todavía su enlace a la ficha. */}
+                      <p className={styles.reviewMeta}>{r.location} · {r.date.slice(0, 7).replace('-', '/')}</p>
                     </div>
                   </header>
                   <StarRating rating={r.rating} />
@@ -194,9 +180,11 @@ export default function ReviewsPage() {
             </div>
 
             <div className={styles.moreReviews}>
-              <p>Ver las <strong>523 reseñas</strong> en Google Maps</p>
+              <p>Ver las <strong>{HOTEL.reviewCount} reseñas</strong> en Google Maps</p>
+              {/* El perfil del hotel por su cid: la búsqueda por nombre podía abrir la
+                  OTRA ficha («Posada Paraiso Encantado», ver lib/seo-entidades.ts). */}
               <a
-                href="https://maps.google.com/?q=Hotel+Paraíso+Encantado+Xilitla"
+                href={PERFIL_GOOGLE}
                 target="_blank" rel="noopener noreferrer"
                 className={styles.moreReviewsBtn}
               >
@@ -211,7 +199,7 @@ export default function ReviewsPage() {
           <FloatingLeaves />
           <div className={styles.ctaInner}>
             <h2>¿Listo para tu experiencia?</h2>
-            <p>Únete a los 523 huéspedes que nos califican con 4.5★ en Google</p>
+            <p>Únete a los {HOTEL.reviewCount} huéspedes que nos califican con {HOTEL.rating}★ en Google</p>
             <Link href="/reservar" className={styles.ctaBtn}>Reservar Suite</Link>
           </div>
         </section>

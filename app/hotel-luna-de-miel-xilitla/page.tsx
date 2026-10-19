@@ -4,22 +4,26 @@ import Link from 'next/link';
 import { Bath, Leaf, MapPin, Utensils, Mountain, Flower2 } from 'lucide-react';
 import { suites } from '@/data/suites';
 import FloatingLeaves from '@/components/FloatingLeaves';
+import { HOTEL, lodgingSchema, faqSchema } from '@/lib/seo-hotel';
 import styles from './luna-de-miel.module.css';
+
+const URL = `${HOTEL.url}/hotel-luna-de-miel-xilitla`;
 
 export const metadata: Metadata = {
   // Era el título más largo del sitio (82 caracteres, 743 px). Se queda solo
   // la consulta ("hotel romántico en xilitla") y el diferenciador real.
   title: 'Hotel Romántico en Xilitla · Suites con Spa Privado',
   description:
-    'Escapada de pareja en la Huasteca: terraza, alberca climatizada privada y selva alrededor, a 5 min de Las Pozas. Reserva directa sin comisiones.',
+    `Escapada de pareja en la Huasteca: terraza, alberca climatizada privada y selva alrededor, a ${HOTEL.minutosCaminandoALasPozas} min de Las Pozas. Reserva directa sin comisiones.`,
   alternates: {
-    canonical: 'https://www.paraisoencantado.com/hotel-luna-de-miel-xilitla',
+    canonical: URL,
   },
   openGraph: {
     title: 'Hotel Romántico para Luna de Miel en Xilitla — Paraíso Encantado',
+    // Sin «la escapada romántica más especial de la Huasteca» (17 oct 2026): superlativo sin sustento.
     description:
-      'Spa privado, selva, Las Pozas de Edward James y cocina huasteca. La escapada romántica más especial de la Huasteca Potosina.',
-    url: 'https://www.paraisoencantado.com/hotel-luna-de-miel-xilitla',
+      'Spa privado, selva, Las Pozas de Edward James y cocina huasteca: una escapada en pareja en la Huasteca Potosina.',
+    url: URL,
     images: [{
       url: 'https://www.paraisoencantado.com/images/LINDAVISTA/PORTADA.jpg',
       width: 1200, height: 630,
@@ -28,35 +32,37 @@ export const metadata: Metadata = {
   },
 };
 
+// Una sola lista para el FAQ visible y el FAQPage del JSON-LD (antes eran dos
+// copias del mismo texto, escritas a mano por separado).
+const FAQS = [
+  { q: '¿Es Xilitla un buen destino para luna de miel?', a: 'Sí — es uno de los destinos más especiales e íntimos de México. Selva tropical, el jardín surrealista de Edward James, spa privado y gastronomía huasteca auténtica. Pocas regiones combinan naturaleza, arte y privacidad de esta manera.' },
+  { q: '¿Qué suites son las más románticas?', a: 'LindaVista (tina de hidromasaje, vistas panorámicas), Jungla (piscina spa privada entre la selva), Lajas (balcón con vista a Xilitla) y Lirios 2 (balcón privado con jardines). Todas son para máximo 4 personas — en pareja tienes el espacio para ustedes.' },
+  { q: '¿Ofrecen decoración especial para luna de miel o aniversario?', a: 'Sí. Avísanos por WhatsApp al reservar y preparamos detalles en la suite. Sin costo adicional.' },
+  { q: '¿Qué actividades románticas hay en Xilitla?', a: `Las Pozas de Edward James (${HOTEL.minutosCaminandoALasPozas} min caminando), tour privado a Tamul en canoa, cenas en El Papán, paseo por el pueblo al atardecer y disfrutar el spa privado en tu terraza con vista a las montañas.` },
+];
+
+/**
+ * JSON-LD (17 oct 2026). El hotel era un LodgingBusiness SIN `@id`, con el nombre
+ * inflado («Hotel Paraíso Encantado — Escapadas Románticas»), la dirección a medias y
+ * una calificación de 523 reseñas que esta página no muestra: para Google y las IA,
+ * otro hotel. Ahora es el mismo `#hotel` de todo el sitio (lodgingSchema).
+ */
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'LodgingBusiness',
-      name: 'Hotel Paraíso Encantado — Escapadas Románticas',
-      description: 'Hotel boutique romántico en Xilitla para lunas de miel y aniversarios. Suites con spa privado a 5 minutos de Las Pozas de Edward James.',
-      url: 'https://www.paraisoencantado.com/hotel-luna-de-miel-xilitla',
-      image: 'https://www.paraisoencantado.com/images/LINDAVISTA/PORTADA.jpg',
-      telephone: '+524891007679',
-      address: { '@type': 'PostalAddress', addressLocality: 'Xilitla', addressRegion: 'San Luis Potosí', addressCountry: 'MX' },
-      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.5, reviewCount: 523, bestRating: 5 },
-    },
+    lodgingSchema({
+      description: `Hotel boutique romántico en Xilitla para lunas de miel y aniversarios. Suites con spa privado a ${HOTEL.minutosCaminandoALasPozas} minutos de Las Pozas de Edward James.`,
+      url: URL,
+      image: `${HOTEL.url}/images/LINDAVISTA/PORTADA.jpg`,
+    }),
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
-        { '@type': 'ListItem', position: 2, name: 'Hotel Romántico Xilitla', item: 'https://www.paraisoencantado.com/hotel-luna-de-miel-xilitla' },
+        { '@type': 'ListItem', position: 2, name: 'Hotel Romántico Xilitla', item: URL },
       ],
     },
-    {
-      '@type': 'FAQPage',
-      mainEntity: [
-        { '@type': 'Question', name: '¿Es Xilitla un buen destino para luna de miel?', acceptedAnswer: { '@type': 'Answer', text: 'Sí — es uno de los destinos más especiales e íntimos de México. Selva tropical, el jardín surrealista de Edward James, spa privado y gastronomía huasteca auténtica. Pocas regiones combinan naturaleza, arte y privacidad de esta manera.' } },
-        { '@type': 'Question', name: '¿Qué suites son las más románticas?', acceptedAnswer: { '@type': 'Answer', text: 'LindaVista (tina de hidromasaje, vistas panorámicas), Jungla (piscina spa privada entre la selva), Lajas (balcón con vista a Xilitla) y Lirios 2 (balcón privado con jardines). Todas son para máximo 4 personas — en pareja tienes el espacio para ustedes.' } },
-        { '@type': 'Question', name: '¿Ofrecen decoración especial para luna de miel o aniversario?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Avísanos por WhatsApp al reservar y preparamos detalles en la suite. Sin costo adicional.' } },
-        { '@type': 'Question', name: '¿Qué actividades románticas hay en Xilitla?', acceptedAnswer: { '@type': 'Answer', text: 'Las Pozas de Edward James (5 min caminando), tour privado a Tamul en canoa, cenas en El Papán, paseo por el pueblo al atardecer y disfrutar el spa privado en tu terraza con vista a las montañas.' } },
-      ],
-    },
+    faqSchema(FAQS),
   ],
 };
 
@@ -67,7 +73,7 @@ const romanticSuites = suites.filter((s) =>
 const REASONS = [
   { icon: <Bath size={22} strokeWidth={1.5} />, title: 'Spa Privado en tu Suite', body: 'Nuestras suites con spa o tina de hidromasaje son completamente privadas — no compartes el agua con nadie. A cualquier hora.' },
   { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Selva y Silencio', body: 'Rodeados de vegetación tropical. Por las noches solo se escucha el río y los grillos. Sin ruido de tráfico, sin vecinos ruidosos.' },
-  { icon: <MapPin size={22} strokeWidth={1.5} />, title: 'A 5 Min de Las Pozas', body: 'El jardín surrealista de Edward James a 5 minutos caminando. Un lugar mágico para vivir juntos — único en el mundo.' },
+  { icon: <MapPin size={22} strokeWidth={1.5} />, title: `A ${HOTEL.minutosCaminandoALasPozas} Min de Las Pozas`, body: `El jardín surrealista de Edward James a ${HOTEL.minutosCaminandoALasPozas} minutos caminando. Un lugar mágico para vivir juntos — único en el mundo.` },
   { icon: <Utensils size={22} strokeWidth={1.5} />, title: 'Cenas en El Papán', body: 'Gastronomía huasteca auténtica a pasos de tu suite. Reserva una mesa privada con anticipación.' },
   { icon: <Mountain size={22} strokeWidth={1.5} />, title: 'Vistas Panorámicas', body: 'Varias suites tienen terraza con vistas a las montañas de la Huasteca y al pueblo de Xilitla.' },
   { icon: <Flower2 size={22} strokeWidth={1.5} />, title: 'Detalles Especiales', body: 'Avísanos que es luna de miel o aniversario y preparamos detalles en la suite sin costo adicional.' },
@@ -90,8 +96,10 @@ export default function LunaDePageMielPage() {
               <Link href="/">Inicio</Link><span aria-hidden="true"> › </span><span>Hotel Romántico Xilitla</span>
             </nav>
             <p className={styles.eyebrow}>Luna de Miel · Aniversarios · Escapadas en Pareja</p>
-            <h1>El Hotel Romántico <em>Más Especial</em><br />de la Huasteca Potosina</h1>
-            <p className={styles.heroSub}>Spa privado, selva y el jardín de Edward James a 5 minutos. La escapada perfecta para dos.</p>
+            {/* Era «El Hotel Romántico Más Especial de la Huasteca Potosina»: superlativo
+                sin sustento (17 oct 2026). Ahora dice lo que sí tiene, y «Xilitla». */}
+            <h1>Hotel Romántico <em>con Spa Privado</em><br />en Xilitla, Huasteca Potosina</h1>
+            <p className={styles.heroSub}>Spa privado, selva y el jardín de Edward James a {HOTEL.minutosCaminandoALasPozas} minutos. La escapada perfecta para dos.</p>
             <div className={styles.heroCtas}>
               <Link href="/reservar" className={styles.heroCtaPrimary}>Reservar Suite Romántica</Link>
               <a href="https://wa.me/524891007679?text=Hola%2C%20es%20para%20una%20luna%20de%20miel" target="_blank" rel="noopener noreferrer" className={styles.heroCtaSecondary}>Consultar por WhatsApp</a>
@@ -197,12 +205,7 @@ export default function LunaDePageMielPage() {
           <div className={styles.faqInner}>
             <h2>Preguntas Frecuentes</h2>
             <dl className={styles.faqList}>
-              {[
-                { q: '¿Es Xilitla un buen destino para luna de miel?', a: 'Sí — es uno de los destinos más especiales e íntimos de México. Selva tropical, el jardín surrealista de Edward James, spa privado y gastronomía huasteca auténtica. Pocas regiones combinan naturaleza, arte y privacidad de esta manera.' },
-                { q: '¿Qué suites son las más románticas?', a: 'LindaVista (tina de hidromasaje, vistas panorámicas), Jungla (piscina spa privada entre la selva), Lajas (balcón con vista a Xilitla) y Lirios 2 (balcón privado con jardines). Todas son para máximo 4 personas — en pareja tienes el espacio para ustedes.' },
-                { q: '¿Ofrecen decoración especial para luna de miel o aniversario?', a: 'Sí. Avísanos por WhatsApp al reservar y preparamos detalles en la suite. Sin costo adicional.' },
-                { q: '¿Qué actividades románticas hay en Xilitla?', a: 'Las Pozas de Edward James (5 min caminando), tour privado a Tamul en canoa, cenas en El Papán, paseo por el pueblo al atardecer y disfrutar el spa privado en tu terraza con vista a las montañas.' },
-              ].map(({ q, a }) => (
+              {FAQS.map(({ q, a }) => (
                 <div key={q} className={styles.faqItem}>
                   <dt>{q}</dt><dd>{a}</dd>
                 </div>

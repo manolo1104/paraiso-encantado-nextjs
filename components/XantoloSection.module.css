@@ -204,73 +204,16 @@
   background: #1d2a12;
 }
 
-/* ── Tours Huasteca: paquete y guía regional ─────────────────────────────
-   Van después de los botones y con menos peso que ellos: primero el hotel. */
-.paquete {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 32px;
-  padding: 18px 20px 16px;
-  border: 1px solid rgba(242, 148, 34, 0.32);
-  border-radius: 10px;
-  background: rgba(242, 148, 34, 0.06);
-  color: var(--cream);
-  text-decoration: none;
-  max-width: 560px;
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.paquete:hover {
-  border-color: rgba(242, 148, 34, 0.6);
-  background: rgba(242, 148, 34, 0.1);
-}
-
-.paquete:focus-visible,
+/* ── Tours Huasteca: guía regional ───────────────────────────────────────
+   Va después de los botones y con menos peso que ellos: primero el hotel. (La
+   tarjeta del paquete de Tours con hotel se quitó el 16 oct 2026: ya no se vende.) */
 .masHuasteca a:focus-visible {
   outline: 2px solid var(--cempasuchil-claro);
   outline-offset: 3px;
 }
 
-.paqueteEtiqueta {
-  font-family: var(--font-jost), sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--cempasuchil-claro);
-}
-
-.paqueteNombre {
-  font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
-  font-size: 23px;
-  font-weight: 400;
-  line-height: 1.25;
-}
-
-.paqueteDetalle {
-  font-family: var(--font-jost), sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  line-height: 1.6;
-  color: rgba(250, 248, 245, 0.8);
-}
-
-.paqueteFlecha {
-  display: inline-block;
-  margin-left: 6px;
-  color: var(--cempasuchil-claro);
-  transition: transform var(--transition-fast);
-}
-
-.paquete:hover .paqueteFlecha {
-  transform: translateX(3px);
-}
-
 .masHuasteca {
-  margin: 16px 0 0;
+  margin: 28px 0 0;
   font-family: var(--font-jost), sans-serif;
   font-size: 14px;
   font-weight: 300;

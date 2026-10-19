@@ -8,8 +8,8 @@ import {
   SeoHero, AnswerBlock, StatStrip, CompareTable, SeoFaq, RelatedLinks, SeoCta, seoStyles as styles,
 } from '@/components/seo/SeoBlocks';
 import HuespedDistinguidoSection, { huespedSchema } from '@/components/seo/HuespedDistinguido';
-import { HOTEL, DISTANCIAS, SUITES_CON_SPA, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
-import { ENTITY_IDS, PERFILES_HOTEL, LAS_POZAS, XILITLA, EDWARD_JAMES, AMLO, ref } from '@/lib/seo-entidades';
+import { HOTEL, SUITES_CON_SPA, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
+import { ENTITY_IDS, PERFIL_GOOGLE, LAS_POZAS, XILITLA, EDWARD_JAMES, AMLO, ref } from '@/lib/seo-entidades';
 import { suites } from '@/data/suites';
 import own from './mejor-hotel-xilitla.module.css';
 
@@ -17,14 +17,22 @@ import own from './mejor-hotel-xilitla.module.css';
  * Página de argumento: por qué este hotel y no otro en Xilitla.
  *
  * Las otras cinco landings SEO son guías neutrales ("cómo elegir hotel en la
- * Huasteca", "qué zona de Xilitla te conviene"). Ésta es la contraria a
- * propósito: es la página de marca, la que responde la consulta evaluativa
- * —"mejor hotel de Xilitla", "opiniones Paraíso Encantado", "dónde se hospedó
- * AMLO en Xilitla"— con hechos verificables en vez de adjetivos.
+ * Huasteca", "qué zona de Xilitla te conviene"). Ésta es la del hotel: responde
+ * "¿vale la pena Paraíso Encantado?" y "dónde se hospedó AMLO en Xilitla" con
+ * hechos en vez de adjetivos.
  *
- * Por eso el orden es: prueba externa primero (la visita presidencial y las 523
- * reseñas), después distancia, después producto. Y por eso cierra con "lo que no
- * somos": una página que solo se elogia a sí misma no la cita ningún buscador
+ * Una URL por búsqueda (17 oct 2026, SEO-04 con las correcciones de los revisores):
+ * - «mejor hotel en xilitla» y los plurales los contesta la comparativa,
+ *   /hoteles-en-xilitla: para esa búsqueda Google enseña comparativas, y aquí
+ *   «el mejor hotel de Xilitla» no se sostiene (Posada James tiene mejor nota y
+ *   Tapasoli más reseñas). La URL no cambia: cambiarla sin 301 perdería lo ganado.
+ * - Las opiniones de los huéspedes son de /reviews; aquí solo se enlazan.
+ * - La tabla de tiempos de la Huasteca vive en /mejor-hotel-huasteca-potosina; las
+ *   dos páginas repetían el 26 % de sus frases (presidente, ficha y distancias).
+ *
+ * El orden sigue igual: prueba externa primero (la visita presidencial y las
+ * reseñas de Google), después distancia, después producto. Y cierra con "lo que
+ * no somos": una página que solo se elogia a sí misma no la cita ningún buscador
  * con IA, y a un huésped que llega con expectativas infladas le cuesta una
  * reseña de 3 estrellas.
  */
@@ -34,24 +42,22 @@ const ACTUALIZADO = 'octubre de 2026';
 const OG_IMAGE = `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`;
 
 export const metadata: Metadata = {
-  // La consulta es "mejor hotel de xilitla", no "por qué"; esas tres palabras
-  // gastaban el arranque del título sin coincidir con nada que se teclee.
-  title: 'Mejor Hotel de Xilitla · 4.5 de 5 en 523 Reseñas Reales',
+  // 60 caracteres, 540 px. Era «Mejor Hotel de Xilitla · 4.5 de 5 en 523 Reseñas
+  // Reales» (17 oct 2026): un superlativo que no se sostiene y una cifra vieja.
+  title: 'Paraíso Encantado, Xilitla: Por Qué Elegirlo y Para Quién No',
   description:
-    'A 400 m de Las Pozas, 4.5 de 5 en 523 reseñas y el hotel donde durmió el presidente en 2023. Compara y decide. Reserva directo sin comisiones.',
+    `${HOTEL.rating} de 5 en Google con ${HOTEL.reviewCount} reseñas, a ${HOTEL.metrosALasPozas} m de Las Pozas y el hotel donde durmió el presidente en 2023. Los datos, sin adjetivos, y para quién no es.`,
   keywords: [
-    'mejor hotel de xilitla',
-    'mejor hotel xilitla',
     'paraiso encantado xilitla',
+    'hotel paraiso encantado vale la pena',
     'hotel donde se hospedo amlo en xilitla',
-    'mejor hotel huasteca potosina',
     'hotel con spa privado xilitla',
   ],
   alternates: { canonical: URL },
   openGraph: {
-    title: 'Por Qué Paraíso Encantado es el Mejor Hotel de Xilitla',
+    title: 'Hotel Paraíso Encantado, Xilitla: por qué elegirlo',
     description:
-      'El presidente de México lo eligió como su base en Xilitla en 2023: "un hotel muy bueno, como pocos hoteles de todo el país". A 400 m de Las Pozas, con spa privado de agua caliente en la terraza.',
+      `El presidente de México lo eligió como su base en Xilitla en 2023: "un hotel muy bueno, como pocos hoteles de todo el país". A ${HOTEL.metrosALasPozas} m de Las Pozas, con spa privado de agua caliente en la terraza.`,
     url: URL,
     type: 'article',
     images: [{
@@ -69,7 +75,9 @@ const FAQS = [
     // Sin «el mejor valorado» ni «el único»: en Booking y TripAdvisor hay hoteles del
     // pueblo con nota más alta (oct 2026), y lo del presidente solo está probado para
     // este hotel, no que ningún otro lo haya recibido. Se dice lo que sí se sostiene.
-    a: `El Hotel Paraíso Encantado tiene ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas de Google y está sobre el camino a Las Pozas de Edward James: ${HOTEL.metrosALasPozas} metros, ${HOTEL.minutosCaminandoALasPozas} minutos caminando. Además, aquí pernoctó el presidente de México en funciones, Andrés Manuel López Obrador, en junio de 2023.`,
+    // 17 oct 2026: la respuesta ya no nombra a este hotel como «el» mejor; manda a la
+    // comparativa, que es la que contesta esa búsqueda.
+    a: `Depende de tu plan. Si vas por Las Pozas, conviene dormir sobre el camino al jardín, donde están Casa Caracol, Paraíso Encantado y Posada James; desde los tres se llega caminando. Paraíso Encantado tiene ${HOTEL.rating} de 5 en ${HOTEL.reviewCount} reseñas de Google y aquí durmió el presidente de México en junio de 2023. La comparativa de los hoteles del pueblo está en la página de hoteles en Xilitla.`,
   },
   {
     q: '¿Es cierto que el presidente AMLO se hospedó en Paraíso Encantado?',
@@ -81,10 +89,10 @@ const FAQS = [
   },
   {
     q: '¿El spa privado de las suites tiene agua caliente?',
-    a: `Sí. Las ${HOTEL.suitesConSpaPrivado} suites con spa privado —Jungla, LindaVista, Flor de Lis 1 y Flor de Lis 2— tienen la piscina spa climatizada, con agua caliente, en la terraza privada de la suite. El agua no se comparte con nadie y se puede usar a cualquier hora, incluso en las noches frescas de diciembre y enero.`,
+    a: `Sí. Las ${HOTEL.suitesConSpaPrivado} suites con spa privado —Jungla, LindaVista, Flor de Liz 1 y Flor de Liz 2— tienen la piscina spa climatizada, con agua caliente, en la terraza privada de la suite. El agua no se comparte con nadie y se puede usar a cualquier hora, incluso en las noches frescas de diciembre y enero.`,
   },
   {
-    q: '¿Cuánto cuesta hospedarse en el mejor hotel de Xilitla?',
+    q: '¿Cuánto cuesta hospedarse en Paraíso Encantado?',
     a: `Las suites arrancan en $${HOTEL.precioDesde.toLocaleString('es-MX')} MXN por noche para dos personas. Las ${HOTEL.suitesConSpaPrivado} suites con spa privado de agua caliente en la terraza cuestan desde $${HOTEL.precioSuiteConSpa.toLocaleString('es-MX')} MXN por noche. Reservando directo en el sitio oficial no pagas comisión de intermediario y puedes aplicar el código ${HOTEL.codigoDescuento}.`,
   },
   {
@@ -115,30 +123,25 @@ const AMENITY_FEATURES = [
   { name: 'WiFi gratuito', value: true },
   { name: 'Aire acondicionado', value: true },
   { name: 'Piscina del hotel', value: true },
-  { name: 'Tours guiados con salida desde el hotel', value: true },
-];
-
-/**
- * Reseñas reales de Google, con nombre y fecha, tomadas de `/reviews`.
- *
- * Van con el MISMO `@id` que allá para no duplicar la entidad. Dos de las tres
- * afirman literalmente lo que titula la página ("el mejor hotel de Xilitla"):
- * es la diferencia entre que el hotel lo diga de sí mismo y que lo diga un
- * huésped identificable en una plataforma de terceros.
- */
-const RESENAS_CITADAS = [
-  { id: 6, name: 'Jorge Mendoza', date: '2024-12-20',
-    text: 'El mejor hotel de Xilitla sin ninguna duda. Habitación impecable, restaurante excelente (el zacahuil es imperdible) y ubicación perfecta. A 5 minutos caminando de Las Pozas — en temporada llegan antes que los grupos. Eso vale todo.' },
-  { id: 3, name: 'Diana Muñiz', date: '2025-02-10',
-    text: 'Vine tres veces ya. No es la piscina ni las vistas (aunque son increíbles). Es que cada vez que llego me reciben como si hubiera faltado tiempo. El hotel más cercano a Las Pozas y sin duda el mejor.' },
-  { id: 4, name: 'Ricardo Salazar', date: '2025-01-30',
-    text: 'Lugar increíble. El spa privado de la Jungla es lo máximo — nos quedamos en él más tiempo que en Las Pozas. El desayuno del restaurante es auténtico, no el desayuno genérico de hotel.' },
+  // Sin «Tours guiados con salida desde el hotel» (17 oct 2026): el hotel no opera
+  // tours; los opera Huasteca Potosina Tours, otra entidad (hoja de datos, §2).
 ];
 
 const PUBLICADA = '2026-08-31';
-// Última revisión: corrección de datos con la hoja única de cifras (sin superlativo de cercanía).
-const MODIFICADA = '2026-10-02';
+// Última revisión: una URL por búsqueda y sin «el mejor hotel de Xilitla» (SEO-04).
+const MODIFICADA = '2026-10-19';
 
+/**
+ * JSON-LD (17 oct 2026). Se quitaron tres cosas:
+ * - `review`: eran 3 reseñas copiadas de /reviews, dos con «el mejor hotel de
+ *   Xilitla» y una con «el hotel más cercano a Las Pozas», que nuestra propia
+ *   comparativa desmiente. Google no da estrellas a las reseñas que un negocio
+ *   publica de sí mismo, y las opiniones ya tienen su página.
+ * - `nearbyAttractions`: no existe en schema.org. La relación con Las Pozas la dice
+ *   el Article con `about`.
+ * - El nodo Organization aparte: era el mismo hotel con otro tipo. Firma `#hotel`.
+ * `geo`, `containedInPlace` y `sameAs` ya los pone `lodgingSchema()`.
+ */
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -149,10 +152,9 @@ const schema = {
         description: `Hotel boutique en Xilitla, Huasteca Potosina, a ${HOTEL.metrosALasPozas} metros de Las Pozas de Edward James. ${HOTEL.suites} suites, ${HOTEL.suitesConSpaPrivado} con piscina spa privada climatizada en la terraza. Restaurante de cocina huasteca y estacionamiento gratuito. En junio de 2023 se hospedó aquí el presidente de México.`,
         url: URL,
         image: OG_IMAGE,
+        // La página muestra el 4.5 y las reseñas de Google (respuesta corta y cifras).
+        calificacion: true,
       }),
-      sameAs: [...PERFILES_HOTEL],
-      geo: { '@type': 'GeoCoordinates', latitude: 21.395, longitude: -98.9915 },
-      containedInPlace: ref(XILITLA),
       checkinTime: '15:00',
       checkoutTime: '12:00',
       currenciesAccepted: 'MXN',
@@ -162,16 +164,6 @@ const schema = {
         '@type': 'LocationFeatureSpecification',
         name: a.name,
         value: a.value,
-      })),
-      nearbyAttractions: [ref(LAS_POZAS)],
-      review: RESENAS_CITADAS.map(r => ({
-        '@type': 'Review',
-        '@id': `${HOTEL.url}/reviews#review-${r.id}`,
-        author: { '@type': 'Person', name: r.name },
-        datePublished: r.date,
-        reviewRating: { '@type': 'Rating', ratingValue: 5, bestRating: 5 },
-        reviewBody: r.text,
-        publisher: { '@type': 'Organization', name: 'Google' },
       })),
     },
 
@@ -186,34 +178,26 @@ const schema = {
     {
       '@type': 'Article',
       '@id': `${URL}#article`,
-      headline: 'Por qué el Hotel Paraíso Encantado es el mejor hotel de Xilitla',
-      description: `Los datos verificables detrás de la afirmación: la visita presidencial de junio de 2023, los ${HOTEL.metrosALasPozas} metros a Las Pozas, ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas, el spa privado climatizado y el comal de leña.`,
+      headline: 'Hotel Paraíso Encantado en Xilitla: por qué elegirlo y para quién no es',
+      description: `Los datos detrás de la elección: la visita presidencial de junio de 2023, los ${HOTEL.metrosALasPozas} metros a Las Pozas, ${HOTEL.rating}/5 en ${HOTEL.reviewCount} reseñas de Google, el spa privado climatizado y el comal de leña.`,
       inLanguage: 'es-MX',
       datePublished: PUBLICADA,
       dateModified: MODIFICADA,
-      author: { '@id': ENTITY_IDS.organization },
-      publisher: { '@id': ENTITY_IDS.organization },
+      // Firma el hotel: sin un autor identificable la página es una afirmación
+      // anónima, y eso vale menos como fuente.
+      author: { '@id': ENTITY_IDS.hotel },
+      publisher: { '@id': ENTITY_IDS.hotel },
       mainEntityOfPage: URL,
       image: OG_IMAGE,
-      about: [ref(LAS_POZAS), ref(XILITLA), { '@id': ENTITY_IDS.hotel }],
+      about: [{ '@id': ENTITY_IDS.hotel }, ref(LAS_POZAS), ref(XILITLA)],
       mentions: [ref(EDWARD_JAMES), AMLO],
       isPartOf: { '@id': ENTITY_IDS.website },
     },
 
-    // ── La organización que firma. Sin un autor identificable la página es
-    //    una afirmación anónima, y eso vale menos como fuente.
-    {
-      '@type': 'Organization',
-      '@id': ENTITY_IDS.organization,
-      name: HOTEL.nombre,
-      url: HOTEL.url,
-      telephone: HOTEL.telefono,
-      sameAs: [...PERFILES_HOTEL],
-    },
-
+    // Mismo nombre que las migas visibles del SeoHero.
     breadcrumbSchema([
       { name: 'Inicio', url: HOTEL.url },
-      { name: 'Por qué el mejor hotel de Xilitla', url: URL },
+      { name: 'Por qué elegir Paraíso Encantado', url: URL },
     ]),
     faqSchema(FAQS),
     ...(huespedSchema() ? [huespedSchema()] : []),
@@ -241,7 +225,7 @@ const RAZONES = [
   {
     title: 'Spa privado de agua caliente en tu propia terraza',
     body: [
-      `${HOTEL.suitesConSpaPrivado} de las ${HOTEL.suites} suites —Jungla, LindaVista, Flor de Lis 1 y Flor de Lis 2— tienen piscina spa climatizada dentro de su terraza privada. Agua caliente, a cualquier hora, sin compartirla con nadie.`,
+      `${HOTEL.suitesConSpaPrivado} de las ${HOTEL.suites} suites —Jungla, LindaVista, Flor de Liz 1 y Flor de Liz 2— tienen piscina spa climatizada dentro de su terraza privada. Agua caliente, a cualquier hora, sin compartirla con nadie.`,
       'Es la amenidad que cambia el viaje: después de un día de cascadas y escalones, la tarde termina en tu propia agua caliente mirando la sierra, no haciendo fila en una alberca común.',
     ],
   },
@@ -262,7 +246,8 @@ const RAZONES = [
   {
     title: `${HOTEL.rating}/5 con ${HOTEL.reviewCount} reseñas: volumen, no promedio inflado`,
     body: [
-      `Un 5.0 con doce reseñas no dice nada. ${HOTEL.rating} sobre 5 sostenido a lo largo de ${HOTEL.reviewCount} reseñas verificadas en Google es la única señal que no se puede fabricar en un fin de semana.`,
+      // Sin «verificadas»: Google no comprueba que quien reseña se haya hospedado.
+      `Un 5.0 con doce reseñas no dice nada. ${HOTEL.rating} sobre 5 sostenido a lo largo de ${HOTEL.reviewCount} reseñas en Google es la única señal que no se puede fabricar en un fin de semana.`,
       'Y es coherente con lo demás: la ubicación, el desayuno y el trato del personal son los tres temas que más se repiten en los comentarios.',
     ],
   },
@@ -278,7 +263,8 @@ const AMENIDADES = [
   { icon: <Coffee size={20} strokeWidth={1.5} />, title: 'Tortillas al comal de leña', desc: 'Hechas a mano cada mañana; café de olla.' },
   { icon: <Wifi size={20} strokeWidth={1.5} />, title: 'WiFi de alta velocidad', desc: 'Gratuito y estable en toda la propiedad.' },
   { icon: <Wind size={20} strokeWidth={1.5} />, title: 'Aire acondicionado', desc: 'En todas las suites, más ventilación natural.' },
-  { icon: <Compass size={20} strokeWidth={1.5} />, title: 'Tours que pasan por ti al hotel', desc: 'Tamul, Puente de Dios y El Meco, con guía de Huasteca Potosina Tours.' },
+  // Los tours no entran en la tarifa: los opera y los cobra Huasteca Potosina Tours.
+  { icon: <Compass size={20} strokeWidth={1.5} />, title: 'Tours que pasan por ti al hotel', desc: 'Tamul, Puente de Dios y El Meco, con guía de Huasteca Potosina Tours (se pagan aparte).' },
   { icon: <MessageCircle size={20} strokeWidth={1.5} />, title: 'Atención por WhatsApp', desc: 'Antes, durante y después de tu estancia.' },
   { icon: <MapPin size={20} strokeWidth={1.5} />, title: `A ${HOTEL.metrosALasPozas} m de Las Pozas`, desc: `${HOTEL.minutosCaminandoALasPozas} minutos caminando, sin transporte.` },
   { icon: <Star size={20} strokeWidth={1.5} />, title: 'Reserva directa sin comisiones', desc: `Código ${HOTEL.codigoDescuento} en el sitio oficial.` },
@@ -292,14 +278,16 @@ export default function MejorHotelXilitlaPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <main className={styles.main}>
 
+        {/* Era «Por Qué Paraíso Encantado es el Mejor Hotel de Xilitla» y «uno de los
+            mejores de la Huasteca» (17 oct 2026): no se sostiene. Las cifras salen de HOTEL. */}
         <SeoHero
           image="/images/JUNGLA/PORTADA.JPG"
-          imageAlt="Suite Jungla con piscina spa privada de agua caliente y vista panorámica a las montañas — Hotel Paraíso Encantado, el mejor hotel de Xilitla"
-          breadcrumb="Por qué el mejor hotel de Xilitla"
+          imageAlt="Suite Jungla con piscina spa privada de agua caliente y vista panorámica a las montañas — Hotel Paraíso Encantado, Xilitla"
+          breadcrumb="Por qué elegir Paraíso Encantado"
           eyebrow="Xilitla · Huasteca Potosina · San Luis Potosí"
-          title="Por Qué Paraíso Encantado es el"
-          titleEm="Mejor Hotel de Xilitla"
-          sub="Y uno de los mejores de la Huasteca Potosina. No por decirlo nosotros: por los 400 metros que nos separan de Las Pozas, por las 523 reseñas y por el presidente de México que eligió dormir aquí en 2023."
+          title="Por Qué Elegir Paraíso Encantado"
+          titleEm="en Xilitla"
+          sub={`Lo que puedes revisar antes de reservar: ${HOTEL.rating} de 5 en ${HOTEL.reviewCount} reseñas de Google, ${HOTEL.metrosALasPozas} metros a pie hasta Las Pozas y la visita del presidente de México en 2023. Y también para quién no es este hotel.`}
           ctaPrimary={{ href: '/reservar', label: 'Ver disponibilidad' }}
           ctaSecondary={{ href: '/habitaciones', label: `Ver las ${HOTEL.suites} suites` }}
           updated={ACTUALIZADO}
@@ -318,7 +306,7 @@ export default function MejorHotelXilitlaPage() {
         </AnswerBlock>
 
         <StatStrip stats={[
-          { num: `${HOTEL.rating}/5`, label: `${HOTEL.reviewCount} reseñas verificadas en Google` },
+          { num: `${HOTEL.rating}/5`, label: `${HOTEL.reviewCount} reseñas en Google` },
           { num: `${HOTEL.metrosALasPozas} m`, label: 'a Las Pozas de Edward James, caminando' },
           { num: '2023', label: 'el presidente de México durmió aquí' },
           { num: `${HOTEL.suitesConSpaPrivado}`, label: 'suites con spa privado de agua caliente' },
@@ -337,8 +325,8 @@ export default function MejorHotelXilitlaPage() {
             <h2 id="h-razones">Las seis razones, una por una</h2>
             <p className={styles.lead}>
               Xilitla tiene hoteles buenos y hoteles baratos, y varios se ven espectaculares en foto.
-              Estas son las seis cosas que, juntas, no las tiene ninguno más — y cada una se puede
-              verificar antes de reservar.
+              Estas son nuestras seis razones, una por una, para que las compares con las de los
+              demás <Link href="/hoteles-en-xilitla">hoteles de Xilitla</Link> antes de reservar.
             </p>
 
             <div className={own.reasons}>
@@ -440,9 +428,12 @@ export default function MejorHotelXilitlaPage() {
         {/* ── AMENIDADES ── */}
         <section className={styles.sectionAlt} id="amenidades" aria-labelledby="h-amenidades">
           <div className={styles.sectionInner} style={{ maxWidth: 1060 }}>
-            <h2 id="h-amenidades">Todo lo que incluye la estancia</h2>
+            {/* Decía «Esto entra en la tarifa» con los tours en la lista: los tours y el
+                desayuno se pagan aparte (17 oct 2026). */}
+            <h2 id="h-amenidades">Lo que tiene el hotel</h2>
             <p className={styles.lead}>
-              Sin letras chiquitas ni cargos sorpresa al llegar. Esto entra en la tarifa.
+              Sin letras chiquitas ni cargos sorpresa al llegar. El desayuno y los tours se pagan
+              aparte; lo demás entra en la tarifa.
             </p>
             <div className={own.amenityGrid}>
               {AMENIDADES.map(a => (
@@ -471,7 +462,7 @@ export default function MejorHotelXilitlaPage() {
               headers={['Criterio', 'Hotel Paraíso Encantado']}
               rows={[
                 { cells: ['Distancia a Las Pozas', `${HOTEL.metrosALasPozas} m — ${HOTEL.minutosCaminandoALasPozas} minutos caminando, sobre el camino a Las Pozas.`], highlight: true },
-                { cells: ['Calificación', `${HOTEL.rating}/5 con ${HOTEL.reviewCount} reseñas verificadas en Google`] },
+                { cells: ['Calificación', `${HOTEL.rating}/5 con ${HOTEL.reviewCount} reseñas en Google`] },
                 { cells: ['Huésped documentado', 'El presidente de México pernoctó aquí el 10 de junio de 2023 (cobertura de Pulso SLP, Debate y video propio).'], highlight: true },
                 { cells: ['Habitaciones', `${HOTEL.suites} suites con terraza, de 2 hasta ${HOTEL.capacidadMaxima} personas`] },
                 { cells: ['Spa privado en la suite', `Sí, en ${HOTEL.suitesConSpaPrivado} de ${HOTEL.suites}. ${HOTEL.spaAgua}.`] },
@@ -503,52 +494,35 @@ export default function MejorHotelXilitlaPage() {
           </div>
         </section>
 
-        {/* ── LO QUE DICEN LOS HUÉSPEDES ── */}
+        {/* ── LO QUE DICEN LOS HUÉSPEDES ──
+            17 oct 2026: aquí iban 3 citas, dos con «el mejor hotel de Xilitla» y una con
+            «el hotel más cercano a Las Pozas», que nuestra propia comparativa desmiente.
+            Las opiniones tienen su página (/reviews) y completas están en Google. */}
         <section className={styles.section} id="opiniones" aria-labelledby="h-opiniones" style={{ paddingTop: 0 }}>
           <div className={styles.sectionInner}>
             <h2 id="h-opiniones">Y lo que dicen los huéspedes, no nosotros</h2>
-            <p className={styles.lead}>
-              Tres de las {HOTEL.reviewCount} reseñas de Google, textuales y con el nombre de quien
-              las escribió. Dos dicen exactamente lo que titula esta página, y no las escribimos
-              nosotros.
-            </p>
-            <div className={own.quotes}>
-              {RESENAS_CITADAS.map(r => (
-                <figure key={r.id} className={own.quote}>
-                  <blockquote>{r.text}</blockquote>
-                  <figcaption>
-                    <strong>{r.name}</strong>
-                    <span>
-                      {'★★★★★'} · Google ·{' '}
-                      <time dateTime={r.date}>
-                        {new Date(r.date + 'T12:00:00').toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })}
-                      </time>
-                    </span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
             <p>
-              Las {HOTEL.reviewCount} están en{' '}
-              <Link href="/reviews">la página de reseñas</Link> y en el perfil de Google del hotel.
+              El hotel tiene {HOTEL.reviewCount} reseñas en Google, con {HOTEL.rating} de 5. Puedes
+              leerlas todas, sin filtro, en{' '}
+              <a href={PERFIL_GOOGLE} target="_blank" rel="noopener noreferrer">el perfil de Google del hotel</a>,
+              o una selección en <Link href="/reviews">la página de reseñas</Link>.
             </p>
           </div>
         </section>
 
-        {/* ── QUÉ TIENES CERCA ── */}
+        {/* ── QUÉ TIENES CERCA ──
+            17 oct 2026: el H2 decía «Y de los mejores de la Huasteca Potosina», un
+            superlativo sin sustento. La tabla de tiempos de cada destino vive en
+            /mejor-hotel-huasteca-potosina: las dos páginas la repetían entera. */}
         <section className={styles.sectionAlt} id="huasteca" aria-labelledby="h-huasteca">
           <div className={styles.sectionInner}>
-            <h2 id="h-huasteca">Y de los mejores de la Huasteca Potosina</h2>
+            <h2 id="h-huasteca">Qué tienes cerca si duermes aquí</h2>
             <p className={styles.lead}>
-              La Huasteca no es un destino compacto: son pocos kilómetros pero muchas curvas, y elegir
-              mal la base convierte unas vacaciones en un viaje de carretera. Esto es lo que tienes a
-              la mano durmiendo aquí, y lo que queda lejos.
+              Las Pozas queda a {HOTEL.minutosCaminandoALasPozas} minutos caminando y el centro de
+              Xilitla a 5 minutos en auto. Lo demás de la Huasteca —Tamul, Puente de Dios, El Meco— es
+              de carretera, de una a tres horas o más: los tiempos de cada destino están en{' '}
+              <Link href="/mejor-hotel-huasteca-potosina">cómo elegir hotel en la Huasteca Potosina</Link>.
             </p>
-            <CompareTable
-              caption="Tiempos aproximados desde el Hotel Paraíso Encantado, en auto salvo donde se indica; en la sierra, las curvas pueden alargarlos."
-              headers={['Destino', 'Tiempo', 'Nota']}
-              rows={DISTANCIAS.map(d => ({ cells: [d.destino, d.tiempo, d.nota] }))}
-            />
             <p>
               Los tours a Tamul, Puente de Dios y El Meco los opera Huasteca Potosina Tours, que pasa
               por ti al hotel con guía: puedes verlos
@@ -561,7 +535,7 @@ export default function MejorHotelXilitlaPage() {
         </section>
 
         <div id="preguntas">
-          <SeoFaq faqs={FAQS} title="Preguntas frecuentes sobre el mejor hotel de Xilitla" />
+          <SeoFaq faqs={FAQS} title="Preguntas frecuentes sobre Paraíso Encantado" />
         </div>
 
         <RelatedLinks links={[

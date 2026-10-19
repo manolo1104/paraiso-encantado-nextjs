@@ -105,7 +105,7 @@ export function buildRecoveryEmailHtml(data: RecoveryEmailData): string {
 
   <tr><td style="background:#f0ece3;padding:22px 48px;text-align:center;border-top:1px solid #e8e4da;">
     <p style="margin:0 0 6px;font-size:13px;font-style:italic;color:#7a7a6a;font-family:Georgia,serif;">Paraíso Encantado</p>
-    <p style="margin:0;font-size:11px;color:#9a9a82;line-height:1.8;">Xilitla, San Luis Potosí 79910 · México<br>A 5 min del Jardín de Edward James</p>
+    <p style="margin:0;font-size:11px;color:#9a9a82;line-height:1.8;">Xilitla, San Luis Potosí 79900 · México<br>A 5 min del Jardín de Edward James</p>
     <p style="margin:10px 0 0;font-size:10px;color:#b0b0a0;">Recibes este correo porque empezaste una reserva en <a href="${SITE}" style="color:#9a9a82;">paraisoencantado.com</a>.</p>
   </td></tr>
 

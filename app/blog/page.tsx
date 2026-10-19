@@ -3,6 +3,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/blog';
 import FloatingLeaves from '@/components/FloatingLeaves';
+import { ENTITY_IDS } from '@/lib/seo-entidades';
+import { HOTEL } from '@/lib/seo-hotel';
 import styles from './blog.module.css';
 
 // Pre-render estático en build time — evita fs.readdirSync en producción Railway
@@ -43,10 +45,13 @@ export default function BlogPage() {
     name: 'Blog de Viaje — Hotel Paraíso Encantado · Xilitla y Huasteca Potosina',
     description: 'Guías de viaje, consejos y todo lo que necesitas saber para visitar Xilitla, Las Pozas de Edward James y la Huasteca Potosina.',
     url: 'https://www.paraisoencantado.com/blog',
+    // El mismo `#hotel` de todo el sitio, con el mismo tipo (17 oct 2026: era una
+    // Organization sin @id, otra entidad con el nombre del hotel).
     publisher: {
-      '@type': 'Organization',
-      name: 'Hotel Paraíso Encantado',
-      url: 'https://www.paraisoencantado.com',
+      '@type': 'Hotel',
+      '@id': ENTITY_IDS.hotel,
+      name: HOTEL.nombre,
+      url: HOTEL.url,
       logo: { '@type': 'ImageObject', url: 'https://www.paraisoencantado.com/logo.png' },
     },
     blogPost: posts.map((p) => ({
@@ -55,7 +60,8 @@ export default function BlogPage() {
       description: p.description,
       url: `https://www.paraisoencantado.com/blog/${p.slug}`,
       datePublished: p.date,
-      dateModified: p.date,
+      // La fecha real del último cambio (frontmatter), igual que en el artículo.
+      dateModified: p.dateModified ?? p.date,
       image: {
         '@type': 'ImageObject',
         url: `https://www.paraisoencantado.com${p.image}`,
@@ -67,11 +73,7 @@ export default function BlogPage() {
         jobTitle: 'Fundador · Hotel Paraíso Encantado',
         url: 'https://www.paraisoencantado.com/sobre-nosotros',
       },
-      publisher: {
-        '@type': 'Organization',
-        name: 'Hotel Paraíso Encantado',
-        url: 'https://www.paraisoencantado.com',
-      },
+      publisher: { '@type': 'Hotel', '@id': ENTITY_IDS.hotel, name: HOTEL.nombre, url: HOTEL.url },
     })),
   };
 
@@ -89,12 +91,13 @@ export default function BlogPage() {
     })),
   };
 
+  // «Guías de viaje», como el H1 y como las migas de cada artículo (oct 2026).
   const blogBreadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
-      { '@type': 'ListItem', position: 2, name: 'Blog de Viaje', item: 'https://www.paraisoencantado.com/blog' },
+      { '@type': 'ListItem', position: 2, name: 'Guías de viaje', item: 'https://www.paraisoencantado.com/blog' },
     ],
   };
 
@@ -111,7 +114,7 @@ export default function BlogPage() {
           <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
             <Link href="/">Inicio</Link>
             <span aria-hidden="true"> › </span>
-            <span>Blog</span>
+            <span aria-current="page">Guías de viaje</span>
           </nav>
           <p className={styles.eyebrow}>Huasteca Potosina · Xilitla · San Luis Potosí</p>
           <h1>Guías de <em>Viaje</em></h1>

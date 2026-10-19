@@ -66,12 +66,17 @@ export default function DestinoSection() {
         {/* Imagen */}
         <div className={styles.imageCol}>
           <div className={styles.imageFrame}>
+            {/* Foto real de Las Pozas (CC0, Wikimedia Commons; oct 2026). La de antes,
+                jardin-edward-james-aerial.png, estaba hecha con IA y traía la estrella de
+                Gemini. Es panorámica: en este marco casi cuadrado el recorte se corre un
+                poco a la izquierda para que entren las columnas y el arco. */}
             <Image
-              src="/images/atracciones/jardin-edward-james-aerial.png"
-              alt="Jardín Surrealista de Edward James — Las Pozas, Xilitla"
+              src="/images/las-pozas/columnas-las-pozas-edward-james-xilitla.jpg"
+              alt="Columnas de concreto de Las Pozas, el jardín surrealista de Edward James, entre la selva de Xilitla"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className={styles.image}
+              style={{ objectPosition: '40% 50%' }}
             />
             <div className={styles.imageBadge}>
               <span>Las Pozas</span>

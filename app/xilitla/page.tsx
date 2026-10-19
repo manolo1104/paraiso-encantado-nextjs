@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { MapPin, Clock } from 'lucide-react';
 import FloatingLeaves from '@/components/FloatingLeaves';
 import { HOTEL } from '@/lib/seo-hotel';
+import { ENTITY_IDS, LAS_POZAS, EDWARD_JAMES, XILITLA, ref } from '@/lib/seo-entidades';
 import styles from './xilitla.module.css';
 
 // Esta es LA página de «qué hacer en Xilitla». Hasta oct 2026 competía con el
@@ -17,24 +18,54 @@ import styles from './xilitla.module.css';
 // estaba «a 1 hora» (son más de 180 km) y que en Las Pozas se podía nadar
 // (el reglamento lo prohíbe): si cambias un dato, que sea con fuente.
 
+// El title NO se toca hasta medir el 23 oct 2026 (protege el 2.º lugar en «qué hacer
+// en xilitla»). Es una sola constante para que el WebPage del JSON-LD diga lo mismo.
+const TITULO = 'Qué Hacer en Xilitla 2026: 14 Lugares, Precios y Horarios';
+
+// Oct 2026: la descripción ahora también contesta «dónde queda Xilitla» (búsquedas como
+// «xilitla dónde está» o «de qué estado es xilitla»). Sin «escrita en el pueblo»: no
+// se puede sostener.
+const DESCRIPCION =
+  'Dónde queda Xilitla, qué ver en 2 o 3 días y cuánto manejas a cada lugar: Las Pozas de Edward James, el centro, museos y cascadas, con precios 2026.';
+
+// Foto real de Las Pozas (CC0, Wikimedia Commons). Hasta oct 2026 el hero y la tarjeta
+// para compartir eran una imagen hecha con IA (jardin-edward-james-aerial.png) que traía
+// la estrella de Gemini en la esquina. CC0 no exige crédito; se declara igual en el
+// JSON-LD, que es lo que lee Google Imágenes.
+const FOTO_LAS_POZAS = '/images/las-pozas/columnas-las-pozas-edward-james-xilitla.jpg';
+const FOTO_LAS_POZAS_OG = '/images/las-pozas/columnas-las-pozas-edward-james-xilitla-og.jpg';
+const FOTO_LAS_POZAS_ALT =
+  'Columnas de concreto de Las Pozas, el jardín surrealista de Edward James, entre la selva de Xilitla';
+const IMAGEN_LAS_POZAS = {
+  '@type': 'ImageObject',
+  contentUrl: `https://www.paraisoencantado.com${FOTO_LAS_POZAS}`,
+  url: `https://www.paraisoencantado.com${FOTO_LAS_POZAS}`,
+  width: 1920,
+  height: 908,
+  caption: 'Columnas de concreto de Las Pozas entre la selva de Xilitla, San Luis Potosí.',
+  creator: { '@type': 'Person', name: 'A01701823 SergioC' },
+  creditText: 'A01701823 SergioC / Wikimedia Commons (CC0)',
+  license: 'https://creativecommons.org/publicdomain/zero/1.0/',
+  acquireLicensePage:
+    'https://commons.wikimedia.org/wiki/File:Lugar_de_Fantasia,_Jardin_de_Edward_James._Xilitla,_San_Luis_Potosi,_Mexico.jpg',
+};
+
 export const metadata: Metadata = {
-  title: 'Qué Hacer en Xilitla 2026: 14 Lugares, Precios y Horarios',
-  description:
-    'Las Pozas, el centro, el Museo Leonora Carrington, Huichihuayán y Tamul: qué hacer en Xilitla con precios 2026 y cuánto manejas desde el pueblo.',
+  title: TITULO,
+  description: DESCRIPCION,
   alternates: {
     canonical: 'https://www.paraisoencantado.com/xilitla',
   },
   openGraph: {
-    title: 'Qué Hacer en Xilitla 2026: 14 Lugares, Precios y Horarios',
-    description:
-      'Guía de Xilitla, Pueblo Mágico: Las Pozas de Edward James, el centro, museos, cascadas cercanas y cuánto manejas a cada lugar.',
+    title: TITULO,
+    description: DESCRIPCION,
     url: 'https://www.paraisoencantado.com/xilitla',
     images: [
       {
-        url: 'https://www.paraisoencantado.com/images/atracciones/jardin-edward-james-aerial.png',
+        url: `https://www.paraisoencantado.com${FOTO_LAS_POZAS_OG}`,
         width: 1200,
         height: 630,
-        alt: 'Las Pozas de Edward James en Xilitla, San Luis Potosí',
+        alt: 'Columnas de Las Pozas de Edward James en Xilitla, San Luis Potosí',
       },
     ],
   },
@@ -249,24 +280,20 @@ const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
-      '@type': 'TouristDestination',
-      name: 'Xilitla',
+      // Oct 2026: el destino es LA MISMA entidad que XILITLA en el resto del sitio (su
+      // Wikidata, Q2313212), no un nodo anónimo ni un «#destino» propio: con dos @id
+      // distintos, un buscador vería dos Xilitlas. El sameAs apunta al artículo de
+      // Xilitla, San Luis Potosí, no a la desambiguación (hay otro Xilitla en Hidalgo).
+      ...XILITLA,
+      '@type': ['City', 'TouristDestination'],
       description:
         'Pueblo Mágico de la Huasteca Potosina, en San Luis Potosí, conocido por Las Pozas de Edward James, el ex convento agustino del siglo XVI y la selva de la sierra.',
-      url: 'https://www.paraisoencantado.com/xilitla',
-      image: 'https://www.paraisoencantado.com/images/atracciones/jardin-edward-james-aerial.png',
+      image: IMAGEN_LAS_POZAS,
       geo: { '@type': 'GeoCoordinates', latitude: 21.3853, longitude: -98.9894 },
       touristType: ['Nature tourists', 'Cultural tourists', 'Adventure tourists'],
       includesAttraction: [
-        {
-          '@type': 'TouristAttraction',
-          name: 'Las Pozas — Jardín Escultórico Edward James',
-          description:
-            'Jardín escultórico surrealista construido por Edward James entre 1962 y 1984, con más de 30 estructuras de concreto. Monumento Artístico de la Nación desde 2012.',
-          url: 'https://www.paraisoencantado.com/blog/las-pozas-edward-james-guia',
-          geo: { '@type': 'GeoCoordinates', latitude: 21.3967, longitude: -98.9966 },
-          sameAs: 'https://www.wikidata.org/wiki/Q11688402',
-        },
+        // Las Pozas con su Wikidata (Q11688402) y su Wikipedia, desde lib/seo-entidades.ts.
+        { ...LAS_POZAS, image: IMAGEN_LAS_POZAS },
         {
           '@type': 'TouristAttraction',
           name: 'Museo Leonora Carrington Xilitla',
@@ -289,6 +316,25 @@ const schema = {
           url: 'https://www.paraisoencantado.com/blog/cascada-tamul-guia-completa',
         },
       ],
+    },
+    {
+      // La página en sí: de qué trata (Xilitla), qué nombra y cuándo cambió. La página
+      // nació el 17 may 2026 (commit 934af82); dateModified = último cambio de contenido.
+      '@type': 'WebPage',
+      '@id': 'https://www.paraisoencantado.com/xilitla#webpage',
+      url: 'https://www.paraisoencantado.com/xilitla',
+      name: TITULO,
+      description: DESCRIPCION,
+      inLanguage: 'es-MX',
+      datePublished: '2026-05-17',
+      // El JSON-LD cambió el 17 oct (sameAs de Las Pozas y Edward James en
+      // lib/seo-entidades.ts): igual que LOTE en app/sitemap.ts. Si el lote sale otro
+      // día y cambia LOTE, cambiar también esta fecha.
+      dateModified: '2026-10-19',
+      about: ref(XILITLA),
+      mentions: [ref(LAS_POZAS), EDWARD_JAMES],
+      primaryImageOfPage: IMAGEN_LAS_POZAS,
+      isPartOf: { '@id': ENTITY_IDS.website },
     },
     {
       '@type': 'BreadcrumbList',
@@ -340,14 +386,16 @@ export default function XilitlaPage() {
         {/* HERO */}
         <section className={styles.hero}>
           <div className={styles.heroImg}>
+            {/* Foto panorámica (2:1): en celular el recorte cae un poco a la izquierda
+                del centro para que se vean las columnas y el arco, no solo hojas. */}
             <Image
-              src="/images/atracciones/jardin-edward-james-aerial.png"
-              alt="Vista aérea de Las Pozas de Edward James — Xilitla, San Luis Potosí"
+              src={FOTO_LAS_POZAS}
+              alt={FOTO_LAS_POZAS_ALT}
               fill
               priority
               quality={80}
               sizes="100vw"
-              style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
+              style={{ objectFit: 'cover', objectPosition: '42% 35%' }}
             />
             <div className={styles.heroOverlay} />
           </div>
@@ -394,6 +442,32 @@ export default function XilitlaPage() {
               <div className={styles.fact}><strong>Desde CDMX</strong><span>~7 horas en carro</span></div>
               <div className={styles.fact}><strong>Temporada seca</strong><span>Nov – May</span></div>
             </div>
+          </div>
+        </section>
+
+        {/* DÓNDE QUEDA (oct 2026) — contesta «dónde queda Xilitla» / «de qué estado es»
+            arriba y en un párrafo que se entiende solo, sin depender del resto de la página.
+            Estado, distancias y Las Pozas: hoja de datos verificados (§1, §3 y §4). El
+            Xilitla de Hidalgo: desambiguación «Xilitla» de es.wikipedia (16 oct 2026). */}
+        <section className={`${styles.intro} ${styles.dondeQueda}`} id="donde-queda">
+          <div className={styles.introInner}>
+            <h2>¿Dónde queda Xilitla?</h2>
+            <p>
+              Xilitla está en el estado de <strong>San Luis Potosí</strong>, México, en la Huasteca
+              Potosina, al sureste del estado: es la cabecera del municipio del mismo nombre. En carro
+              queda a unas 7 horas de la Ciudad de México, a 5 de la ciudad de San Luis Potosí, a hora
+              y media o dos de Ciudad Valles y a unas 3 horas y media del aeropuerto de Tampico. Las
+              Pozas está a 2.4 km del centro, en el barrio de La Conchita: 5 minutos en carro.
+            </p>
+            <p>
+              No hay que confundirlo con Xilitla, Hidalgo, una localidad del municipio de Tepehuacán
+              que lleva el mismo nombre.
+            </p>
+            <p>
+              <Link href="/blog/como-llegar-a-xilitla" className={styles.itemLink}>
+                Rutas en carro, autobús y avión →
+              </Link>
+            </p>
           </div>
         </section>
 
@@ -541,6 +615,12 @@ export default function XilitlaPage() {
                 </p>
               </div>
             </div>
+            {/* Una frase y un enlace, sin pregunta frecuente propia: «cuál es la mejor época
+                para ir a Xilitla» es del artículo, y si /xilitla la contestara se la quitaría. */}
+            <p className={styles.epoca}>
+              ¿Dudas entre un mes y otro? Lo vemos mes por mes en{' '}
+              <Link href="/blog/mejor-epoca-visitar-xilitla">la mejor época para visitar Xilitla</Link>.
+            </p>
             <p className={styles.xantolo}>
               Del 31 de octubre al 2 de noviembre, Xilitla celebra el <strong>Xantolo</strong>, el Día de
               Muertos de la Huasteca: <Link href="/blog/xantolo-en-xilitla">fechas, programa y dónde dormir</Link>.

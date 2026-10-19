@@ -1,8 +1,11 @@
 import { Star, MapPin, Waves, ShieldCheck } from 'lucide-react';
+import { HOTEL } from '@/lib/seo-hotel';
 import styles from './SocialProofBar.module.css';
 
-const RATING = 4.5;
-const REVIEWS = 523;
+// Las cifras salen de lib/seo-hotel.ts (17 oct 2026): aquí decía 523 escrito a mano y
+// «verificadas», y Google no comprueba que quien reseña se haya hospedado.
+const RATING = HOTEL.rating;
+const REVIEWS = HOTEL.reviewCount;
 
 export default function SocialProofBar() {
   return (
@@ -15,7 +18,7 @@ export default function SocialProofBar() {
           </div>
           <div className={styles.content}>
             <strong>{RATING.toFixed(1)} / 5</strong>
-            <p>{REVIEWS} reseñas verificadas en Google</p>
+            <p>{REVIEWS} reseñas en Google</p>
           </div>
         </div>
 
@@ -26,8 +29,8 @@ export default function SocialProofBar() {
             <MapPin size={24} strokeWidth={1.5} />
           </div>
           <div className={styles.content}>
-            <strong>A 5 min de Las Pozas</strong>
-            <p>400 metros, sobre el camino al Jardín de Edward James</p>
+            <strong>A {HOTEL.minutosCaminandoALasPozas} min de Las Pozas</strong>
+            <p>{HOTEL.metrosALasPozas} metros, sobre el camino al Jardín de Edward James</p>
           </div>
         </div>
 
@@ -38,7 +41,7 @@ export default function SocialProofBar() {
             <Waves size={24} strokeWidth={1.5} />
           </div>
           <div className={styles.content}>
-            <strong>13 suites, 4 con spa privado</strong>
+            <strong>{HOTEL.suites} suites, {HOTEL.suitesConSpaPrivado} con spa privado</strong>
             <p>Cada una con su propio carácter</p>
           </div>
         </div>

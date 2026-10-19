@@ -4,20 +4,26 @@ import Link from 'next/link';
 import { Droplets, Bed, Leaf, Compass, Utensils, MapPin } from 'lucide-react';
 import { suites } from '@/data/suites';
 import FloatingLeaves from '@/components/FloatingLeaves';
+import { HOTEL, lodgingSchema } from '@/lib/seo-hotel';
 import styles from './familias.module.css';
+
+const URL = `${HOTEL.url}/hotel-familias-xilitla`;
 
 export const metadata: Metadata = {
   title: 'Hotel para Familias en Xilitla · Suites de 4 a 8 personas',
+  // «Tours que pasan por ti al hotel»: decía «tours para niños desde el hotel», y los
+  // tours no los opera el hotel sino Huasteca Potosina Tours (17 oct 2026).
   description:
-    'Suites familiares, alberca y restaurante propio a 400 m de Las Pozas. Tours para niños desde el hotel. Reserva directa y cancela gratis hasta 7 días.',
+    `Suites familiares, alberca y restaurante propio a ${HOTEL.metrosALasPozas} m de Las Pozas. Tours que pasan por ti al hotel. Reserva directa y cancela gratis hasta 7 días.`,
   alternates: {
-    canonical: 'https://www.paraisoencantado.com/hotel-familias-xilitla',
+    canonical: URL,
   },
   openGraph: {
     title: 'Hotel Familiar en Xilitla — Piscina y Suites Grandes | Paraíso Encantado',
+    // Decía «13 suites con capacidad para hasta 8 personas»: solo Helechos 2 llega a 8.
     description:
-      '13 suites con capacidad para hasta 8 personas, piscina, tours seguros para niños y a 5 min de Las Pozas de Edward James en Xilitla, Huasteca Potosina.',
-    url: 'https://www.paraisoencantado.com/hotel-familias-xilitla',
+      `${HOTEL.suites} suites, la más grande para ${HOTEL.capacidadMaxima} personas, piscina y a ${HOTEL.minutosCaminandoALasPozas} min de Las Pozas de Edward James en Xilitla, Huasteca Potosina.`,
+    url: URL,
     images: [{
       url: 'https://www.paraisoencantado.com/images/HELECHOS 1/PORTADA.jpg',
       width: 1200, height: 630,
@@ -26,18 +32,21 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * JSON-LD (17 oct 2026). El hotel era un LodgingBusiness SIN `@id`, con el nombre
+ * inflado («Hotel Paraíso Encantado — Hotel Familiar Xilitla»), la dirección a medias
+ * y una calificación de 523 reseñas que esta página no muestra: para Google y las IA,
+ * otro hotel. Ahora es el mismo `#hotel` de todo el sitio (lodgingSchema). El
+ * FAQPage de abajo es el mismo texto que el FAQ visible.
+ */
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'LodgingBusiness',
-      name: 'Hotel Paraíso Encantado — Hotel Familiar Xilitla',
-      description: 'Hotel boutique familiar en Xilitla con suites para 4-8 personas y piscina. A 5 minutos de Las Pozas de Edward James en la Huasteca Potosina.',
-      url: 'https://www.paraisoencantado.com/hotel-familias-xilitla',
-      telephone: '+524891007679',
-      address: { '@type': 'PostalAddress', addressLocality: 'Xilitla', addressRegion: 'San Luis Potosí', addressCountry: 'MX' },
-      aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.5, reviewCount: 523, bestRating: 5 },
-    },
+    lodgingSchema({
+      description: `Hotel boutique en Xilitla con suites familiares para 4 a ${HOTEL.capacidadMaxima} personas y piscina, a ${HOTEL.minutosCaminandoALasPozas} minutos caminando de Las Pozas de Edward James, en la Huasteca Potosina.`,
+      url: URL,
+      image: `${HOTEL.url}/images/HELECHOS%201/PORTADA.jpg`,
+    }),
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
@@ -65,9 +74,10 @@ const REASONS = [
   { icon: <Droplets size={22} strokeWidth={1.5} />, title: 'Piscina en tu Suite', body: 'Las suites con spa tienen piscina privada y las familiares tienen acceso directo a la piscina del hotel. Los niños pueden disfrutar el agua con supervisión.' },
   { icon: <Bed size={22} strokeWidth={1.5} />, title: 'Suites hasta 8 Personas', body: 'Helechos 1 (hasta 6) y Helechos 2 (hasta 8) tienen 3-4 camas matrimoniales. Toda la familia en el mismo espacio.' },
   { icon: <Leaf size={22} strokeWidth={1.5} />, title: 'Naturaleza Segura', body: 'El hotel tiene jardines seguros, áreas comunes amplias y está en La Conchita, sobre el camino a Las Pozas, en Xilitla — un pueblo tranquilo y familiar.' },
-  { icon: <Compass size={22} strokeWidth={1.5} />, title: 'Tours para Niños', body: 'Las Pozas y las Cascadas de Micos funcionan bien con niños. En el Puente de Dios hay corriente: solo con chaleco y cuerda, y no para menores de 5 años. Guía certificado en todos los tours.' },
+  // Los tours no los opera el hotel sino Huasteca Potosina Tours (hoja de datos, §2).
+  { icon: <Compass size={22} strokeWidth={1.5} />, title: 'Tours para Niños', body: 'Las Pozas y las Cascadas de Micos funcionan bien con niños. En el Puente de Dios hay corriente: solo con chaleco y cuerda, y no para menores de 5 años. Los tours los opera Huasteca Potosina Tours y pasan por ti al hotel.' },
   { icon: <Utensils size={22} strokeWidth={1.5} />, title: 'Restaurante en el Hotel', body: 'El Papán Huasteco tiene opciones para toda la familia. No necesitas salir del hotel para la primera comida del día.' },
-  { icon: <MapPin size={22} strokeWidth={1.5} />, title: '5 Min de Las Pozas', body: 'Las Pozas de Edward James son fascinantes para los niños: estructuras enormes, pozas de agua y selva tropical. Un mundo de exploración.' },
+  { icon: <MapPin size={22} strokeWidth={1.5} />, title: `${HOTEL.minutosCaminandoALasPozas} Min de Las Pozas`, body: 'Las Pozas de Edward James son fascinantes para los niños: estructuras enormes, pozas de agua y selva tropical. Un mundo de exploración.' },
 ];
 
 export default function HotelFamiliasPage() {
@@ -88,10 +98,10 @@ export default function HotelFamiliasPage() {
             </nav>
             <p className={styles.eyebrow}>Familias · Grupos · Viaje con Niños</p>
             <h1>El Hotel <em>Ideal para Familias</em><br />en Xilitla, Huasteca Potosina</h1>
-            <p className={styles.heroSub}>Suites para hasta 8 personas, piscina y a 5 minutos caminando de Las Pozas de Edward James.</p>
+            <p className={styles.heroSub}>Suites para hasta {HOTEL.capacidadMaxima} personas, piscina y a {HOTEL.minutosCaminandoALasPozas} minutos caminando de Las Pozas de Edward James.</p>
             <div className={styles.heroCtas}>
               <Link href="/reservar" className={styles.heroCtaPrimary}>Reservar Suite Familiar</Link>
-              <Link href="/habitaciones" className={styles.heroCtaSecondary}>Ver las 13 Suites</Link>
+              <Link href="/habitaciones" className={styles.heroCtaSecondary}>Ver las {HOTEL.suites} Suites</Link>
             </div>
           </div>
         </section>
@@ -100,11 +110,11 @@ export default function HotelFamiliasPage() {
         <section className={styles.stats}>
           <FloatingLeaves />
           <div className={styles.statsInner}>
-            <div className={styles.stat}><span className={styles.statNum}>8</span><span className={styles.statLabel}>personas máximo en suites familiares</span></div>
+            <div className={styles.stat}><span className={styles.statNum}>{HOTEL.capacidadMaxima}</span><span className={styles.statLabel}>personas máximo en suites familiares</span></div>
             <div className={styles.statDivider} />
-            <div className={styles.stat}><span className={styles.statNum}>5</span><span className={styles.statLabel}>minutos a Las Pozas de Edward James</span></div>
+            <div className={styles.stat}><span className={styles.statNum}>{HOTEL.minutosCaminandoALasPozas}</span><span className={styles.statLabel}>minutos a Las Pozas de Edward James</span></div>
             <div className={styles.statDivider} />
-            <div className={styles.stat}><span className={styles.statNum}>13</span><span className={styles.statLabel}>suites · 4 con spa privado</span></div>
+            <div className={styles.stat}><span className={styles.statNum}>{HOTEL.suites}</span><span className={styles.statLabel}>suites · {HOTEL.suitesConSpaPrivado} con spa privado</span></div>
           </div>
         </section>
 
@@ -163,7 +173,7 @@ export default function HotelFamiliasPage() {
             <h2 style={{ color: 'white' }}>3 Días Perfectos con la Familia</h2>
             <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
               {[
-                { dia: 'Día 1 — Llegada y Las Pozas', actividades: 'Llegada al hotel, check-in, tarde en el spa privado de la suite. Al día siguiente temprano: Las Pozas de Edward James (5 min caminando) — los niños van a flipar con las estructuras gigantes y las pozas de agua.' },
+                { dia: 'Día 1 — Llegada y Las Pozas', actividades: `Llegada al hotel, check-in, tarde en el spa privado de la suite. Al día siguiente temprano: Las Pozas de Edward James (${HOTEL.minutosCaminandoALasPozas} min caminando) — los niños van a flipar con las estructuras gigantes y las pozas de agua.` },
                 { dia: 'Día 2 — Cascadas', actividades: 'Tour a las Cascadas de Micos o al Puente de Dios, de día completo. En Micos hay pozas turquesas donde los niños mayores de 6 años pueden nadar con supervisión; en el Puente de Dios la corriente es fuerte: solo con chaleco y cuerda, y no para menores de 5. Comida en restaurante local y regreso al hotel.' },
                 { dia: 'Día 3 — Pueblo y descanso', actividades: 'Mañana libre: mercado del pueblo, café de olla y artesanías. Tarde en el spa privado de la suite. Si se quedan más noches: tour Tamul en canoa (para mayores de 8 años).' },
               ].map(d => (
@@ -220,7 +230,8 @@ export default function HotelFamiliasPage() {
         <section className={styles.finalCta}>
           <FloatingLeaves />
           <div className={styles.finalCtaInner}>
-            <h2>El Mejor Viaje Familiar de la Huasteca</h2>
+            {/* Era «El Mejor Viaje Familiar de la Huasteca»: superlativo sin sustento (17 oct 2026). */}
+            <h2>Tu Viaje en Familia a la Huasteca</h2>
             <p>Xilitla, Las Pozas y la naturaleza de la sierra potosina para toda la familia.</p>
             <div className={styles.finalCtaBtns}>
               <Link href="/reservar" className={styles.ctaPrimary}>Reservar Ahora</Link>

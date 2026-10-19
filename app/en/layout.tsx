@@ -1,48 +1,24 @@
 import type { Metadata } from 'next';
 
+/**
+ * Solo lo que comparten TODAS las páginas en inglés (17 oct 2026).
+ *
+ * El title, la descripción, el canonical y los hreflang de /en se mudaron a
+ * app/en/page.tsx. Aquí se heredaban: cualquier página nueva /en/* que no declarara
+ * los suyos habría salido con canonical a /en (y Google no la habría indexado como
+ * página propia). Cada página en inglés declara los suyos.
+ *
+ * Ojo: si una página define su propio `openGraph`, Next lo usa ENTERO y no lo mezcla
+ * con este; por eso /en repite siteName y locale en el suyo.
+ */
 export const metadata: Metadata = {
-  title: 'Hotel Paraíso Encantado | Boutique Hotel near Edward James Garden · Xilitla, Mexico',
-  description:
-    '13 boutique suites (4 with private spa), a 5-min walk from Las Pozas (Edward James Garden) in Xilitla, Huasteca Potosina. Book direct from $80/night.',
-  keywords: [
-    'hotel near edward james garden',
-    'hotel las pozas xilitla',
-    'boutique hotel xilitla mexico',
-    'huasteca potosina hotel english',
-    'edward james surrealist garden hotel',
-    'xilitla accommodation',
-    'san luis potosí boutique hotel',
-    'hotel near las pozas',
-    'mexico surrealist garden hotel',
-  ],
-  alternates: {
-    canonical: 'https://www.paraisoencantado.com/en',
-    languages: {
-      'es': 'https://www.paraisoencantado.com',
-      'en': 'https://www.paraisoencantado.com/en',
-      'x-default': 'https://www.paraisoencantado.com',
-    },
-  },
   openGraph: {
     siteName: 'Hotel Paraíso Encantado',
-    title: 'Hotel Paraíso Encantado | Xilitla, Mexico — Boutique Hotel near Las Pozas',
-    description:
-      '13 boutique suites, 4 with private spa, a 5-min walk from the Edward James Surrealist Garden. Direct booking, no commissions.',
     locale: 'en_US',
     type: 'website',
-    url: 'https://www.paraisoencantado.com/en',
-    images: [
-      {
-        url: 'https://www.paraisoencantado.com/og/home.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Hotel Paraíso Encantado — boutique hotel near the Edward James Garden, Xilitla, Mexico',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
-    images: ['https://www.paraisoencantado.com/og/home.jpg'],
   },
 };
 

@@ -2,9 +2,16 @@ import Image from 'next/image';
 import { MessageCircle } from 'lucide-react';
 import styles from './Footer.module.css';
 import FloatingLeaves from './FloatingLeaves';
+import FooterIdioma from './FooterIdioma';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+
+  // Enlace al otro idioma (17 oct 2026). Hasta esta fecha ninguna página del sitio
+  // enlazaba a /en: solo se llegaba por el hreflang y el sitemap, y Google la trataba
+  // como una página sin peso. El pie sale en todo el sitio, así que desde aquí la
+  // enlazan todas. En /en el enlace cambia a «Español». Lo decide FooterIdioma en el
+  // navegador: con `headers()` aquí se quedaba viejo al navegar con <Link>.
 
   return (
     <footer className={styles.footer} id="contacto">
@@ -55,6 +62,7 @@ export default function Footer() {
             <li><a href="/reviews">Reseñas</a></li>
             <li><a href="/sobre-nosotros">Sobre Nosotros</a></li>
             <li><a href="/contacto">Contacto</a></li>
+            <FooterIdioma />
           </ul>
         </div>
 
@@ -97,11 +105,14 @@ export default function Footer() {
         <div className={styles.section}>
           <h4>Guías para Elegir</h4>
           <ul role="list">
-            <li><a href="/mejor-hotel-xilitla">Por Qué Somos el Mejor de Xilitla</a></li>
-            <li><a href="/mejor-hotel-huasteca-potosina">Mejor Hotel de la Huasteca</a></li>
+            {/* Sin «Por Qué Somos el Mejor de Xilitla» ni «Mejor Hotel de la Huasteca»
+                (17 oct 2026): no se sostiene, y la comparativa de los hoteles del pueblo es
+                /hoteles-en-xilitla. Las opiniones tienen su página (Reseñas, arriba). */}
+            <li><a href="/mejor-hotel-xilitla">Por Qué Elegir Paraíso Encantado</a></li>
+            <li><a href="/mejor-hotel-huasteca-potosina">Cómo Elegir Hotel en la Huasteca</a></li>
             <li><a href="/hoteles-en-xilitla">Hoteles en Xilitla</a></li>
             <li><a href="/donde-hospedarse-huasteca-potosina">Dónde Hospedarse en la Huasteca</a></li>
-            <li><a href="/hotel-alberca-privada-xilitla">Hotel con Alberca Privada</a></li>
+            <li><a href="/hotel-alberca-privada-xilitla">Suites con Spa Privado</a></li>
             <li><a href="/comparar">Comparar Suites</a></li>
           </ul>
         </div>

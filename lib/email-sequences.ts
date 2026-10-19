@@ -80,7 +80,7 @@ function footer() {
   return `
   <tr><td class="mplg" style="background-color:#f0ebe3;padding:44px 48px;text-align:center;">
     <p style="margin:0 0 12px;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;letter-spacing:3px;text-transform:uppercase;color:#8a7d6b;">Paraíso Encantado</p>
-    <p style="margin:0 0 16px;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#a09080;line-height:1.6;">Hotel Paraíso Encantado · Xilitla, San Luis Potosí 79910 · México<br>A pasos del Jardín Surrealista de Edward James</p>
+    <p style="margin:0 0 16px;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#a09080;line-height:1.6;">Hotel Paraíso Encantado · Xilitla, San Luis Potosí 79900 · México<br>A pasos del Jardín Surrealista de Edward James</p>
     <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;color:#b8aa9a;">© ${new Date().getFullYear()} Hotel Paraíso Encantado · Todos los derechos reservados</p>
   </td></tr>`;
 }

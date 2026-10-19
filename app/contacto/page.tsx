@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Phone, MessageCircle, MapPin, CalendarCheck, Mail, Clock, ChevronDown } from 'lucide-react';
+import { HOTEL, lodgingSchema } from '@/lib/seo-hotel';
+import { ENTITY_IDS } from '@/lib/seo-entidades';
 import styles from './contacto.module.css';
 import ContactForm from './ContactForm';
 
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
   // aun borrado ocupaba ancho. El número queda igual de visible.
   title: 'Contacto Hotel Paraíso Encantado · WhatsApp 489-100-7679',
   description:
-    'Escríbenos por WhatsApp y te contestamos en menos de 2 horas. Reserva directa sin comisiones, a 400 m de Las Pozas, en Xilitla, SLP.',
+    `Escríbenos por WhatsApp y te contestamos en menos de 2 horas. Reserva directa sin comisiones, a ${HOTEL.metrosALasPozas} m de Las Pozas, en Xilitla, SLP.`,
   alternates: {
     canonical: 'https://www.paraisoencantado.com/contacto',
   },
@@ -31,7 +33,20 @@ export const metadata: Metadata = {
   },
 };
 
-// ── Schema ContactPage + LocalBusiness ────────────────────────────────────────
+// ── Schema ContactPage + el hotel ─────────────────────────────────────────────
+/**
+ * Una sola entidad (17 oct 2026). Aquí se declaraba un tercer negocio,
+ * `#localbusiness` de tipo [LocalBusiness, LodgingBusiness], con CP 79910 y las
+ * redes viejas en `sameAs`: para Google, otro hotel más con el mismo nombre. Ahora es
+ * el mismo `#hotel` de la portada (lodgingSchema), más lo que solo cuenta esta
+ * página: correo, horario de recepción y formas de contacto.
+ *
+ * Del JSON-LD salió el 489 100 7601: es el teléfono de OTRA ficha de Google
+ * («Posada Paraiso Encantado», Matamoros 205; ver lib/seo-entidades.ts). Se sigue
+ * viendo en la página y en el pie hasta que Manolo diga de quién es.
+ * Y `availableLanguage` queda en español: que alguien atienda en inglés no está
+ * comprobado (en /en se quitó por lo mismo).
+ */
 const contactSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -40,35 +55,17 @@ const contactSchema = {
       name: 'Contacto — Hotel Paraíso Encantado',
       url: 'https://www.paraisoencantado.com/contacto',
       description: 'Formas de contactar al Hotel Paraíso Encantado en Xilitla, Huasteca Potosina.',
-      mainEntity: { '@id': 'https://www.paraisoencantado.com/#localbusiness' },
+      mainEntity: { '@id': ENTITY_IDS.hotel },
     },
     {
-      '@type': ['LocalBusiness', 'LodgingBusiness'],
-      '@id': 'https://www.paraisoencantado.com/#localbusiness',
-      name: 'Hotel Paraíso Encantado',
-      url: 'https://www.paraisoencantado.com',
-      telephone: ['+524891007679', '+524891007601'],
+      ...lodgingSchema({
+        description: `Hotel boutique en Xilitla, Huasteca Potosina, a ${HOTEL.metrosALasPozas} metros de Las Pozas de Edward James. Reservas en línea, por WhatsApp y por teléfono.`,
+        url: 'https://www.paraisoencantado.com/contacto',
+      }),
       email: 'reservas@paraisoencantado.com',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Xilitla',
-        addressRegion: 'San Luis Potosí',
-        postalCode: '79910',
-        addressCountry: 'MX',
-      },
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: 21.395,
-        longitude: -98.9915,
-      },
-      openingHoursSpecification: [
-        {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
-          opens: '08:00',
-          closes: '21:00',
-        },
-      ],
+      // El horario de 8:00 a 21:00 es el de la RECEPCIÓN (va en el contactPoint): puesto
+      // en el hotel, que ahora es la misma entidad de todo el sitio, diría que el hotel
+      // cierra de noche.
       areaServed: {
         '@type': 'GeoCircle',
         geoMidpoint: { '@type': 'GeoCoordinates', latitude: 21.395, longitude: -98.9915 },
@@ -78,19 +75,7 @@ const contactSchema = {
         {
           '@type': 'ContactPoint',
           contactType: 'reservations',
-          telephone: '+524891007679',
-          availableLanguage: ['Spanish', 'English'],
-          hoursAvailable: {
-            '@type': 'OpeningHoursSpecification',
-            dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
-            opens: '08:00',
-            closes: '21:00',
-          },
-        },
-        {
-          '@type': 'ContactPoint',
-          contactType: 'customer service',
-          telephone: '+524891007601',
+          telephone: HOTEL.telefono,
           availableLanguage: 'Spanish',
           hoursAvailable: {
             '@type': 'OpeningHoursSpecification',
@@ -102,16 +87,9 @@ const contactSchema = {
         {
           '@type': 'ContactPoint',
           contactType: 'reservations',
-          contactOption: 'https://schema.org/TollFree',
-          url: 'https://wa.me/524891007679',
-          availableLanguage: ['Spanish', 'English'],
+          url: HOTEL.whatsapp,
+          availableLanguage: 'Spanish',
         },
-      ],
-      sameAs: [
-        'https://www.instagram.com/_paraiso_encantado/',
-        'https://www.facebook.com/cabanas.encantado/',
-        'https://www.youtube.com/@hotelparaisoencantadoxilit8111',
-        `https://wa.me/524891007679`,
       ],
     },
   ],
@@ -130,7 +108,7 @@ const faqs = [
   {
     q: '¿Cómo llego al hotel desde el centro de Xilitla?',
     // Antes decía "a 5 minutos caminando del centro": son unos 2 km (hoja única, 2 oct 2026).
-    a: 'El hotel está en La Conchita, a unos 2 km del centro de Xilitla: 5 minutos en auto o taxi (a pie, unos 25 minutos de subida). Está a 400 metros de la entrada al Jardín de Edward James (Las Pozas). Al llegar al pueblo, sigue las señales hacia Las Pozas — el hotel está señalizado en la misma calle.',
+    a: `El hotel está en La Conchita, a unos 2 km del centro de Xilitla: 5 minutos en auto o taxi (a pie, unos 25 minutos de subida). Está a ${HOTEL.metrosALasPozas} metros de la entrada al Jardín de Edward James (Las Pozas). Al llegar al pueblo, sigue las señales hacia Las Pozas — el hotel está señalizado en la misma calle.`,
   },
   {
     q: '¿Aceptan mascotas?',

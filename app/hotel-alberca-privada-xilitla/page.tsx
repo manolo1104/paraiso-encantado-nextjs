@@ -8,20 +8,25 @@ import {
 import { HOTEL, SUITES_CON_SPA, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hotel';
 
 const URL = `${HOTEL.url}/hotel-alberca-privada-xilitla`;
-const ACTUALIZADO = 'agosto de 2026';
+const ACTUALIZADO = 'octubre de 2026';
 
 export const metadata: Metadata = {
   // Nadie busca "alberca privada en la habitación": las 220 impresiones reales
   // son "hoteles con alberca en xilitla" y sus variantes, todas en posición
-  // 13-15. El título arranca con esa búsqueda y deja lo privado como gancho.
-  title: 'Hoteles en Xilitla con Alberca · 4 Suites con Spa Privado',
+  // 13-15.
+  // 17 oct 2026 (SEO-04, una URL por búsqueda): el título ya no arranca con
+  // «Hoteles en Xilitla», que es de la comparativa (/hoteles-en-xilitla), sino con
+  // lo que solo tiene esta página. Conserva «alberca en Xilitla». 43 caracteres.
+  title: 'Suites con Spa Privado y Alberca en Xilitla',
+  // «Desde» con el precio de las suites CON spa: decía el de la suite más barata
+  // ($1,500), que no tiene spa privado.
   description:
-    `${HOTEL.suitesConSpaPrivado} suites con alberca spa climatizada en tu propia terraza, sin compartir el agua. A ${HOTEL.metrosALasPozas} m de Las Pozas. Desde $${HOTEL.precioDesde.toLocaleString('es-MX')} la noche, reserva directa.`,
+    `${HOTEL.suitesConSpaPrivado} suites con alberca spa climatizada en tu propia terraza, sin compartir el agua. A ${HOTEL.metrosALasPozas} m de Las Pozas. Desde $${HOTEL.precioSuiteConSpa.toLocaleString('es-MX')} la noche, reserva directa.`,
   keywords: ['hotel alberca privada xilitla', 'hotel jacuzzi xilitla', 'suite con jacuzzi huasteca potosina', 'hotel con tina xilitla'],
   alternates: { canonical: URL },
   openGraph: {
     title: 'Suites con Alberca Privada en Xilitla — Paraíso Encantado',
-    description: 'Piscina spa o tina de hidromasaje en tu propia terraza, con vista a la selva y a cinco minutos de Las Pozas.',
+    description: `Piscina spa o tina de hidromasaje en tu propia terraza, con vista a la selva y a ${HOTEL.minutosCaminandoALasPozas} minutos de Las Pozas.`,
     url: URL,
     images: [{
       url: `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`,
@@ -34,7 +39,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: '¿Hay hoteles en Xilitla con alberca privada en la habitación?',
-    a: `Sí. En el Hotel Paraíso Encantado, ${HOTEL.suitesConSpaPrivado} de las ${HOTEL.suites} suites tienen piscina spa o tina de hidromasaje dentro de su propia terraza: Jungla, LindaVista, Flor de Lis 1 y Flor de Lis 2. El agua no se comparte con otros huéspedes.`,
+    a: `Sí. En el Hotel Paraíso Encantado, ${HOTEL.suitesConSpaPrivado} de las ${HOTEL.suites} suites tienen piscina spa o tina de hidromasaje dentro de su propia terraza: Jungla, LindaVista, Flor de Liz 1 y Flor de Liz 2. El agua no se comparte con otros huéspedes.`,
   },
   {
     q: '¿La piscina privada es climatizada?',
@@ -42,7 +47,7 @@ const FAQS = [
   },
   {
     q: '¿Cuánto cuesta una suite con alberca privada en Xilitla?',
-    a: `Las cuatro suites con spa privado cuestan desde $2,000 MXN por noche para dos personas. Las demás suites del hotel, sin spa privado, arrancan en $${HOTEL.precioDesde.toLocaleString('es-MX')} MXN.`,
+    a: `Las cuatro suites con spa privado cuestan desde $${HOTEL.precioSuiteConSpa.toLocaleString('es-MX')} MXN por noche para dos personas. Las demás suites del hotel, sin spa privado, arrancan en $${HOTEL.precioDesde.toLocaleString('es-MX')} MXN.`,
   },
   {
     q: '¿Todas las suites tienen alberca privada?',
@@ -109,7 +114,7 @@ export default function AlbercaPrivadaPage() {
           <p>
             <strong>Sí hay hoteles en Xilitla con alberca privada dentro de la habitación.</strong>{' '}
             En el Hotel Paraíso Encantado son {HOTEL.suitesConSpaPrivado} suites — Jungla,
-            LindaVista, Flor de Lis 1 y Flor de Lis 2 — cada una con piscina spa o tina de
+            LindaVista, Flor de Liz 1 y Flor de Liz 2 — cada una con piscina spa o tina de
             hidromasaje en su propia terraza, a {HOTEL.metrosALasPozas} metros de Las Pozas. Las
             otras {HOTEL.suites - HOTEL.suitesConSpaPrivado} suites usan la piscina del hotel.
           </p>
@@ -161,8 +166,8 @@ export default function AlbercaPrivadaPage() {
                 { cells: ['Dónde está el agua', 'En la terraza de tu suite', 'En el área común del hotel'], highlight: true },
                 { cells: ['Con quién la compartes', 'Con nadie', 'Con los demás huéspedes'] },
                 { cells: ['Horario', 'El que tú quieras', 'El horario del área común'] },
-                { cells: ['Suites', 'Jungla, LindaVista, Flor de Lis 1 y 2', `Las otras ${HOTEL.suites - HOTEL.suitesConSpaPrivado}`] },
-                { cells: ['Desde', '$2,000 MXN/noche', `$${HOTEL.precioDesde.toLocaleString('es-MX')} MXN/noche`] },
+                { cells: ['Suites', 'Jungla, LindaVista, Flor de Liz 1 y 2', `Las otras ${HOTEL.suites - HOTEL.suitesConSpaPrivado}`] },
+                { cells: ['Desde', `$${HOTEL.precioSuiteConSpa.toLocaleString('es-MX')} MXN/noche`, `$${HOTEL.precioDesde.toLocaleString('es-MX')} MXN/noche`] },
               ]}
             />
             <p>
@@ -177,7 +182,7 @@ export default function AlbercaPrivadaPage() {
         <SeoFaq faqs={FAQS} />
 
         <RelatedLinks links={[
-          { href: '/mejor-hotel-xilitla', label: 'Por qué Paraíso Encantado es el mejor hotel de Xilitla' },
+          { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado en Xilitla' },
           { href: '/hotel-luna-de-miel-xilitla', label: 'Luna de miel en Xilitla' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca' },
           { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla por zona' },

@@ -491,7 +491,7 @@ export function buildEmailHtml(data: {
             <tr>
               <td style="width:50%;padding:20px;vertical-align:top;">
                 <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('map-pin')}Cómo Llegar</p>
-                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A 5 min en auto del centro, sobre el camino a Las Pozas. Paraíso Encantado, Xilitla, SLP 79910.</p>
+                <p style="margin:0;font-family:'Jost','Helvetica Neue',Arial;font-size:12px;color:#4a3f30;line-height:1.5;">A 5 min en auto del centro, sobre el camino a Las Pozas. Paraíso Encantado, Xilitla, SLP 79900.</p>
               </td>
               <td class="split-left" style="width:50%;padding:20px;vertical-align:top;border-left:1px solid #e4ddd3;">
                 <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;color:#2a2218;">${icono('leaf')}Cerca de Ti</p>
@@ -539,7 +539,7 @@ export function buildEmailHtml(data: {
         <tr><td class="mobile-padding-lg" style="background-color:#f0ebe3;padding:44px 48px;text-align:center;">
           <p style="margin:0 0 12px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;letter-spacing:3px;text-transform:uppercase;color:#8a7d6b;">Paraíso Encantado</p>
           <p style="margin:0 0 16px 0;font-family:'Jost','Helvetica Neue',Arial;font-size:11px;color:#a09080;line-height:1.6;">
-            Hotel Paraíso Encantado &middot; Xilitla, San Luis Potosí 79910 &middot; México<br>
+            Hotel Paraíso Encantado &middot; Xilitla, San Luis Potosí 79900 &middot; México<br>
             A pasos del Jardín Surrealista de Edward James
           </p>
           <p style="margin:16px 0 0 0;font-family:'Jost','Helvetica Neue',Arial;font-size:10px;color:#b8aa9a;">

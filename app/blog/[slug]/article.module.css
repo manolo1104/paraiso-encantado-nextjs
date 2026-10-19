@@ -89,7 +89,10 @@
 
 .meta {
   display: flex;
-  gap: 10px;
+  /* Con «Actualizado el 2 de octubre de 2026» la línea ya no cabe en 390 px: que baje
+     de renglón en vez de salirse de la pantalla. */
+  flex-wrap: wrap;
+  gap: 4px 10px;
   font-size: 13px;
   color: #6f6a62; /* #aaa daba 2.2:1 sobre crema: fechas y minutos de lectura casi no se leían */
   font-family: var(--font-jost, sans-serif);

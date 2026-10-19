@@ -4,6 +4,7 @@
 
 import type { Metadata } from 'next';
 import GaleriaClient from './GaleriaClient';
+import { HOTEL_REF } from '@/lib/seo-entidades';
 
 export const metadata: Metadata = {
   // Aquí sí se conserva la marca: la única consulta de fotos que trae
@@ -39,22 +40,10 @@ const gallerySchema = {
   description:
     'Galería fotográfica del Hotel Paraíso Encantado: 13 suites boutique, 4 con spa privado, restaurante El Papán Huasteco, jardines tropicales y destinos naturales de la Huasteca Potosina en Xilitla, San Luis Potosí.',
   url: 'https://www.paraisoencantado.com/galeria',
-  author: {
-    '@type': 'Organization',
-    name: 'Hotel Paraíso Encantado',
-    url: 'https://www.paraisoencantado.com',
-  },
-  about: {
-    '@type': 'TouristAttraction',
-    name: 'Hotel Paraíso Encantado',
-    description: 'Hotel boutique en Xilitla a 5 minutos del Jardín de Edward James (Las Pozas)',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Xilitla',
-      addressRegion: 'San Luis Potosí',
-      addressCountry: 'MX',
-    },
-  },
+  // El mismo `#hotel` de todo el sitio (17 oct 2026): antes eran una Organization y
+  // una TouristAttraction sin @id, o sea dos entidades más con el nombre del hotel.
+  author: HOTEL_REF,
+  about: HOTEL_REF,
   image: [
     {
       '@type': 'ImageObject',
@@ -69,10 +58,18 @@ const gallerySchema = {
       description: 'Vista exterior del Hotel Paraíso Encantado con jardines tropicales en Xilitla, Huasteca Potosina',
     },
     {
+      // Foto real (CC0) en lugar de la imagen hecha con IA que había (oct 2026). Con
+      // contentUrl + license + creditText, Google Imágenes puede mostrar autor y licencia.
       '@type': 'ImageObject',
-      url: 'https://www.paraisoencantado.com/images/atracciones/jardin-edward-james-aerial.png',
-      name: 'Jardín de Edward James — Las Pozas, Xilitla',
+      url: 'https://www.paraisoencantado.com/images/las-pozas/columnas-las-pozas-edward-james-xilitla.jpg',
+      contentUrl: 'https://www.paraisoencantado.com/images/las-pozas/columnas-las-pozas-edward-james-xilitla.jpg',
+      name: 'Columnas de Las Pozas, el jardín de Edward James en Xilitla',
       description: 'Las Pozas de Edward James, jardín surrealista declarado Monumento Artístico en 2012, a 5 min a pie de Paraíso Encantado',
+      creator: { '@type': 'Person', name: 'A01701823 SergioC' },
+      creditText: 'A01701823 SergioC / Wikimedia Commons (CC0)',
+      license: 'https://creativecommons.org/publicdomain/zero/1.0/',
+      acquireLicensePage:
+        'https://commons.wikimedia.org/wiki/File:Lugar_de_Fantasia,_Jardin_de_Edward_James._Xilitla,_San_Luis_Potosi,_Mexico.jpg',
     },
     {
       '@type': 'ImageObject',

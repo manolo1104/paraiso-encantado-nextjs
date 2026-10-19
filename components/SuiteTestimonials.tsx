@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Star, CheckCircle } from 'lucide-react';
+import { Star } from 'lucide-react';
 import styles from './SuiteTestimonials.module.css';
 
 interface Testimonial {
@@ -384,11 +384,9 @@ export default function SuiteTestimonials({ suiteId }: { suiteId: string }) {
                 <span className={styles.location}>{t.location}</span>
                 <StarRating count={t.rating} />
                 <span className={styles.date}>{t.date}</span>
-                {t.verified && (
-                  <span className={styles.verified}>
-                    <CheckCircle size={11} strokeWidth={2} /> Estancia verificada
-                  </span>
-                )}
+                {/* Sin la etiqueta «Estancia verificada» (17 oct 2026), igual que en la
+                    portada: nadie comprobó estas estancias. Vuelve si cada testimonio
+                    se enlaza con su reseña real. */}
               </div>
             </header>
             <p className={styles.text}>&#8220;{t.text}&#8221;</p>

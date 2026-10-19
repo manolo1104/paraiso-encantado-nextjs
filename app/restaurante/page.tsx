@@ -65,7 +65,8 @@ const restaurantSchema = {
     streetAddress: 'Hotel Paraíso Encantado',
     addressLocality: 'Xilitla',
     addressRegion: 'San Luis Potosí',
-    postalCode: '79910',
+    // El CP del hotel en todo el sitio (lib/seo-hotel.ts); decía 79910 (17 oct 2026).
+    postalCode: '79900',
     addressCountry: 'MX',
   },
   geo: {
@@ -167,7 +168,9 @@ const restaurantImages = [
   '/images/RESTAURANTE/DSCF1275.jpg',
 ];
 
-// Reseñas específicas del restaurante (estilo Testimonials de homepage)
+// Reseñas específicas del restaurante (estilo Testimonials de homepage).
+// 17 oct 2026: las etiquetas decían «Visita verificada» y «Estancia verificada», y
+// nadie comprobó estas visitas: quedan como «Comensal» y «Huésped».
 const restaurantReviews = [
   {
     name: 'Claudia Vega',
@@ -175,7 +178,7 @@ const restaurantReviews = [
     date: 'Abril 2025',
     rating: 5,
     text: 'El zacahuil es una experiencia en sí mismo. Nunca había comido algo así — masa gruesa, el adobo rojo con un aroma a hoja de plátano que no olvidaré. Nos quedamos a desayunar dos días seguidos solo por eso.',
-    badge: 'Visita verificada',
+    badge: 'Comensal',
   },
   {
     name: 'Jorge Ramírez',
@@ -183,7 +186,7 @@ const restaurantReviews = [
     date: 'Enero 2025',
     rating: 5,
     text: 'El desayuno completo con tortillas de comal me hizo entender por qué la gente dice que la comida sabe diferente en las montañas. El café de olla llegó a la mesa en olla de barro, caliente y con canela. Perfecto.',
-    badge: 'Estancia verificada',
+    badge: 'Huésped',
   },
   {
     name: 'Marcela Fuentes',
@@ -191,7 +194,7 @@ const restaurantReviews = [
     date: 'Marzo 2025',
     rating: 5,
     text: 'Vine solo a comer, no soy huésped del hotel, y fue una de las mejores decisiones del viaje. Las enchiladas huastecas y el pozole rojo están a otro nivel. El ambiente con vista al jardín es increíble.',
-    badge: 'Visita verificada',
+    badge: 'Comensal',
   },
   {
     name: 'Rodrigo Castellanos',
@@ -199,7 +202,7 @@ const restaurantReviews = [
     date: 'Febrero 2025',
     rating: 5,
     text: 'Las garnachas huastecas y el agua de tamarindo son imprescindibles. El servicio es cálido y los precios muy accesibles para la calidad que ofrecen. Si vas a Xilitla, come aquí aunque no te hospedes.',
-    badge: 'Visita verificada',
+    badge: 'Comensal',
   },
 ];
 

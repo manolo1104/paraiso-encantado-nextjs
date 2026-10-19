@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { suites } from '@/data/suites';
 import SuitePageClient from './SuitePageClient';
+import { HOTEL, POSTAL_ADDRESS } from '@/lib/seo-hotel';
+import { ENTITY_IDS } from '@/lib/seo-entidades';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -14,7 +16,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!suite) return {};
   const canonical = `https://www.paraisoencantado.com/habitaciones/${id}`;
   return {
-    title: `${suite.name} · Suite Boutique Xilitla | Paraíso Encantado — Desde $${suite.price.toLocaleString('es-MX')} MXN`,
+    // ≤ 60 caracteres (17 oct 2026: medían de 70 a 83 y Google los cortaba antes
+    // del precio). Si el nombre ya dice «Suite», no se repite.
+    title: `${suite.name} · ${suite.name.startsWith('Suite') ? 'Xilitla' : 'Suite en Xilitla'} · Desde $${suite.price.toLocaleString('es-MX')} MXN`,
     description: `${suite.description.slice(0, 80).trimEnd()}… Xilitla, a 5 min de Las Pozas. Desde $${suite.price.toLocaleString('es-MX')} MXN. Reserva directa.`,
     alternates: { canonical },
     openGraph: {
@@ -39,8 +43,10 @@ export default async function SuitePage({ params, searchParams }: Props) {
   if (!suite) notFound();
 
   // @graph con HotelRoom + Product separado.
-  // REGLA: AggregateRating NO está soportado en HotelRoom por Google.
-  // Solución: nodo Product adicional en el mismo @graph — Google usa éste para rich results.
+  // 17 oct 2026: el Product ya NO lleva `aggregateRating`. Era la calificación del HOTEL
+  // en Google (4.5 con 523) puesta en cada suite, y esta página no la muestra: Google
+  // pide que la calificación sea del producto y que se vea, y la portada ya la declara
+  // para el hotel. Ojo: si alguna ficha salía con estrellas en Google, deja de salir.
   const schema = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -67,14 +73,14 @@ export default async function SuitePage({ params, searchParams }: Props) {
           price: suite.price,
           priceCurrency: 'MXN',
           availability: 'https://schema.org/InStock',
-          url: `https://www.paraisoencantado.com/reservar?suiteId=${id}`,
+          url: `https://www.paraisoencantado.com/reservar?suiteId=${id}&autoselect=1`,
         },
         containedInPlace: {
           '@id': 'https://www.paraisoencantado.com/#hotel',
         },
       },
       {
-        // Product — único tipo que Google admite con AggregateRating para rich snippets de precio+rating
+        // Product con su oferta (precio de lista; el de cada noche lo da el motor).
         '@type': 'Product',
         '@id': `https://www.paraisoencantado.com/habitaciones/${id}#product`,
         name: `${suite.name} — Hotel Paraíso Encantado`,
@@ -89,32 +95,19 @@ export default async function SuitePage({ params, searchParams }: Props) {
           price: suite.price,
           priceCurrency: 'MXN',
           availability: 'https://schema.org/InStock',
-          url: `https://www.paraisoencantado.com/reservar?suiteId=${id}`,
-          seller: {
-            '@type': 'Organization',
-            name: 'Hotel Paraíso Encantado',
-          },
-        },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: 4.5,
-          reviewCount: 523,
-          bestRating: 5,
-          worstRating: 1,
+          url: `https://www.paraisoencantado.com/reservar?suiteId=${id}&autoselect=1`,
+          seller: { '@id': ENTITY_IDS.hotel },
         },
       },
       {
-        // LodgingBusiness referenciado
-        '@type': 'LodgingBusiness',
-        '@id': 'https://www.paraisoencantado.com/#hotel',
-        name: 'Hotel Paraíso Encantado',
-        url: 'https://www.paraisoencantado.com',
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: 'Xilitla',
-          addressRegion: 'San Luis Potosí',
-          addressCountry: 'MX',
-        },
+        // El hotel al que pertenece la suite: el mismo `#hotel` de todo el sitio, con
+        // el mismo tipo y la dirección completa (17 oct 2026: era un LodgingBusiness
+        // con solo el municipio).
+        '@type': 'Hotel',
+        '@id': ENTITY_IDS.hotel,
+        name: HOTEL.nombre,
+        url: HOTEL.url,
+        address: POSTAL_ADDRESS,
       },
     ],
   };

@@ -1,6 +1,20 @@
-// Citas curadas de las reseñas de Google publicadas en /reviews (app/reviews/page.tsx).
+// Citas curadas de las reseñas publicadas en /reviews (app/reviews/page.tsx).
 // Extractos textuales — NO inventar ni editar el contenido; si se agregan,
-// deben venir de esa misma fuente. Rating real de cada autor.
+// deben venir de esa misma fuente.
+//
+// 🔴 17 oct 2026: esas 25 reseñas NO están comprobadas contra la ficha de Google (ver
+// el comentario de REVIEWS en app/reviews/page.tsx). Por eso /reservar ya no firma
+// estas citas «Google» y el resumen del pago no cita ninguna. Hasta que Manolo enlace
+// cada una con su reseña real (o las cambie por reseñas copiadas de la ficha), que
+// ninguna página las presente como reseñas de Google.
+//
+// 17 oct 2026: salieron dos citas que se enseñaban en /reservar y que el sitio no
+// puede sostener: la de Diana Muñiz («El hotel más cercano a Las Pozas y sin duda el
+// mejor»; nuestra propia comparativa pone Casa Caracol más cerca) y la de Jorge
+// Mendoza («El mejor hotel de Xilitla sin ninguna duda»; Posada James tiene mejor
+// nota). Siguen en /reviews hasta que Manolo confirme cada reseña con su enlace.
+// No se editó ninguna: se quitaron enteras. Patricia Vega pasa a ser la cita
+// general (su texto no habla de una suite).
 
 export interface ReviewQuote {
   name: string;
@@ -13,15 +27,7 @@ export interface ReviewQuote {
 
 export const REVIEW_QUOTES: ReviewQuote[] = [
   {
-    name: 'Diana Muñiz', location: 'Monterrey', rating: 5, room: null,
-    text: 'Vine tres veces ya. Cada vez que llego me reciben como si hubiera faltado tiempo. El hotel más cercano a Las Pozas y sin duda el mejor.',
-  },
-  {
-    name: 'Jorge Mendoza', location: 'Monterrey', rating: 5, room: null,
-    text: 'El mejor hotel de Xilitla sin ninguna duda. Habitación impecable, restaurante excelente y ubicación perfecta. A 5 minutos caminando de Las Pozas.',
-  },
-  {
-    name: 'Patricia Vega', location: 'Querétaro', rating: 5, room: 'Orquídeas 2',
+    name: 'Patricia Vega', location: 'Querétaro', rating: 5, room: null,
     text: 'Llegamos tarde por tráfico y nos esperaron con la cena lista. Ese detalle lo dice todo sobre cómo tratan a sus huéspedes.',
   },
   {
@@ -75,14 +81,21 @@ export function getQuoteForRoom(roomName: string, roomId = 0): ReviewQuote {
   const exact = REVIEW_QUOTES.find(q => q.room === roomName);
   if (exact) return exact;
   const generals = REVIEW_QUOTES.filter(q => q.room === null);
-  return generals[roomId % generals.length];
+  // Sin citas generales, `roomId % 0` daría NaN y /reservar pintaría `undefined`.
+  const pool = generals.length ? generals : REVIEW_QUOTES;
+  return pool[roomId % pool.length];
 }
 
-/** Citas generales para la franja de reseñas de /reservar */
+/**
+ * Citas para la franja de reseñas de /reservar (la primera va también en la barra
+ * lateral). Se buscan por nombre, no por posición: hasta el 17 oct 2026 eran
+ * REVIEW_QUOTES[0..2] y quitar una cita cambiaba en silencio las que se ven.
+ */
+const CITAS_FRANJA = ['Patricia Vega', 'Claudia Méndez', 'Ricardo Salazar'];
+
 export function getStripQuotes(): ReviewQuote[] {
-  return [
-    REVIEW_QUOTES[0], // Diana — "vine tres veces"
-    REVIEW_QUOTES[1], // Jorge — "el mejor hotel de Xilitla"
-    REVIEW_QUOTES[2], // Patricia — "nos esperaron con la cena lista"
-  ];
+  const citas = CITAS_FRANJA
+    .map(nombre => REVIEW_QUOTES.find(q => q.name === nombre))
+    .filter((q): q is ReviewQuote => Boolean(q));
+  return citas.length ? citas : REVIEW_QUOTES.slice(0, 3);
 }

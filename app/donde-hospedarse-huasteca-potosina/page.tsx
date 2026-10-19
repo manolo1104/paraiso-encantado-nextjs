@@ -8,6 +8,14 @@ import { HOTEL, lodgingSchema, breadcrumbSchema, faqSchema } from '@/lib/seo-hot
 const URL = `${HOTEL.url}/donde-hospedarse-huasteca-potosina`;
 const ACTUALIZADO = 'octubre de 2026';
 
+// Foto real de Las Pozas (CC0, Wikimedia Commons), la misma de /xilitla. Hasta el
+// 17 oct 2026 el hero y la tarjeta para compartir eran jardin-edward-james-aerial.png,
+// hecha con IA, con un alt que decía «vista aérea».
+const FOTO_LAS_POZAS = '/images/las-pozas/columnas-las-pozas-edward-james-xilitla.jpg';
+const FOTO_LAS_POZAS_OG = '/images/las-pozas/columnas-las-pozas-edward-james-xilitla-og.jpg';
+const FOTO_LAS_POZAS_ALT =
+  'Columnas de concreto de Las Pozas, el jardín surrealista de Edward James, entre la selva de Xilitla';
+
 export const metadata: Metadata = {
   title: 'Dónde Hospedarse en la Huasteca Potosina · Xilitla o Valles',
   description:
@@ -20,9 +28,9 @@ export const metadata: Metadata = {
     url: URL,
     type: 'article',
     images: [{
-      url: `${HOTEL.url}/images/atracciones/jardin-edward-james-aerial.png`,
+      url: `${HOTEL.url}${FOTO_LAS_POZAS_OG}`,
       width: 1200, height: 630,
-      alt: 'Vista aérea del Jardín Surrealista de Edward James en Xilitla, Huasteca Potosina',
+      alt: FOTO_LAS_POZAS_ALT,
     }],
   },
 };
@@ -46,7 +54,9 @@ const FAQS = [
   },
   {
     q: '¿Cuál es la mejor época para ir?',
-    a: 'De noviembre a mayo. En temporada de lluvias, de junio a septiembre, el agua de los ríos baja turbia y algunos tours de río se cancelan por seguridad; el paisaje está más verde, pero las fotos turquesa que la gente busca son de temporada seca.',
+    // Lluvias de junio a OCTUBRE (17 oct 2026): decía «junio a septiembre» y dejaba
+    // octubre sin temporada; la hoja de datos fija la seca de noviembre a mayo.
+    a: 'De noviembre a mayo. En temporada de lluvias, de junio a octubre, el agua de los ríos baja turbia y algunos tours de río se cancelan por seguridad; el paisaje está más verde, pero las fotos turquesa que la gente busca son de temporada seca.',
   },
 ];
 
@@ -56,7 +66,9 @@ const schema = {
     lodgingSchema({
       description: `Hotel boutique en Xilitla, base para visitar Las Pozas y la sierra de la Huasteca Potosina.`,
       url: URL,
-      image: `${HOTEL.url}/images/atracciones/jardin-edward-james-aerial.png`,
+      // La imagen del HOTEL es una foto del hotel, no del jardín (la de Las Pozas
+      // es la de la página).
+      image: `${HOTEL.url}/images/JUNGLA/PORTADA.JPG`,
     }),
     breadcrumbSchema([
       { name: 'Inicio', url: HOTEL.url },
@@ -73,8 +85,8 @@ export default function DondeHospedarsePage() {
       <main className={styles.main}>
 
         <SeoHero
-          image="/images/atracciones/jardin-edward-james-aerial.png"
-          imageAlt="Vista aérea del Jardín Surrealista de Edward James, Las Pozas, Xilitla"
+          image={FOTO_LAS_POZAS}
+          imageAlt={FOTO_LAS_POZAS_ALT}
           breadcrumb="Dónde hospedarse en la Huasteca Potosina"
           eyebrow="Cómo armar el viaje · Huasteca Potosina"
           title="Dónde Hospedarse en la"
@@ -169,7 +181,7 @@ export default function DondeHospedarsePage() {
         <SeoCta
           title="Empieza tu viaje"
           titleEm="por Xilitla"
-          body="Duerme a cinco minutos de Las Pozas, entra al jardín en el primer turno, antes que los grupos, y sal al norte con el día completo por delante."
+          body={`Duerme a ${HOTEL.minutosCaminandoALasPozas} minutos de Las Pozas, entra al jardín en el primer turno, antes que los grupos, y sal al norte con el día completo por delante.`}
           note={HOTEL.cancelacion}
         />
       </main>

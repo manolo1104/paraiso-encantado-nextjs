@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
+import { Fragment } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import remarkGfm from 'remark-gfm';
 import { getAllSlugs, getAllPosts, getPost } from '@/lib/blog';
+import { ENTITY_IDS, LAS_POZAS, EDWARD_JAMES, XILITLA } from '@/lib/seo-entidades';
 import TablaDeslizable from '@/components/TablaDeslizable';
+import FinDeTemporada from '@/components/FinDeTemporada';
 import styles from './article.module.css';
 
 // Sin remark-gfm, MDX no reconoce las tablas de Markdown: hasta oct 2026 las 8
@@ -118,6 +121,22 @@ const AUTHORS: Record<string, { name: string; role: string; bio: string; color: 
   },
 };
 
+// De qué trata cada guía (`about`) y qué nombra de paso (`mentions`), con las entidades
+// verificadas de lib/seo-entidades.ts (Wikidata + Wikipedia). Sirve para que un buscador
+// con IA no tenga que adivinar de qué «Las Pozas» o de qué «Xilitla» se habla (hay otro
+// Xilitla en Hidalgo). Solo donde la entidad es de verdad el tema o sale en el texto.
+const ENTIDADES: Record<string, { about?: object[]; mentions?: object[] }> = {
+  'las-pozas-edward-james-guia': { about: [LAS_POZAS], mentions: [EDWARD_JAMES, XILITLA] },
+  'como-llegar-a-xilitla': { about: [XILITLA] },
+  'mejor-epoca-visitar-xilitla': { about: [XILITLA], mentions: [LAS_POZAS] },
+  'temporada-lluvias-vs-seca-xilitla': { about: [XILITLA], mentions: [LAS_POZAS] },
+  'xilitla-con-ninos': { about: [XILITLA], mentions: [LAS_POZAS] },
+  'xantolo-en-xilitla': { mentions: [XILITLA, LAS_POZAS] },
+  'ruta-maestra-huasteca-potosina': { mentions: [XILITLA, LAS_POZAS] },
+  'que-llevar-a-xilitla': { mentions: [XILITLA, LAS_POZAS] },
+  'gastronomia-xilitla-huasteca': { mentions: [XILITLA] },
+};
+
 // HowTo JSON-LD por artículo: solo para guías con pasos de ruta visibles y reales.
 // El texto refleja los pasos numerados que aparecen en el cuerpo del artículo.
 const HOWTO_SCHEMAS: Record<string, object> = {
@@ -206,20 +225,28 @@ export default async function ArticlePage({ params }: Props) {
   const headings = extractHeadings(post.content);
   const showToc = headings.length >= 4;
 
+  // Migas de 3 niveles, las mismas en la página y en el JSON-LD (oct 2026). Antes el
+  // JSON-LD tenía 4, con un nivel de categoría que apuntaba también a /blog, y lo
+  // visible decía otra cosa («Blog › categoría»). Ahora las dos dicen lo mismo.
   const articleBreadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://www.paraisoencantado.com' },
-      { '@type': 'ListItem', position: 2, name: 'Blog de Viaje', item: 'https://www.paraisoencantado.com/blog' },
-      { '@type': 'ListItem', position: 3, name: post.category, item: 'https://www.paraisoencantado.com/blog' },
-      { '@type': 'ListItem', position: 4, name: post.title, item: `https://www.paraisoencantado.com/blog/${slug}` },
+      { '@type': 'ListItem', position: 2, name: 'Guías de viaje', item: 'https://www.paraisoencantado.com/blog' },
+      { '@type': 'ListItem', position: 3, name: post.title, item: `https://www.paraisoencantado.com/blog/${slug}` },
     ],
   };
+
+  // La fecha que se enseña es la del último cambio real (dateModified del frontmatter):
+  // hasta oct 2026 la guía de Las Pozas, reescrita el 2 oct, enseñaba «1 de mayo».
+  const fechaVisible = post.dateModified ?? post.date;
+  const actualizado = Boolean(post.dateModified && post.dateModified !== post.date);
 
   const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
+    '@id': `https://www.paraisoencantado.com/blog/${slug}#article`,
     headline: post.title,
     description: post.description,
     image: {
@@ -231,23 +258,28 @@ export default async function ArticlePage({ params }: Props) {
     dateModified: post.dateModified ?? post.date,
     wordCount: post.readTime * 200,
     inLanguage: 'es-MX',
+    ...(ENTIDADES[slug] ?? {}),
+    isPartOf: { '@id': ENTITY_IDS.website },
+    // Solo h1: las clases .article-description y .article-intro que había aquí no
+    // existen en el HTML, así que no señalaban nada.
     speakable: {
       '@type': 'SpeakableSpecification',
-      cssSelector: ['h1', '.article-description', '.article-intro'],
+      cssSelector: ['h1'],
     },
     author: {
       '@type': 'Person',
       name: authorProfile.name,
       jobTitle: authorProfile.role,
       url: authorProfile.sameAs,
-      worksFor: {
-        '@type': 'Hotel',
-        name: 'Hotel Paraíso Encantado',
-        url: 'https://www.paraisoencantado.com',
-      },
+      // El hotel de la portada (#hotel), no un «Hotel» anónimo más.
+      worksFor: { '@id': ENTITY_IDS.hotel },
     },
+    // El mismo `#hotel` con el MISMO tipo que en todo el sitio (17 oct 2026: decía
+    // Organization). Hotel es una Organization para schema.org, así que sigue valiendo
+    // como `publisher`.
     publisher: {
-      '@type': 'Organization',
+      '@type': 'Hotel',
+      '@id': ENTITY_IDS.hotel,
       name: 'Hotel Paraíso Encantado',
       url: 'https://www.paraisoencantado.com',
       logo: {
@@ -280,7 +312,10 @@ export default async function ArticlePage({ params }: Props) {
         }
       : null;
 
-  const INTERNAL_LINKS: Record<string, { text: string; links: { href: string; label: string; desc: string }[] }> = {
+  // `fin` (opcional, ISO en UTC): la tarjeta se esconde sola en el navegador al
+  // pasar esa fecha. Para las de llegada fija (Xantolo): esta página se compila una
+  // vez y /reservar descarta una llegada que ya pasó.
+  const INTERNAL_LINKS: Record<string, { text: string; links: { href: string; label: string; desc: string; fin?: string }[] }> = {
     'como-llegar-a-xilitla': {
       text: 'Ya sabes cómo llegar — ahora elige dónde quedarte:',
       links: [
@@ -297,15 +332,18 @@ export default async function ArticlePage({ params }: Props) {
         { href: '/reservar', label: 'Reservar suite', desc: 'Llegas a pie a tu turno de la mañana' },
       ],
     },
-    // Artículo de temporada (oct 2026): las noches del 30 y 31 de octubre ya
-    // estaban llenas al publicarlo, por eso el primer enlace va directo a las
-    // fechas que sí tenían cuartos.
+    // Artículo de temporada (oct 2026). Al 16 oct, las noches del 30 y 31 de octubre
+    // estaban llenas y la del 1 de noviembre casi (el 13 oct, llena); las que sí tenían
+    // cuartos eran las de entre semana de alrededor: el jueves 29 y del lunes 2 al
+    // jueves 5. Por eso los dos primeros enlaces van ahí y no al 1 de noviembre, como
+    // antes. No prometen cupo: /reservar enseña la disponibilidad real de cada noche.
     'xantolo-en-xilitla': {
       text: 'Para vivir el Xantolo desde Xilitla:',
       links: [
-        { href: '/reservar?checkin=2026-11-01&checkout=2026-11-03&adults=2', label: 'Suites del 1 al 3 de noviembre', desc: 'Disponibilidad real, sin comisiones' },
+        // `fin` = medianoche de México del día de llegada (la misma de XantoloSection).
+        { href: '/reservar?checkin=2026-10-29&checkout=2026-10-30&adults=2', label: 'Suites del 29 al 30 de octubre', desc: 'Jueves: se levantan los arcos y los altares', fin: '2026-10-30T06:00:00Z' },
+        { href: '/reservar?checkin=2026-11-02&checkout=2026-11-04&adults=2', label: 'Suites del 2 al 4 de noviembre', desc: 'Del lunes de Fieles Difuntos en adelante', fin: '2026-11-03T06:00:00Z' },
         { href: '/blog/las-pozas-edward-james-guia', label: 'Las Pozas: reserva tu turno', desc: 'En días de fiesta los turnos se agotan' },
-        { href: '/hoteles-en-xilitla', label: 'Otros hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas' },
       ],
     },
     'cascada-tamul-guia-completa': {
@@ -418,9 +456,9 @@ export default async function ArticlePage({ params }: Props) {
             <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
               <Link href="/">Inicio</Link>
               <span aria-hidden="true"> › </span>
-              <Link href="/blog">Blog</Link>
+              <Link href="/blog">Guías de viaje</Link>
               <span aria-hidden="true"> › </span>
-              <span>{post.category}</span>
+              <span aria-current="page">{post.title}</span>
             </nav>
           </div>
         </div>
@@ -434,8 +472,9 @@ export default async function ArticlePage({ params }: Props) {
               <div className={styles.meta}>
                 <span className={styles.metaAuthor}>{authorProfile.name}</span>
                 <span aria-hidden="true">·</span>
-                <time dateTime={post.date}>
-                  {new Date(post.date + 'T12:00:00').toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
+                <time dateTime={fechaVisible}>
+                  {actualizado ? 'Actualizado el ' : ''}
+                  {new Date(fechaVisible + 'T12:00:00').toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </time>
                 <span aria-hidden="true">·</span>
                 <span>{post.readTime} min de lectura</span>
@@ -487,12 +526,17 @@ export default async function ArticlePage({ params }: Props) {
               <div className={styles.internalLinks}>
                 <p className={styles.internalLinksTitle}>{internalLinks.text}</p>
                 <div className={styles.internalLinksGrid}>
-                  {internalLinks.links.map((l) => (
-                    <Link key={l.href} href={l.href} className={styles.internalLinkCard}>
-                      <span className={styles.internalLinkLabel}>{l.label} →</span>
-                      <span className={styles.internalLinkDesc}>{l.desc}</span>
-                    </Link>
-                  ))}
+                  {internalLinks.links.map((l) => {
+                    const tarjeta = (
+                      <Link href={l.href} className={styles.internalLinkCard}>
+                        <span className={styles.internalLinkLabel}>{l.label} →</span>
+                        <span className={styles.internalLinkDesc}>{l.desc}</span>
+                      </Link>
+                    );
+                    return l.fin
+                      ? <FinDeTemporada key={l.href} fin={l.fin}>{tarjeta}</FinDeTemporada>
+                      : <Fragment key={l.href}>{tarjeta}</Fragment>;
+                  })}
                 </div>
               </div>
             )}

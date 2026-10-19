@@ -12,6 +12,8 @@
  * una fuente pública, no entra en este archivo y no se publica.
  */
 
+import { PERFILES_HOTEL, XILITLA } from '@/lib/seo-entidades';
+
 export const HOTEL = {
   nombre: 'Hotel Paraíso Encantado',
   ciudad: 'Xilitla',
@@ -22,13 +24,16 @@ export const HOTEL = {
   whatsapp: 'https://wa.me/524891007679',
   url: 'https://www.paraisoencantado.com',
 
-  // Reseñas verificadas en Google (mismas cifras que el schema del resto del sitio)
+  // Calificación del perfil de Google del hotel (lib/seo-entidades.ts → PERFIL_GOOGLE).
+  // 523 hasta el 29 jun 2026; la ficha decía «4.5 con 540 opiniones» el 13 oct 2026.
+  // Entran unas 5 al mes: revisar la ficha cada mes y cambiar SOLO este número.
+  // Se publica como «reseñas en Google», no «verificadas»: Google no comprueba estancias.
   rating: 4.5,
-  reviewCount: 523,
+  reviewCount: 540,
 
   // Inventario real (data/suites.ts)
   suites: 13,
-  suitesConSpaPrivado: 4,        // Jungla, LindaVista, Flor de Lis 1, Flor de Lis 2
+  suitesConSpaPrivado: 4,        // Jungla, LindaVista, Flor de Liz 1, Flor de Liz 2 (así en la hoja y en lib/booking.ts)
   capacidadMaxima: 8,            // Helechos 2
   precioDesde: 1500,             // MXN/noche, 2 personas
   precioSuiteConSpa: 2000,       // MXN/noche, 2 personas — las 4 con spa privado
@@ -39,8 +44,13 @@ export const HOTEL = {
   spaClimatizado: true,
   spaAgua: 'Agua caliente climatizada, en la terraza privada de la suite',
 
-  // Distancias verificadas. Se publican tal cual ("a 400 m, 5 min a pie"), sin el
-  // superlativo "el hotel más cercano": Casa Caracol está a 300 m (2 oct 2026).
+  // Distancias publicadas ("a 400 m, 5 min a pie"), sin el superlativo "el hotel
+  // más cercano": Casa Caracol está a 300 m (2 oct 2026).
+  // 🔴 NO medidas (16 oct 2026): con las coordenadas del propio sitio (hotel
+  // 21.3950,-98.9915; Las Pozas 21.3967,-98.9966) salen 561 m EN LÍNEA RECTA, y la
+  // ficha de Google dice 560 m. Hasta que Manolo lo mida caminando, ningún «400»
+  // ni «5 min» se escribe a mano: todo sale de estas dos constantes, así que
+  // corregirlas aquí corrige el sitio entero.
   metrosALasPozas: 400,
   minutosCaminandoALasPozas: 5,
 
@@ -86,6 +96,10 @@ export const AGGREGATE_RATING = {
   bestRating: 5,
 } as const;
 
+// El CP del sitio es 79900 (16 oct 2026): varias páginas y correos decían 79910,
+// que no es el del hotel. Ojo: según SEPOMEX, La Conchita podría ser 79903;
+// NO comprobado. Si Correos de México confirma otro, se cambia AQUÍ (y en
+// `HOTEL.direccion`) y todas las páginas que usan esta dirección lo toman solas.
 export const POSTAL_ADDRESS = {
   '@type': 'PostalAddress',
   streetAddress: 'Camino La Conchita–Las Pozas #10, La Conchita',
@@ -93,6 +107,13 @@ export const POSTAL_ADDRESS = {
   addressRegion: 'San Luis Potosí',
   postalCode: '79900',
   addressCountry: 'MX',
+} as const;
+
+/** Punto del hotel en OpenStreetMap (2 oct 2026); el anterior (21.383, -99.002) caía a 1.6 km. */
+export const GEO_HOTEL = {
+  '@type': 'GeoCoordinates',
+  latitude: 21.395,
+  longitude: -98.9915,
 } as const;
 
 /**
@@ -113,10 +134,27 @@ export const POSTAL_ADDRESS = {
  *    `description`, que sí admite matiz.
  * 3. **`url` es la del hotel; la de la página va en `mainEntityOfPage`.** La
  *    entidad vive en el dominio; la página solo la describe.
+ *
+ * Desde el 16 oct 2026 además:
+ * - **`@type` es `Hotel`**, igual que la portada: una sola entidad con un solo tipo.
+ * - **Lleva `geo`, `containedInPlace` (Xilitla en Wikidata) y `sameAs`** de un solo
+ *   lugar, para que ninguna página los escriba a mano distinto.
+ * - **`aggregateRating` solo con `calificacion: true`**, y solo en páginas que
+ *   MUESTRAN el 4.5 y las reseñas en el texto. Google pide que el marcado describa
+ *   lo que se ve, y no da estrellas a las reseñas que un hotel publica de sí mismo.
+ *   Como todas las páginas hablan del mismo `@id`, la calificación declarada en la
+ *   portada ya es del hotel; no hace falta repetirla donde no se lee.
  */
-export function lodgingSchema(opts: { name?: string; description: string; url: string; image?: string }) {
+export function lodgingSchema(opts: {
+  name?: string;
+  description: string;
+  url: string;
+  image?: string;
+  /** true solo si la página muestra la calificación de Google en el texto. */
+  calificacion?: boolean;
+}) {
   return {
-    '@type': 'LodgingBusiness',
+    '@type': 'Hotel',
     '@id': `${HOTEL.url}/#hotel`,
     name: opts.name ?? HOTEL.nombre,
     description: opts.description,
@@ -124,7 +162,10 @@ export function lodgingSchema(opts: { name?: string; description: string; url: s
     mainEntityOfPage: opts.url,
     telephone: HOTEL.telefono,
     address: POSTAL_ADDRESS,
-    aggregateRating: AGGREGATE_RATING,
+    geo: GEO_HOTEL,
+    containedInPlace: { '@id': XILITLA['@id'] },
+    sameAs: [...PERFILES_HOTEL],
+    ...(opts.calificacion ? { aggregateRating: AGGREGATE_RATING } : {}),
     priceRange: '$$',
     ...(opts.image ? { image: opts.image } : {}),
   };

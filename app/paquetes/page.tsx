@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Check, Calendar, Users, Coffee, MapPin } from 'lucide-react';
 import TiltCard from '@/components/TiltCard';
 import FloatingLeaves from '@/components/FloatingLeaves';
+import { HOTEL } from '@/lib/seo-hotel';
 import styles from './paquetes.module.css';
 
 export const metadata: Metadata = {
@@ -190,7 +191,8 @@ export default function PaquetesPage() {
         <div className={styles.trustBanner} role="list" aria-label="Garantías de reserva directa" data-reveal>
           <FloatingLeaves />
           <span role="listitem" className={styles.trustItem}>
-            <span className={styles.stars} aria-hidden="true">★★★★★</span> 4.5 · 523 reseñas Google
+            {/* Cifras de Google de lib/seo-hotel.ts (540 el 13 oct 2026; decía 523). */}
+            <span className={styles.stars} aria-hidden="true">★★★★★</span> {HOTEL.rating} · {HOTEL.reviewCount} reseñas Google
           </span>
           <span className={styles.trustSep} aria-hidden="true" />
           <span role="listitem" className={styles.trustItem}>Reembolso hasta 7 días antes</span>

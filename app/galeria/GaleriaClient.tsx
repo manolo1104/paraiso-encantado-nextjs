@@ -70,8 +70,12 @@ const images: GalleryImage[] = [
   { src: '/images/RESTAURANTE/DSCF1275.jpg', alt: 'El Papán — mesas con vista a la selva', category: 'Restaurante' },
   { src: '/images/RESTAURANTE/sirviendo-zacahuil.webp', alt: 'Zacahuil tradicional — especialidad de El Papán Huasteco', category: 'Restaurante', aspect: 'wide' },
   // Naturaleza
-  { src: '/images/atracciones/jardin-edward-james-aerial.png', alt: 'Jardín de Edward James — Las Pozas, Xilitla', category: 'Naturaleza', aspect: 'tall' },
-  { src: '/images/atracciones/ruta-surrealista-pozas.png', alt: 'Las Pozas — Jardín Surrealista de Edward James, Xilitla', category: 'Naturaleza', aspect: 'wide' },
+  // Oct 2026: las dos fotos de Las Pozas que había aquí (jardin-edward-james-aerial.png y
+  // ruta-surrealista-pozas.png) estaban hechas con IA y traían la estrella de Gemini, en
+  // una galería que promete fotos reales. Va una foto real (CC0, Wikimedia Commons, de
+  // A01701823 SergioC) en celda normal: simulada la cuadrícula de 4, 3 y 2 columnas, así
+  // no se abre ningún hueco nuevo (con «tall» o «wide», sí).
+  { src: '/images/las-pozas/columnas-las-pozas-edward-james-xilitla.jpg', alt: 'Columnas de concreto de Las Pozas, el jardín surrealista de Edward James, entre la selva de Xilitla', category: 'Naturaleza' },
   { src: '/images/atracciones/cascada_de_tamul.jpg', alt: 'Cascada de Tamul — Huasteca Potosina', category: 'Naturaleza' },
   { src: '/images/atracciones/cascadas_de_micos.jpg', alt: 'Cascadas de Micos — San Luis Potosí', category: 'Naturaleza', aspect: 'wide' },
   { src: '/images/atracciones/puente_de_dios.jpg', alt: 'Puente de Dios — aguas turquesas de la Huasteca', category: 'Naturaleza' },
