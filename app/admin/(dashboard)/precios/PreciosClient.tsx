@@ -5,7 +5,7 @@ import { RefreshCw, Trash2, Plus, Sparkles, Check, X, CalendarDays, CalendarPlus
 import {
   BOOKING_ROOMS, calcNights, calcRoomStayTotal, formatMXN, getRoomBasePrice, getRoomNightPrice,
 } from '@/lib/booking';
-import { AjusteDia, ConfigPrecios, ReglaPrecio, TipoRegla, factoresAplicados } from '@/lib/precios';
+import { AjusteDia, ConfigPrecios, ReglaPrecio, TipoRegla, esAprobacion, factoresAplicados } from '@/lib/precios';
 import type { ImpactoPrecios } from '@/lib/admin/precios-impacto';
 import type { SenalesNoche } from '@/lib/admin/demanda';
 import { desglosarNoche, pctDeFactor, type DesgloseNoche } from './desglose';
@@ -160,7 +160,8 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
     return m;
   }, [senales]);
 
-  /** Lo que de verdad se cobra: solo los ajustes aplicados. */
+  /** Lo que de verdad se cobra: los ajustes aplicados y, en una noche con
+   *  propuesta pendiente, la regla que cobra mientras espera (`factorVigente`). */
   const factores = useMemo(() => factoresAplicados(ajustes), [ajustes]);
 
   const diasDelMes = useMemo(() => new Date(mesVista.y, mesVista.m + 1, 0).getDate(), [mesVista]);
@@ -210,9 +211,11 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
   /**
    * Las propuestas con lo que cuesta cada decisión, y 🔴 lo que cuesta NO decidir.
    *
-   * La hoja guarda UNA fila por noche, así que mientras una propuesta espera, esa
-   * noche no tiene fila aplicada y la web cobra el PRECIO BASE: la temporada del
-   * dueño no se cobra. Esperar no es neutral, y el panel tiene que decirlo.
+   * Desde oct 2026 una propuesta que espera cobra la REGLA del dueño
+   * (`factorVigente`, columna G de PreciosDias), así que `pierde` suele ser 0.
+   * Solo una propuesta escrita antes de ese cambio, sin `factorVigente`, cobra
+   * el PRECIO BASE hasta la siguiente corrida de las reglas: para esas sigue el
+   * aviso de abajo.
    */
   const pendientes = useMemo(() => {
     const filas = propuestas.map(p => {
@@ -338,7 +341,9 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
     setSalida(null);
     const a = porFecha.get(fecha);
     setPctDia(a && a.estado === 'aplicado' ? pctDeFactor(a.factor) : 0);
-    setMotivoDia(a?.origen === 'manual' ? a.motivo : '');
+    // Una aprobación también es fila manual, pero su motivo («Aprobado: …») no
+    // es suyo: si la retoca a mano, ya no es lo que aprobó.
+    setMotivoDia(a?.origen === 'manual' && !esAprobacion(a) ? a.motivo : '');
   }
 
   function cerrarDetalle() {
@@ -358,14 +363,15 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
     setMotivoDia('');
   }
 
-  async function guardarDia(pct: number) {
+  /** `fijar`: el botón «Fijar esta noche». Sin él, 0% le quita el ajuste (vuelve a tus reglas). */
+  async function guardarDia(pct: number, fijar = false) {
     if (!diaSel) return;
     setCargando(true);
     try {
       const res = await fetch('/api/admin/precios/dia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fecha: diaSel, pct, motivo: motivoDia }),
+        body: JSON.stringify({ fecha: diaSel, pct, motivo: motivoDia, fijar }),
       });
       const d = await res.json();
       if (!res.ok) { alert(d?.error || 'No se pudo guardar la noche.'); return; }
@@ -391,7 +397,7 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
       await refrescar();
       setAviso(
         aprobar
-          ? `Listo: ${fechas.length} ${fechas.length === 1 ? 'noche aprobada' : 'noches aprobadas'}. Ya cobran lo que proponía la IA.`
+          ? `Listo: ${fechas.length} ${fechas.length === 1 ? 'noche aprobada' : 'noches aprobadas'}. Ya cobran lo que proponía la IA y se quedan así hasta que tú las cambies («Volver a automático» en cada noche).`
           : `Listo: ${fechas.length} ${fechas.length === 1 ? 'noche rechazada' : 'noches rechazadas'}. Vuelven a cobrar lo que dicen tus reglas.`
       );
       // La fila dejó de estar pendiente: el detalle abierto ya no corresponde.
@@ -502,6 +508,7 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
 
   const desgloseSel = diaSel ? desglosar(diaSel) : null;
   const propuestaSel = diaSel ? pendientes.filas.find(p => p.fecha === diaSel) : undefined;
+  const aprobadaSel = diaSel ? esAprobacion(porFecha.get(diaSel)) : false;
 
   /** Las noches que cubre la estancia seleccionada, para sombrearlas. */
   const nochesEnRango = useMemo(() => {
@@ -618,12 +625,12 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
 
           {pendientes.nochesQuePierden > 0 && (
             <p className={styles.pendientesAlerta}>
-              🔴 Mientras no contestes, {pendientes.nochesQuePierden === 1
+              🔴 Ahora mismo {pendientes.nochesQuePierden === 1
                 ? 'una de esas noches cobra'
                 : `${pendientes.nochesQuePierden} de esas noches cobran`}{' '}
-              tu precio de lista en vez de tu temporada. La hoja guarda una sola fila por
-              noche, así que una sugerencia esperando deja esa noche sin tu recargo.
-              Aprobar o rechazar, cualquiera de las dos, lo arregla.
+              tu precio de lista en vez de tus reglas: son sugerencias de antes del arreglo
+              de oct 2026. Desde la corrida de las 6:00 (o con «Recalcular el calendario»)
+              cobran tus reglas mientras decides. Aprobar o rechazar lo arregla ya.
             </p>
           )}
 
@@ -792,7 +799,11 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
                       </span>
                     )}
                   </p>
-                  <p className={styles.reciboQuien}>{QUIEN_LABEL[desgloseSel.quien]}</p>
+                  <p className={styles.reciboQuien}>
+                    {/* Una propuesta aprobada queda como fila manual (para que la IA no
+                        la deshaga): se distingue de un ajuste a mano por su motivo. */}
+                    {aprobadaSel ? 'Lo aprobaste tú: era una sugerencia de la IA' : QUIEN_LABEL[desgloseSel.quien]}
+                  </p>
 
                   {desgloseSel.reglas.length > 0 ? (
                     <ul className={styles.reciboLineas}>
@@ -823,7 +834,7 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
 
                   {(desgloseSel.quien === 'ia' || desgloseSel.quien === 'manual') && desgloseSel.reglas.length > 0 && (
                     <p className={styles.reciboHint}>
-                      {desgloseSel.quien === 'manual' ? 'Tu ajuste a mano manda' : 'La IA manda'} sobre tus reglas,
+                      {aprobadaSel ? 'Lo que aprobaste manda' : desgloseSel.quien === 'manual' ? 'Tu ajuste a mano manda' : 'La IA manda'} sobre tus reglas,
                       que pedían {pctDeFactor(desgloseSel.factorDeReglas) > 0 ? '+' : ''}
                       {pctDeFactor(desgloseSel.factorDeReglas)}% ({formatMXN(getRoomNightPrice(SUITE_REF, 2, diaSel, { [diaSel]: desgloseSel.factorDeReglas }))}).
                     </p>
@@ -840,7 +851,9 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
                     if (!sn) return null;
                     return (
                       <p className={styles.reciboDemanda}>
-                        <strong>Demanda:</strong> {sn.ocupadas} de {TOTAL_SUITES} suites ocupadas ({sn.ocupacionPct}%)
+                        <strong>Demanda:</strong> {sn.ocupadas} de {TOTAL_SUITES} suites cerradas
+                        {/* Lo mismo que lee la IA: solo las vendidas son demanda. */}
+                        {sn.vendidas !== undefined && ` (${sn.vendidas} vendidas · ${Math.max(0, sn.ocupadas - sn.vendidas - (sn.ota ?? 0))} bloqueadas${sn.ota ? ` · ${sn.ota} de Expedia` : ''})`}
                         {' · '}{sn.ritmo7d} {sn.ritmo7d === 1 ? 'reserva' : 'reservas'} nuevas esta semana
                         {' · '}{sn.busquedas7d} {sn.busquedas7d === 1 ? 'búsqueda' : 'búsquedas'}
                         {sn.sinCupo7d > 0 && `, ${sn.sinCupo7d} sin encontrar lugar`}
@@ -945,7 +958,8 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
                     <span className={styles.preview}>
                       {SUITE_REF.name}: {formatMXN(getRoomNightPrice(SUITE_REF, 2, diaSel, { [diaSel]: 1 + pctDia / 100 }))}
                     </span>
-                    <button className={styles.primaryBtn} onClick={() => guardarDia(pctDia)} disabled={cargando}>
+                    {/* `fijar`: con 0% queda fija a precio de lista (antes era igual que «Quitar ajuste»). */}
+                    <button className={styles.primaryBtn} onClick={() => guardarDia(pctDia, true)} disabled={cargando}>
                       <Check size={14} /> Fijar esta noche
                     </button>
                     <button className={styles.secondaryBtn} onClick={() => guardarDia(0)} disabled={cargando}>
@@ -992,6 +1006,10 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
                 Nunca baja de <strong>−{Math.abs(config.pisoPct)}%</strong> ni sube de{' '}
                 <strong>+{config.techoPct}%</strong> de tu precio de lista. La IA mueve sola hasta{' '}
                 <strong>±{config.bandaAutoPct}%</strong>; más que eso te lo pregunta.{' '}
+                {/* Los dos interruptores de oct 2026 se cambian en la hoja Config
+                    (precios_ia_sube_entre_semana, precios_semana_cede_a_temporada). */}
+                {!config.iaSubeEntreSemana && <>De domingo a jueves, fuera de temporada, la IA <strong>solo puede bajar</strong>. </>}
+                {config.semanaCedeATemporada && <>En temporada no entra tu rebaja de semana: manda la temporada. </>}
                 <button className={styles.linkBtn} onClick={() => setEditandoLimites(true)}>cambiar</button>
               </p>
             ) : (
@@ -1082,9 +1100,9 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
                 )}
               </div>
 
-              {formRegla.tipo === 'finde' && (
+              {(formRegla.tipo === 'finde' || formRegla.tipo === 'ocupacion' || formRegla.tipo === 'ultimahora') && (
                 <label className={styles.field} style={{ marginBottom: 12 }}>
-                  Días que aplica
+                  {formRegla.tipo === 'finde' ? 'Días que aplica' : 'Solo estos días (opcional: sin marcar, todos)'}
                   <span className={styles.chips}>
                     {DIAS_LARGO.map((nombre, i) => (
                       <button
@@ -1105,8 +1123,8 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
               <p className={styles.hint}>
                 {formRegla.tipo === 'temporada' && 'Sube o baja todas las noches dentro del rango. Es la que más dinero mueve.'}
                 {formRegla.tipo === 'finde' && 'Sube o baja según el día de la semana. Viernes y sábado son los candidatos.'}
-                {formRegla.tipo === 'ocupacion' && `Solo entra cuando esa noche ya tiene vendido ese porcentaje de las ${TOTAL_SUITES} suites.`}
-                {formRegla.tipo === 'ultimahora' && 'Solo entra si falta poco Y la noche sigue por debajo del 50% vendida. Empieza con −5%: es la única regla que puede enseñarle a tu cliente a esperar el descuento.'}
+                {formRegla.tipo === 'ocupacion' && `Solo entra cuando esa noche ya tiene cerrado ese porcentaje de las ${TOTAL_SUITES} suites (vendidas, bloqueadas o de Expedia).`}
+                {formRegla.tipo === 'ultimahora' && 'Solo entra si falta poco Y la noche sigue por debajo del 50% vendido (sin contar bloqueos ni noches de Expedia). Empieza con −5%: es la única regla que puede enseñarle a tu cliente a esperar el descuento.'}
               </p>
 
               {/* La prioridad sigue decidiendo quién gana entre dos reglas del mismo
@@ -1154,8 +1172,10 @@ export default function PreciosClient({ initial }: { initial: DatosPrecios }) {
                       <td>
                         {r.tipo === 'temporada' && `${fechaCorta(r.desde)} → ${fechaCorta(r.hasta)}`}
                         {r.tipo === 'finde' && r.dias.map(d => DIAS_LARGO[d]).join(', ')}
-                        {r.tipo === 'ocupacion' && `${r.umbral}% o más vendido`}
+                        {r.tipo === 'ocupacion' && `${r.umbral}% o más ocupado`}
                         {r.tipo === 'ultimahora' && `${r.umbral} días o menos para la llegada`}
+                        {(r.tipo === 'ocupacion' || r.tipo === 'ultimahora') && r.dias.length > 0 &&
+                          ` · solo ${r.dias.map(d => DIAS_LARGO[d]).join(', ')}`}
                       </td>
                       <td className={r.pct > 0 ? styles.reciboUp : styles.reciboDown} style={{ fontWeight: 600 }}>
                         {r.pct > 0 ? '+' : ''}{r.pct}%

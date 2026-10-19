@@ -1,6 +1,6 @@
 /**
  * precios-sheets.ts
- * Las hojas de los precios dinámicos. Tres pestañas nuevas + 4 llaves en Config.
+ * Las hojas de los precios dinámicos. Tres pestañas nuevas + 6 llaves en Config.
  *
  *   PreciosReglas     — lo que el dueño configura (temporadas, finde, ocupación, última hora)
  *   PreciosDias       — el calendario: un factor por noche, con su origen y estado
@@ -11,7 +11,12 @@
  *   cliente si Google revoca el token).
  * - NUNCA clear(hoja) antes de escribir: esa ventana vacía es el bug documentado
  *   en lib/sheets.ts:14-25. Se sobrescribe en sitio y solo se limpia la cola.
- * - Lectura que falla devuelve vacío: sin factores, el motor cobra el precio base.
+ * - Lectura que falla devuelve vacío SOLO para los que leen (la web, el correo,
+ *   el panel): sin factores, el motor cobra el precio base.
+ * - 🔴 Los que ESCRIBEN el calendario leen con las versiones `…Estricto`, que
+ *   lanzan: si Google falla al leer, la corrida no escribe nada. Antes un fallo
+ *   de lectura se volvía «no hay reglas» o «el calendario está vacío», y la
+ *   escritura siguiente lo hacía verdad.
  */
 import { getSheetsClient, sheetsCall } from '@/lib/sheets';
 import { parseFechaHojaMx, toMexicoDateStr } from '@/lib/date-mx';
@@ -27,7 +32,8 @@ const TAB_DIAS = 'PreciosDias';
 const TAB_HIST = 'PreciosHistorial';
 
 const HEAD_REGLAS = ['Id', 'Nombre', 'Tipo', 'Desde', 'Hasta', 'Dias', 'Umbral', 'Pct', 'Prioridad', 'Activa'];
-const HEAD_DIAS = ['Fecha', 'Factor', 'Origen', 'Motivo', 'Estado', 'AnalizadoEn'];
+// FactorVigente (columna G): solo en filas «propuesto», la regla que se cobra mientras el dueño decide.
+const HEAD_DIAS = ['Fecha', 'Factor', 'Origen', 'Motivo', 'Estado', 'AnalizadoEn', 'FactorVigente'];
 const HEAD_HIST = ['Cuando', 'Fecha', 'FactorAnterior', 'FactorNuevo', 'Origen', 'Motivo'];
 
 type Client = NonNullable<Awaited<ReturnType<typeof getSheetsClient>>>;
@@ -91,31 +97,64 @@ const LLAVES: Record<keyof ConfigPrecios, string> = {
   pisoPct: 'precios_piso_pct',
   techoPct: 'precios_techo_pct',
   bandaAutoPct: 'precios_banda_pct',
+  // Los dos interruptores de oct 2026. Se editan a mano en la hoja; si la llave
+  // no existe, quedan APAGADOS y todo cobra como antes de que existieran.
+  iaSubeEntreSemana: 'precios_ia_sube_entre_semana',
+  semanaCedeATemporada: 'precios_semana_cede_a_temporada',
 };
 
-export async function getConfigPrecios(): Promise<ConfigPrecios> {
+/**
+ * Se aceptan TRUE/1/sí porque la celda se edita a mano en Google Sheets y un
+ * `TRUE` (que es lo que pone la hoja al marcar una casilla) apagaba todo el
+ * sistema en silencio cuando aquí se exigía la cadena 'true'.
+ */
+function esVerdadero(valor: unknown): boolean {
+  return /^(true|1|si|sí|verdadero)$/i.test(String(valor ?? '').trim());
+}
+
+/**
+ * La configuración, o un ERROR si la hoja no se pudo leer.
+ *
+ * 🔴 Lo usan los que ESCRIBEN el calendario (`aplicarReglas`, la IA, las
+ * decisiones del panel). Con la versión tolerante, una lectura fallida se
+ * volvía la configuración por omisión sin que nadie se enterara, y con ella se
+ * recalculaba y se escribía todo el calendario.
+ */
+export async function getConfigPreciosEstricto(): Promise<ConfigPrecios> {
   const client = await getSheetsClient();
-  if (!client) return CONFIG_PRECIOS_DEFAULT;
+  if (!client) throw new Error('Sin conexión a la hoja: no se pudo leer la configuración de precios');
+  const res = await sheetsCall(() =>
+    client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${CONFIG_SHEET}!A:B` })
+  );
+  return configDeFilas(res.data.values || []);
+}
+
+/** Las filas crudas de Config (llave, valor) → configuración. Pura: la usan las pruebas. */
+export function configDeFilas(rows: unknown[][]): ConfigPrecios {
+  const leer = (llave: string): unknown => rows.find(r => r?.[0] === llave)?.[1];
+  const num = (llave: string, def: number): number => {
+    const n = Number(leer(llave));
+    return Number.isFinite(n) ? n : def;
+  };
+  return {
+    // Apagado por omisión: si la llave no existe todavía, el sitio cobra lo de siempre.
+    activo: esVerdadero(leer(LLAVES.activo)),
+    pisoPct: num(LLAVES.pisoPct, CONFIG_PRECIOS_DEFAULT.pisoPct),
+    techoPct: num(LLAVES.techoPct, CONFIG_PRECIOS_DEFAULT.techoPct),
+    bandaAutoPct: num(LLAVES.bandaAutoPct, CONFIG_PRECIOS_DEFAULT.bandaAutoPct),
+    iaSubeEntreSemana: esVerdadero(leer(LLAVES.iaSubeEntreSemana)),
+    semanaCedeATemporada: esVerdadero(leer(LLAVES.semanaCedeATemporada)),
+  };
+}
+
+/**
+ * Versión tolerante, para los que solo LEEN (lo que cobra la web, el correo, el
+ * panel): si la hoja falla, la configuración por omisión, que tiene el
+ * interruptor maestro apagado y cobra el precio base.
+ */
+export async function getConfigPrecios(): Promise<ConfigPrecios> {
   try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${CONFIG_SHEET}!A:B` })
-    );
-    const rows = res.data.values || [];
-    const leer = (llave: string): string | undefined => rows.find(r => r[0] === llave)?.[1];
-    const num = (llave: string, def: number): number => {
-      const n = Number(leer(llave));
-      return Number.isFinite(n) ? n : def;
-    };
-    return {
-      // Apagado por omisión: si la llave no existe todavía, el sitio cobra lo de siempre.
-      // Se aceptan TRUE/1/sí porque la celda se edita a mano en Google Sheets y
-      // un `TRUE` (que es lo que pone la hoja al marcar una casilla) apagaba
-      // todo el sistema en silencio cuando aquí se exigía la cadena 'true'.
-      activo: /^(true|1|si|sí|verdadero)$/i.test(String(leer(LLAVES.activo) ?? '').trim()),
-      pisoPct: num(LLAVES.pisoPct, CONFIG_PRECIOS_DEFAULT.pisoPct),
-      techoPct: num(LLAVES.techoPct, CONFIG_PRECIOS_DEFAULT.techoPct),
-      bandaAutoPct: num(LLAVES.bandaAutoPct, CONFIG_PRECIOS_DEFAULT.bandaAutoPct),
-    };
+    return await getConfigPreciosEstricto();
   } catch {
     return CONFIG_PRECIOS_DEFAULT;
   }
@@ -264,34 +303,49 @@ function parseDias(raw: string): number[] {
     .filter(n => Number.isFinite(n) && n >= 0 && n <= 6);
 }
 
-export async function getReglas(): Promise<ReglaPrecio[]> {
+/**
+ * Las reglas, o un ERROR si la hoja no se pudo leer. Para los que escriben el
+ * calendario: con la versión tolerante, una lectura fallida era «el dueño no
+ * tiene reglas» y `aplicarReglas` dejaba las 365 noches a precio de lista.
+ */
+export async function getReglasEstricto(): Promise<ReglaPrecio[]> {
   const client = await getSheetsClient();
-  if (!client) return [];
+  if (!client) throw new Error('Sin conexión a la hoja: no se pudieron leer las reglas de precio');
   await ensureTab(client, TAB_REGLAS, HEAD_REGLAS);
+  const res = await sheetsCall(() =>
+    client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_REGLAS}!A:J` })
+  );
+  return reglasDeFilas(res.data.values || []);
+}
+
+/** Las filas crudas de PreciosReglas (con encabezado) → reglas. Pura: la usan las pruebas y la simulación. */
+export function reglasDeFilas(valores: unknown[][]): ReglaPrecio[] {
+  const rows = valores.slice(1) as any[][];
+  return rows
+    // El rowIndex se calcula ANTES de filtrar. Al revés —filtrar y luego
+    // numerar— una sola fila en blanco o sin Id corre todos los índices, y
+    // entonces `saveRegla` edita y `deleteRegla` BORRA la regla equivocada.
+    .map((r, i) => ({ r, rowIndex: i + 2 }))
+    .filter(({ r }) => r?.[0])
+    .map(({ r, rowIndex }) => ({
+      rowIndex,
+      id: String(r[0]),
+      nombre: String(r[1] || 'Sin nombre'),
+      tipo: (TIPOS.includes(r[2] as TipoRegla) ? r[2] : 'temporada') as TipoRegla,
+      desde: fechaReglaIso(r[3]),
+      hasta: fechaReglaIso(r[4]),
+      dias: parseDias(r[5]),
+      umbral: Number(r[6]) || 0,
+      pct: Number(r[7]) || 0,
+      prioridad: Number(r[8]) || 1,
+      activa: String(r[9]) !== 'false',
+    }));
+}
+
+/** Versión tolerante (panel, correo): si la hoja falla, sin reglas. */
+export async function getReglas(): Promise<ReglaPrecio[]> {
   try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_REGLAS}!A:J` })
-    );
-    const rows = (res.data.values || []).slice(1);
-    return rows
-      // El rowIndex se calcula ANTES de filtrar. Al revés —filtrar y luego
-      // numerar— una sola fila en blanco o sin Id corre todos los índices, y
-      // entonces `saveRegla` edita y `deleteRegla` BORRA la regla equivocada.
-      .map((r, i) => ({ r, rowIndex: i + 2 }))
-      .filter(({ r }) => r[0])
-      .map(({ r, rowIndex }) => ({
-        rowIndex,
-        id: String(r[0]),
-        nombre: String(r[1] || 'Sin nombre'),
-        tipo: (TIPOS.includes(r[2] as TipoRegla) ? r[2] : 'temporada') as TipoRegla,
-        desde: fechaReglaIso(r[3]),
-        hasta: fechaReglaIso(r[4]),
-        dias: parseDias(r[5]),
-        umbral: Number(r[6]) || 0,
-        pct: Number(r[7]) || 0,
-        prioridad: Number(r[8]) || 1,
-        activa: String(r[9]) !== 'false',
-      }));
+    return await getReglasEstricto();
   } catch {
     return [];
   }
@@ -315,7 +369,9 @@ export async function saveRegla(regla: ReglaNueva): Promise<string> {
   const id = regla.id || `R-${Date.now().toString(36).toUpperCase()}`;
   const fila = filaDeRegla({ ...regla, id });
   return withPreciosLock(async () => {
-    const existentes = await getReglas();
+    // Estricta: con la tolerante, una lectura fallida era «no hay reglas» y
+    // EDITAR una regla la duplicaba al final de la hoja en vez de corregirla.
+    const existentes = await getReglasEstricto();
     const previa = existentes.find(r => r.id === id);
     if (previa) {
       await sheetsCall(() =>
@@ -355,7 +411,9 @@ export async function sembrarReglas(
   if (!client) throw new Error('Sin conexión a la hoja');
   await ensureTab(client, TAB_REGLAS, HEAD_REGLAS);
   return withPreciosLock(async () => {
-    const existentes = await getReglas();
+    // Estricta por lo mismo que `saveRegla`: con una lectura fallida, «Sembrar»
+    // agregaba las 17 reglas otra vez, duplicadas.
+    const existentes = await getReglasEstricto();
     const porId = new Map(existentes.map(r => [r.id, r]));
     const updates: { range: string; values: string[][] }[] = [];
     const nuevas: string[][] = [];
@@ -391,9 +449,11 @@ export async function sembrarReglas(
 
 export async function deleteRegla(id: string): Promise<void> {
   const client = await getSheetsClient();
-  if (!client) return;
+  if (!client) throw new Error('Sin conexión a la hoja: la regla no se borró');
   await withPreciosLock(async () => {
-    const reglas = await getReglas();
+    // Estricta: con la tolerante, una lectura fallida respondía «borrada» sin
+    // borrar nada.
+    const reglas = await getReglasEstricto();
     const regla = reglas.find(r => r.id === id);
     if (!regla) return;
     const meta = await sheetsCall(() => client.spreadsheets.get({ spreadsheetId: SHEET_ID }));
@@ -420,28 +480,87 @@ export async function deleteRegla(id: string): Promise<void> {
 const ESTADOS: EstadoAjuste[] = ['aplicado', 'propuesto', 'rechazado'];
 const ORIGENES: OrigenPrecio[] = ['regla', 'ia', 'manual'];
 
-/** Todo el calendario guardado. `desde` recorta el pasado (opcional). */
-export async function getAjustes(desde?: string, hasta?: string): Promise<AjusteDia[]> {
+/**
+ * Todo el calendario guardado, o un ERROR si la hoja no se pudo leer.
+ * `desde` recorta el pasado (opcional).
+ *
+ * 🔴 Es la lectura de los que REESCRIBEN la hoja entera (`escribirAjustes`).
+ * Con la versión tolerante, un fallo de Google era «el calendario está vacío»
+ * y la siguiente escritura borraba lo fijado a mano, lo de la IA y el registro
+ * de lo que ya se cobró.
+ */
+export async function getAjustesEstricto(desde?: string, hasta?: string): Promise<AjusteDia[]> {
   const client = await getSheetsClient();
-  if (!client) return [];
+  if (!client) throw new Error('Sin conexión a la hoja: no se pudo leer el calendario de precios');
   await ensureTab(client, TAB_DIAS, HEAD_DIAS);
-  try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_DIAS}!A:F` })
-    );
-    const rows = (res.data.values || []).slice(1);
-    return rows
-      .filter(r => /^\d{4}-\d{2}-\d{2}$/.test(String(r[0] || '')))
-      .map((r, i) => ({
+  const res = await sheetsCall(() =>
+    client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_DIAS}!A:G` })
+  );
+  return ajustesDeFilas(res.data.values || [])
+    .filter(a => (!desde || a.fecha >= desde) && (!hasta || a.fecha <= hasta));
+}
+
+/**
+ * Columna G (FactorVigente): `factor@fecha`, p. ej. `0.92@2026-10-25`.
+ *
+ * 🔴 La fecha va DENTRO de la celda a propósito (17 oct 2026). El código de
+ * antes de oct 2026 reescribe solo A:F y limpia solo A:F: si alguna vez se
+ * revierte el despliegue, la G de cada fila se queda donde estaba mientras las
+ * noches se recorren, y al volver a subir este código una propuesta cobraba el
+ * FactorVigente de OTRA noche. Con la fecha, una G que no es de su noche no se
+ * cree: la noche cobra lista hasta la siguiente corrida, nunca el de otra.
+ */
+const G_VIGENTE = /^\s*([0-9]+(?:\.[0-9]+)?)@(\d{4}-\d{2}-\d{2})\s*$/;
+
+/** La celda G de una fila → su FactorVigente, solo si es de ESA noche. */
+export function factorVigenteDeCelda(celda: unknown, fecha: string): number | undefined {
+  const m = G_VIGENTE.exec(String(celda ?? ''));
+  if (!m || m[2] !== fecha) return undefined;
+  return factorSeguro(m[1]);
+}
+
+/** Las filas crudas de PreciosDias (con encabezado) → calendario. Pura: la usan las pruebas y la simulación. */
+export function ajustesDeFilas(valores: unknown[][]): AjusteDia[] {
+  const rows = valores.slice(1) as any[][];
+  return rows
+    .filter(r => /^\d{4}-\d{2}-\d{2}$/.test(String(r?.[0] || '')))
+    .map((r, i) => {
+      const fecha = String(r[0]);
+      // Columna G: solo las propuestas la traen. Vacía (o de otra noche) =
+      // la propuesta cobra lista hasta la siguiente corrida de las reglas.
+      const vigente = factorVigenteDeCelda(r[6], fecha);
+      return {
         rowIndex: i + 2,
-        fecha: String(r[0]),
+        fecha,
         factor: factorSeguro(r[1]),
         origen: (ORIGENES.includes(r[2] as OrigenPrecio) ? r[2] : 'regla') as OrigenPrecio,
         motivo: String(r[3] || ''),
         estado: (ESTADOS.includes(r[4] as EstadoAjuste) ? r[4] : 'aplicado') as EstadoAjuste,
         analizadoEn: String(r[5] || ''),
-      }))
-      .filter(a => (!desde || a.fecha >= desde) && (!hasta || a.fecha <= hasta));
+        ...(vigente !== undefined ? { factorVigente: vigente } : {}),
+      };
+    });
+}
+
+/** Calendario → filas de PreciosDias, con encabezado (lo inverso de `ajustesDeFilas`). Pura. */
+export function filasDeAjustes(ajustes: AjusteDia[]): string[][] {
+  const ordenados = [...ajustes].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  return [
+    HEAD_DIAS,
+    ...ordenados.map(a => [
+      a.fecha, String(a.factor), a.origen, a.motivo || '', a.estado, a.analizadoEn || '',
+      a.estado === 'propuesto' && a.factorVigente !== undefined ? `${a.factorVigente}@${a.fecha}` : '',
+    ]),
+  ];
+}
+
+/**
+ * Versión tolerante, para los que solo LEEN (lo que cobra la web, el correo,
+ * el panel): si la hoja falla, sin factores, y el motor cobra el precio base.
+ */
+export async function getAjustes(desde?: string, hasta?: string): Promise<AjusteDia[]> {
+  try {
+    return await getAjustesEstricto(desde, hasta);
   } catch {
     return [];
   }
@@ -459,13 +578,7 @@ export async function escribirAjustes(ajustes: AjusteDia[]): Promise<void> {
   const client = await getSheetsClient();
   if (!client) return;
   await ensureTab(client, TAB_DIAS, HEAD_DIAS);
-  const ordenados = [...ajustes].sort((a, b) => a.fecha.localeCompare(b.fecha));
-  const filas = [
-    HEAD_DIAS,
-    ...ordenados.map(a => [
-      a.fecha, String(a.factor), a.origen, a.motivo || '', a.estado, a.analizadoEn || '',
-    ]),
-  ];
+  const filas = filasDeAjustes(ajustes);
   try {
     const previo = await sheetsCall(() =>
       client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_DIAS}!A:A` })
@@ -483,7 +596,7 @@ export async function escribirAjustes(ajustes: AjusteDia[]): Promise<void> {
       await sheetsCall(() =>
         client.spreadsheets.values.clear({
           spreadsheetId: SHEET_ID,
-          range: `${TAB_DIAS}!A${filas.length + 1}:F${previoFilas}`,
+          range: `${TAB_DIAS}!A${filas.length + 1}:G${previoFilas}`,
         })
       );
     }
@@ -540,28 +653,40 @@ export const MARCA_RECHAZO = 'Rechazado:';
  * no cobra nada: una noche de Navidad cuya propuesta él rechazara se iba a precio
  * base en vez de a su propia regla de +15%. Rechazar la opinión de la IA no puede
  * borrarle al dueño su temporada.
+ *
+ * Lanza si la hoja no se pudo leer: la IA, que es quien la usa, no debe
+ * escribir sin saber qué le dijo que no el dueño (podría volver a aplicarlo).
  */
-export async function getRechazosRecientes(dias = DIAS_RECHAZO_VIGENTE): Promise<Map<string, number>> {
+export async function getRechazosRecientesEstricto(dias = DIAS_RECHAZO_VIGENTE): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   const client = await getSheetsClient();
-  if (!client) return out;
-  try {
-    const res = await sheetsCall(() =>
-      client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_HIST}!A:F` })
-    );
-    const corte = Date.now() - dias * 86400000;
-    for (const r of (res.data.values || []).slice(1)) {
-      if (!r[1] || !String(r[5] || '').startsWith(MARCA_RECHAZO)) continue;
-      const cuando = parseFechaHojaMx(String(r[0] || ''));
-      if (cuando && cuando.getTime() < corte) continue;
-      // `factorAnterior` es el valor que se rechazó (lo escribe resolverPropuestas).
-      const factor = Number(r[2]);
-      if (Number.isFinite(factor)) out.set(String(r[1]), factor);
-    }
-  } catch (e: any) {
-    console.error('[precios] getRechazosRecientes:', e?.message || e);
+  if (!client) throw new Error('Sin conexión a la hoja: no se pudo leer el historial de rechazos');
+  // Sin la pestaña (una hoja nueva), esta lectura lanzaría todos los días y la
+  // IA no correría nunca: se crea vacía, que es «sin rechazos».
+  await ensureTab(client, TAB_HIST, HEAD_HIST);
+  const res = await sheetsCall(() =>
+    client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB_HIST}!A:F` })
+  );
+  const corte = Date.now() - dias * 86400000;
+  for (const r of (res.data.values || []).slice(1)) {
+    if (!r[1] || !String(r[5] || '').startsWith(MARCA_RECHAZO)) continue;
+    const cuando = parseFechaHojaMx(String(r[0] || ''));
+    if (cuando && cuando.getTime() < corte) continue;
+    // `factorAnterior` es el valor que se rechazó (lo escribe resolverPropuestas).
+    const factor = Number(r[2]);
+    if (Number.isFinite(factor)) out.set(String(r[1]), factor);
   }
   return out;
+}
+
+/** Versión tolerante: si la hoja falla, lo registra y devuelve vacío. */
+export async function getRechazosRecientes(dias = DIAS_RECHAZO_VIGENTE): Promise<Map<string, number>> {
+  try {
+    return await getRechazosRecientesEstricto(dias);
+  } catch (e: any) {
+    console.error('[precios] getRechazosRecientes:', e?.message || e);
+    return new Map();
+  }
 }
 
 export async function getHistorial(limite = 100): Promise<(EntradaHistorial & { cuando: string })[]> {

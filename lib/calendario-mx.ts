@@ -142,7 +142,14 @@ export const TEMPORADAS_MX: TemporadaMx[] = [
  *
  * 🔴 El tipo `finde` del motor IGNORA `desde`/`hasta`: aplica los 365 días del
  * horizonte, también dentro de las temporadas altas, donde se multiplica con
- * ellas (el techo lo frena). Es a propósito, pero hay que saberlo.
+ * ellas (el techo lo frena). Desde oct 2026 eso tiene interruptor: con
+ * `precios_semana_cede_a_temporada` encendido en Config, en las noches de una
+ * temporada esta rebaja no entra y manda la temporada (lib/precios.ts,
+ * `factorPorReglas`). Apagado, que es lo normal, se multiplican como siempre.
+ *
+ * 🔴 «Sembrar temporadas y puentes» REESCRIBE esta fila con lo que diga este
+ * archivo: si el dueño cambia el % en el panel, hay que cambiarlo aquí también o
+ * el siguiente clic en «Sembrar» se lo regresa.
  */
 export const REGLA_DIAS_SEMANA = {
   id: 'dias-semana',

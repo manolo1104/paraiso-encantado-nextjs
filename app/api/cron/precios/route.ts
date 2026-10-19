@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { aplicarReglas } from '@/lib/admin/precios-motor';
 import { analizarDemanda } from '@/lib/admin/precios-ia';
-import { construirSenales, senalesParaReglas } from '@/lib/admin/demanda';
+import { construirSenales, ocupacionFiable, senalesParaReglas } from '@/lib/admin/demanda';
 import { getUltimaCorrida, marcarCorrida } from '@/lib/admin/precios-sheets';
 import { enviarResumenPrecios } from '@/lib/email-precios';
 import { mexicoTodayStr } from '@/lib/date-mx';
@@ -32,6 +32,15 @@ export const dynamic = 'force-dynamic';
  * reescrituras del calendario peleándose.
  */
 let corriendo: Promise<unknown> | null = null;
+
+/**
+ * Día (MX) en que ya salió el correo de «la revisión falló» por las reglas.
+ * Si Google no deja leer, la corrida ya no escribe nada y responde 500, y el
+ * scheduler la reintenta cada 30 min: sin esto, un apagón de Google de una
+ * mañana eran 10 correos iguales. En memoria a propósito: un reinicio a lo más
+ * manda uno más.
+ */
+let avisoDeFallaEnviado: string | null = null;
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');
@@ -73,7 +82,14 @@ async function correr(hoy: string, auto: boolean): Promise<{ salida: Record<stri
 
   try {
     const senales = await construirSenales(hoy, 120);
-    const reglas = await aplicarReglas(senalesParaReglas(senales));
+    // Sin la matriz de ocupación, las señales dicen «hotel vacío» y una regla de
+    // última hora rebajaría todas las noches. `null` le avisa a `aplicarReglas`:
+    // si hay reglas de ocupación o de última hora, no escribe nada y lanza (la
+    // corrida responde 500 y el scheduler la reintenta en 30 min); sin ellas,
+    // las señales no mueven nada y se sigue normal.
+    const fiable = ocupacionFiable();
+    if (!fiable) console.warn('[cron/precios] ocupación no fiable: la matriz de disponibilidad no se pudo leer');
+    const reglas = await aplicarReglas(fiable ? senalesParaReglas(senales) : null);
     salida.reglasCambiadas = reglas.cambiadas;
     salida.nochesConFactor = reglas.conFactor;
     salida.nochesRespetadas = reglas.respetadas;
@@ -82,8 +98,11 @@ async function correr(hoy: string, auto: boolean): Promise<{ salida: Record<stri
     salida.ok = false;
     salida.errorReglas = e?.message || 'error';
     // El correo sale igual: un día sin aviso es indistinguible de un día sin
-    // cambios, y justo este es el día en que hay que enterarse.
-    if (auto) await enviarResumenPrecios(e?.message || 'error al aplicar las reglas');
+    // cambios, y justo este es el día en que hay que enterarse. Una vez por día.
+    if (auto && avisoDeFallaEnviado !== hoy) {
+      avisoDeFallaEnviado = hoy;
+      await enviarResumenPrecios(e?.message || 'error al aplicar las reglas');
+    }
     return { salida, status: 500 };
   }
 

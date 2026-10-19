@@ -36,7 +36,12 @@ export interface ReglaPrecio {
   /** temporada: rango de fechas inclusivo. Vacío en los otros tipos. */
   desde: string;
   hasta: string;
-  /** finde: días de la semana que aplica (0 = domingo … 6 = sábado). */
+  /**
+   * finde: días de la semana que aplica (0 = domingo … 6 = sábado).
+   * ocupacion y ultimahora: OPCIONAL — si trae días, la regla solo entra esos
+   * días (vacío = todos). Así una rebaja de última hora puede ser solo de lunes
+   * a jueves sin tocar un sábado que se vende solo.
+   */
   dias: number[];
   /** ocupacion: % de ocupación desde el que aplica. ultimahora: días para la llegada. */
   umbral: number;
@@ -55,6 +60,15 @@ export interface AjusteDia {
   motivo: string;
   estado: EstadoAjuste;
   analizadoEn: string;
+  /**
+   * Solo en filas «propuesto»: el factor de las REGLAS del dueño, que es lo que
+   * se cobra mientras él decide. Antes una propuesta pendiente dejaba la noche a
+   * precio de lista (la hoja guarda una sola fila por noche): el domingo 25 y el
+   * lunes 2 nov perdieron así su −8% sin que nadie lo decidiera.
+   * Una propuesta escrita antes de oct 2026 no la trae y cobra lista hasta la
+   * siguiente corrida de las reglas, que se la pone (columna G de PreciosDias).
+   */
+  factorVigente?: number;
 }
 
 export interface ConfigPrecios {
@@ -66,6 +80,24 @@ export interface ConfigPrecios {
   techoPct: number;
   /** Hasta cuánto puede separarse la IA de las reglas sin pedir permiso, en %. */
   bandaAutoPct: number;
+  /**
+   * `precios_ia_sube_entre_semana`. Apagado (lo normal): de domingo a jueves
+   * FUERA de temporada (ver `nocheProtegida`) la IA solo puede BAJAR el precio
+   * de las reglas, nunca subirlo ni quitarle al dueño su rebaja de semana. En
+   * temporada (Navidad, Año Nuevo, Semana Santa…) sí puede subir, como un
+   * sábado. Encendido: la IA se porta como hasta oct 2026.
+   * Existe porque en sus 5 primeros días la IA le quitó el −8% 27 veces en 16
+   * noches, contando bloqueos y noches de Expedia como si fueran ventas.
+   */
+  iaSubeEntreSemana: boolean;
+  /**
+   * `precios_semana_cede_a_temporada`. Apagado (lo normal): las rebajas de
+   * semana se multiplican con la temporada, como siempre (martes de Navidad =
+   * +15% × −8%). Encendido: en una noche que cae dentro de una temporada, las
+   * rebajas de semana (días de la semana y última hora) NO entran y manda la
+   * temporada sola. Ver `factorPorReglas`.
+   */
+  semanaCedeATemporada: boolean;
 }
 
 export const CONFIG_PRECIOS_DEFAULT: ConfigPrecios = {
@@ -73,12 +105,21 @@ export const CONFIG_PRECIOS_DEFAULT: ConfigPrecios = {
   pisoPct: -15,
   techoPct: 30,
   bandaAutoPct: 10,
+  iaSubeEntreSemana: false,
+  semanaCedeATemporada: false,
 };
 
 /** Señales de demanda de UNA noche, para las reglas que no son de calendario. */
 export interface SenalesDia {
-  /** % de las 13 suites ya ocupadas esa noche. */
+  /** % de las 13 suites ya cerradas esa noche (vendidas + bloqueadas + OTA). */
   ocupacionPct?: number;
+  /**
+   * % de las 13 suites VENDIDAS de verdad (RESERVADO o reserva registrada), sin
+   * BLOQUEADO ni OTA. En la matriz, BLOQUEADO es tanto una venta por otro canal
+   * como un cierre; contarlo como venta apagaba la rebaja de última hora justo
+   * en las noches vacías (mar 27 oct: 8 bloqueadas, 0 vendidas).
+   */
+  ventaPct?: number;
   /** Días entre hoy y esa noche. */
   diasParaLlegada?: number;
 }
@@ -154,6 +195,12 @@ export function esCambioGrande(propuesto: number, referencia: number, bandaPct: 
  */
 function reglaAplica(regla: ReglaPrecio, fecha: string, senales: SenalesDia): boolean {
   if (!regla.activa) return false;
+  // `dias` también limita a ocupacion y ultimahora (vacío = todos los días).
+  // Las temporadas sembradas traen `dias` vacío, así que no les cambia nada.
+  if ((regla.tipo === 'ocupacion' || regla.tipo === 'ultimahora') && regla.dias.length > 0) {
+    const dow = diaSemana(fecha);
+    if (dow === null || !regla.dias.includes(dow)) return false;
+  }
   switch (regla.tipo) {
     case 'temporada':
       if (!regla.desde || !regla.hasta) return false;
@@ -164,15 +211,18 @@ function reglaAplica(regla: ReglaPrecio, fecha: string, senales: SenalesDia): bo
     }
     case 'ocupacion':
       return senales.ocupacionPct !== undefined && senales.ocupacionPct >= regla.umbral;
-    case 'ultimahora':
+    case 'ultimahora': {
       // Solo si de verdad está vacía: bajar el precio de una noche que ya se
-      // está vendiendo sola es regalar dinero.
+      // está vendiendo sola es regalar dinero. Se mira lo VENDIDO (ventaPct):
+      // un BLOQUEADO puede ser un cierre y no dice que la noche se venda sola.
+      const vendido = senales.ventaPct ?? senales.ocupacionPct;
       return (
         senales.diasParaLlegada !== undefined &&
         senales.diasParaLlegada >= 0 &&
         senales.diasParaLlegada <= regla.umbral &&
-        (senales.ocupacionPct === undefined || senales.ocupacionPct < 50)
+        (vendido === undefined || vendido < 50)
       );
+    }
     default:
       return false;
   }
@@ -182,6 +232,19 @@ export interface ResultadoReglas {
   factor: number;
   /** Nombres de las reglas que entraron, para explicarlo en el panel. */
   aplicadas: string[];
+  /**
+   * true si esa noche ENTRÓ una rebaja de semana del dueño (días de la semana o
+   * última hora, con % negativo) y la temporada que manda no sube (no hay, o es
+   * de 0% o menos). Es lo que protege el freno de la IA (`nocheProtegida`): un
+   * martes normal con su −8% sí; un martes 22 dic con Navidad +15% no (plan T2,
+   * oct 2026). Una «cola de Xantolo» en 0% deja la noche protegida.
+   */
+  rebajaDelDueno: boolean;
+}
+
+/** ¿Es una rebaja de semana? Días de la semana o última hora, con % negativo. */
+function esRebajaDeSemana(r: ReglaPrecio): boolean {
+  return r.pct < 0 && (r.tipo === 'finde' || r.tipo === 'ultimahora');
 }
 
 /**
@@ -191,6 +254,16 @@ export interface ResultadoReglas {
  * temporadas que se traslapan no se suman. Entre tipos distintos sí se
  * multiplican, porque el sábado de Navidad es legítimamente la noche más cara
  * del año. El piso y el techo se encargan de que no se vaya de las manos.
+ *
+ * 🔴 EXCEPCIÓN con interruptor (`config.semanaCedeATemporada`, Config
+ * `precios_semana_cede_a_temporada`, APAGADO por omisión): encendido, en una
+ * noche que cae dentro de una temporada activa las rebajas de semana (días de
+ * la semana y última hora, con % negativo) NO entran y manda la temporada sola.
+ * Apagado, se multiplican como siempre: con −8% eso es aceptable (martes de
+ * Navidad +5.8%), pero con −15% o −20% el martes de Navidad quedaría casi en
+ * lista y el de Semana Santa por DEBAJO (1.2 × 0.8 = 0.96). Cuenta cualquier
+ * temporada, también una de 0%: así una «cola de Xantolo» en 0% protege de la
+ * rebaja a unas noches que se venden solas.
  */
 export function factorPorReglas(
   fecha: string,
@@ -198,9 +271,13 @@ export function factorPorReglas(
   senales: SenalesDia = {},
   config: ConfigPrecios = CONFIG_PRECIOS_DEFAULT,
 ): ResultadoReglas {
+  const aplican = reglas.filter(r => reglaAplica(r, fecha, senales));
+  // `=== true` y no solo truthy: un config viejo sin la llave se porta como hoy.
+  const cedeATemporada = config.semanaCedeATemporada === true && aplican.some(r => r.tipo === 'temporada');
+
   const porTipo = new Map<TipoRegla, ReglaPrecio>();
-  for (const regla of reglas) {
-    if (!reglaAplica(regla, fecha, senales)) continue;
+  for (const regla of aplican) {
+    if (cedeATemporada && esRebajaDeSemana(regla)) continue;
     const previa = porTipo.get(regla.tipo);
     if (!previa || regla.prioridad < previa.prioridad) porTipo.set(regla.tipo, regla);
   }
@@ -210,7 +287,58 @@ export function factorPorReglas(
     factor *= 1 + regla.pct / 100;
     aplicadas.push(regla.nombre);
   }
-  return { factor: recortarFactor(factor, config), aplicadas };
+  // Solo cuentan las reglas que ganaron en su tipo (las que de verdad entraron).
+  const temporada = porTipo.get('temporada');
+  const rebajaDelDueno = [...porTipo.values()].some(esRebajaDeSemana) && !(temporada && temporada.pct > 0);
+  return { factor: recortarFactor(factor, config), aplicadas, rebajaDelDueno };
+}
+
+/**
+ * Prefijo del motivo de una propuesta de la IA que el dueño APROBÓ. Al aprobarla
+ * queda como fila `manual` para que ni la IA ni las reglas la deshagan a la
+ * mañana siguiente; con esta marca el panel la distingue de un ajuste a mano.
+ * Vive aquí (lógica pura) porque la usan el panel, que es de cliente, y el motor.
+ */
+export const MARCA_APROBADO = 'Aprobado:';
+
+/** ¿Esta fila es una propuesta de la IA que el dueño aprobó? */
+export function esAprobacion(a: { origen: OrigenPrecio; motivo: string } | undefined | null): boolean {
+  return Boolean(a && a.origen === 'manual' && a.motivo.startsWith(MARCA_APROBADO));
+}
+
+/**
+ * Marca, dentro del motivo del historial, de una noche que la corrida de la IA
+ * devolvió a las reglas del dueño (la IA dejó de pedir su ajuste, o un freno se
+ * lo quitó). El correo diario la busca para contarlas: antes esos cambios de
+ * precio no salían en ninguna parte.
+ */
+export const MARCA_VUELVE_A_REGLAS = 'volvió a tus reglas';
+
+/**
+ * El porqué del freno de semana en el historial y en el correo. Un solo texto
+ * para los dos escritores (`planificarAjustes` y `planificarReglas`).
+ */
+export const RAZON_FRENO_SEMANA = 'de domingo a jueves, fuera de temporada, la IA solo puede bajar';
+
+/** ¿Es noche de domingo a jueves? */
+export function esDomingoAJueves(fecha: string): boolean {
+  const dow = diaSemana(fecha);
+  return dow !== null && dow <= 4;
+}
+
+/**
+ * ¿Esta noche la protege el freno de semana? De domingo a jueves, con la rebaja
+ * de semana del dueño en vigor y sin una temporada que suba (`rebajaDelDueno`).
+ * Con `iaSubeEntreSemana` apagado, ahí la IA solo puede BAJAR.
+ *
+ * Hasta el 17 oct 2026 el freno valía para TODO domingo a jueves, también en
+ * temporada: un martes de Navidad, el 27, 28 y 30 dic o el martes de Semana
+ * Santa no podían subir aunque se estuvieran llenando, y el plan (T2) decía lo
+ * contrario. 🔴 La usan los DOS escritores del calendario: `planificarAjustes`
+ * (a través de `protegidas`) y `planificarReglas`, para que digan lo mismo.
+ */
+export function nocheProtegida(fecha: string, r: Pick<ResultadoReglas, 'rebajaDelDueno'>): boolean {
+  return esDomingoAJueves(fecha) && r.rebajaDelDueno;
 }
 
 // ── Memoria de los rechazos del dueño ─────────────────────
@@ -239,12 +367,17 @@ export function esRechazoVigente(a: AjusteDia, ahoraMs: number): boolean {
   return ahoraMs - t < DIAS_RECHAZO_VIGENTE * 86400000;
 }
 
-/** Los factores que el motor web debe cobrar: solo los ajustes ya aplicados. */
+/**
+ * Los factores que el motor web debe cobrar: los ajustes aplicados y, en las
+ * noches con una propuesta pendiente, la REGLA del dueño (`factorVigente`), no
+ * el precio de lista.
+ */
 export function factoresAplicados(ajustes: AjusteDia[]): FactoresPorFecha {
   const out: FactoresPorFecha = {};
   for (const a of ajustes) {
-    if (a.estado !== 'aplicado') continue;
-    const f = factorSeguro(a.factor);
+    const f = a.estado === 'aplicado' ? factorSeguro(a.factor)
+      : a.estado === 'propuesto' && a.factorVigente !== undefined ? factorSeguro(a.factorVigente)
+      : 1;
     if (f !== 1) out[a.fecha] = f;
   }
   return out;

@@ -6,8 +6,13 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Una noche en concreto:
- *  { fecha, pct }                  → la fija a mano (pct 0 la devuelve al precio base)
- *  { fechas: [...], aprobar: bool } → aprueba o rechaza propuestas de la IA
+ *  { fecha, pct }                  → la fija a mano (pct 0 le quita el ajuste y
+ *                                    vuelve a sus reglas en ese momento)
+ *  { fecha, pct, fijar: true }     → «Fijar esta noche»: queda fija a mano
+ *                                    AUNQUE sea 0% (precio de lista)
+ *  { fechas: [...], aprobar: bool } → aprueba (queda fija, como a mano) o rechaza
+ *                                    (vuelve a sus reglas) propuestas de la IA
+ * Si la hoja no se deja leer, responde 500 sin escribir nada.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -34,7 +39,7 @@ export async function POST(req: NextRequest) {
     if (pct < -50 || pct > 100) {
       return NextResponse.json({ error: 'El porcentaje tiene que estar entre −50% y +100%' }, { status: 400 });
     }
-    await fijarFactorManual(fecha, 1 + pct / 100, String(b?.motivo || '').slice(0, 120));
+    await fijarFactorManual(fecha, 1 + pct / 100, String(b?.motivo || '').slice(0, 120), b?.fijar === true);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'No se pudo guardar la noche' }, { status: 500 });

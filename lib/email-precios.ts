@@ -18,7 +18,7 @@
 import { Resend } from 'resend';
 import { getAjustes, getHistorial, getReglas, getConfigPrecios } from '@/lib/admin/precios-sheets';
 import { calcularImpacto, type ImpactoPrecios } from '@/lib/admin/precios-impacto';
-import { factorPorReglas, redondear50, sumarDias, type AjusteDia } from '@/lib/precios';
+import { MARCA_VUELVE_A_REGLAS, factorPorReglas, redondear50, sumarDias, type AjusteDia } from '@/lib/precios';
 import { BOOKING_ROOMS, getRoomBasePrice, formatMXN } from '@/lib/booking';
 import { mexicoTodayStr, parseFechaHojaMx, toMexicoDateStr } from '@/lib/date-mx';
 
@@ -47,6 +47,13 @@ export interface ResumenPrecios {
   activo: boolean;
   aplicadas: NocheResumen[];
   pendientes: NocheResumen[];
+  /**
+   * Noches que tenían un ajuste de la IA (o una propuesta) y hoy volvieron a las
+   * reglas: la IA dejó de pedirlo o un freno se lo quitó. `sinIA` = lo que
+   * cobraba antes, `conIA` = lo que cobra ahora. Antes estos cambios de precio
+   * no salían en el correo.
+   */
+  retiradas: NocheResumen[];
   impacto: ImpactoPrecios;
   /** Mensaje de error de la corrida, si lo hubo. */
   error?: string;
@@ -64,28 +71,50 @@ export async function construirResumenPrecios(error?: string): Promise<ResumenPr
     getHistorial(300),
     calcularImpacto(30),
   ]);
+  return armarResumenPrecios({ hoy, config, reglas, ajustes, historial, impacto, error });
+}
 
+export interface DatosResumen {
+  hoy: string;
+  config: Awaited<ReturnType<typeof getConfigPrecios>>;
+  reglas: Awaited<ReturnType<typeof getReglas>>;
+  ajustes: AjusteDia[];
+  /** Como lo da `getHistorial`: del más nuevo al más viejo. */
+  historial: Awaited<ReturnType<typeof getHistorial>>;
+  impacto: ImpactoPrecios;
+  error?: string;
+}
+
+/** La parte PURA del resumen: qué noches salen en el correo. La usan las pruebas. */
+export function armarResumenPrecios(d: DatosResumen): ResumenPrecios {
+  const { hoy, config, reglas, ajustes, historial, impacto, error } = d;
   const precioDeFactor = (f: number) => redondear50(PRECIO_REF * f);
-  const sinIA = (fecha: string) => precioDeFactor(factorPorReglas(fecha, reglas, {}, config).factor);
+  // Lo que la noche cobra sin la IA. En una propuesta pendiente es su
+  // `factorVigente`: la regla que de verdad se está cobrando mientras espera
+  // (calculada con las señales de demanda, igual que en la web).
+  const sinIA = (a: AjusteDia) => precioDeFactor(
+    a.estado === 'propuesto' && a.factorVigente !== undefined
+      ? a.factorVigente
+      : factorPorReglas(a.fecha, reglas, {}, config).factor,
+  );
 
   // Lo que se movió HOY: el historial es la única fuente que sabe qué cambió en
   // esta corrida y no en una anterior.
-  const cambiadasHoy = new Set(
-    historial
-      .filter(h => {
-        const cuando = parseFechaHojaMx(h.cuando);
-        return cuando !== null && toMexicoDateStr(cuando) === hoy;
-      })
-      .map(h => h.fecha),
-  );
+  const historialHoy = historial.filter(h => {
+    const cuando = parseFechaHojaMx(h.cuando);
+    return cuando !== null && toMexicoDateStr(cuando) === hoy;
+  });
+  const cambiadasHoy = new Set(historialHoy.map(h => h.fecha));
 
   const resumenDe = (a: AjusteDia): NocheResumen => ({
     fecha: a.fecha,
-    sinIA: sinIA(a.fecha),
+    sinIA: sinIA(a),
     conIA: precioDeFactor(a.factor),
     motivo: a.motivo,
   });
 
+  // Incluye las noches que la IA dejó a precio de lista (factor 1): desde oct
+  // 2026 esa decisión deja fila, y antes eran cambios que nunca salían aquí.
   const aplicadas = ajustes
     .filter(a => a.origen === 'ia' && a.estado === 'aplicado' && cambiadasHoy.has(a.fecha))
     .sort((x, y) => x.fecha.localeCompare(y.fecha))
@@ -96,7 +125,29 @@ export async function construirResumenPrecios(error?: string): Promise<ResumenPr
     .sort((x, y) => x.fecha.localeCompare(y.fecha))
     .map(resumenDe);
 
-  return { fecha: hoy, activo: config.activo, aplicadas, pendientes, impacto, error };
+  // `getHistorial` viene del más nuevo al más viejo: la primera línea de cada
+  // noche es la última que se escribió. Si después de volver a las reglas la IA
+  // la volvió a mover (otro «Analizar ahora»), ya sale arriba, en «aplicadas».
+  const mandaLaIA = new Set(ajustes.filter(a => a.origen === 'ia').map(a => a.fecha));
+  const vistas = new Set<string>();
+  const retiradas: NocheResumen[] = [];
+  for (const h of historialHoy) {
+    if (vistas.has(h.fecha)) continue;
+    vistas.add(h.fecha);
+    if (h.fecha < hoy || mandaLaIA.has(h.fecha)) continue;
+    if (h.origen !== 'regla' || !h.motivo.includes(MARCA_VUELVE_A_REGLAS)) continue;
+    // Solo el porqué («la noche está llena», «de domingo a jueves…»).
+    const porque = h.motivo.split(`${MARCA_VUELVE_A_REGLAS}: `)[1]?.replace(/\)\s*$/, '') || h.motivo;
+    retiradas.push({
+      fecha: h.fecha,
+      sinIA: precioDeFactor(h.factorAnterior),
+      conIA: precioDeFactor(h.factorNuevo),
+      motivo: porque.charAt(0).toUpperCase() + porque.slice(1),
+    });
+  }
+  retiradas.sort((x, y) => x.fecha.localeCompare(y.fecha));
+
+  return { fecha: hoy, activo: config.activo, aplicadas, pendientes, retiradas, impacto, error };
 }
 
 // ── El asunto ─────────────────────────────────────────────
@@ -111,6 +162,9 @@ export function asuntoResumen(r: ResumenPrecios): string {
   }
   if (r.aplicadas.length > 0) {
     return `Precios ${dia} · ${r.aplicadas.length} ${r.aplicadas.length === 1 ? 'noche ajustada' : 'noches ajustadas'} sola`;
+  }
+  if (r.retiradas.length > 0) {
+    return `Precios ${dia} · ${r.retiradas.length} ${r.retiradas.length === 1 ? 'noche volvió' : 'noches volvieron'} a tus reglas`;
   }
   return `Precios ${dia} · sin cambios`;
 }
@@ -135,7 +189,10 @@ function diferencia(n: NocheResumen): string {
  * ahí una tabla de cinco columnas se encoge hasta no leerse. El «de → a» va
  * junto en una celda.
  */
-function tabla(titulo: string, nota: string, filas: NocheResumen[], mostrarSinIA: boolean): string {
+function tabla(
+  titulo: string, nota: string, filas: NocheResumen[], mostrarSinIA: boolean,
+  encabezado = mostrarSinIA ? 'Hoy → si apruebas' : 'Precio',
+): string {
   if (filas.length === 0) return '';
   const th = "padding:8px 10px;font-weight:400;font-size:11px;letter-spacing:1px;text-transform:uppercase;";
   return `
@@ -145,7 +202,7 @@ function tabla(titulo: string, nota: string, filas: NocheResumen[], mostrarSinIA
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-family:'Jost',Arial,sans-serif;font-size:13px;">
       <tr style="background-color:#2f281f;color:#fff;">
         <th align="left" style="${th}">Noche</th>
-        <th align="left" style="${th}">${mostrarSinIA ? 'Hoy → si apruebas' : 'Precio'}</th>
+        <th align="left" style="${th}">${encabezado}</th>
         <th align="left" style="${th}">Cambio</th>
         <th align="left" style="${th}">Por qué</th>
       </tr>
@@ -163,7 +220,7 @@ function tabla(titulo: string, nota: string, filas: NocheResumen[], mostrarSinIA
 }
 
 export function buildPreciosEmailHtml(r: ResumenPrecios): string {
-  const nada = r.aplicadas.length === 0 && r.pendientes.length === 0;
+  const nada = r.aplicadas.length === 0 && r.pendientes.length === 0 && r.retiradas.length === 0;
   const imp = r.impacto;
 
   const cuerpo = r.error
@@ -227,8 +284,14 @@ export function buildPreciosEmailHtml(r: ResumenPrecios): string {
   )}
 
   ${tabla(
+    'Volvieron a tus reglas',
+    'Noches donde la IA tenía un ajuste propio (o una propuesta) y hoy se quitó: ya cobran lo que dicen tus reglas.',
+    r.retiradas, true, 'Antes → ahora',
+  )}
+
+  ${tabla(
     'Esperan tu visto bueno',
-    'Cambios grandes: no se cobran hasta que los apruebes. El primer número es lo que esa noche cobra HOY con tu propia regla de temporada — no el precio de lista —, así que es contra eso que conviene comparar.',
+    'Cambios grandes: no se cobran hasta que los apruebes. El primer número es lo que esa noche cobra HOY con tus reglas — no el precio de lista — y lo que seguirá cobrando si no contestas. Lo que apruebes se queda fijo hasta que tú lo quites.',
     r.pendientes, true,
   )}
 

@@ -37,9 +37,10 @@ export interface DesgloseNoche {
   /** Una sugerencia de la IA esperando respuesta. */
   propuesta: AjusteDia | null;
   /**
-   * 🔴 La propuesta pendiente ocupa la única fila de esa fecha, así que
-   * mientras espera NO se cobra la regla del dueño. Si su regla pedía más, el
-   * hotel está cobrando de menos sin que nadie lo vea.
+   * 🔴 La propuesta pendiente ocupa la única fila de esa fecha. Desde oct 2026
+   * guarda la regla que se cobra mientras espera (`factorVigente`), así que esto
+   * solo sale true en una propuesta escrita antes de ese cambio, que cobra lista
+   * hasta la siguiente corrida de las reglas.
    */
   propuestaTapaLaRegla: boolean;
 }
