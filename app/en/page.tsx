@@ -314,6 +314,10 @@ export default function EnglishPage() {
               language). Open Wednesday to Monday, 9:00 to 18:00, last entry at 16:00; closed on
               Tuesdays. Swimming in the pools is not allowed.
             </p>
+            {/* La guía completa en inglés (19 oct 2026). */}
+            <p className={styles.contextBody}>
+              <Link href="/en/las-pozas" className={styles.mapsLink}>Las Pozas tickets and hours</Link>
+            </p>
             <p className={styles.contextBody}>
               Paraíso Encantado sits {HOTEL.metrosALasPozas} meters from the garden entrance — close enough to walk,
               far enough to offer complete tranquility.

@@ -15,11 +15,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const suite = suites.find((s) => s.id === id);
   if (!suite) return {};
   const canonical = `https://www.paraisoencantado.com/habitaciones/${id}`;
+  // ≤ 60 caracteres (17 oct 2026: medían de 70 a 83). Sin precio (19 oct 2026): el
+  // «Desde $X» era la tarifa de lista, y con el motor de precios la noche de lunes a
+  // jueves ya sale más barata; el precio de cada fecha se ve en la página.
+  const nombre = suite.name.startsWith('Suite') ? suite.name : `Suite ${suite.name}`;
+  const distintivo =
+    suite.category === 'Suite con spa privado' ? 'Spa Privado'
+    : suite.category === 'Suite con hidromasaje' ? 'Hidromasaje'
+    : 'Hotel Paraíso Encantado';
   return {
-    // ≤ 60 caracteres (17 oct 2026: medían de 70 a 83 y Google los cortaba antes
-    // del precio). Si el nombre ya dice «Suite», no se repite.
-    title: `${suite.name} · ${suite.name.startsWith('Suite') ? 'Xilitla' : 'Suite en Xilitla'} · Desde $${suite.price.toLocaleString('es-MX')} MXN`,
-    description: `${suite.description.slice(0, 80).trimEnd()}… Xilitla, a 5 min de Las Pozas. Desde $${suite.price.toLocaleString('es-MX')} MXN. Reserva directa.`,
+    title: `${nombre} en Xilitla · ${distintivo}`,
+    description: `${suite.description.slice(0, 80).trimEnd()}… Xilitla, a 5 min de Las Pozas. Reserva directa con el hotel.`,
     alternates: { canonical },
     openGraph: {
       title: `${suite.name} — Hotel Paraíso Encantado, Xilitla`,

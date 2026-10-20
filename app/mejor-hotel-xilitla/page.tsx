@@ -129,7 +129,7 @@ const AMENITY_FEATURES = [
 
 const PUBLICADA = '2026-08-31';
 // Última revisión: una URL por búsqueda y sin «el mejor hotel de Xilitla» (SEO-04).
-const MODIFICADA = '2026-10-19';
+const MODIFICADA = '2026-10-20';
 
 /**
  * JSON-LD (17 oct 2026). Se quitaron tres cosas:
@@ -540,6 +540,7 @@ export default function MejorHotelXilitlaPage() {
 
         <RelatedLinks links={[
           { href: '/hotel-cerca-de-las-pozas', label: `Hotel a ${HOTEL.metrosALasPozas} m de Las Pozas` },
+          { href: '/blog/las-pozas-edward-james-guia', label: 'Las Pozas: boletos, horario y reglas' },
           { href: '/hotel-alberca-privada-xilitla', label: 'Las suites con alberca privada' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca Potosina' },
           { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla: en qué zona dormir' },

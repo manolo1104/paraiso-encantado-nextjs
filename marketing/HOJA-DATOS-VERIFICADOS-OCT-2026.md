@@ -15,6 +15,10 @@ no se inventa: se deja como está o se quita. Detalle y URLs en:
 - **No hay venta en línea** (por el momento): se **reserva** el turno en
   boletos.laspozasxilitla.org.mx (hasta 60 días antes) y se **paga en la taquilla**
   (efectivo o tarjeta). Llegar 10 min antes; si llegas tarde pierdes el turno.
+  🟢 **Re-verificado el 19 oct 2026** (portada oficial, aviso «Reservaciones y pagos»: «Por el momento no hay
+  venta en línea… paga EXCLUSIVAMENTE en la taquilla física… el día de tu visita», $180/$120, guía $30; horario
+  9:00-18:00 mié-lun, último acceso 16:00). La página «Planea tu visita» sigue con el esquema VIEJO de principios
+  de 2026 ($170 en línea / $180 en taquilla): NO usarla. El paso de pago del sistema no se vio (captcha).
 - Turnos de 9:00 a 16:00; tour en inglés a las 10:00 y 15:00; los fines de semana hay un
   turno extra a las 8:00 (observado en el sistema oficial).
 - **Prohibido nadar** y entrar con traje de baño. Sin mascotas (solo animales de servicio
@@ -96,5 +100,10 @@ no se inventa: se deja como está o se quita. Detalle y URLs en:
 - Xilitla: cabecera a **675 msnm** (NO 1,100); **Pueblo Mágico desde 2011**.
 - Pemoles = galletas de maíz (la bebida de maíz tostado es el pinole).
 - Museo Leonora Carrington Xilitla: Corregidora 103, a una cuadra del Jardín Hidalgo;
-  abrió en oct 2018.
+  abrió en oct 2018. Mar a dom 11:00–17:00, último acceso 16:30; entrada $50; tarifa
+  preferencial SIN monto publicado (estudiantes, docentes, adultos mayores con credencial);
+  gratis menores de 12 y residentes (Secretaría de Cultura de SLP, nota del 1 oct 2026).
+- 🔴 El mural de Leonora Carrington en Xilitla NO está en Las Pozas: lo pintó hacia 1964 en una
+  columna de la antigua casa de Plutarco Gastélum (Poniatowska, Revista de la Universidad de
+  México, abr 2009). Corregido el 19 oct 2026 en /xilitla y en la guía de Las Pozas.
 - Temporada seca: usar "noviembre a mayo" en todo el sitio.

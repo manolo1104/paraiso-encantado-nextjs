@@ -347,6 +347,10 @@ export default function HotelCercaDeLasPozasPage() {
                 a comer caminando. El recorrido es guiado y dura 1 h 30 min; el jardín cierra los martes
                 y el último acceso es a las 16:00. La proximidad cambia completamente la experiencia.
               </p>
+              <Link href="/blog/las-pozas-edward-james-guia" className={styles.aboutLink}>
+                Guía de Las Pozas: boletos, horario y qué está prohibido →
+              </Link>
+              <br />
               <Link href="/xilitla" className={styles.aboutLink}>
                 Guía completa de Xilitla →
               </Link>

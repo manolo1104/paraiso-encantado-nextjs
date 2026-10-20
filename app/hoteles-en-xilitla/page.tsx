@@ -268,7 +268,7 @@ export default function HotelesEnXilitlaPage() {
 
             <h3>Por qué La Conchita cambia el viaje</h3>
             <p>
-              Las Pozas abren temprano y se llenan a media mañana, cuando llegan los autobuses de
+              <Link href="/blog/las-pozas-edward-james-guia">Las Pozas</Link> abren temprano y se llenan a media mañana, cuando llegan los autobuses de
               excursión. Dormir en La Conchita te permite llegar caminando al primer turno —que se
               reserva antes— y recorrer el jardín antes de que lleguen los grupos. Desde el centro
               tendrías que bajar en auto o taxi; desde la carretera, manejar. Es la diferencia entre

@@ -532,6 +532,27 @@
 
 .faqItem:last-child { border-bottom: none; }
 
+.fuentes {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #555;
+}
+
+.fuentes h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--forest);
+  margin-bottom: 8px;
+  font-family: var(--font-jost, sans-serif);
+}
+
+.fuentes ul { padding-left: 18px; margin: 0; }
+
+.fuentes a { color: var(--forest); text-decoration: underline; }
+
 .faqItem dt {
   font-size: 16px;
   font-weight: 600;

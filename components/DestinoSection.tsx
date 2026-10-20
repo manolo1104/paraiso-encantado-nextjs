@@ -46,9 +46,14 @@ export default function DestinoSection() {
             domesticada.
           </p>
 
-          <Link href="/xilitla" className={styles.destinoLink}>
-            Guía completa de Xilitla →
-          </Link>
+          <div className={styles.destinoLinks}>
+            <Link href="/xilitla" className={styles.destinoLink}>
+              Guía completa de Xilitla →
+            </Link>
+            <Link href="/blog/las-pozas-edward-james-guia" className={styles.destinoLink}>
+              Las Pozas de Edward James: precio y horario →
+            </Link>
+          </div>
 
           <div className={styles.stats}>
             {stats.map(({ Icon, value, label }) => (

@@ -164,10 +164,10 @@ export default function LunaDePageMielPage() {
             <h2 style={{ color: 'white' }}>La Mejor Época para tu Escapada</h2>
             <div style={{ maxWidth: 720, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               {[
-                { mes: 'Oct – Dic', tipo: '✦ Temporada ideal', desc: 'Clima fresco (18-22°C), cascadas llenas, sin turistas masivos. Diciembre es mágico en el pueblo.' },
-                { mes: 'Ene – Mar', tipo: '✦ Temporada ideal', desc: 'Los meses más tranquilos del año. Las Pozas, más tranquilas en el primer turno de la mañana. Perfectas para fotos.' },
+                { mes: 'Oct – Dic', tipo: '✦ Temporada ideal', desc: 'Templado: máximas de 24 a 28 °C y noches de 14 a 18 °C, con las cascadas todavía con agua. Se llenan el Xantolo y del 20 de diciembre al 6 de enero.' },
+                { mes: 'Ene – Mar', tipo: '✦ Temporada ideal', desc: 'Fuera del 1 al 6 de enero y de Semana Santa, los meses más tranquilos del año. Las Pozas, más tranquilas en el primer turno de la mañana.' },
                 { mes: 'Abr – May', tipo: '★ Buena época', desc: 'Clima cálido, Semana Santa concurrida. Reserva con anticipación. Las cascadas aún tienen agua.' },
-                { mes: 'Jun – Sep', tipo: '— Temporada lluviosa', desc: 'Lluvia frecuente pero la selva está en su máximo esplendor. Pozas con agua cristalina.' },
+                { mes: 'Jun – Sep', tipo: '— Temporada lluviosa', desc: 'Lluvia frecuente, pero la selva está en su máximo esplendor y las cascadas llevan más agua. El agua de los ríos baja turbia.' },
               ].map(e => (
                 <div key={e.mes} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 8, padding: '16px 20px', border: '1px solid rgba(255,255,255,0.12)' }}>
                   <p style={{ color: 'var(--gold)', fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 4px', fontFamily: 'var(--font-jost)' }}>{e.mes}</p>

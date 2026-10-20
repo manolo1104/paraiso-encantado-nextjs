@@ -243,6 +243,22 @@
   }
 }
 
+/* 1025-1120px: con «Xilitla» en el menú (oct 2026) el botón Reservar se salía
+   25 px por la derecha a 1025 px. Un poco menos de aire entre enlaces. */
+@media (max-width: 1120px) and (min-width: 1025px) {
+  .navLinks {
+    gap: 14px;
+  }
+
+  .navLinks li a {
+    letter-spacing: 1px;
+  }
+
+  .navContainer {
+    gap: 18px;
+  }
+}
+
 /* Tablet y móvil: hamburger */
 @media (max-width: 1024px) {
   .navLinks,

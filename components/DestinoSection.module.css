@@ -185,6 +185,19 @@
   }
 }
 
+/* Dos enlaces (oct 2026): la guía de Xilitla y la de Las Pozas, que antes no recibía
+   ningún enlace desde la portada. */
+.destinoLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+  margin-bottom: 28px;
+}
+
+.destinoLinks .destinoLink {
+  margin-bottom: 0;
+}
+
 .destinoLink {
   display: inline-block;
   color: var(--gold);

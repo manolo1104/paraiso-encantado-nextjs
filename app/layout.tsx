@@ -37,14 +37,10 @@ export const metadata: Metadata = {
     'san luis potosí', 'boutique hotel edward james garden',
     'hotel near las pozas xilitla', 'huasteca potosina hotel english',
   ],
-  alternates: {
-    canonical: 'https://www.paraisoencantado.com',
-    languages: {
-      'es': 'https://www.paraisoencantado.com',
-      'en': 'https://www.paraisoencantado.com/en',
-      'x-default': 'https://www.paraisoencantado.com',
-    },
-  },
+  // Sin `alternates` aquí (oct 2026): lo heredaba toda página que no declarara el suyo,
+  // y así /encuesta y /gracias-por-tu-opinion se decían copia de la portada. Hoy son
+  // noindex, pero la próxima página que lo olvide se declararía copia sin que el build
+  // avise. La portada (app/page.tsx) declara su propio canonical y sus hreflang.
   openGraph: {
     siteName: 'Hotel Paraíso Encantado',
     title: 'Hotel Paraíso Encantado | Xilitla, Huasteca Potosina',
@@ -74,7 +70,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const isAdmin = pathname.startsWith('/admin');
-  const lang = pathname.startsWith('/en') ? 'en' : 'es';
+  // `/en` o `/en/…`, no cualquier ruta que empiece con «en» (/encuesta salía en inglés).
+  const lang = pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'es';
 
   // La barra fija de WhatsApp + Reservar vivía solo en la portada, y el 88% de
   // las visitas que llegan de Google son de celular: /restaurante, /xilitla,

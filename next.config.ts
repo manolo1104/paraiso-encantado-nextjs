@@ -69,6 +69,19 @@ const LEGACY_REDIRECTS: Array<[source: string, destination: string]> = [
   // la guía de Las Pozas con consejos que el reglamento ya no permite.
   ['/blog/que-hacer-en-xilitla',         '/xilitla'],
   ['/blog/tips-las-pozas-sin-multitudes', '/blog/las-pozas-edward-james-guia'],
+  // 19 oct 2026: «temporada de lluvias vs. seca» y «mejor época» contestaban la misma
+  // pregunta y ninguna estaba indexada; quedó un solo artículo, con el clima del SMN.
+  ['/blog/temporada-lluvias-vs-seca-xilitla', '/blog/mejor-epoca-visitar-xilitla'],
+
+  // ── Direcciones cortas (oct 2026) ───────────────────────────────────────
+  // Para redes, para Tours y para quien la teclea de memoria: daba 404.
+  ['/las-pozas', '/blog/las-pozas-edward-james-guia'],
+
+  // ── Suites con la URL vieja (SEO-08) ────────────────────────────────────
+  // El JSON-LD de la portada las publicó con «lis» (con s) hasta el 17 oct; la
+  // suite se llama «Liz» en el motor y esas dos daban 404.
+  ['/habitaciones/flor-de-lis-1', '/habitaciones/flor-de-liz-1'],
+  ['/habitaciones/flor-de-lis-2', '/habitaciones/flor-de-liz-2'],
 ];
 
 // Next compara el `source` contra el pathname CRUDO de la petición, que sigue

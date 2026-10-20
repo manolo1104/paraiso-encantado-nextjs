@@ -96,7 +96,7 @@ const DESTACADOS = [
     distance: 'Jardín Hidalgo, la plaza principal',
     time: 'Una tarde a pie',
     body: [
-      'La plaza, el ex convento agustino del siglo XVI, el mercado y los cafés de altura. A una cuadra está el Museo Leonora Carrington, con obra de la pintora surrealista que dejó un mural en Las Pozas.',
+      'La plaza, el ex convento agustino del siglo XVI, el mercado y los cafés de altura. A una cuadra está el Museo Leonora Carrington, con obra de la pintora surrealista, amiga de Edward James, que hacia 1964 pintó un mural en la casa de Plutarco Gastélum, el amigo de James.',
       'Los domingos el huapango se baila en la plaza: en junio de 2026, Xilitla rompió un Récord Guinness con más de 500 bailarines.',
     ],
     link: null,
@@ -149,7 +149,9 @@ const EN_EL_PUEBLO: Lugar[] = [
     nombre: 'Museo Leonora Carrington',
     donde: 'Corregidora 103, a una cuadra de la plaza',
     datos: '$50 · mar a dom, 11:00–17:00',
-    texto: 'Abrió en 2018 con obra de la pintora surrealista, amiga de Edward James. Estudiantes, maestros y adultos mayores pagan $25; menores de 12, gratis.',
+    // Tarifas de la nota de la Secretaría de Cultura de SLP del 1 oct 2026: la preferencial
+    // no trae monto publicado (aquí decía $25) y los residentes de Xilitla no pagan.
+    texto: 'Abrió en 2018 con obra de la pintora surrealista, amiga de Edward James. Último acceso a las 16:30. Estudiantes, docentes y adultos mayores con credencial pagan tarifa preferencial; menores de 12 años y residentes de Xilitla, gratis.',
   },
   {
     nombre: 'Domingos de Huapango',
@@ -330,7 +332,7 @@ const schema = {
       // El JSON-LD cambió el 17 oct (sameAs de Las Pozas y Edward James en
       // lib/seo-entidades.ts): igual que LOTE en app/sitemap.ts. Si el lote sale otro
       // día y cambia LOTE, cambiar también esta fecha.
-      dateModified: '2026-10-19',
+      dateModified: '2026-10-20',
       about: ref(XILITLA),
       mentions: [ref(LAS_POZAS), EDWARD_JAMES],
       primaryImageOfPage: IMAGEN_LAS_POZAS,
@@ -704,6 +706,24 @@ export default function XilitlaPage() {
                 </div>
               ))}
             </dl>
+
+            {/* Fuentes (SEO-03, 19 oct 2026): esperaba a que se verificara cómo se
+                compran los boletos de Las Pozas. Fechas reales de cada consulta. */}
+            <div className={styles.fuentes}>
+              <h3>Fuentes</h3>
+              <ul>
+                <li>
+                  Las Pozas (horario, precios, guía y reservaciones):{' '}
+                  <a href="https://laspozasxilitla.org.mx/">sitio oficial del jardín</a>, consultado el 19 de
+                  octubre de 2026.
+                </li>
+                <li>Distancias por carretera: OpenStreetMap (OSRM), medidas el 2 de octubre de 2026.</li>
+                <li>
+                  Mural de Leonora Carrington: Elena Poniatowska, «Un mural en la selva, el de Leonora
+                  Carrington», Revista de la Universidad de México, abril de 2009.
+                </li>
+              </ul>
+            </div>
           </div>
         </section>
 

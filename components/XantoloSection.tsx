@@ -45,14 +45,15 @@ export default function XantoloSection() {
             </h2>
             <p className={styles.cuerpo}>
               Arcos de cempasúchil, altares y comparsas de huehues que bailan de noche en la plaza.
-              Te contamos qué pasa cada noche y cómo vivirlo con respeto.
+              Ya salió el programa 2026: comparsas el sábado 31, catrinas el domingo 1 y, en Las Pozas,
+              un recorrido de noche.
             </p>
 
             <XantoloNoches />
 
             <div className={styles.acciones}>
-              <Link href="/blog/xantolo-en-xilitla" className={styles.primario}>
-                Leer la guía de Xantolo
+              <Link href="/blog/xantolo-en-xilitla#programa-oficial-del-xantolo-2026-en-xilitla" className={styles.primario}>
+                Ver el programa 2026
               </Link>
               {NOCHES_ENTRE_SEMANA.filter((n) => Date.now() <= Date.parse(n.fin)).map((n) => (
                 <FinDeTemporada key={n.href} fin={n.fin}>

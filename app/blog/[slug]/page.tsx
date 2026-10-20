@@ -17,6 +17,14 @@ import styles from './article.module.css';
 // citan los buscadores con IA, así que perderlas costaba doble.
 const MDX_OPTIONS = { mdxOptions: { remarkPlugins: [remarkGfm] } };
 
+const GUIA_PILAR = 'las-pozas-edward-james-guia';
+
+// Artículos con versión en inglés (oct 2026): hreflang en los dos sentidos. La página
+// en inglés declara los mismos tres (es, en, x-default) en su propio metadata.
+const VERSION_EN: Record<string, string> = {
+  'las-pozas-edward-james-guia': 'https://www.paraisoencantado.com/en/las-pozas',
+};
+
 function slugify(text: string): string {
   return text
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -129,7 +137,6 @@ const ENTIDADES: Record<string, { about?: object[]; mentions?: object[] }> = {
   'las-pozas-edward-james-guia': { about: [LAS_POZAS], mentions: [EDWARD_JAMES, XILITLA] },
   'como-llegar-a-xilitla': { about: [XILITLA] },
   'mejor-epoca-visitar-xilitla': { about: [XILITLA], mentions: [LAS_POZAS] },
-  'temporada-lluvias-vs-seca-xilitla': { about: [XILITLA], mentions: [LAS_POZAS] },
   'xilitla-con-ninos': { about: [XILITLA], mentions: [LAS_POZAS] },
   'xantolo-en-xilitla': { mentions: [XILITLA, LAS_POZAS] },
   'ruta-maestra-huasteca-potosina': { mentions: [XILITLA, LAS_POZAS] },
@@ -185,6 +192,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.description,
       alternates: {
         canonical: `https://www.paraisoencantado.com/blog/${slug}`,
+        ...(VERSION_EN[slug]
+          ? {
+              languages: {
+                es: `https://www.paraisoencantado.com/blog/${slug}`,
+                en: VERSION_EN[slug],
+                'x-default': `https://www.paraisoencantado.com/blog/${slug}`,
+              },
+            }
+          : {}),
       },
       openGraph: {
         title: post.title,
@@ -219,7 +235,15 @@ export default async function ArticlePage({ params }: Props) {
   }
 
   const allPosts = getAllPosts();
-  const related = allPosts.filter((p) => p.slug !== slug).slice(0, 3);
+  // La guía de Las Pozas va primero en «Más guías de viaje» de todos los artículos
+  // (oct 2026): es la del tema que más se busca y casi no recibía enlaces del blog.
+  // Después, los de la misma categoría y luego el resto, en el orden del índice.
+  const otros = allPosts.filter((p) => p.slug !== slug);
+  const related = [
+    ...otros.filter((p) => p.slug === GUIA_PILAR),
+    ...otros.filter((p) => p.slug !== GUIA_PILAR && p.category === post.category),
+    ...otros.filter((p) => p.slug !== GUIA_PILAR && p.category !== post.category),
+  ].slice(0, 3);
 
   const authorProfile = AUTHORS[post.author] ?? AUTHORS['Hotel Paraíso Encantado'];
   const headings = extractHeadings(post.content);
@@ -320,7 +344,7 @@ export default async function ArticlePage({ params }: Props) {
       text: 'Ya sabes cómo llegar — ahora elige dónde quedarte:',
       links: [
         { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas en una tabla' },
-        { href: '/habitaciones', label: 'Ver las 13 suites', desc: 'Desde $1,500 MXN/noche · Estacionamiento incluido' },
+        { href: '/xilitla', label: 'Qué hacer en Xilitla', desc: '14 lugares y cuánto manejas a cada uno' },
         { href: '/reservar', label: 'Reservar ahora', desc: 'Confirmación instantánea · Sin comisiones' },
       ],
     },
@@ -360,14 +384,6 @@ export default async function ArticlePage({ params }: Props) {
         { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca', desc: 'Qué ves desde cada base y cuánto manejas' },
         { href: '/experiencias', label: 'Tours por la Huasteca', desc: 'Tamul, Pozas, Puente de Dios · Guías certificados' },
         { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días con tours guiados' },
-      ],
-    },
-    'temporada-lluvias-vs-seca-xilitla': {
-      text: 'Ya sabes cuándo ir — ahora asegura tu lugar:',
-      links: [
-        { href: '/reservar', label: 'Verificar disponibilidad', desc: 'Temporada alta · Reserva con anticipación' },
-        { href: '/paquetes', label: 'Paquetes de hotel y tours', desc: 'De 3 a 6 días · Consulta disponibilidad' },
-        { href: '/habitaciones', label: 'Ver suites disponibles', desc: '13 opciones · Desde $1,500 MXN/noche' },
       ],
     },
     'mejor-epoca-visitar-xilitla': {

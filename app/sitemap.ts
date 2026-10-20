@@ -26,8 +26,16 @@ const BASE = 'https://www.paraisoencantado.com';
 // artículos tocados en el lote (xantolo-en-xilitla y xilitla-con-ninos).
 const LOTE = '2026-10-19';
 
+// 🔴 Segundo lote (copia del 19 oct, salió el 20 oct 2026): Xantolo con el programa
+// oficial, boletos de Las Pozas verificados, /en/las-pozas, enlaces a la guía,
+// suites sin precio en el título y fuentes de /xilitla. Solo lo llevan las páginas
+// cuyo texto cambió en ese lote; las demás se quedan con LOTE. Va de la mano con el
+// `dateModified` de app/xilitla/page.tsx, `MODIFICADA` de mejor-hotel-xilitla, las
+// fechas de app/en/las-pozas y el `dateModified` de los 7 artículos tocados.
+const LOTE_2 = '2026-10-20';
+
 const LASTMOD = {
-  '/': LOTE,
+  '/': LOTE_2,
   // f72d074. El calendario de fechas cambió el 12 oct y en este lote, pero es la
   // ventana que se abre en el navegador, no el texto de la página.
   '/habitaciones': '2026-10-02',
@@ -37,26 +45,27 @@ const LASTMOD = {
   '/paquetes': LOTE,
   '/grupos-eventos': LOTE,
   '/galeria': LOTE,                              // fuera las fotos de Las Pozas hechas con IA
-  '/hotel-luna-de-miel-xilitla': LOTE,
+  '/hotel-luna-de-miel-xilitla': LOTE_2,
   '/hotel-familias-xilitla': LOTE,
-  '/hotel-cerca-de-las-pozas': LOTE,
-  '/mejor-hotel-xilitla': LOTE,
+  '/hotel-cerca-de-las-pozas': LOTE_2,
+  '/mejor-hotel-xilitla': LOTE_2,
   '/mejor-hotel-huasteca-potosina': LOTE,
-  '/hoteles-en-xilitla': LOTE,
+  '/hoteles-en-xilitla': LOTE_2,
   '/donde-hospedarse-huasteca-potosina': LOTE,
   '/hotel-alberca-privada-xilitla': LOTE,
   // El texto es del 2 oct; el JSON-LD del hotel (lodgingSchema) cambió en este lote.
   '/que-hacer-huasteca-potosina-3-dias': LOTE,
-  '/xilitla': LOTE,
+  '/xilitla': LOTE_2,
   '/sobre-nosotros': LOTE,
   '/reviews': LOTE,
   '/contacto': LOTE,
-  '/en': LOTE,
+  '/en': LOTE_2,
+  '/en/las-pozas': LOTE_2,                       // nueva (20 oct 2026)
   '/reservar': LOTE,
   // El índice del blog: esta fecha o la del artículo más nuevo, la que sea mayor.
   '/blog': LOTE,
   // Plantilla de las 13 suites (app/habitaciones/[id]/page.tsx).
-  '/habitaciones/[id]': LOTE,
+  '/habitaciones/[id]': LOTE_2,
 } as const;
 
 type Ruta = Exclude<keyof typeof LASTMOD, '/habitaciones/[id]'>;
@@ -125,6 +134,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     pagina('/contacto', 0.60, 'monthly'),
     // Versión en inglés: hreflang es/en en metadata.alternates de / y de /en.
     pagina('/en', 0.75, 'monthly', ['/images/JUNGLA/PORTADA.JPG']),
+    // Guía de Las Pozas en inglés; hreflang recíproco con la guía en español.
+    pagina('/en/las-pozas', 0.75, 'monthly', [FOTO_LAS_POZAS]),
     pagina('/reservar', 0.90, 'weekly'),
     // FUERA desde el 17 oct 2026: /politica-privacidad, /politica-cancelacion y
     // /terminos-condiciones. Llevan robots noindex, y el sitemap no debe pedir que
