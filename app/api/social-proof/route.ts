@@ -3,16 +3,19 @@ import { getAllBookings } from '@/lib/admin/sheets-admin';
 import { getSheetsClient, sheetsCall } from '@/lib/sheets';
 import { BOOKING_ROOMS } from '@/lib/booking';
 import { parseFechaHojaMx as parseFechaMx } from '@/lib/date-mx';
-import { contarReservasCalendario } from '@/lib/admin/reservas-calendario';
+import { getReservasCalendario } from '@/lib/admin/reservas-calendario';
 
 export const dynamic = 'force-dynamic';
 
 // Prueba social REAL para /reservar: reservas recientes anonimizadas
 // (nombre de pila + inicial, suite, hace cuánto) + conteo de 30 días.
 // Sin PII: nunca exponemos apellidos, correos, teléfonos ni fechas de estancia.
+// Dos fuentes: la hoja Reservas (web, panel y Camila; con nombre) y las reservas
+// que el hotel cierra desde /admin/calendario (WhatsApp, teléfono…; sin nombre).
 
 interface RecentEntry {
-  name: string;
+  /** Nombre de pila + inicial; null en las del calendario del panel (no guardan nombre). */
+  name: string | null;
   room: string;
   agoHours: number;
 }
@@ -106,37 +109,45 @@ export async function GET() {
       getAllBookings(),
       calcOccupancyPct(),
       // Reservas que el hotel cerró desde /admin/calendario (WhatsApp,
-      // teléfono…): cuentan para «N reservas confirmadas este mes», pero NO
-      // entran en `recent` (el aviso de reserva verificada necesita un nombre).
-      contarReservasCalendario(30).catch(() => 0),
+      // teléfono…). Cuentan para «N reservas confirmadas este mes» y, desde el
+      // 20 oct 2026, también salen en el aviso, sin nombre: eran 12 de las 15
+      // reservas de esa semana y el aviso solo enseñaba las de la hoja Reservas,
+      // casi todas de hacía semanas.
+      getReservasCalendario(true).catch(() => []),
     ]);
     const now = Date.now();
     const DAY = 86_400_000;
+    // Ni el conteo ni el aviso miran más de un mes atrás (el aviso llegaba a 45
+    // días: «hace 41 días» no convence a nadie).
+    const VENTANA_MS = 30 * DAY;
+    const horas = (ageMs: number) => Math.max(1, Math.round(ageMs / 3_600_000));
 
     let count30d = 0;
-    const recent: RecentEntry[] = [];
+    const candidatas: RecentEntry[] = [];
 
-    // De la más nueva a la más vieja (la hoja se llena por append)
-    for (let i = bookings.length - 1; i >= 0; i--) {
-      const b = bookings[i];
+    for (const b of bookings) {
       if (b.estado === 'CANCELADA') continue;
       const created = parseFechaMx(b.fecha);
       if (!created) continue;
       const ageMs = now - created.getTime();
-      if (ageMs < 0 || ageMs > 45 * DAY) continue;
-
-      if (ageMs <= 30 * DAY) count30d++;
-
-      if (recent.length < 20) {
-        const name = anonymizeName(b.cliente);
-        const room = firstRoom(b.habitaciones);
-        if (name && room) {
-          recent.push({ name, room, agoHours: Math.max(1, Math.round(ageMs / 3_600_000)) });
-        }
-      }
+      if (ageMs < 0 || ageMs > VENTANA_MS) continue;
+      count30d++;
+      const name = anonymizeName(b.cliente);
+      const room = firstRoom(b.habitaciones);
+      if (name && room) candidatas.push({ name, room, agoHours: horas(ageMs) });
     }
 
-    count30d += delCalendario;
+    for (const r of delCalendario) {
+      if (r.estado !== 'activa') continue;
+      const ageMs = now - Date.parse(r.registrada);
+      if (!(ageMs >= 0 && ageMs <= VENTANA_MS)) continue; // también deja fuera una fecha ilegible (NaN)
+      count30d++;
+      const room = firstRoom(r.suite);
+      if (room) candidatas.push({ name: null, room, agoHours: horas(ageMs) });
+    }
+
+    // La más nueva primero, venga de la fuente que venga.
+    const recent = candidatas.sort((a, b) => a.agoHours - b.agoHours).slice(0, 20);
 
     const payload: Payload = { count30d, recent, occupancyPct };
     cache = { at: Date.now(), payload };

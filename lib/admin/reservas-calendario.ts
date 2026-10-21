@@ -9,8 +9,9 @@
  *  - la reserva queda apuntada en la pestaña `ReservasCalendario` y se suma al
  *    «N reservas confirmadas este mes» de /reservar (ver /api/social-proof).
  *    Antes esas ventas no existían para la prueba social: solo contaba la
- *    hoja Reservas. NO salen en el aviso de «reserva verificada» (no hay
- *    nombre que enseñar, y el dueño no lo pidió).
+ *    hoja Reservas. Desde el 20 oct 2026 salen también en el aviso de reservas
+ *    recientes, sin nombre («Nueva reserva en Jungla»): no hay nombre que
+ *    enseñar, y el dueño pidió que el aviso traiga las reservas más nuevas.
  *
  * Una fila por reserva (no por noche): cerrar 3 noches de una reserva cuenta 1.
  */
@@ -93,13 +94,6 @@ export async function getReservasCalendario(soloLeer = false): Promise<ReservaCa
   const res = await sheetsCall(() => client.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${TAB}!A:H` }));
   const filas = res.data.values || [];
   return filas.slice(1).map((r, i) => aFila(r as string[], i + 2)).filter((r) => r.id);
-}
-
-/** Reservas del calendario (activas) registradas en los últimos `dias` días. */
-export async function contarReservasCalendario(dias = 30): Promise<number> {
-  const desde = Date.now() - dias * 86_400_000;
-  const filas = await getReservasCalendario(true);
-  return filas.filter((r) => r.estado === 'activa' && Date.parse(r.registrada) >= desde).length;
 }
 
 /** 'YYYY-MM-DD' de la columna A de la matriz, venga como venga. */

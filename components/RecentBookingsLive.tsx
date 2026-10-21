@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { X, BadgeCheck } from 'lucide-react';
 
 export interface LiveBookingItem {
-  name: string;
+  /** null = reserva cerrada desde el calendario del panel (WhatsApp, teléfono…): no guarda nombre. */
+  name: string | null;
   room: string;
   agoHours: number;
 }
@@ -66,6 +67,8 @@ export default function RecentBookingsLive({ items }: { items: LiveBookingItem[]
         .rbl-text { min-width: 0; }
         .rbl-line { font-size: 0.8rem; color: #1a2e1a; line-height: 1.35; }
         .rbl-line strong { font-weight: 600; }
+        /* La suite no se parte: en celular salía «Suite Flor de Liz» y el «1» solo abajo */
+        .rbl-room { white-space: nowrap; }
         .rbl-sub { font-size: 0.7rem; color: #6a7a6a; margin-top: 1px; }
         .rbl-close {
           background: none; border: none; cursor: pointer;
@@ -82,8 +85,12 @@ export default function RecentBookingsLive({ items }: { items: LiveBookingItem[]
       <div className={`rbl-toast ${visible ? 'rbl-visible' : ''}`} role="status" aria-live="polite">
         <BadgeCheck size={20} strokeWidth={1.6} className="rbl-icon" aria-hidden="true" />
         <div className="rbl-text">
-          <div className="rbl-line"><strong>{item.name}</strong> reservó <strong>{item.room}</strong></div>
-          <div className="rbl-sub">{ago(item.agoHours)} · Reserva verificada</div>
+          <div className="rbl-line">
+            {item.name
+              ? <><strong>{item.name}</strong> reservó <strong className="rbl-room">{item.room}</strong></>
+              : <>Nueva reserva en <strong className="rbl-room">{item.room}</strong></>}
+          </div>
+          <div className="rbl-sub">{ago(item.agoHours)} · {item.name ? 'Reserva verificada' : 'Reserva confirmada'}</div>
         </div>
         <button className="rbl-close" onClick={() => setDismissed(true)} aria-label="Cerrar avisos de reservas">
           <X size={13} />
