@@ -34,14 +34,34 @@ export default function WhatsAppRecoveryWidget({ bookingData = {} }: Props) {
   // En checkout NO interrumpir — zona sagrada sin distracciones
   const isCheckout = pathname === '/reservar/checkout';
 
-  // Timers + exit intent — solo en /reservar, nunca en checkout
+  // Por INACTIVIDAD, no por reloj (28 oct 2026, Clarity): antes eran 3 min
+  // fijos desde que abría la página y el aviso tapaba la pantalla a quien
+  // seguía pasando fotos. Ahora cuenta desde el último toque, scroll o tecla,
+  // no sale con una galería o un calendario abiertos, y sí sale al VOLVER a la
+  // pestaña después de 3 min fuera (ahí sí se quedó a medias).
   useEffect(() => {
     if (isCheckout) return;
-
-    // 3 min sin completar
-    const t3 = setTimeout(() => showPopup('booking_abandoned'), 3 * 60_000);
-    // 5 min fallback
-    const t5 = setTimeout(() => showPopup('stuck_in_step'), 5 * 60_000);
+    const INACTIVO_MS = 3 * 60_000;
+    let ultimo = Date.now();
+    let ocultoDesde = 0;
+    const tocar = () => { ultimo = Date.now(); };
+    const hayDialogo = () => !!document.querySelector('[role="dialog"]:not(.wa-popup)');
+    const revisar = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - ultimo < INACTIVO_MS) return;
+      if (hayDialogo()) { ultimo = Date.now(); return; }
+      showPopup('booking_abandoned');
+    };
+    const alCambiarVisibilidad = () => {
+      if (document.visibilityState === 'hidden') { ocultoDesde = Date.now(); return; }
+      if (ocultoDesde && Date.now() - ocultoDesde >= INACTIVO_MS && !hayDialogo()) showPopup('came_back');
+      ocultoDesde = 0;
+      ultimo = Date.now();
+    };
+    const eventos: (keyof DocumentEventMap)[] = ['pointerdown', 'touchstart', 'scroll', 'keydown', 'wheel'];
+    eventos.forEach(ev => document.addEventListener(ev, tocar, { passive: true }));
+    document.addEventListener('visibilitychange', alCambiarVisibilidad);
+    const intervalo = setInterval(revisar, 15_000);
 
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 0) {
@@ -52,8 +72,9 @@ export default function WhatsAppRecoveryWidget({ bookingData = {} }: Props) {
     document.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
-      clearTimeout(t3);
-      clearTimeout(t5);
+      clearInterval(intervalo);
+      eventos.forEach(ev => document.removeEventListener(ev, tocar));
+      document.removeEventListener('visibilitychange', alCambiarVisibilidad);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, [showPopup, isCheckout]);

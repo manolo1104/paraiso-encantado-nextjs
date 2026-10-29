@@ -6,6 +6,7 @@ import FloatingLeaves from '@/components/FloatingLeaves';
 import { HOTEL } from '@/lib/seo-hotel';
 import { ENTITY_IDS, LAS_POZAS, EDWARD_JAMES, XILITLA, ref } from '@/lib/seo-entidades';
 import styles from './xilitla.module.css';
+import EntreSemanaDesde from '@/components/EntreSemanaDesde';
 
 // Esta es LA página de «qué hacer en Xilitla». Hasta oct 2026 competía con el
 // artículo /blog/que-hacer-en-xilitla (mismo H1, precios distintos); en 90 días
@@ -686,6 +687,9 @@ export default function XilitlaPage() {
                   Reservar Ahora
                 </Link>
               </div>
+              {/* Mismo aviso de precio entre semana + calendario que en /reservar
+                  (28 oct 2026): /xilitla trae 143 visitas y solo 7 llegaban al motor. */}
+              <EntreSemanaDesde origen="xilitla" variante="claro" diferido />
               <p className={styles.stayAlt}>
                 ¿Comparando opciones? En <Link href="/hoteles-en-xilitla">hoteles en Xilitla</Link> están los
                 demás, con su zona y su distancia a Las Pozas.

@@ -33,15 +33,17 @@ export default function Navbar() {
       <div className={styles.navContainer}>
         {/* Logo */}
         <a href="/" className={styles.navLogo} aria-label="Paraíso Encantado - Inicio">
+          {/* Logo nuevo con nombre (28 oct 2026): el mismo SVG horizontal de los
+              posts de Instagram (PARAISO-IG-POSTS/build/logo-h.svg), en blanco
+              sobre el verde del navbar. Sustituye al icono de las manos + texto. */}
           <Image
-            src="/logo.png"
-            alt="Hotel Paraíso Encantado Xilitla — logo"
-            width={36}
-            height={36}
+            src="/logo-h.svg"
+            alt="Hotel Paraíso Encantado, Xilitla"
+            width={1250}
+            height={570}
             className={styles.navLogoImg}
             priority
           />
-          <em>Paraíso Encantado</em>
         </a>
 
         {/* Links desktop */}

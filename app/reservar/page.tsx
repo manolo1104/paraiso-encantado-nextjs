@@ -252,6 +252,9 @@ function ReservarPageInner() {
   // Calendario de estancia (components/calendario). Se abre solo al entrar sin
   // fechas: antes la página buscaba «hoy → mañana» sin que nadie lo pidiera.
   const [calendarioAbierto, setCalendarioAbierto] = useState(false);
+  // Celular: con fechas ya buscadas, el buscador se pliega a un renglón
+  // («4 → 6 nov · 2 adultos · Cambiar») y la primera suite sube a la vista.
+  const [editarBusqueda, setEditarBusqueda] = useState(false);
   // Cada búsqueda lleva un número; la respuesta de una búsqueda vieja (dos
   // rangos elegidos seguidos) se descarta en vez de pisar a la nueva.
   const searchSeqRef = useRef(0);
@@ -270,6 +273,7 @@ function ReservarPageInner() {
   // ── UI ────────────────────────────────────────────────
   const [lightboxRoom, setLightboxRoom] = useState<BookingRoom | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState(0);
+  const lbTouchX = useRef<number | null>(null);
   const [detailRoom, setDetailRoom] = useState<BookingRoom | null>(null);
 
   // ── Apartado temporal REAL (cronómetro de 10 min) ─────
@@ -629,6 +633,7 @@ function ReservarPageInner() {
   }
 
   async function handleSearch() {
+    setEditarBusqueda(false);
     if (!checkin || !checkout || nights <= 0) {
       setCalendarioAbierto(true);
       return;
@@ -764,6 +769,13 @@ function ReservarPageInner() {
     router.push('/reservar/checkout');
   }
 
+  function abrirGaleria(room: BookingRoom) {
+    if (room.images.length === 0) return;
+    setLightboxRoom(room);
+    setLightboxIdx(0);
+    trackEvent('GALERIA_ABIERTA', { suite: room.name, searched });
+  }
+
   /** «Reservar esta»: solo si el carrito está vacío y todo el grupo cabe en esa suite. */
   function puedeReservarDirecto(room: BookingRoom): boolean {
     return searched && !searching && !availabilityDegraded && cart.length === 0
@@ -833,21 +845,28 @@ function ReservarPageInner() {
     goToCheckout();
   }
 
+  const buscadorCompacto = searched && !!checkin && !!checkout && !editarBusqueda;
+  const fmtCorta = (f: string) => new Date(`${f}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
+
   return (
     <main className={styles.main}>
+      {/* En celular (28 oct 2026, Clarity): antes de la primera suite había
+          cabecera, barra de progreso, 4 insignias, franja de demanda y el
+          formulario otra vez; el 50% no bajaba de la mitad de la página. Lo
+          que no decide nada se va al final o solo a escritorio. */}
       <div className={styles.pageHeader}>
-        <p className={styles.eyebrow}>Reserva Directa · Sin Comisiones</p>
+        <p className={`${styles.eyebrow} ${styles.soloEscritorio}`}>Reserva Directa · Sin Comisiones</p>
         <h1>Reserva tu <em>Suite</em></h1>
-        <p className={styles.headerSub}>
+        <p className={`${styles.headerSub} ${styles.soloEscritorio}`}>
           Sin intermediarios · Confirmación instantánea · Reembolso 100% hasta 7 días antes
         </p>
       </div>
 
       <CheckoutProgressBar currentStep={1} />
-      <TrustBadgesReservar />
+      <div className={styles.soloEscritorio}><TrustBadgesReservar /></div>
 
       {socialProof !== null && (socialProof.count30d >= 5 || (socialProof.occupancyPct !== null && socialProof.occupancyPct >= 50)) && (
-        <div className={styles.demandStrip} role="status">
+        <div className={`${styles.demandStrip} ${styles.soloEscritorio}`} role="status">
           <Flame size={14} strokeWidth={2} />
           <span>
             {socialProof.occupancyPct !== null && socialProof.occupancyPct >= 50 && (
@@ -861,8 +880,21 @@ function ReservarPageInner() {
         </div>
       )}
 
+      {buscadorCompacto && (
+        <div className={`${styles.resumenBusqueda} ${styles.soloMovil}`}>
+          <span>
+            <strong>{fmtCorta(checkin)} → {fmtCorta(checkout)}</strong>
+            {' '}· {nights} {nights === 1 ? 'noche' : 'noches'} · {adults} {adults === 1 ? 'adulto' : 'adultos'}
+            {children > 0 ? ` · ${children} ${children === 1 ? 'menor' : 'menores'}` : ''}
+          </span>
+          <button type="button" onClick={() => { setEditarBusqueda(true); trackEvent('BUSQUEDA_EDITAR', { checkin, checkout }); }}>
+            Cambiar
+          </button>
+        </div>
+      )}
+
       {/* ── Search bar (selectores) ── */}
-      <div className={styles.searchBar}>
+      <div className={`${styles.searchBar} ${buscadorCompacto ? styles.searchBarPlegada : ''}`}>
         <div className={styles.searchFields}>
           {/* Llegada y Salida abren el calendario propio: cada noche dice si
               hay lugar y desde cuánto (components/calendario). */}
@@ -945,7 +977,7 @@ function ReservarPageInner() {
 
       {/* ── Date summary + blocked warning ── */}
       {nights > 0 && checkin && checkout && (
-        <div className={styles.dateSummaryRow}>
+        <div className={`${styles.dateSummaryRow} ${styles.soloEscritorio}`}>
           <p className={styles.nightsSummary}>
             <CalendarDays size={14} strokeWidth={1.5} />
             {' '}{nights} noche{nights !== 1 ? 's' : ''} · {new Date(`${checkin}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} → {new Date(`${checkout}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
@@ -1059,7 +1091,7 @@ function ReservarPageInner() {
           )}
 
           {searched && !searching && !allUnavailable && !availabilityDegraded && unavailCount > 0 && (
-            <div className={styles.urgencyBanner} role="status">
+            <div className={`${styles.urgencyBanner} ${styles.soloEscritorio}`} role="status">
               <Flame size={15} strokeWidth={2} />
               <span>
                 <strong>{unavailCount} de {visibleRooms.length} habitaciones</strong> ya están reservadas en tus fechas — asegura la tuya.
@@ -1091,7 +1123,7 @@ function ReservarPageInner() {
                   className={`${styles.roomImageWrap} ${room.images.length > 0 ? styles.roomImageZoom : ''}`}
                   onClick={e => {
                     e.stopPropagation();
-                    if (room.images.length > 0) { setLightboxRoom(room); setLightboxIdx(0); }
+                    abrirGaleria(room);
                   }}
                 >
                   <Image
@@ -1111,7 +1143,7 @@ function ReservarPageInner() {
                   </div>
                   <button
                     className={styles.photoBtn}
-                    onClick={e => { e.stopPropagation(); setLightboxRoom(room); setLightboxIdx(0); }}
+                    onClick={e => { e.stopPropagation(); abrirGaleria(room); }}
                     aria-label={`Ver galería de ${room.name}`}
                   >
                     Ver fotos ({room.images.length})
@@ -1592,18 +1624,79 @@ function ReservarPageInner() {
         />
       )}
 
+      {/* Las insignias de confianza, en celular, después de las suites. */}
+      <div className={styles.soloMovil}><TrustBadgesReservar /></div>
+
       {/* ── Lightbox ── */}
-      {lightboxRoom && (
-        <div className={styles.lightbox} onClick={() => setLightboxRoom(null)} role="dialog" aria-modal="true" aria-label={`Galería de ${lightboxRoom.name}`}>
-          <button className={styles.lbClose} onClick={() => setLightboxRoom(null)} aria-label="Cerrar galería">✕</button>
-          <button className={styles.lbPrev} onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i - 1 + lightboxRoom.images.length) % lightboxRoom.images.length); }} aria-label="Foto anterior">‹</button>
-          <div className={styles.lbImg} onClick={e => e.stopPropagation()}>
-            <Image src={lightboxRoom.images[lightboxIdx]} alt={lightboxRoom.name} fill sizes="100vw" className={styles.lbImage} priority />
+      {/* Pie con precio y salida a reservar (28 oct 2026, Clarity): la galería
+          era donde terminaban 11 de 13 visitas al motor en celular (474 de
+          1,783 toques eran «›» y «Reservar» tenía 3) porque aquí no había ni
+          precio ni botón. También se pasa de foto deslizando. */}
+      {lightboxRoom && (() => {
+        const n = lightboxRoom.images.length;
+        const huespedesLb = Math.max(1, Math.min(adults || 1, lightboxRoom.maxGuests));
+        const totalLb = searched && checkin && checkout ? calcRoomStayTotal(lightboxRoom, huespedesLb, checkin, checkout, factores) : null;
+        const agotadaLb = isUnavailable(lightboxRoom);
+        const directoLb = puedeReservarDirecto(lightboxRoom);
+        const enCarritoLb = inCart(lightboxRoom.id);
+        const siguiente = (dir: 1 | -1) => setLightboxIdx(i => (i + dir + n) % n);
+        return (
+          <div className={styles.lightbox} onClick={() => setLightboxRoom(null)} role="dialog" aria-modal="true" aria-label={`Galería de ${lightboxRoom.name}`}>
+            <button className={styles.lbClose} onClick={() => setLightboxRoom(null)} aria-label="Cerrar galería">✕</button>
+            <button className={styles.lbPrev} onClick={e => { e.stopPropagation(); siguiente(-1); }} aria-label="Foto anterior">‹</button>
+            <div
+              className={styles.lbImg}
+              onClick={e => e.stopPropagation()}
+              onTouchStart={e => { lbTouchX.current = e.touches[0]?.clientX ?? null; }}
+              onTouchEnd={e => {
+                const x0 = lbTouchX.current;
+                lbTouchX.current = null;
+                if (x0 == null) return;
+                const dx = (e.changedTouches[0]?.clientX ?? x0) - x0;
+                if (Math.abs(dx) >= 40) siguiente(dx < 0 ? 1 : -1);
+              }}
+            >
+              <Image src={lightboxRoom.images[lightboxIdx]} alt={lightboxRoom.name} fill sizes="100vw" className={styles.lbImage} priority />
+            </div>
+            <button className={styles.lbNext} onClick={e => { e.stopPropagation(); siguiente(1); }} aria-label="Foto siguiente">›</button>
+            <div className={styles.lbFooter} onClick={e => e.stopPropagation()}>
+              <div className={styles.lbInfo}>
+                <strong>{lightboxRoom.name}</strong>
+                <span>
+                  {lightboxIdx + 1}/{n}
+                  {agotadaLb
+                    ? ' · Agotada en tus fechas'
+                    : totalLb != null
+                      ? <> · <b>{formatMXN(totalLb)}</b> por {nights} {nights === 1 ? 'noche' : 'noches'}</>
+                      : <> · desde <b>{formatMXN(lightboxRoom.price)}</b>/noche</>}
+                </span>
+              </div>
+              {agotadaLb ? null : directoLb ? (
+                <button
+                  className={styles.lbCta}
+                  onClick={() => { trackEvent('GALERIA_RESERVAR', { suite: lightboxRoom.name, action: 'reservar' }); setLightboxRoom(null); reservarEsta(lightboxRoom); }}
+                >
+                  Reservar esta suite
+                </button>
+              ) : searched ? (
+                <button
+                  className={styles.lbCta}
+                  onClick={() => { trackEvent('GALERIA_RESERVAR', { suite: lightboxRoom.name, action: enCarritoLb ? 'ya_en_carrito' : 'seleccionar' }); if (!enCarritoLb) addToCart(lightboxRoom); setLightboxRoom(null); }}
+                >
+                  {enCarritoLb ? 'Ya está en tu reserva' : 'Seleccionar esta suite'}
+                </button>
+              ) : (
+                <button
+                  className={styles.lbCta}
+                  onClick={() => { trackEvent('GALERIA_RESERVAR', { suite: lightboxRoom.name, action: 'ver_fechas' }); setLightboxRoom(null); setCalendarioAbierto(true); }}
+                >
+                  Ver fechas y precio
+                </button>
+              )}
+            </div>
           </div>
-          <button className={styles.lbNext} onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i + 1) % lightboxRoom.images.length); }} aria-label="Foto siguiente">›</button>
-          <p className={styles.lbCaption}>{lightboxRoom.name} · {lightboxIdx + 1}/{lightboxRoom.images.length}</p>
-        </div>
-      )}
+        );
+      })()}
       <RecentBookingsLive items={socialProof?.recent ?? []} />
       <WhatsAppRecoveryWidget />
     </main>

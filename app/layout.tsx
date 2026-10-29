@@ -116,7 +116,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         {!isAdmin && <Footer />}
         {!isAdmin && <WhatsAppButton />}
-        {mostrarBarraMovil && <StickyBar />}
+        {/* La barra se esconde sola en /reservar y /habitaciones/* según la URL
+            del momento (components/StickyBar.tsx); aquí solo se excluye el panel. */}
+        {!isAdmin && <StickyBar />}
         {!isAdmin && <ExitIntentPopup />}
       </body>
     </html>

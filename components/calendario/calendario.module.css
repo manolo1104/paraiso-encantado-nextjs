@@ -334,6 +334,8 @@
   cursor: pointer;
 }
 .listo:hover { background: var(--moss); }
+.listo:disabled { opacity: 0.45; cursor: default; }
+.listo:disabled:hover { background: var(--forest); }
 .listo:focus-visible,
 .borrar:focus-visible,
 .masMeses:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }

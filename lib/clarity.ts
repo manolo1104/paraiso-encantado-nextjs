@@ -82,6 +82,18 @@ function idSesion(): string | null {
   }
 }
 
+/**
+ * Eventos sueltos que sirven para filtrar grabaciones (28 oct 2026): abrir la
+ * galería, reservar desde ella, cerrar el calendario con solo la llegada y
+ * cuándo salió el popup de WhatsApp.
+ */
+const EVENTOS: Record<string, string> = {
+  GALERIA_ABIERTA: 'galeria_abierta',
+  GALERIA_RESERVAR: 'galeria_reservar',
+  CALENDARIO_CERRADO_SIN_SALIDA: 'calendario_sin_salida',
+  EXIT_POPUP_SHOWN: 'popup_whatsapp',
+};
+
 export function etiquetarClarity(evento: string, datos: Record<string, unknown> = {}): void {
   try {
     const clarity = (window as unknown as VentanaConClarity).clarity;
@@ -99,6 +111,9 @@ export function etiquetarClarity(evento: string, datos: Record<string, unknown> 
 
     const contacto = CONTACTOS[evento];
     if (contacto) clarity('event', contacto);
+
+    const suelto = EVENTOS[evento];
+    if (suelto) clarity('event', suelto);
 
     if (GRABAR_SIEMPRE.has(evento)) clarity('upgrade', evento);
   } catch {

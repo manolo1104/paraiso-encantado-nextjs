@@ -40,10 +40,13 @@
 }
 
 .navLogoImg {
-  width: 36px;
-  height: 36px;
+  height: 62px;
+  width: auto;
   object-fit: contain;
   flex-shrink: 0;
+}
+@media (max-width: 1024px) {
+  .navLogoImg { height: 50px; }
 }
 
 .navLogo:hover {

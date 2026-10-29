@@ -959,15 +959,43 @@
 
 .lbImage { object-fit: contain; }
 
-.lbCaption {
+.lbFooter {
   position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(255,255,255,0.7);
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6));
+  color: #fff;
   font-family: var(--font-jost), sans-serif;
-  font-size: 0.78rem;
-  white-space: nowrap;
+}
+
+.lbInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lbInfo strong { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.2rem; font-weight: 500; line-height: 1.1; }
+.lbInfo span { font-size: 0.8rem; color: rgba(255,255,255,0.82); }
+.lbInfo b { color: #fff; font-weight: 600; }
+
+.lbCta {
+  flex-shrink: 0;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 18px;
+  font-family: var(--font-jost), sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  min-height: 44px;
+}
+.lbCta:hover { filter: brightness(1.08); }
+
+@media (max-width: 768px) {
+  .lbImg { width: 100vw; height: 62vh; }
+  .lbPrev, .lbNext { top: 38%; }
 }
 
 /* ── Sidebar includes block ── */
@@ -1125,6 +1153,45 @@
 /* En teléfonos angostos, una columna: el contador no cabe en 2 columnas */
 @media (max-width: 480px) {
   .searchFields { grid-template-columns: 1fr; }
+}
+
+/* ── Celular: primera suite a la vista (28 oct 2026) ── */
+.resumenBusqueda {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e4ddd3;
+  border-radius: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.86rem;
+  color: #4a5a4a;
+}
+.resumenBusqueda strong { color: #1a2e1a; font-weight: 600; }
+.resumenBusqueda button {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid #1e3012;
+  color: #1e3012;
+  border-radius: 4px;
+  padding: 7px 12px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 36px;
+}
+@media (max-width: 768px) {
+  .soloEscritorio { display: none !important; }
+  .searchBarPlegada { display: none !important; }
+  .pageHeader { padding-top: 12px; padding-bottom: 4px; }
+  .pageHeader h1 { font-size: 1.7rem; margin-bottom: 4px; }
+}
+@media (min-width: 769px) {
+  .soloMovil { display: none !important; }
 }
 
 /* ── Room name row & detail button ── */

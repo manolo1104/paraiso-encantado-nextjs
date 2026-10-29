@@ -24,6 +24,7 @@ import {
   LATE_CHECKOUT_PRECIO,
   LATE_CHECKOUT_REGLA,
   CANCELACION_FLEX_REGLA,
+  calcDepositAmount,
 } from '@/lib/booking';
 import { recortarFactores } from '@/lib/precios';
 import styles from './checkout.module.css';
@@ -166,6 +167,9 @@ export default function GuestInfoPage() {
   const personas = booking.adults + booking.children;
   const habs = booking.cart.length;
   const noches = `${booking.nights} noche${booking.nights !== 1 ? 's' : ''}`;
+  const totalesResumen = calcStayTotals(booking);
+  const pagaHoy = calcDepositAmount(totalesResumen.total, booking.nights);
+  const fmtCorta = (f: string) => new Date(`${f}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
   const conTodo = calcStayTotals({ ...booking, addons: { desayuno: true, cancelacionFlexible: true, lateCheckout: true } });
   const conCancel = calcStayTotals({ ...booking, addons: { ...booking.addons, desayuno: !!booking.addons?.desayuno, cancelacionFlexible: true } });
   const addonsTotals = {
@@ -185,6 +189,22 @@ export default function GuestInfoPage() {
         </button>
         <span className={styles.topTitle}>Tus Datos</span>
         <span className={styles.topSecure}><Lock size={12} strokeWidth={1.5} /> Pago Seguro</span>
+      </div>
+
+      {/* Resumen corto arriba en celular (28 oct 2026): que se vea qué suite,
+          qué fechas y cuánto se paga HOY antes de pedir un solo dato. El
+          Resumen completo sigue abajo del formulario. */}
+      <div className={styles.resumenMovil}>
+        <span className={styles.resumenMovilSuite}>
+          {booking.cart.map(i => BOOKING_ROOMS.find(r => r.id === i.roomId)?.name).filter(Boolean).join(' + ')}
+        </span>
+        <span>{fmtCorta(booking.checkin)} → {fmtCorta(booking.checkout)} · {noches} · {personas} {personas === 1 ? 'persona' : 'personas'}</span>
+        <span className={styles.resumenMovilTotal}>
+          <strong>{formatMXN(totalesResumen.total)}</strong>
+          {pagaHoy < totalesResumen.total
+            ? <> · hoy pagas <strong>{formatMXN(pagaHoy)}</strong> (50%), el resto al llegar</>
+            : <> · se paga al reservar</>}
+        </span>
       </div>
 
       <div className={styles.layout}>
@@ -236,25 +256,6 @@ export default function GuestInfoPage() {
                 />
               </label>
 
-              <label className={styles.formLabel}>
-                <span>¿Cómo nos conociste?</span>
-                <select
-                  className={styles.formInput}
-                  value={howDidYouHear}
-                  onChange={e => setHowDidYouHear(e.target.value)}
-                >
-                  <option value="">Selecciona una opción</option>
-                  <option value="google_busqueda">Google Búsqueda</option>
-                  <option value="google_maps">Google Maps</option>
-                  <option value="chatgpt_ia">ChatGPT / IA (Gemini, Perplexity, etc.)</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="facebook">Facebook</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="recomendacion">Recomendación</option>
-                  <option value="booking">Booking.com</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </label>
             </div>
 
             <fieldset className={styles.addons}>
@@ -309,6 +310,30 @@ export default function GuestInfoPage() {
               </label>
             </fieldset>
 
+            {/* Lo que no hace falta para reservar va plegado (28 oct 2026, Clarity:
+                quien llegaba aquí se iba en <35 s sin escribir; 7 campos a la vista). */}
+            <details className={styles.opcional}>
+              <summary>¿Cómo nos conociste? · Peticiones especiales <em>(opcional)</em></summary>
+              <label className={styles.formLabel}>
+                <span>¿Cómo nos conociste?</span>
+                <select
+                  className={styles.formInput}
+                  value={howDidYouHear}
+                  onChange={e => setHowDidYouHear(e.target.value)}
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="google_busqueda">Google Búsqueda</option>
+                  <option value="google_maps">Google Maps</option>
+                  <option value="chatgpt_ia">ChatGPT / IA (Gemini, Perplexity, etc.)</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="recomendacion">Recomendación</option>
+                  <option value="booking">Booking.com</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </label>
+
             {/* Texto libre del huésped: alergias, celebraciones, salud. Lo más
                 delicado del formulario. */}
             <label className={styles.formLabel} style={{ marginTop: 8 }} data-clarity-mask="true">
@@ -321,6 +346,7 @@ export default function GuestInfoPage() {
                 rows={3}
               />
             </label>
+            </details>
 
             {error && <p className={styles.errorMsg}>{error}</p>}
 

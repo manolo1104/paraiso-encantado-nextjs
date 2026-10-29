@@ -16,6 +16,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, X } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 import {
   CALENDARIO_DIAS,
   MAX_NOCHES,
@@ -152,7 +153,10 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
         return;
       }
       setSel({ checkin: f, checkout: '' });
-      setAviso('Ahora elige tu salida.');
+      // Sin aviso aparte: el pie ya dice «Llegada … · elige tu salida». El
+      // texto «Ahora elige tu salida.» se leía como botón (clics muertos en
+      // Clarity, 28 oct 2026).
+      setAviso('');
       return;
     }
     // Hay llegada y se está eligiendo la salida.
@@ -193,6 +197,11 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
     });
   }
 
+  function cerrar() {
+    if (sel.checkin && !sel.checkout) trackEvent('CALENDARIO_CERRADO_SIN_SALIDA', { checkin: sel.checkin });
+    onCerrar();
+  }
+
   const suite = grupo.suiteId ? BOOKING_ROOMS.find((r) => r.id === grupo.suiteId) : undefined;
   const personas = Math.max(1, (grupo.adultos || 0) + (grupo.menores || 0));
   const noches = sel.checkin && sel.checkout ? diasEntre(sel.checkin, sel.checkout) : 0;
@@ -218,7 +227,7 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
             Noches con precio más bajo
           </p>
         </div>
-        <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar calendario">
+        <button type="button" className={styles.cerrar} onClick={cerrar} aria-label="Cerrar calendario">
           <X size={20} strokeWidth={1.6} />
         </button>
       </header>
@@ -337,12 +346,17 @@ export default function StayCalendar({ valor, onCompleto, onCerrar, grupo, cal, 
               Borrar
             </button>
           )}
+          {/* Con solo la llegada este botón decía «Cerrar» y tiraba la fecha
+              elegida: 6 de 13 personas en Clarity (28 oct 2026) tocaron una
+              noche → Cerrar → empezar de nuevo. Ahora espera la salida; la ✕
+              de arriba es la única forma de cerrar sin terminar. */}
           <button
             type="button"
             className={styles.listo}
-            onClick={() => (sel.checkin && sel.checkout ? onCompleto(sel) : onCerrar())}
+            disabled={!(sel.checkin && sel.checkout)}
+            onClick={() => { if (sel.checkin && sel.checkout) onCompleto(sel); }}
           >
-            {sel.checkin && sel.checkout ? 'Listo' : 'Cerrar'}
+            {sel.checkin && sel.checkout ? 'Listo' : sel.checkin ? 'Elige tu salida' : 'Elige tu llegada'}
           </button>
         </div>
       </footer>

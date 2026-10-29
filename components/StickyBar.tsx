@@ -13,11 +13,29 @@ export default function StickyBar() {
   // La barra se monta en todo el sitio desde app/layout.tsx, incluida la
   // landing en inglés: ahí los rótulos en español se leen como un error.
   const enIngles = pathname === '/en' || pathname.startsWith('/en/');
+  // Dónde NO va la barra: el motor de reservas, el pago, la ficha de suite y
+  // el panel traen su propio pie. app/layout.tsx la decidía en el servidor con
+  // la URL de ENTRADA y al navegar dentro del sitio el layout no se vuelve a
+  // evaluar: en Clarity (28 oct 2026) la barra seguía encima de /reservar y
+  // de /reservar/pago en quien entró por la portada, tapando el total y el
+  // botón de pagar. Aquí se decide con la URL de cada momento.
+  const ocultar =
+    pathname === '/reservar' || pathname.startsWith('/reservar/') ||
+    pathname.startsWith('/habitaciones/') || pathname.startsWith('/admin');
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // El botón flotante de WhatsApp se esconde donde está la barra (ver
+  // WhatsAppButton.module.css): la marca del body sigue a la barra.
+  useEffect(() => {
+    if (ocultar) document.body.removeAttribute('data-barra-movil');
+    else document.body.setAttribute('data-barra-movil', '1');
+  }, [ocultar]);
+
+  if (ocultar) return null;
 
   return (
     <div

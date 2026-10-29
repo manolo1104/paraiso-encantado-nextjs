@@ -10,6 +10,7 @@ import { ENTITY_IDS, LAS_POZAS, EDWARD_JAMES, XILITLA } from '@/lib/seo-entidade
 import TablaDeslizable from '@/components/TablaDeslizable';
 import FinDeTemporada from '@/components/FinDeTemporada';
 import styles from './article.module.css';
+import EntreSemanaDesde from '@/components/EntreSemanaDesde';
 
 // Sin remark-gfm, MDX no reconoce las tablas de Markdown: hasta oct 2026 las 8
 // tablas del blog (precios de Las Pozas, tiempos de carretera…) se publicaban
@@ -518,6 +519,11 @@ export default async function ArticlePage({ params }: Props) {
               </p>
               <a href="/reservar" className={styles.inlineCtaBtn}>Ver disponibilidad →</a>
             </div>
+            {/* Precio real de lunes a jueves + calendario con lugar y precio por
+                noche, aquí mismo (28 oct 2026, Clarity): el blog traía 151
+                visitas con 85% de una sola página y solo 11 pasaban a /reservar.
+                Al elegir fechas lleva a /reservar ya con ellas. */}
+            <EntreSemanaDesde origen="blog" variante="claro" diferido />
 
             <div className={styles.prose}>
               <MDXRemote source={post.content} components={mdxComponents} options={MDX_OPTIONS} />
