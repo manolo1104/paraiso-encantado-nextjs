@@ -238,7 +238,6 @@ export default function MejorHotelHuastecaPage() {
 
         <RelatedLinks links={[
           { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado en Xilitla' },
-          { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla: en qué zona conviene dormir' },
           { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca Potosina' },
           { href: '/que-hacer-huasteca-potosina-3-dias', label: 'Qué hacer en la Huasteca en 3 días' },
           { href: '/hotel-alberca-privada-xilitla', label: 'Suites con spa privado y alberca en Xilitla' },

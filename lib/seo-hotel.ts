@@ -73,7 +73,7 @@ export const HOTEL = {
  * El Meco a "1 h" (está en El Naranjo, a 3 h o más), Puente de Dios a 1 h 30,
  * Tamul a 2 h 30 y el centro a "10 min caminando" (son ~2 km de subida). Además
  * decía "el hotel más cercano de Xilitla", que contradice nuestra propia tabla de
- * /hoteles-en-xilitla (Casa Caracol a 300 m). Los minutos son aproximados: en la
+ * lib/hoteles-xilitla.ts (Casa Caracol a 300 m). Los minutos son aproximados: en la
  * sierra las curvas los alargan. El de Tamul falta confirmarlo con el chofer.
  */
 export const DISTANCIAS = [

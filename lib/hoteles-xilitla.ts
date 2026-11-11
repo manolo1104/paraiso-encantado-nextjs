@@ -1,11 +1,12 @@
 /**
  * Los hoteles de Xilitla con los que nos comparamos, en un solo lugar.
  *
- * La tabla de /hoteles-en-xilitla y la respuesta «¿cuál es el hotel más cercano a
- * Las Pozas?» de /hotel-cerca-de-las-pozas leen de aquí, para que las dos páginas
- * no puedan decir cosas distintas. Ya pasó: hasta el 2 oct 2026 el sitio decía que
- * el más cercano era Paraíso Encantado mientras su propia tabla ponía Casa Caracol
- * a 300 m.
+ * La tabla y la respuesta «¿cuál es el hotel más cercano a Las Pozas?» de
+ * /hotel-cerca-de-las-pozas leen de aquí, para que el sitio no diga dos cosas
+ * distintas. Ya pasó: hasta el 2 oct 2026 el sitio decía que el más cercano era
+ * Paraíso Encantado mientras su propia tabla ponía Casa Caracol a 300 m.
+ * La comparativa completa de los 10 hoteles (/hoteles-en-xilitla) se retiró el
+ * 10 nov 2026 y hace 301 a /mejor-hotel-xilitla.
  *
  * Dos reglas que no se rompen aquí:
  *

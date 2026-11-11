@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   // son "hoteles con alberca en xilitla" y sus variantes, todas en posición
   // 13-15.
   // 17 oct 2026 (SEO-04, una URL por búsqueda): el título ya no arranca con
-  // «Hoteles en Xilitla», que es de la comparativa (/hoteles-en-xilitla), sino con
+  // «Hoteles en Xilitla», que era de la comparativa (/hoteles-en-xilitla, retirada el 10 nov 2026), sino con
   // lo que solo tiene esta página. Conserva «alberca en Xilitla». 43 caracteres.
   title: 'Suites con Spa Privado y Alberca en Xilitla',
   // «Desde» con el precio de las suites CON spa: decía el de la suite más barata
@@ -185,7 +185,6 @@ export default function AlbercaPrivadaPage() {
           { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado en Xilitla' },
           { href: '/hotel-luna-de-miel-xilitla', label: 'Luna de miel en Xilitla' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca' },
-          { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla por zona' },
           { href: '/habitaciones', label: 'Las 13 suites' },
           { href: '/paquetes', label: 'Paquetes todo incluido' },
         ]} />

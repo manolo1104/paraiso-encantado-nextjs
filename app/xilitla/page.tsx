@@ -690,10 +690,6 @@ export default function XilitlaPage() {
               {/* Mismo aviso de precio entre semana + calendario que en /reservar
                   (28 oct 2026): /xilitla trae 143 visitas y solo 7 llegaban al motor. */}
               <EntreSemanaDesde origen="xilitla" variante="claro" diferido />
-              <p className={styles.stayAlt}>
-                ¿Comparando opciones? En <Link href="/hoteles-en-xilitla">hoteles en Xilitla</Link> están los
-                demás, con su zona y su distancia a Las Pozas.
-              </p>
             </div>
           </div>
         </section>

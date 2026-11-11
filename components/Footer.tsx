@@ -106,11 +106,11 @@ export default function Footer() {
           <h4>Guías para Elegir</h4>
           <ul role="list">
             {/* Sin «Por Qué Somos el Mejor de Xilitla» ni «Mejor Hotel de la Huasteca»
-                (17 oct 2026): no se sostiene, y la comparativa de los hoteles del pueblo es
-                /hoteles-en-xilitla. Las opiniones tienen su página (Reseñas, arriba). */}
+                (17 oct 2026): no se sostiene. La comparativa de los hoteles del pueblo
+                (/hoteles-en-xilitla) se retiró el 10 nov 2026. Las opiniones tienen su
+                página (Reseñas, arriba). */}
             <li><a href="/mejor-hotel-xilitla">Por Qué Elegir Paraíso Encantado</a></li>
             <li><a href="/mejor-hotel-huasteca-potosina">Cómo Elegir Hotel en la Huasteca</a></li>
-            <li><a href="/hoteles-en-xilitla">Hoteles en Xilitla</a></li>
             <li><a href="/donde-hospedarse-huasteca-potosina">Dónde Hospedarse en la Huasteca</a></li>
             <li><a href="/hotel-alberca-privada-xilitla">Suites con Spa Privado</a></li>
             <li><a href="/comparar">Comparar Suites</a></li>

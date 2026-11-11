@@ -344,7 +344,7 @@ export default async function ArticlePage({ params }: Props) {
     'como-llegar-a-xilitla': {
       text: 'Ya sabes cómo llegar — ahora elige dónde quedarte:',
       links: [
-        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas en una tabla' },
+        { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado', desc: 'Seis razones con datos, y para quién no es' },
         { href: '/xilitla', label: 'Qué hacer en Xilitla', desc: '14 lugares y cuánto manejas a cada uno' },
         { href: '/reservar', label: 'Reservar ahora', desc: 'Confirmación instantánea · Sin comisiones' },
       ],
@@ -431,7 +431,7 @@ export default async function ArticlePage({ params }: Props) {
       text: 'Para ver el amanecer hay que dormir cerca:',
       links: [
         { href: '/experiencias', label: 'Tour al Sótano de las Golondrinas', desc: 'Salida de madrugada · Guía certificado' },
-        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia en una tabla' },
+        { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado', desc: 'Seis razones con datos, y para quién no es' },
         { href: '/reservar', label: 'Reservar tu suite', desc: 'El tour pasa por ti al hotel' },
       ],
     },
@@ -439,7 +439,7 @@ export default async function ArticlePage({ params }: Props) {
       text: 'Lo que empacas depende de los tours que vas a hacer:',
       links: [
         { href: '/experiencias', label: 'Ver los tours disponibles', desc: 'Qué equipo incluye cada uno' },
-        { href: '/hoteles-en-xilitla', label: 'Comparar hoteles en Xilitla', desc: 'Zona, precio y distancia a Las Pozas' },
+        { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado', desc: 'Seis razones con datos, y para quién no es' },
         { href: '/reservar', label: 'Reservar ahora', desc: 'Confirmación instantánea · Sin comisiones' },
       ],
     },
@@ -583,7 +583,7 @@ export default async function ArticlePage({ params }: Props) {
           {/* SIDEBAR */}
           <aside className={styles.sidebar}>
             <div className={styles.sidebarCard}>
-              {/* Sin «el más cercano»: la tabla de /hoteles-en-xilitla pone otro
+              {/* Sin «el más cercano»: la tabla de lib/hoteles-xilitla.ts pone otro
                   hotel a 300 m, y el sitio no puede contradecirse a sí mismo. */}
               <p className={styles.sidebarEyebrow}>A 400 m de Las Pozas</p>
               <h3>Hotel Paraíso Encantado</h3>

@@ -579,7 +579,7 @@ export default function LasPozasEnglishPage() {
 
         {/* ── DÓNDE DORMIR ──────────────────────────────────────────────────── */}
         {/* Sin metros, sin minutos y sin «el más cercano»: la distancia a pie se está
-            volviendo a medir, y la tabla de /hoteles-en-xilitla pone otro hotel más cerca. */}
+            volviendo a medir, y la tabla de lib/hoteles-xilitla.ts pone otro hotel más cerca. */}
         <section className={styles.section} aria-labelledby="where-to-stay">
           <div className={styles.inner}>
             <h2 id="where-to-stay" className={en.sectionTitle}>Where to stay nearby</h2>

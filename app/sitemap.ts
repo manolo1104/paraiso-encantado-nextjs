@@ -50,7 +50,6 @@ const LASTMOD = {
   '/hotel-cerca-de-las-pozas': LOTE_2,
   '/mejor-hotel-xilitla': LOTE_2,
   '/mejor-hotel-huasteca-potosina': LOTE,
-  '/hoteles-en-xilitla': LOTE_2,
   '/donde-hospedarse-huasteca-potosina': LOTE,
   '/hotel-alberca-privada-xilitla': LOTE,
   // El texto es del 2 oct; el JSON-LD del hotel (lodgingSchema) cambió en este lote.
@@ -122,7 +121,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Landings SEO de posicionamiento regional (ago 2026)
     pagina('/mejor-hotel-xilitla', 0.93, 'monthly', ['/images/JUNGLA/PORTADA.JPG']),
     pagina('/mejor-hotel-huasteca-potosina', 0.92, 'monthly', ['/images/JUNGLA/PORTADA.JPG']),
-    pagina('/hoteles-en-xilitla', 0.88, 'monthly', ['/images/Areas comunes/DSC09456-HDR.jpg']),
     pagina('/donde-hospedarse-huasteca-potosina', 0.86, 'monthly', [FOTO_LAS_POZAS]),
     pagina('/hotel-alberca-privada-xilitla', 0.86, 'monthly', ['/images/JUNGLA/PORTADA.JPG']),
     pagina('/que-hacer-huasteca-potosina-3-dias', 0.84, 'monthly', ['/images/atracciones/cascada_de_tamul.jpg']),

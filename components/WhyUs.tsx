@@ -2,7 +2,7 @@ import Link from 'next/link';
 import styles from './WhyUs.module.css';
 
 /**
- * Las páginas de /hoteles-en-xilitla, /hotel-cerca-de-las-pozas y compañía solo
+ * Las páginas de /mejor-hotel-xilitla, /hotel-cerca-de-las-pozas y compañía solo
  * recibían enlaces desde el pie de página, y por eso llevaban semanas sin aparecer
  * en Google: un enlace de pie de página vale poco porque se repite en las 34 páginas
  * del sitio y no dice nada del contenido. Estos cuatro van en el cuerpo de la portada
@@ -11,9 +11,11 @@ import styles from './WhyUs.module.css';
  */
 const guias = [
   {
-    href: '/hoteles-en-xilitla',
-    texto: 'Los hoteles de Xilitla, comparados uno por uno',
-    nota: 'Zona, precio por noche y distancia a Las Pozas de diez opciones del pueblo.',
+    // Hasta el 10 nov 2026 aquí iba «Los hoteles de Xilitla, comparados uno por uno»
+    // (/hoteles-en-xilitla, retirada): mandaba a quien llegaba a la portada a comparar.
+    href: '/mejor-hotel-xilitla',
+    texto: 'Por qué elegir Paraíso Encantado (y para quién no)',
+    nota: 'Las seis razones con sus datos, y a quién no le vamos a gustar.',
   },
   {
     href: '/hotel-cerca-de-las-pozas',

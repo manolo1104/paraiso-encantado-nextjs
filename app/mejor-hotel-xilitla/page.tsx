@@ -22,10 +22,10 @@ import own from './mejor-hotel-xilitla.module.css';
  * hechos en vez de adjetivos.
  *
  * Una URL por búsqueda (17 oct 2026, SEO-04 con las correcciones de los revisores):
- * - «mejor hotel en xilitla» y los plurales los contesta la comparativa,
- *   /hoteles-en-xilitla: para esa búsqueda Google enseña comparativas, y aquí
- *   «el mejor hotel de Xilitla» no se sostiene (Posada James tiene mejor nota y
- *   Tapasoli más reseñas). La URL no cambia: cambiarla sin 301 perdería lo ganado.
+ * - «mejor hotel en xilitla» y los plurales los contestaba la comparativa
+ *   /hoteles-en-xilitla; se retiró el 10 nov 2026 y su URL hace 301 aquí. Aun así,
+ *   aquí «el mejor hotel de Xilitla» no se sostiene (Posada James tiene mejor nota
+ *   y Tapasoli más reseñas). La URL no cambia: cambiarla sin 301 perdería lo ganado.
  * - Las opiniones de los huéspedes son de /reviews; aquí solo se enlazan.
  * - La tabla de tiempos de la Huasteca vive en /mejor-hotel-huasteca-potosina; las
  *   dos páginas repetían el 26 % de sus frases (presidente, ficha y distancias).
@@ -214,7 +214,7 @@ const RAZONES = [
     ],
   },
   {
-    // Sin "el hotel más cercano de Xilitla": nuestra tabla de /hoteles-en-xilitla
+    // Sin "el hotel más cercano de Xilitla": nuestra tabla de lib/hoteles-xilitla.ts
     // pone Casa Caracol a 300 m (2 oct 2026).
     title: `A ${HOTEL.metrosALasPozas} metros de Las Pozas, sobre el camino al jardín`,
     body: [
@@ -325,8 +325,7 @@ export default function MejorHotelXilitlaPage() {
             <h2 id="h-razones">Las seis razones, una por una</h2>
             <p className={styles.lead}>
               Xilitla tiene hoteles buenos y hoteles baratos, y varios se ven espectaculares en foto.
-              Estas son nuestras seis razones, una por una, para que las compares con las de los
-              demás <Link href="/hoteles-en-xilitla">hoteles de Xilitla</Link> antes de reservar.
+              Estas son nuestras seis razones, una por una, con los datos que las respaldan.
             </p>
 
             <div className={own.reasons}>
@@ -543,7 +542,6 @@ export default function MejorHotelXilitlaPage() {
           { href: '/blog/las-pozas-edward-james-guia', label: 'Las Pozas: boletos, horario y reglas' },
           { href: '/hotel-alberca-privada-xilitla', label: 'Las suites con alberca privada' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca Potosina' },
-          { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla: en qué zona dormir' },
           { href: '/restaurante', label: 'El Papán Huasteco: el restaurante' },
           { href: '/reviews', label: 'Lo que dicen los huéspedes' },
           { href: '/xilitla', label: 'Guía de Xilitla' },

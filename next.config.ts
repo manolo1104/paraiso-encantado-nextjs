@@ -72,6 +72,10 @@ const LEGACY_REDIRECTS: Array<[source: string, destination: string]> = [
   // 19 oct 2026: «temporada de lluvias vs. seca» y «mejor época» contestaban la misma
   // pregunta y ninguna estaba indexada; quedó un solo artículo, con el clima del SMN.
   ['/blog/temporada-lluvias-vs-seca-xilitla', '/blog/mejor-epoca-visitar-xilitla'],
+  // 10 nov 2026: se retiró la comparativa de los 10 hoteles del pueblo. Publicaba
+  // tarifas de terceros que no podemos mantener al día y no generaba reservas
+  // (3–10 nov: 14 visitantes la cargaron completa, ninguno llegó al pago).
+  ['/hoteles-en-xilitla', '/mejor-hotel-xilitla'],
 
   // ── Direcciones cortas (oct 2026) ───────────────────────────────────────
   // Para redes, para Tours y para quien la teclea de memoria: daba 404.

@@ -184,7 +184,7 @@ export default function TresDiasPage() {
         <RelatedLinks links={[
           { href: '/donde-hospedarse-huasteca-potosina', label: 'Dónde hospedarse en la Huasteca' },
           { href: '/mejor-hotel-huasteca-potosina', label: 'Cómo elegir hotel en la Huasteca' },
-          { href: '/hoteles-en-xilitla', label: 'Hoteles en Xilitla por zona' },
+          { href: '/mejor-hotel-xilitla', label: 'Por qué elegir Paraíso Encantado' },
           { href: '/experiencias', label: 'Tours desde el hotel' },
           { href: '/xilitla', label: 'Guía de Xilitla' },
           { href: '/paquetes', label: 'Paquetes de hotel y tours' },

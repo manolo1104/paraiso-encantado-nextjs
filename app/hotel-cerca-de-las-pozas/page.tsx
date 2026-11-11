@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 
 // Una sola lista para el FAQ visible y el FAQPage del JSON-LD: antes eran dos
 // textos distintos y el schema decía "el hotel boutique más cercano", que nuestra
-// propia tabla de /hoteles-en-xilitla contradice (2 oct 2026).
+// propia tabla (lib/hoteles-xilitla.ts) contradice (2 oct 2026).
 const FAQS = [
   {
     q: '¿Qué tan cerca está el hotel de Las Pozas de Edward James?',
@@ -59,7 +59,7 @@ const FAQS = [
   },
   {
     // La pregunta que de verdad se hace, contestada con nuestra propia comparativa
-    // (lib/hoteles-xilitla.ts, la misma tabla de /hoteles-en-xilitla): el más
+    // (lib/hoteles-xilitla.ts): el más
     // cercano NO es este hotel. Entre Paraíso Encantado y Posada James no se afirma
     // un orden: la distancia del hotel todavía no está medida a pie.
     q: '¿Cuál es el hotel más cercano a Las Pozas?',
@@ -137,7 +137,7 @@ const schema = {
  * El pasaje «¿Qué hotel está más cerca de Las Pozas?» (17 oct 2026).
  *
  * Es la pregunta que trae a esta página, y hasta ahora solo la contestaban
- * /hoteles-en-xilitla y llms.txt. Se contesta con la MISMA tabla de la comparativa
+ * /hoteles-en-xilitla (retirada el 10 nov 2026) y llms.txt. Se contesta con la MISMA tabla de la comparativa
  * (lib/hoteles-xilitla.ts): si una distancia cambia allá, cambia aquí sola. Va en
  * orden de cercanía según esa tabla, con Casa Caracol primero; entre Paraíso
  * Encantado y Posada James no se afirma un orden (ver CAMINO_A_LAS_POZAS).
@@ -288,9 +288,6 @@ export default function HotelCercaDeLasPozasPage() {
                 </tbody>
               </table>
             </div>
-            <Link href="/hoteles-en-xilitla" className={styles.aboutLink}>
-              Los 10 hoteles de Xilitla, con zona, precio y alberca →
-            </Link>
           </div>
         </section>
 
