@@ -318,7 +318,14 @@
   font-family: var(--font-jost), sans-serif;
   font-size: 0.88rem;
   color: #2d5a27;
-  grid-column: 1 / -1;
+  /* Encima de la primera suite, no en el flujo: al aparecer y desaparecer ya
+     no empuja la lista (CLS, nov 2026). */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .searchSpinner {
@@ -359,6 +366,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  position: relative;
 }
 
 .promptBanner {
@@ -557,6 +565,10 @@
   padding-top: 10px;
   border-top: 1px solid #f0ece4;
   margin-top: auto;
+  /* Alto de la versión con fechas (precio tachado + total + por noche, o los
+     dos botones): sin fechas medía menos y al llegar el precio crecía y
+     empujaba las tarjetas de abajo. */
+  min-height: 96px;
 }
 
 .priceBlock { display: flex; flex-direction: column; gap: 2px; }

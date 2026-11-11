@@ -70,6 +70,14 @@ function hotelToday(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
 }
 
+/** Fechas válidas de la liga (`?checkin=&checkout=`), de hoy en adelante; si no, null. */
+function fechasDeLiga(sp: { get(k: string): string | null }): { checkin: string; checkout: string } | null {
+  const ci = sp.get('checkin');
+  const co = sp.get('checkout');
+  if (!ci || !co || ci < hotelToday() || calcNights(ci, co) <= 0) return null;
+  return { checkin: ci, checkout: co };
+}
+
 // ── Room Detail Drawer ────────────────────────────────────
 function RoomDrawer({
   room,
@@ -238,9 +246,17 @@ function ReservarPageInner() {
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // ── Search state ──────────────────────────────────────
-  const [checkin, setCheckin] = useState('');
-  const [checkout, setCheckout] = useState('');
-  const [adults, setAdults] = useState(2);
+  // Las fechas de la liga se toman desde el PRIMER pintado (también en el
+  // servidor): así el buscador ya sale plegado y la lista no brinca ~350 px al
+  // regresar la búsqueda (Clarity, nov 2026: CLS 0.075 → 0.63 en celular).
+  // El efecto de abajo las vuelve a poner igual; las de sessionStorage solo
+  // existen en el navegador y siguen llegando ahí.
+  const [checkin, setCheckin] = useState(() => fechasDeLiga(searchParams)?.checkin ?? '');
+  const [checkout, setCheckout] = useState(() => fechasDeLiga(searchParams)?.checkout ?? '');
+  const [adults, setAdults] = useState(() => {
+    const a = parseInt(searchParams.get('adults') || '', 10);
+    return Math.max(1, Math.min(12, a || 2));
+  });
   const [children, setChildren] = useState(0);
   const [searched, setSearched] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -845,7 +861,9 @@ function ReservarPageInner() {
     goToCheckout();
   }
 
-  const buscadorCompacto = searched && !!checkin && !!checkout && !editarBusqueda;
+  // Plegado en cuanto hay fechas, sin esperar a que regrese la búsqueda: antes
+  // dependía de `searched` y el buscador se cerraba solo, segundos después.
+  const buscadorCompacto = !!checkin && !!checkout && calcNights(checkin, checkout) > 0 && !editarBusqueda;
   const fmtCorta = (f: string) => new Date(`${f}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
 
   return (
@@ -988,7 +1006,9 @@ function ReservarPageInner() {
       <div className={styles.layout} ref={resultsRef}>
         {/* ── Room grid ── */}
         <div className={styles.roomGrid}>
-          {!searched && !searching && (
+          {/* Solo sin fechas: con fechas en la liga aparecía un instante y se
+              cambiaba por el de «consultando», empujando las suites dos veces. */}
+          {!checkin && !searched && !searching && (
             <div className={styles.promptBanner}>
               <CalendarDays size={20} strokeWidth={1.5} />
               <span>

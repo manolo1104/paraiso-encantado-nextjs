@@ -11,8 +11,12 @@ const WHATSAPP_URL = 'https://wa.me/524891007679';
 export default function ConfirmacionPage() {
   const [confirmationNumber, setConfirmationNumber] = useState('');
   const [booking, setBooking] = useState<BookingState | null>(null);
+  // Hasta leer sessionStorage se reserva el alto de los detalles: aparecían de
+  // golpe y empujaban todo lo de abajo (Clarity: CLS 3.6 en esta página).
+  const [listo, setListo] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const cn = sessionStorage.getItem('pe_confirmation_number') || '';
     const raw = sessionStorage.getItem('pe_booking_for_confirm');
     setConfirmationNumber(cn);
@@ -20,6 +24,7 @@ export default function ConfirmacionPage() {
     if (raw) {
       try { parsed = JSON.parse(raw) as BookingState; setBooking(parsed); } catch {}
     }
+    setListo(true);
 
     // ── Conversión GA4 / Google Ads (vía GTM) ──────────────────────────────
     // Empuja un evento `purchase` (formato ecommerce GA4) en la página de
@@ -98,6 +103,8 @@ export default function ConfirmacionPage() {
           Recibirás un correo de confirmación en los próximos minutos.
           Cualquier duda, escríbenos por WhatsApp.
         </p>
+
+        {!listo && <div className={styles.detallesCascaron} aria-hidden="true" />}
 
         {/* data-clarity-mask: el número va PINTADO como texto y el
             enmascaramiento de Clarity sólo tapa campos de formulario. */}

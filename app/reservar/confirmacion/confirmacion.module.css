@@ -2,10 +2,15 @@
   min-height: 100vh;
   background: #f8f6f1;
   display: flex;
-  align-items: center;
+  /* Arriba, no centrado: centrado, cualquier cambio de alto movía también la
+     parte de arriba de la tarjeta (CLS). */
+  align-items: flex-start;
   justify-content: center;
-  padding: 40px 24px;
+  padding: 112px 24px 40px;
 }
+
+/* Alto aproximado del número + detalles mientras se leen. */
+.detallesCascaron { width: 100%; min-height: 440px; }
 
 .card {
   background: #fff;

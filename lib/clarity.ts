@@ -92,6 +92,8 @@ const EVENTOS: Record<string, string> = {
   GALERIA_RESERVAR: 'galeria_reservar',
   CALENDARIO_CERRADO_SIN_SALIDA: 'calendario_sin_salida',
   EXIT_POPUP_SHOWN: 'popup_whatsapp',
+  // Cambió las fechas desde la pantalla de datos (10 nov 2026).
+  CHECKOUT_FECHAS_CAMBIADAS: 'checkout_cambio_fechas',
 };
 
 export function etiquetarClarity(evento: string, datos: Record<string, unknown> = {}): void {

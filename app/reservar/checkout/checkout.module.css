@@ -205,7 +205,13 @@
   border-radius: 8px;
   padding: 16px;
   background: #fff;
+  /* El iframe de Stripe crece en varios saltos al cargar: reservar su altura
+     para que el resumen de abajo no brinque (CLS en /reservar/pago). */
+  min-height: 300px;
 }
+
+/* Mientras se crea el cobro: el mismo alto que el formulario que lo reemplaza. */
+.cargandoPago { min-height: 420px; justify-content: center; }
 
 .errorMsg {
   background: #fff5f5;
@@ -363,6 +369,23 @@
 
 .summaryDates span { color: #8a9a8a; }
 .summaryDates strong { font-weight: 500; color: #1a2e1a; }
+.summaryDatesTocable { cursor: pointer; }
+
+.summaryCambiar {
+  align-self: flex-start;
+  margin-top: -4px;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a8842a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.summaryCambiar:disabled { opacity: 0.7; cursor: progress; }
 
 .summaryRooms {
   display: flex;
@@ -528,6 +551,47 @@
 }
 .resumenMovilSuite { font-family: var(--font-cormorant), Georgia, serif; font-size: 1.15rem; color: #1a2e1a; }
 .resumenMovilTotal strong { color: #1a2e1a; font-weight: 600; }
+
+/* Fechas tocables: abren el calendario aquí mismo (10 nov 2026). */
+.resumenMovilFechas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 2px 0;
+  padding: 6px 8px;
+  border: 1px dashed #d8cbb4;
+  border-radius: 6px;
+  background: #fbf8f2;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.resumenMovilFechas > span:first-of-type { flex: 1; min-width: 0; }
+.resumenMovilFechas:disabled { opacity: 0.7; cursor: progress; }
+.cambiarFechas {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #a8842a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.avisoFechas {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fdf1ec;
+  border: 1px solid #f0c9b8;
+  color: #8a3a1a;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+}
+
+/* Cascarón mientras se lee la reserva: misma altura aproximada que lo final,
+   para que el pie de página no suba y baje (CLS). */
+.resumenMovilCascaron { min-height: 112px; }
+.formCascaron { min-height: 760px; }
 
 /* Campos que no hacen falta para reservar, plegados */
 .opcional { border-top: 1px solid #ece6dc; padding-top: 12px; }
@@ -766,4 +830,55 @@
 @media (max-width: 480px) {
   .addonCard { grid-template-columns: auto 1fr auto; padding: 12px; gap: 10px; }
   .addonIcon { display: none; }
+}
+
+/* «¿Cómo nos conociste?» a la vista, en botones de un toque (10 nov 2026). */
+.conociste {
+  border: none;
+  padding: 0;
+  margin: 4px 0 0;
+}
+
+.conocisteTitulo {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a7a6a;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.conocisteOpciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.conocisteChip {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.85rem;
+  color: #1a2e1a;
+  background: #fff;
+  border: 1.5px solid #d8d0c4;
+  border-radius: 999px;
+  padding: 8px 14px;
+  min-height: 40px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.conocisteChip:hover { border-color: #a8842a; }
+
+.conocisteChip:focus-visible {
+  outline: 2px solid #a8842a;
+  outline-offset: 2px;
+}
+
+.conocisteChipOn,
+.conocisteChipOn:hover {
+  border-color: #1a2e1a;
+  background: #1a2e1a;
+  color: #fff;
 }

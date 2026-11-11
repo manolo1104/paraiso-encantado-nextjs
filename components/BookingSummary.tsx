@@ -24,7 +24,15 @@ function fmtDate(d: string): string {
   });
 }
 
-export default function BookingSummary({ booking }: { booking: BookingState }) {
+interface Props {
+  booking: BookingState;
+  /** Solo en el paso de datos: abre el calendario para cambiar las fechas ahí
+   *  mismo. En el pago no se ofrece (el cobro ya está armado con esas fechas). */
+  onCambiarFechas?: () => void;
+  cambiandoFechas?: boolean;
+}
+
+export default function BookingSummary({ booking, onCambiarFechas, cambiandoFechas }: Props) {
   const { subtotal, total, addons } = calcStayTotals(booking);
   const isDeposit = booking.isDeposit ?? false;
 
@@ -32,13 +40,28 @@ export default function BookingSummary({ booking }: { booking: BookingState }) {
     <aside className={styles.summary}>
       <h2 className={styles.summaryTitle}>Resumen</h2>
 
-      <div className={styles.summaryDates}>
+      {/* Las fechas se tocaban aunque no hicieran nada (Clarity, nov 2026):
+          con onCambiarFechas el bloque entero abre el calendario. */}
+      <div
+        className={`${styles.summaryDates} ${onCambiarFechas ? styles.summaryDatesTocable : ''}`}
+        onClick={onCambiarFechas && !cambiandoFechas ? onCambiarFechas : undefined}
+      >
         <div><span>Check-in</span><strong>{fmtDate(booking.checkin)}</strong></div>
         <div><span>Check-out</span><strong>{fmtDate(booking.checkout)}</strong></div>
         <div><span>Noches</span><strong>{booking.nights}</strong></div>
         <div><span>Adultos</span><strong>{booking.adults}</strong></div>
         {booking.children > 0 && <div><span>Menores</span><strong>{booking.children}</strong></div>}
       </div>
+      {onCambiarFechas && (
+        <button
+          type="button"
+          className={styles.summaryCambiar}
+          onClick={onCambiarFechas}
+          disabled={cambiandoFechas}
+        >
+          {cambiandoFechas ? 'Revisando fechas…' : 'Cambiar fechas'}
+        </button>
+      )}
 
       <div className={styles.summaryRooms}>
         {booking.cart.map(item => {

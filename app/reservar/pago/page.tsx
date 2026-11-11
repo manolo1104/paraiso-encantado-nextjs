@@ -239,6 +239,9 @@ export default function PagoPage() {
   const bookingRef = useRef<BookingState | null>(null);
 
   useEffect(() => {
+    // Igual que en el paso de datos: esta página se pinta después de leer la
+    // reserva y Next la dejaba con el scroll de la pantalla anterior.
+    window.scrollTo(0, 0);
     const state = loadBookingState();
     if (!state || state.cart.length === 0 || !state.checkin) {
       router.replace('/reservar');
@@ -354,7 +357,25 @@ export default function PagoPage() {
     router.push('/reservar/confirmacion');
   }
 
-  if (!booking || !guest) return null;
+  // Cascarón con la altura aproximada de la pantalla final mientras se lee la
+  // reserva: con `return null` el pie subía y bajaba (Clarity: CLS 4.8 aquí).
+  if (!booking || !guest) {
+    return (
+      <main className={styles.main} aria-busy="true">
+        <CheckoutProgressBar currentStep={3} />
+        <div className={styles.topBar}>
+          <button className={styles.backBtn} onClick={() => router.push('/reservar/checkout')}>
+            <ChevronLeft size={15} strokeWidth={2} /> Volver
+          </button>
+          <span className={styles.topTitle}>Pago</span>
+          <span className={styles.topSecure}><Lock size={12} strokeWidth={1.5} /> Pago Seguro</span>
+        </div>
+        <div className={styles.layout}>
+          <div className={`${styles.formCol} ${styles.formCascaron}`} />
+        </div>
+      </main>
+    );
+  }
 
   const stripeAppearance = {
     theme: 'stripe' as const,
@@ -399,7 +420,7 @@ export default function PagoPage() {
 
           {loadError && <div className={styles.loadError}>{loadError}</div>}
           {!loadError && !clientSecret && (
-            <div className={styles.loading}>
+            <div className={`${styles.loading} ${styles.cargandoPago}`}>
               <div className={styles.spinner} />
               <p>Preparando formulario de pago…</p>
             </div>

@@ -10,7 +10,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Lock, ShieldCheck, Coffee, CalendarX, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock, ShieldCheck, Coffee, CalendarX, Clock, CalendarDays } from 'lucide-react';
 import {
   loadBookingState,
   saveBookingState,
@@ -18,6 +18,9 @@ import {
   BookingAddons,
   BOOKING_ROOMS,
   calcStayTotals,
+  calcNights,
+  validatePromo,
+  calcPromoDiscount,
   formatMXN,
   DESAYUNO_PRECIO,
   DESAYUNO_MENU,
@@ -30,12 +33,29 @@ import { recortarFactores } from '@/lib/precios';
 import styles from './checkout.module.css';
 import CheckoutProgressBar from '@/components/CheckoutProgressBar';
 import BookingSummary from '@/components/BookingSummary';
+import StayDateField from '@/components/calendario/StayDateField';
 import WhatsAppRecoveryWidget from '@/components/WhatsAppRecoveryWidget';
 import { trackEvent } from '@/lib/analytics';
 import { getHoldSessionId } from '@/lib/hold-session';
 import { loadGuestInfo, saveGuestInfo } from '@/lib/guest-info';
 
 const API = '';
+
+// Fuentes de «¿Cómo nos conociste?». `valor` es lo que se guarda en la hoja
+// (columna «¿Cómo nos conociste?» de Reservas): no cambiarlo sin cambiar los
+// informes que lo leen.
+const FUENTES = [
+  { valor: 'google_busqueda', texto: 'Google' },
+  { valor: 'google_maps', texto: 'Google Maps' },
+  { valor: 'chatgpt_ia', texto: 'ChatGPT / IA' },
+  { valor: 'facebook', texto: 'Facebook' },
+  { valor: 'instagram', texto: 'Instagram' },
+  { valor: 'tiktok', texto: 'TikTok' },
+  { valor: 'youtube', texto: 'YouTube' },
+  { valor: 'recomendacion', texto: 'Me lo recomendaron' },
+  { valor: 'booking', texto: 'Booking' },
+  { valor: 'otro', texto: 'Otro' },
+] as const;
 
 function withAmounts(state: BookingState): BookingState {
   const t = calcStayTotals(state);
@@ -54,8 +74,17 @@ export default function GuestInfoPage() {
   const [howDidYouHear, setHowDidYouHear] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Cambiar fechas aquí mismo (10 nov 2026, Clarity: en celular «Volver» se
+  // tocaba más que «Continuar al pago» y 9 personas tocaron las fechas del
+  // resumen, que no hacían nada; «Volver» además tira la suite y los extras).
+  const [calendarioAbierto, setCalendarioAbierto] = useState(false);
+  const [cambiandoFechas, setCambiandoFechas] = useState(false);
+  const [avisoFechas, setAvisoFechas] = useState('');
 
   useEffect(() => {
+    // Llega desde /reservar bajado: Next no sube solo porque esta página se
+    // pinta después de leer la reserva. Arriba están el resumen y el nombre.
+    window.scrollTo(0, 0);
     const state = loadBookingState();
     if (!state || state.cart.length === 0 || !state.checkin) {
       router.replace('/reservar');
@@ -113,6 +142,89 @@ export default function GuestInfoPage() {
     trackEvent('ADDON_TOGGLE', { addon: key, on });
   }
 
+  /**
+   * Fechas nuevas elegidas en el calendario de esta pantalla. Se confirma con
+   * el servidor que las MISMAS suites del carrito sigan libres (la verdad final:
+   * el calendario puede tener unos minutos de atraso y no ve los apartados), y
+   * solo entonces se rehace la reserva como en `goToCheckout` de /reservar:
+   * noches, precio dinámico de esas noches, código de descuento (se quita si ya
+   * no aplica) y el apartado temporal, que se mueve a las fechas nuevas.
+   */
+  async function cambiarFechas(v: { checkin: string; checkout: string }) {
+    if (!booking || cambiandoFechas) return;
+    const noches = calcNights(v.checkin, v.checkout);
+    if (!v.checkin || !v.checkout || noches <= 0) return;
+    if (v.checkin === booking.checkin && v.checkout === booking.checkout) return;
+
+    const nombres = booking.cart.map(i => BOOKING_ROOMS.find(r => r.id === i.roomId)!.name);
+    const antes = { checkin: booking.checkin, checkout: booking.checkout };
+    setCambiandoFechas(true);
+    setAvisoFechas('');
+    try {
+      const res = await fetch(`${API}/api/check-availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          checkin: v.checkin, checkout: v.checkout, rooms: nombres,
+          guests: booking.adults + booking.children, sessionId,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || data.degraded) {
+        setAvisoFechas('No pudimos confirmar esas fechas. Inténtalo otra vez en un momento.');
+        return;
+      }
+      const sinLugar: string[] = Array.isArray(data.unavailableRooms) ? data.unavailableRooms : [];
+      if (sinLugar.length > 0) {
+        setAvisoFechas(`${sinLugar.join(' y ')} ya no ${sinLugar.length > 1 ? 'tienen' : 'tiene'} lugar esas noches. Elige otras fechas.`);
+        trackEvent('CHECKOUT_FECHAS_CAMBIADAS', { ok: false, checkin: v.checkin, checkout: v.checkout, rooms: booking.cart.length });
+        return;
+      }
+
+      let factores = {};
+      try {
+        const d = await fetch(`${API}/api/precios`).then(r => r.json());
+        if (d?.activo && d?.factores) factores = recortarFactores(d.factores, v.checkin, v.checkout);
+      } catch { /* sin precio dinámico: precio de lista, igual que si el servidor no responde */ }
+
+      const promo = booking.promoCode && validatePromo(booking.promoCode, noches, booking.cart.length).valid
+        ? booking.promoCode : null;
+      const { amountTotal, amountPaid, amountPending, isDeposit, ...base } = booking; // eslint-disable-line @typescript-eslint/no-unused-vars
+      const nuevo: BookingState = {
+        ...base,
+        checkin: v.checkin,
+        checkout: v.checkout,
+        nights: noches,
+        factores,
+        promoCode: promo,
+        promoDiscount: promo ? calcPromoDiscount(promo, booking.cart, v.checkin, v.checkout, noches, factores) : 0,
+      };
+      saveBookingState(nuevo);
+      setBooking(withAmounts(nuevo));
+
+      // El apartado de 10 min es por noche: renovar con las fechas nuevas y la
+      // misma sesión reemplaza el anterior en una sola escritura.
+      fetch(`${API}/api/renew-temporary-block`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkin: v.checkin, checkout: v.checkout, rooms: nombres, sessionId }),
+      }).catch(() => {});
+      // Si después toca «Volver», /reservar abre con estas fechas.
+      try {
+        sessionStorage.setItem('pe_last_dates', JSON.stringify({ checkin: v.checkin, checkout: v.checkout, adults: String(booking.adults) }));
+      } catch { /* ignore */ }
+
+      trackEvent('CHECKOUT_FECHAS_CAMBIADAS', {
+        ok: true, antes: `${antes.checkin}→${antes.checkout}`, checkin: v.checkin, checkout: v.checkout,
+        nights: noches, rooms: booking.cart.length, promoQuitada: !!booking.promoCode && !promo,
+      });
+    } catch {
+      setAvisoFechas('No pudimos confirmar esas fechas. Inténtalo otra vez en un momento.');
+    } finally {
+      setCambiandoFechas(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!booking) return;
@@ -160,7 +272,27 @@ export default function GuestInfoPage() {
     router.push('/reservar/pago');
   }
 
-  if (!booking) return null;
+  // Antes de leer la reserva: el mismo cascarón que la pantalla final (barras +
+  // espacio reservado). Con `return null` el pie de página subía hasta arriba y
+  // luego bajaba de golpe al aparecer el formulario (Clarity: CLS 2.3 aquí).
+  if (!booking) {
+    return (
+      <main className={styles.main} aria-busy="true">
+        <CheckoutProgressBar currentStep={2} />
+        <div className={styles.topBar}>
+          <button className={styles.backBtn} onClick={() => router.push('/reservar')}>
+            <ChevronLeft size={15} strokeWidth={2} /> Volver
+          </button>
+          <span className={styles.topTitle}>Tus Datos</span>
+          <span className={styles.topSecure}><Lock size={12} strokeWidth={1.5} /> Pago Seguro</span>
+        </div>
+        <div className={`${styles.resumenMovil} ${styles.resumenMovilCascaron}`} aria-hidden="true" />
+        <div className={styles.layout}>
+          <div className={`${styles.formCol} ${styles.formCascaron}`} />
+        </div>
+      </main>
+    );
+  }
 
   // Precio de cada add-on como si estuviera activado, para que el huésped vea
   // cuánto suma ANTES de marcarlo.
@@ -198,7 +330,17 @@ export default function GuestInfoPage() {
         <span className={styles.resumenMovilSuite}>
           {booking.cart.map(i => BOOKING_ROOMS.find(r => r.id === i.roomId)?.name).filter(Boolean).join(' + ')}
         </span>
-        <span>{fmtCorta(booking.checkin)} → {fmtCorta(booking.checkout)} · {noches} · {personas} {personas === 1 ? 'persona' : 'personas'}</span>
+        <button
+          type="button"
+          className={styles.resumenMovilFechas}
+          onClick={() => setCalendarioAbierto(true)}
+          disabled={cambiandoFechas}
+          aria-label={`Cambiar fechas: ${fmtCorta(booking.checkin)} a ${fmtCorta(booking.checkout)}`}
+        >
+          <CalendarDays size={14} strokeWidth={1.6} aria-hidden="true" />
+          <span>{fmtCorta(booking.checkin)} → {fmtCorta(booking.checkout)} · {noches} · {personas} {personas === 1 ? 'persona' : 'personas'}</span>
+          <span className={styles.cambiarFechas}>{cambiandoFechas ? 'Revisando…' : 'Cambiar'}</span>
+        </button>
         <span className={styles.resumenMovilTotal}>
           <strong>{formatMXN(totalesResumen.total)}</strong>
           {pagaHoy < totalesResumen.total
@@ -210,6 +352,8 @@ export default function GuestInfoPage() {
       <div className={styles.layout}>
         <div className={styles.formCol}>
           <form onSubmit={handleSubmit} className={styles.form}>
+            {avisoFechas && <p className={styles.avisoFechas} role="alert">{avisoFechas}</p>}
+
             <h2 className={styles.formTitle}>Datos del Huésped</h2>
 
             {/* 🔴 data-clarity-mask: nombre, correo y teléfono. Clarity ya tapa
@@ -257,6 +401,28 @@ export default function GuestInfoPage() {
               </label>
 
             </div>
+
+            {/* «¿Cómo nos conociste?» va A LA VISTA y en botones de un toque.
+                El 28 oct se plegó junto con las peticiones y 5 de 6 reservas web
+                (29 oct–7 nov) llegaron sin fuente, contra 12 de 12 cuando se
+                veía: sin esto no se sabe qué canal vende. Sigue sin ser
+                obligatoria. Los valores son los mismos que lee la hoja. */}
+            <fieldset className={styles.conociste}>
+              <legend className={styles.conocisteTitulo}>¿Cómo nos conociste?</legend>
+              <div className={styles.conocisteOpciones}>
+                {FUENTES.map(f => (
+                  <button
+                    key={f.valor}
+                    type="button"
+                    className={`${styles.conocisteChip} ${howDidYouHear === f.valor ? styles.conocisteChipOn : ''}`}
+                    aria-pressed={howDidYouHear === f.valor}
+                    onClick={() => setHowDidYouHear(howDidYouHear === f.valor ? '' : f.valor)}
+                  >
+                    {f.texto}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
             <fieldset className={styles.addons}>
               <legend className={styles.addonsTitle}>Mejora tu estancia</legend>
@@ -310,29 +476,11 @@ export default function GuestInfoPage() {
               </label>
             </fieldset>
 
+
             {/* Lo que no hace falta para reservar va plegado (28 oct 2026, Clarity:
                 quien llegaba aquí se iba en <35 s sin escribir; 7 campos a la vista). */}
             <details className={styles.opcional}>
-              <summary>¿Cómo nos conociste? · Peticiones especiales <em>(opcional)</em></summary>
-              <label className={styles.formLabel}>
-                <span>¿Cómo nos conociste?</span>
-                <select
-                  className={styles.formInput}
-                  value={howDidYouHear}
-                  onChange={e => setHowDidYouHear(e.target.value)}
-                >
-                  <option value="">Selecciona una opción</option>
-                  <option value="google_busqueda">Google Búsqueda</option>
-                  <option value="google_maps">Google Maps</option>
-                  <option value="chatgpt_ia">ChatGPT / IA (Gemini, Perplexity, etc.)</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="facebook">Facebook</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="recomendacion">Recomendación</option>
-                  <option value="booking">Booking.com</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </label>
+              <summary>Peticiones especiales <em>(opcional)</em></summary>
 
             {/* Texto libre del huésped: alergias, celebraciones, salud. Lo más
                 delicado del formulario. */}
@@ -360,8 +508,26 @@ export default function GuestInfoPage() {
           </form>
         </div>
 
-        <BookingSummary booking={booking} />
+        <BookingSummary
+          booking={booking}
+          onCambiarFechas={() => setCalendarioAbierto(true)}
+          cambiandoFechas={cambiandoFechas}
+        />
       </div>
+
+      {/* 1 suite: el calendario de ESA suite (solo sus noches libres, con su
+          precio). 2+ suites: el general, y el servidor confirma las del carrito. */}
+      <StayDateField
+        sinCampo
+        valor={{ checkin: booking.checkin, checkout: booking.checkout }}
+        onChange={cambiarFechas}
+        grupo={booking.cart.length === 1
+          ? { adultos: booking.cart[0].guestCount, menores: booking.children, suiteId: booking.cart[0].roomId }
+          : { adultos: booking.adults, menores: booking.children }}
+        abierto={calendarioAbierto}
+        onAbiertoChange={setCalendarioAbierto}
+        titulo="Cambia tus fechas"
+      />
       <WhatsAppRecoveryWidget />
     </main>
   );
